@@ -77,7 +77,7 @@ FONT_STYLE = f"""
 
 <style>
 
-    {file_as_string('assets/styles/font_styles.css')}
+    {file_as_string('oswm_codebase/assets/styles/font_styles.css')}
 
 </style>
 
@@ -86,7 +86,7 @@ FONT_STYLE = f"""
 TABLES_STYLE = f"""
 
 <style>
-    {file_as_string('assets/styles/table_styles.css')}
+    {file_as_string('oswm_codebase/assets/styles/table_styles.css')}
 </style>
 
 """
@@ -254,7 +254,7 @@ def gen_quality_report_page(outpath,tabledata,feat_type,category,quality_categor
 def find_map_ref(input_htmlpath):
     with open(input_htmlpath) as inf:
         txt = inf.read()
-        soup = bs4.BeautifulSoup(txt,features='lxml')
+        soup = bs4.BeautifulSoup(txt,features='html5lib')
 
     refs = soup.find_all(attrs={'class':"folium-map"})
 
@@ -268,29 +268,27 @@ def find_html_name(input_htmlpath,specific_ref,tag_ref='img',specific_tag='src',
 
     with open(input_htmlpath) as inf:
         txt = inf.read()
-        soup = bs4.BeautifulSoup(txt,features='lxml')
+        soup = bs4.BeautifulSoup(txt,features='html5lib')
 
     refs = soup.find_all(tag_ref)
 
 
     for found_ref in refs:
-
-
         # if specific_tag in found_ref:
 
         if found_ref[specific_tag] == specific_ref:
             return found_ref[identifier]
             
 
-def style_changer(in_out_htmlpath,element_key,key='style',original='bottom',new='top',append=None):
+def style_changer(in_out_htmlpath,element_key,key='style',original='bottom',new='top',append_t=None):
     with open(in_out_htmlpath) as inf:
         txt = inf.read()
-        soup = bs4.BeautifulSoup(txt,features='lxml')
+        soup = bs4.BeautifulSoup(txt,features='html5lib')
 
     style_refs = soup.find_all(key)
 
     for style_ref in style_refs:
-        as_txt = style_ref.get_text()
+        as_txt = str(style_ref)
         if element_key in as_txt:
 
             if new:
@@ -298,8 +296,8 @@ def style_changer(in_out_htmlpath,element_key,key='style',original='bottom',new=
             else:
                 new_text = as_txt
 
-            if append:
-                new_text += append
+            if append_t:
+                new_text += append_t
 
             break
 

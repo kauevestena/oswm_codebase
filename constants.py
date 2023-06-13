@@ -1,3 +1,6 @@
+import sys
+sys.path.append('.')
+
 from config import *
 
 ###############
@@ -22,18 +25,18 @@ map_page_name = "./map.html"
 OGR2OGR_PATH = 'ogr2ogr'
 
 # data paths
-sidewalks_path = './data/sidewalks.geojson'
-crossings_path = './data/crossings.geojson'
-kerbs_path = './data/kerbs.geojson'
+sidewalks_path = 'data/sidewalks.geojson'
+crossings_path = 'data/crossings.geojson'
+kerbs_path = 'data/kerbs.geojson'
 
-sidewalks_path_raw = './data/sidewalks_raw.geojson'
-crossings_path_raw = './data/crossings_raw.geojson'
-kerbs_path_raw = './data/kerbs_raw.geojson'
+sidewalks_path_raw = 'data/sidewalks_raw.geojson'
+crossings_path_raw = 'data/crossings_raw.geojson'
+kerbs_path_raw = 'data/kerbs_raw.geojson'
 
 
-sidewalks_path_versioning = './data/sidewalks_versioning.json'
-crossings_path_versioning = './data/crossings_versioning.json'
-kerbs_path_versioning = './data/kerbs_versioning.json'
+sidewalks_path_versioning = 'data/sidewalks_versioning.json'
+crossings_path_versioning = 'data/crossings_versioning.json'
+kerbs_path_versioning = 'data/kerbs_versioning.json'
 
 paths_dict = {
     'data' :{
