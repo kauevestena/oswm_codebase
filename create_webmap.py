@@ -56,14 +56,14 @@ print('Creating Map...')
 
 
 # CENTER OF THE MAP:
-mid_lat = (bounding_box_sample[0]+bounding_box_sample[2])/2
-mid_lgt = (bounding_box_sample[1]+bounding_box_sample[3])/2
+mid_lat = (BOUNDING_BOX_SAMPLE[0]+BOUNDING_BOX_SAMPLE[2])/2
+mid_lgt = (BOUNDING_BOX_SAMPLE[1]+BOUNDING_BOX_SAMPLE[3])/2
 
 
 # CREATING THE MAP
 m = folium.Map(location=[mid_lat, mid_lgt],zoom_start=18,min_zoom=min_zoom,
 max_zoom=20,
-zoom_control=False,tiles=None,min_lat=bounding_box[0],min_lon=bounding_box[1],max_lat=bounding_box[2],max_lon=bounding_box[3],max_bounds=True)
+zoom_control=False,tiles=None,min_lat=BOUNDING_BOX[0],min_lon=BOUNDING_BOX[1],max_lat=BOUNDING_BOX[2],max_lon=BOUNDING_BOX[3],max_bounds=True)
 
 # TODO: include controlScale
 
