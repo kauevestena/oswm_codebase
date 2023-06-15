@@ -27,10 +27,7 @@ def vectile_base_insertions(filepath):
         replace_at_html(filepath, insertion_point, base_insertions_dict[insertion_point])
 
 sample_style = {
-    'fillColor': "red",
-    'color': "red",
-    'weight': 3,
-}
+    'color': "black"}
 
 def simple_style(props_dict):
     props = ''
@@ -83,14 +80,75 @@ def veclayer_options(options_dict):
 
     return options
 
+def generate_color_style_for_vectiles(variable_name='p'):
+    resulting_styles = {}
+
+    for layername in fields_values_properties:
+        resulting_styles[layername] = {}
+
+        for tag_key in fields_values_properties[layername]:
+            
+            
+            resulting_styles[layername][tag_key] = 'color: '
+
+            default = 'black'
+            for tag_value in fields_values_properties[layername][tag_key]:
+                color = fields_values_properties[layername][tag_key][tag_value]['color']
+                if tag_value == '?':
+                    default = color
+                else:
+                    resulting_styles[layername][tag_key] += f' {variable_name} === "{tag_value}" ? "{color}" :'
 
 
-def create_vectorgrid_slicer(map_reference,layername,style_part=simple_style(sample_style),slicer_options=dump_for_javascript(default_slicer_options)+'promoteId:"id",'):
+            resulting_styles[layername][tag_key] += f'"{default}",'
+
+    return resulting_styles
+
+color_styles = generate_color_style_for_vectiles()
+
+
+def create_vectorgrid_slicer(map_reference,layername,style_part=simple_style(sample_style),highlight_style=None,slicer_options=dump_for_javascript(default_slicer_options)+'promoteId:"id",',normal_weight=3,highlight_weight=12):
 
 
     layer_varname = f'vectorGrid_{layername}'
 
     layer_call = f'{layername}_layer'
+
+    if highlight_style:
+        highglight_part1 = f"""
+        .on('mouseover', function (e) {{
+
+                            var properties = e.layer.properties;
+
+
+
+                            var popup = L.popup()
+
+                            popup.setContent(properties.surface).setLatLng(e.latlng).openOn({map_reference});
+
+
+                            p = properties.surface;
+
+                            var style = {{
+                                {highlight_style}
+                                weight: {highlight_weight}
+                            }};
+                            lastHoveredFeatureId = properties.id;
+
+                            {layer_varname}.setFeatureStyle(lastHoveredFeatureId, style);
+                        }}
+                        )
+        """
+        highglight_part2 = f"""
+                            {layer_varname}.on('mouseout', function (e) {{
+                        if (lastHoveredFeatureId) {{
+                            {layer_varname}.resetFeatureStyle(lastHoveredFeatureId);
+                            //{map_reference}.closePopup();
+                            // L.closePopup();
+                        }}
+                    }})
+        
+        """
 
     as_txt = f"""
             <script>
@@ -108,6 +166,8 @@ def create_vectorgrid_slicer(map_reference,layername,style_part=simple_style(sam
                                 sliced:
 
                                 {style_part}
+
+                                weight: {normal_weight},
                             }},
 
                             {slicer_options}
@@ -123,37 +183,14 @@ def create_vectorgrid_slicer(map_reference,layername,style_part=simple_style(sam
 
 
                     )
-                        .on('mouseover', function (e) {{
 
-                            var properties = e.layer.properties;
-
-
-
-                            var popup = L.popup()
-
-                            popup.setContent(properties.surface).setLatLng(e.latlng).openOn({map_reference});
-
-
-                            p = properties.surface;
-
-                            var style = {{
-                                color: p === "concrete" ? "blue" : p === "sett" ? "green" : "purple",
-                                weight: 12
-                            }};
-                            lastHoveredFeatureId = properties.id;
-
-                            {layer_varname}.setFeatureStyle(lastHoveredFeatureId, style);
-                        }}
-                        )
+                        {highglight_part1}
+                        
                         .addTo({map_reference});
 
-                    {layer_varname}.on('mouseout', function (e) {{
-                        if (lastHoveredFeatureId) {{
-                            {layer_varname}.resetFeatureStyle(lastHoveredFeatureId);
-                            {map_reference}.closePopup();
-                            // L.closePopup();
-                        }}
-                    }})
+                        {highglight_part2}
+
+
                     </script>
             """
     

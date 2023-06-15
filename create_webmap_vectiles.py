@@ -83,7 +83,7 @@ def end_script_exec(savemap=True):
     """
     vectile_base_insertions(map_page_name)
     map_ref = find_map_ref('map_experimental.html')
-    sidewalks_layer = create_vectorgrid_slicer(map_ref,'sidewalks')
+    sidewalks_layer = create_vectorgrid_slicer(map_ref,'sidewalks',normal_weight=5)
 
     replace_at_html(map_page_name,'</html>',sidewalks_layer+'\n</html>')
 
