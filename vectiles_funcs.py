@@ -131,7 +131,7 @@ def create_vectorgrid_slicer(map_reference,layername,style_part=simple_style(sam
 
                             var popup = L.popup()
 
-                            popup.setContent(properties.surface).setLatLng(e.latlng).openOn(map);
+                            popup.setContent(properties.surface).setLatLng(e.latlng).openOn({map_reference});
 
 
                             p = properties.surface;
@@ -150,7 +150,7 @@ def create_vectorgrid_slicer(map_reference,layername,style_part=simple_style(sam
                     {layer_varname}.on('mouseout', function (e) {{
                         if (lastHoveredFeatureId) {{
                             {layer_varname}.resetFeatureStyle(lastHoveredFeatureId);
-                            map.closePopup();
+                            {map_reference}.closePopup();
                             // L.closePopup();
                         }}
                     }})
