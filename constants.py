@@ -448,6 +448,9 @@ fields_values_properties = {
 }
 }
 
+layernames = [key for key in fields_values_properties]
+
+
 # values to be copied:
 fields_values_properties['sidewalks']['tactile_paving'] = fields_values_properties['kerbs']['tactile_paving']
 

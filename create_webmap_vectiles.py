@@ -2,8 +2,7 @@ from time import sleep
 import geopandas as gpd
 import folium
 from folium.plugins import FloatImage
-from oswm_codebase.functions import *
-from constants import *
+from vectiles_funcs import *
 from webmap_insertions import *
 
 from folium.plugins import GroupedLayerControl
@@ -11,7 +10,7 @@ from folium.plugins import GroupedLayerControl
 print('reading data...')
 
 # overriding while it stills experimental:
-map_page_name = "map_experimental.html"
+map_page_name = "./map_experimental.html"
 
 # reading also as geodataframes:
 sidewalks_gdf = gpd.read_file(sidewalks_path,index='id')
@@ -39,6 +38,7 @@ type_dict = {
     'kerbs' : 'node',
 }
 
+
 # creating the ref for the layers in this brand new version
 layers_ref_str = """"""
 
@@ -54,7 +54,6 @@ for category in gdf_dict:
     # storing each one
     layers_ref_str += l_ref_str +'\n'
 
-exit() # good way to terminate, instead of commenting the rest of the code
 
 '''
 
@@ -74,6 +73,21 @@ mid_lgt = (BOUNDING_BOX_SAMPLE[1]+BOUNDING_BOX_SAMPLE[3])/2
 m = folium.Map(location=[mid_lat, mid_lgt],zoom_start=18,min_zoom=min_zoom,
 max_zoom=20,
 zoom_control=False,tiles=None,min_lat=BOUNDING_BOX[0],min_lon=BOUNDING_BOX[1],max_lat=BOUNDING_BOX[2],max_lon=BOUNDING_BOX[3],max_bounds=True)
+
+def end_script_exec(savemap=True):
+    if savemap:
+        m.save(map_page_name)
+
+    """
+        HTML EDITING
+    """
+    vectile_base_insertions(map_page_name)
+    map_ref = find_map_ref('map_experimental.html')
+    sidewalks_layer = create_vectorgrid_slicer(map_ref,'sidewalks')
+
+    replace_at_html(map_page_name,'</html>',sidewalks_layer+'\n</html>')
+
+    exit()
 
 # TODO: include controlScale
 
@@ -117,6 +131,15 @@ opvnkarte_baselayer = folium.TileLayer(tiles='https://tile.memomaps.de/tilegen/{
 min_zoom=min_zoom) #.add_to(m)
 
 m.add_child(opvnkarte_baselayer)
+
+
+# # sidewalks
+# folium.GeoJson(data=sidewalks_gdf
+# ,name='sidewalks_dummy'
+# ).add_to(m)
+
+
+end_script_exec()
 
 '''
 
@@ -198,11 +221,11 @@ def style_crossing(feature):
 
 '''
 
-# sidewalks
-folium.GeoJson(data=sidewalks_gdf
-,name='sidewalks_dummy',
-style_function= outline_style,control=False
-).add_to(m)
+# # sidewalks
+# folium.GeoJson(data=sidewalks_gdf
+# ,name='sidewalks_dummy',
+# style_function= outline_style,control=False
+# ).add_to(m)
 
 # # crossings
 # folium.GeoJson(data=crossings_gdf
@@ -427,8 +450,8 @@ print('Modifying HTML...')
 
 
 # saving the page:
-m.save(map_page_name)
-sleep(.2)
+# m.save(map_page_name)
+# sleep(.2)
 
 
 '''
