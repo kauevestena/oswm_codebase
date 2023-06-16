@@ -40,7 +40,7 @@ def simple_style(props_dict):
         
         {props}
 
-    }}"""
+    """
 
 
 
@@ -106,6 +106,17 @@ def generate_color_style_for_vectiles(variable_name='p'):
 
 color_styles = generate_color_style_for_vectiles()
 
+def prepare_custom_colorstyle(layername,tag_key):
+    style_string = color_styles[layername][tag_key]
+
+    return f"""
+        function (properties, zoom) {{
+        var p = properties.surface;
+        return {{
+            {style_string}
+    
+    """
+
 
 def create_vectorgrid_slicer(map_reference,layername,style_part=simple_style(sample_style),highlight_style=None,slicer_options=dump_for_javascript(default_slicer_options)+'promoteId:"id",',normal_weight=3,highlight_weight=12):
 
@@ -114,8 +125,12 @@ def create_vectorgrid_slicer(map_reference,layername,style_part=simple_style(sam
 
     layer_call = f'{layername}_layer'
 
+    highlight_part1 = ''
+    highlight_part2 = ''
+
+
     if highlight_style:
-        highglight_part1 = f"""
+        highlight_part1 = f"""
         .on('mouseover', function (e) {{
 
                             var properties = e.layer.properties;
@@ -139,7 +154,7 @@ def create_vectorgrid_slicer(map_reference,layername,style_part=simple_style(sam
                         }}
                         )
         """
-        highglight_part2 = f"""
+        highlight_part2 = f"""
                             {layer_varname}.on('mouseout', function (e) {{
                         if (lastHoveredFeatureId) {{
                             {layer_varname}.resetFeatureStyle(lastHoveredFeatureId);
@@ -163,11 +178,13 @@ def create_vectorgrid_slicer(map_reference,layername,style_part=simple_style(sam
                             rendererFactory: L.svg.tile,
                             //   rendererFactory: L.canvas.tile,
                             vectorTileLayerStyles: {{
-                                sliced:
+                                sliced: 
 
                                 {style_part}
 
                                 weight: {normal_weight},
+                            }},
+
                             }},
 
                             {slicer_options}
@@ -180,15 +197,13 @@ def create_vectorgrid_slicer(map_reference,layername,style_part=simple_style(sam
 
 
 
-
-
                     )
 
-                        {highglight_part1}
+                        {highlight_part1}
                         
                         .addTo({map_reference});
 
-                        {highglight_part2}
+                        {highlight_part2}
 
 
                     </script>

@@ -83,9 +83,17 @@ def end_script_exec(savemap=True):
     """
     vectile_base_insertions(map_page_name)
     map_ref = find_map_ref('map_experimental.html')
-    sidewalks_layer = create_vectorgrid_slicer(map_ref,'sidewalks',normal_weight=5)
 
-    replace_at_html(map_page_name,'</html>',sidewalks_layer+'\n</html>')
+    # # They must be adequated:
+    # # sidewalks_dummy_layer = create_vectorgrid_slicer(map_ref,'sidewalks_dummy',normal_weight=5)
+
+    # # replace_at_html(map_page_name,'</html>',sidewalks_dummy_layer+'\n</html>')
+
+
+
+    sidewalks_surface_layer = create_vectorgrid_slicer(map_ref,'sidewalks',prepare_custom_colorstyle('sidewalks','surface'),color_styles['sidewalks']['surface'])
+
+    replace_at_html(map_page_name,'</html>',sidewalks_surface_layer+'\n</html>')
 
     exit()
 
@@ -112,25 +120,25 @@ def end_script_exec(savemap=True):
 # standard:
 std_baselayer =  folium.TileLayer(name='OpenStreetMap std.',
 min_zoom=min_zoom,
-opacity=.5,max_zoom=22,max_native_zoom=19) #.add_to(m)
+opacity=.3,max_zoom=22,max_native_zoom=19) #.add_to(m)
 m.add_child(std_baselayer)
 
 # # cycloMAP:  (REVEALED BUGGY, suspended for now)
 # folium.TileLayer(tiles='https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png',name='CyclOSM',opacity=.5,attr='CyclOSM',
 # min_zoom=min_zoom,max_zoom=25,max_native_zoom=18).add_to(m)
 
-# HUMANITARIAN:
-humanitarian_baselayer = folium.TileLayer(tiles='https://a.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png',name='Humanitarian OSM',opacity=.5,attr='Humanitarian OSM',
-min_zoom=min_zoom,max_zoom=22,max_native_zoom=18) #.add_to(m)
-m.add_child(humanitarian_baselayer)
+# # HUMANITARIAN:
+# humanitarian_baselayer = folium.TileLayer(tiles='https://a.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png',name='Humanitarian OSM',opacity=.5,attr='Humanitarian OSM',
+# min_zoom=min_zoom,max_zoom=22,max_native_zoom=18) #.add_to(m)
+# m.add_child(humanitarian_baselayer)
 
 
 
-# opvnkarte:
-opvnkarte_baselayer = folium.TileLayer(tiles='https://tile.memomaps.de/tilegen/{z}/{x}/{y}.png',max_zoom=22,max_native_zoom=18,name='OPVN Karte Transport',opacity=.5,attr='OPVN Karte Transport',
-min_zoom=min_zoom) #.add_to(m)
+# # opvnkarte:
+# opvnkarte_baselayer = folium.TileLayer(tiles='https://tile.memomaps.de/tilegen/{z}/{x}/{y}.png',max_zoom=22,max_native_zoom=18,name='OPVN Karte Transport',opacity=.5,attr='OPVN Karte Transport',
+# min_zoom=min_zoom) #.add_to(m)
 
-m.add_child(opvnkarte_baselayer)
+# m.add_child(opvnkarte_baselayer)
 
 
 # # sidewalks
