@@ -16,9 +16,10 @@ min_zoom = 10
 # global max zoom level
 max_zoom = 22
 
-# hmtml file name of map
+# node archives general paths
 map_page_name = "./map.html"
-
+readme_path = "./README.md"
+node_home_path = "./index.html"
 
 
 # ogr2ogr path
@@ -37,6 +38,10 @@ kerbs_path_raw = 'data/kerbs_raw.geojson'
 sidewalks_path_versioning = 'data/sidewalks_versioning.json'
 crossings_path_versioning = 'data/crossings_versioning.json'
 kerbs_path_versioning = 'data/kerbs_versioning.json'
+
+# node homepage:
+user_homepage = f'https://{USERNAME}.github.io/'
+node_homepage = f'https://{USERNAME}.github.io/{REPO_NAME}/'
 
 paths_dict = {
     'data' :{

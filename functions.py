@@ -1,4 +1,4 @@
-import csv
+import csv, os, re
 import bs4
 from time import sleep, time
 import pandas as pd
@@ -24,12 +24,14 @@ def dump_json(inputdict,outputpath,indent=4):
         json.dump(inputdict,json_handle,indent=indent,ensure_ascii=False)
 
 def file_as_string(inputpath:str):
-    with open(inputpath) as reader:
-        return reader.read()
+    if os.path.exists(inputpath):
+        with open(inputpath) as reader:
+            return reader.read()
     
 def str_to_file(inputstr:str,outputpath:str):
-    with open(outputpath,'w+',encoding='utf8') as writer:
-        writer.write(inputstr)
+    if os.path.exists(outputpath):
+        with open(outputpath,'w+',encoding='utf8') as writer:
+            writer.write(inputstr)
 
 
 """
@@ -338,15 +340,38 @@ def replace_at_html(html_filepath,original_text,new_text,count=1):
     beware of tags that repeat! the "count" argument is very important!
     '''
 
+    if os.path.exists(html_filepath):
+        with open(html_filepath) as reader:
+            pag_txt = reader.read()
 
-    with open(html_filepath) as reader:
-        pag_txt = reader.read()
-
-    
-    with open(html_filepath,'w+') as writer:
-        writer.write(pag_txt.replace(original_text,new_text,count))
+        
+        with open(html_filepath,'w+') as writer:
+            writer.write(pag_txt.replace(original_text,new_text,count))
+    else:
+        raise('Error: file not found!!')
 
     sleep(.1)
+
+
+# def file_to_str(filepath):
+#     if os.path.exists(filepath):
+#         with open(filepath) as reader:
+#             pag_txt = reader.read()
+
+#         return pag_txt
+
+def find_between_strings(string, start, end,return_unique=True,exclusions:list=None):
+    pattern = f"{start}(.*){end}"
+    # print(pattern)
+    matches =  re.findall(pattern, string) #, re.DOTALL)
+
+    if return_unique:
+        matches = list(set(matches))
+
+    if exclusions:
+        matches = [match for match in matches if match not in exclusions]
+
+    return matches
 
 
 # (geo)Pandas stuff:
