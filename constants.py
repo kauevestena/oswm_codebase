@@ -55,7 +55,7 @@ paths_dict = {
         'crossings': crossings_path_raw,
         'kerbs': kerbs_path_raw,
     },
-        'versioning' : {
+    'versioning' : {
         'sidewalks': sidewalks_path_versioning,
         'crossings': crossings_path_versioning,
         'kerbs': kerbs_path_versioning,

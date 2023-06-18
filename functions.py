@@ -74,6 +74,8 @@ def record_datetime(key,json_path='data/last_updated.json'):
 
     dump_json(datadict,json_path)
 
+    sleep(.1)
+
 def record_to_json(key,obj,json_path):
 
     datadict = read_json(json_path)
@@ -565,6 +567,13 @@ def create_length_field(input_gdf,fieldname='length(km)',in_km=True):
 
     utm_crs = input_gdf.estimate_utm_crs()
     input_gdf['length(km)'] = input_gdf.to_crs(utm_crs).length/factor
+
+def create_weblink_field(input_gdf,featuretype='LineString',inputfield='id',fieldname='weblink'):
+    if featuretype == 'LineString':
+        input_gdf[fieldname] = input_gdf[inputfield].astype('string').apply(return_weblink_way)
+    if featuretype == 'Point':
+        input_gdf[fieldname] = input_gdf[inputfield].astype('string').apply(return_weblink_node)
+
 
 def create_folder_if_not_exists(folderpath):
     if not os.path.exists(folderpath):
