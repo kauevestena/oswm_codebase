@@ -27,11 +27,31 @@ def file_as_string(inputpath:str):
     if os.path.exists(inputpath):
         with open(inputpath) as reader:
             return reader.read()
+    else:
+        raise(FileNotFoundError)
     
 def str_to_file(inputstr:str,outputpath:str):
     if os.path.exists(outputpath):
         with open(outputpath,'w+',encoding='utf8') as writer:
             writer.write(inputstr)
+            sleep(0.1)
+    else:
+        raise(FileNotFoundError)
+
+class fileAsStrHandler:
+
+    def __init__(self,inputpath:str):
+        self.path = inputpath
+        self.content = file_as_string(self.path)
+
+    def simple_replace(self,original_part,new_part):
+        self.content = self.content.replace(original_part,new_part)
+
+    def rewrite(self):
+        str_to_file(self.content,self.path)
+    
+    def write_to_another_path(self,outputpath):
+        str_to_file(self.content,outputpath)
 
 
 """

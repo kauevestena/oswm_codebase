@@ -40,8 +40,9 @@ crossings_path_versioning = 'data/crossings_versioning.json'
 kerbs_path_versioning = 'data/kerbs_versioning.json'
 
 # node homepage:
-user_homepage = f'https://{USERNAME}.github.io/'
-node_homepage = f'https://{USERNAME}.github.io/{REPO_NAME}/'
+user_basepage_url = f'https://{USERNAME}.github.io/'
+node_homepage_url = f'https://{USERNAME}.github.io/{REPO_NAME}/'
+data_updating_utl = f'https://{USERNAME}.github.io/{REPO_NAME}/data/data_updating.html'
 
 paths_dict = {
     'data' :{
