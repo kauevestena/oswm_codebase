@@ -1,5 +1,5 @@
-from constants import *
 from functions import *
+from modules_info import *
 import re
 
 
@@ -11,27 +11,27 @@ files_obj_dict = {
 
 # REPLACEMENTS BETWEEN TWO SPECIFIC STRINGS:
 
-quads_for_replace_between = [
-    # [begin_of_string,end_of_string,new_middle,file_as_string]
-    ['https://','.github.io',USERNAME,files_obj_dict['homepage']],
-    ['<CITYNAME>','<CITYNAME>',CITY_NAME,files_obj_dict['readme']],
-    ['<!--CITYNAME INSERTION-->','<!--CITYNAME INSERTION-->',CITY_NAME,files_obj_dict['homepage']],
-
-    ['.github.io/','/data/data_updating.html',REPO_NAME,files_obj_dict['homepage']]
+fifths_for_replace_between = [
+    # [begin_of_string,end_of_string,new_middle,file_as_string,consider linebreaks (generally False)]
+    ['https://','.github.io',USERNAME,files_obj_dict['homepage'],False],
+    ['<CITYNAME>','<CITYNAME>',CITY_NAME,files_obj_dict['readme'],False],
+    ['<!--CITYNAME INSERTION-->','<!--CITYNAME INSERTION-->',CITY_NAME,files_obj_dict['homepage'],False],
+    ['.github.io/','/data/data_updating.html',REPO_NAME,files_obj_dict['homepage'],False],
+    ['<!--MODULES INSERTION POINT-->','<!--MODULES INSERTION POINT-->',modules_as_str,files_obj_dict['homepage'],True],
 ]
 
 # print(find_between_strings(readme_as_str,'<CITYNAME>','<CITYNAME>'))
 
-for i,quad in enumerate(quads_for_replace_between):
+for i,fifth in enumerate(fifths_for_replace_between):
     # firstly, finding matches:
-    for match in find_between_strings(quad[3].content,quad[0],quad[1],exclusions=['buttons','opensidewalkmap']):
+    for match in find_between_strings(fifth[3].content,fifth[0],fifth[1],exclusions=['buttons','opensidewalkmap'],include_linebreaks=fifth[4]):
         if len(match) < 100:
-            print(i,'replacing between',quad[0],quad[1],'match: ',match)
+            print(i,'replacing between',fifth[0],fifth[1],'match: ',match)
 
-        original_str = f'{quad[0]}{match}{quad[1]}'
-        new_str      = f'{quad[0]}{quad[2]}{quad[1]}'
+        original_str = f'{fifth[0]}{match}{fifth[1]}'
+        new_str      = f'{fifth[0]}{fifth[2]}{fifth[1]}'
 
-        quad[3].simple_replace(original_str,new_str)
+        fifth[3].simple_replace(original_str,new_str)
 
 
 triads_for_simple_replacements = [

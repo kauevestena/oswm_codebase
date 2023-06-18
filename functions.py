@@ -380,10 +380,13 @@ def replace_at_html(html_filepath,original_text,new_text,count=1):
 
 #         return pag_txt
 
-def find_between_strings(string, start, end,return_unique=True,exclusions:list=None):
+def find_between_strings(string, start, end,return_unique=True,exclusions:list=None,include_linebreaks=False):
     pattern = f"{start}(.*){end}"
     # print(pattern)
-    matches =  re.findall(pattern, string) #, re.DOTALL)
+    if include_linebreaks:
+        matches =  re.findall(pattern, string,re.DOTALL)
+    else:
+        matches =  re.findall(pattern, string)
 
     if return_unique:
         matches = list(set(matches))
