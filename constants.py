@@ -485,3 +485,9 @@ wrong_misspelled_values ={
 
     },
 }
+
+geom_type_dict = {
+    'sidewalks':'LineString',
+    'crossings':'LineString',
+    'kerbs':'Point',
+}

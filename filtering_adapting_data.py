@@ -42,11 +42,7 @@ gdf_dict = {
     'kerbs':kerbs_gdf,
     }
 
-geom_type_dict = {
-    'sidewalks':'LineString',
-    'crossings':'LineString',
-    'kerbs':'Point',
-}
+
 
 print('- Fetching updating info')
 # updating info:

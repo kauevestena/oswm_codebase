@@ -558,5 +558,14 @@ def gdf_to_js_file(input_gdf,output_path,output_varname):
 
     return f'<script type="text/javascript" src="{output_path}"></script>'
 
+def create_length_field(input_gdf,fieldname='length(km)',in_km=True):
+    factor = 1
+    if in_km:
+        factor = 1000
 
+    utm_crs = input_gdf.estimate_utm_crs()
+    input_gdf['length(km)'] = input_gdf.to_crs(utm_crs).length/factor
 
+def create_folder_if_not_exists(folderpath):
+    if not os.path.exists(folderpath):
+        os.makedirs(folderpath)
