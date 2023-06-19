@@ -16,6 +16,9 @@ min_zoom = 10
 # global max zoom level
 max_zoom = 22
 
+# elevation available for routing:
+routing_elevation = False
+
 # node archives general paths
 map_page_name = "./map.html"
 readme_path = "./README.md"
@@ -497,3 +500,4 @@ statistics_basepath = 'statistics'
 # defined here to avoid circular importing problems
 def get_url(relative_url,base_url=node_homepage_url):
     return os.path.join(base_url,relative_url)
+
