@@ -19,7 +19,7 @@ modules_metadata = {
         'text' : 'Optimized Routing'
     },
     'dashboard': {
-        'url' : f'{node_homepage_url}statistics/statistics.html',
+        'url' : f'{node_homepage_url}statistics/sidewalks/sidewalks_smoothness_x_surface.html',
         'img_src' : f"{assets_base_path}oswm_statistics_img.png",
         'text' : 'Dashboard'
     },
