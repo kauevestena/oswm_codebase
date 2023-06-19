@@ -1,8 +1,9 @@
 #vis.vega-embed {
-    width: 100%;
+    width: 80%;
     display: flex;
-    padding-left: 20%;
+    padding-left: 14%;
     padding-top: 2%;
+    resize: horizontal;
 }
 
 #vis.vega-embed details,
@@ -10,15 +11,22 @@
     position: relative;
 }
 
+/* #vis {
+    resize: 60%;
+} */
+
+
+
 /* The side navigation menu */
 .sidebar {
     margin: 0;
     padding: 0;
-    width: 200px;
+    width: 12%;
     background-color: #f1f1f1;
     position: absolute;
     height: 100%;
     overflow: auto;
+    font-size: smaller;
     z-index: 999999999999999999;
 }
 
@@ -120,7 +128,7 @@ div.content {
     .sidebar {
         width: 100%;
         height: auto;
-        position: fixed;
+        position: relative;
     }
 
     .sidebar a {

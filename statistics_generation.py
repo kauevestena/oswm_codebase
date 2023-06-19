@@ -45,18 +45,6 @@ with open(os.path.join(statistics_basepath,'failed_gen.txt'),'w+') as error_repo
                 chart_obj = spec['function'](*spec['params'])
                 chart_obj.save(outpath)
 
-                # fileObj = fileAsStrHandler(outpath)
-
-                # for insertpoint in global_insertions:
-                #     fileObj.simple_replace(insertpoint,global_insertions[insertpoint])
-
-                # for exclusion_specs in global_exclusions:
-                #     to_remove = find_between_strings(fileObj.content,*exclusion_specs['points'],include_linebreaks=exclusion_specs['multiline'])
-                #     for removable in to_remove:
-                #         fileObj.simple_replace(exclusion_specs['points'][0]+removable+exclusion_specs['points'][1])
-
-                # fileObj.rewrite()
-
                 generated_list_dict[category].append(outpath)
                 charts_titles[outpath] = spec['title']
             except Exception as e:
@@ -71,7 +59,7 @@ topbar = f"""
     """
 
 for category in generated_list_dict:
-    category_homepage = get_url(generated_list_dict[category])
+    category_homepage = get_url(generated_list_dict[category][0])
 
     topbar += f'<a href="{category_homepage}">{category.capitalize()} Charts</a>\n'
 
@@ -107,7 +95,7 @@ for category in generated_list_dict:
 # iterating again to modify pages only once:
 for category in generated_list_dict:
     for rel_path in generated_list_dict[category]:
-        fileObj = fileAsStrHandler(outpath)
+        fileObj = fileAsStrHandler(rel_path)
 
         for insertpoint in global_insertions:
             fileObj.simple_replace(insertpoint,global_insertions[insertpoint])
@@ -117,12 +105,12 @@ for category in generated_list_dict:
             for removable in to_remove:
                 fileObj.simple_replace(exclusion_specs['points'][0]+removable+exclusion_specs['points'][1])
 
-        fileObj.simple_replace('<head>','head\n'+category_bars[category])
+        fileObj.simple_replace('<head>','<head>\n'+category_bars[category])
 
         fileObj.rewrite()
 
 
 # to record data aging:
-record_datetime('Statistical Charts','data/last_updated.json')
+record_datetime('Statistical Charts')
 # generate the "report" of the updating info
-gen_updating_infotable_page('../data/data_updating.html','../data/last_updated.json')
+gen_updating_infotable_page()

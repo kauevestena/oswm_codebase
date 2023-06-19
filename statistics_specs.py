@@ -229,7 +229,7 @@ charts_specs = {
         },
     },
     'kerbs': {
-        'crossings_smoothness_x_surface': {
+        'kerbs_x_paving_x_wheelchair': {
             'function': double_scatter_bar,
             'params': (
                 gdfs_dict[
