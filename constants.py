@@ -1,4 +1,4 @@
-import sys
+import sys, os
 sys.path.append('.')
 
 from config import *
@@ -493,3 +493,7 @@ geom_type_dict = {
 }
 
 statistics_basepath = 'statistics'
+
+# defined here to avoid circular importing problems
+def get_url(relative_url,base_url=node_homepage_url):
+    return os.path.join(base_url,relative_url)
