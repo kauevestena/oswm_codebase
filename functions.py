@@ -44,7 +44,8 @@ class fileAsStrHandler:
         self.path = inputpath
         self.content = file_as_string(self.path)
 
-    def simple_replace(self,original_part,new_part):
+    def simple_replace(self,original_part,new_part=''):
+        """default is empty to just remove"""
         self.content = self.content.replace(original_part,new_part)
 
     def rewrite(self):
@@ -578,3 +579,7 @@ def create_weblink_field(input_gdf,featuretype='LineString',inputfield='id',fiel
 def create_folder_if_not_exists(folderpath):
     if not os.path.exists(folderpath):
         os.makedirs(folderpath)
+
+def remove_if_exists(pathfile):
+    if os.path.exists(pathfile):
+        os.remove(pathfile)

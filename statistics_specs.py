@@ -327,3 +327,21 @@ charts_specs = {
         },
     },
 }
+
+global_insertions = {
+    '<head>' : """
+
+    <head>
+    
+     <link rel="stylesheet" href="../../oswm_codebase/assets/styles/stats_styles.css">
+    <script src="../../oswm_codebase/assets/webscripts/stats_funcs.js"></script>
+    
+    """,
+}
+
+global_exclusions = [
+    {
+        'points' : ['<style>','</style>'],
+        'multiline' : True
+    }
+]
