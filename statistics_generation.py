@@ -26,15 +26,24 @@ for category in paths_dict['data']:
     updating_dicts[category].sort_values('year_month',inplace=True)
 
 
-first_chart = create_barchartV2(gdfs_dict['sidewalks'],'surface','Sidewalks Surface Type')
+# generating the charts by using the specifications
+with open(os.path.join(statistics_basepath,'failed_gen.txt'),'w+') as error_report:
+    for category in charts_specs:
+        for chart_spec in charts_specs[category]:
+            try:
+                spec = charts_specs[category][chart_spec]
+                outpath = os.path.join(statistics_basepath,category,chart_spec+'.html')
+                print('generating ',outpath)
+                chart_obj = spec['function'](*spec['params'])
+                chart_obj.save(outpath)
+            except:
+                print('failed ',chart_spec,' writing to report file at "statistics folder"')
+                error_report.write(chart_spec+'\n')
 
 
-first_chart.save('tests/sample_chart2.html')
 
 
-
-
-# to record data aging:
-record_datetime('Statistical Charts','data/last_updated.json')
-# generate the "report" of the updating info
-gen_updating_infotable_page('../data/data_updating.html','../data/last_updated.json')
+# # to record data aging:
+# record_datetime('Statistical Charts','data/last_updated.json')
+# # generate the "report" of the updating info
+# gen_updating_infotable_page('../data/data_updating.html','../data/last_updated.json')

@@ -12,6 +12,28 @@ for category in paths_dict['data']:
 
 charts_specs = {
     'sidewalks': {
+        'sidewalks_smoothness_x_surface': {
+            'function': double_scatter_bar,
+            'params': (
+                gdfs_dict[
+                    'sidewalks'
+                ],
+                'Surface x Smoothness (sidewalks)',
+                'surface',
+                'smoothness',
+                None,
+                'count()',
+                'surface',
+                'smoothness',
+                'length(km)',
+                24,
+                [
+                    'element_type',
+                    'id'
+                ]
+            ),
+            'title': 'Surface x Smoothness',
+        },
         'sidewalks_surface': {
             'function': create_barchartV2,
             'params': (
@@ -76,29 +98,6 @@ charts_specs = {
                 24
             ),
             'title': 'Incline Values',
-        },
-        'sidewalks_smoothness_x_surface': {
-            'function': double_scatter_bar,
-            'params': (
-                gdfs_dict[
-                    'sidewalks'
-                ],
-                'Surface x Smoothness (sidewalks)',
-                'length(km)',
-                'surface',
-                'smoothness',
-                None,
-                'count()',
-                'surface',
-                'smoothness',
-                'length(km)',
-                24,
-                [
-                    'element_type',
-                    'id'
-                ]
-            ),
-            'title': 'Surface x Smoothness',
         },
         'sidewalks_survey_year': {
             'function': create_barchart,
@@ -172,7 +171,6 @@ charts_specs = {
                     'crossings'
                 ],
                 'Surface x Smoothness (crossings)',
-                'length(km)',
                 'surface',
                 'smoothness',
                 None,
@@ -199,7 +197,6 @@ charts_specs = {
             ),
             'title': 'Year of Survey Image',
         },
-        
         'crossings_yr_moth_update': {
             'function': create_barchart,
             'params': (
@@ -215,7 +212,6 @@ charts_specs = {
             ),
             'title': 'Year and Month Of Update',
         },
-
         'crossings_number_revisions': {
             'function': create_barchart,
             'params': (
@@ -233,7 +229,29 @@ charts_specs = {
         },
     },
     'kerbs': {
-            'kerb_types': {
+        'crossings_smoothness_x_surface': {
+            'function': double_scatter_bar,
+            'params': (
+                gdfs_dict[
+                    'kerbs'
+                ],
+                'Kerb x Tactile Paving x Wheelchair Acess.',
+                'kerb',
+                'tactile_paving',
+                None,
+                'count()',
+                'kerb',
+                'tactile_paving',
+                'wheelchair',
+                24,
+                [
+                    'element_type',
+                    'id'
+                ]
+            ),
+            'title': 'Surface x Smoothness',
+        },
+        'kerb_types': {
             'function': create_barchart,
             'params': (
                 updating_dicts[
@@ -254,7 +272,7 @@ charts_specs = {
                 'Kerb Tactile Paving Presence',
             ),
             'title': 'Tactile Paving Presence',
-        },        
+        },
         'kerb_wheelchair_access': {
             'function': create_barchart,
             'params': (
@@ -277,7 +295,6 @@ charts_specs = {
             ),
             'title': 'Year of Survey Image',
         },
-        
         'kerbs_yr_moth_update': {
             'function': create_barchart,
             'params': (
@@ -293,7 +310,6 @@ charts_specs = {
             ),
             'title': 'Year and Month Of Update',
         },
-
         'kerbs_number_revisions': {
             'function': create_barchart,
             'params': (

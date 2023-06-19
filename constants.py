@@ -491,3 +491,5 @@ geom_type_dict = {
     'crossings':'LineString',
     'kerbs':'Point',
 }
+
+statistics_basepath = 'statistics'
