@@ -1,8 +1,9 @@
 import sys,csv
 # import pandas as pd
 import geopandas as gpd
-from data_quality.quality_dicts import *
 sys.path.append('oswm_codebase')
+sys.path.append('oswm_codebase/data_quality')
+from quality_dicts import *
 from functions import *
 from constants import *
 
