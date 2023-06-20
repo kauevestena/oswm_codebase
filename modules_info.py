@@ -14,7 +14,7 @@ modules_metadata = {
         'text' : 'Webmap'
     },
     'routing': {
-        'url' : f'https://kauevestena-opensidewalkmap-beta-streamlit-routing-app-52bins.streamlitapp.com/',
+        'url' : STREAMLIT_URL,
         'img_src' : f"{assets_base_path}oswm_route_img.png",
         'text' : 'Optimized Routing'
     },
