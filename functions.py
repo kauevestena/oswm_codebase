@@ -519,7 +519,7 @@ def print_relevant_columnamesV2(input_df,not_include=('score','geometry','type',
 
     as_list = [column for column in input_df.columns if not any(word in column for word in not_include)]
 
-    print(*as_list)
+    # print(*as_list)
 
     if outfilepath:
         with open(outfilepath,'w+') as writer:

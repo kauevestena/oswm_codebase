@@ -42,6 +42,10 @@ sidewalks_path_versioning = 'data/sidewalks_versioning.json'
 crossings_path_versioning = 'data/crossings_versioning.json'
 kerbs_path_versioning = 'data/kerbs_versioning.json'
 
+# feature keys path
+feat_keys_path = 'quality_check/feature_keys.json'
+
+
 # node homepage:
 user_basepage_url = f'https://{USERNAME}.github.io/'
 node_homepage_url = f'https://{USERNAME}.github.io/{REPO_NAME}/'
