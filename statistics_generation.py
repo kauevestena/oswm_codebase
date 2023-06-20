@@ -94,7 +94,7 @@ for category in generated_list_dict:
 
 # iterating again to modify pages only once:
 for category in generated_list_dict:
-    for rel_path in generated_list_dict[category]:
+    for i,rel_path in enumerate(generated_list_dict[category]):
         fileObj = fileAsStrHandler(rel_path)
 
         for insertpoint in global_insertions:
@@ -108,6 +108,9 @@ for category in generated_list_dict:
         fileObj.simple_replace('<head>','<head>\n'+category_bars[category])
 
         fileObj.rewrite()
+
+        if i == 0 and category == 'sidewalks':
+            fileObj.write_to_another_path(os.path.join(statistics_basepath,'index.html'))
 
 
 # to record data aging:

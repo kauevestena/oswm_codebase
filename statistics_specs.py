@@ -337,6 +337,9 @@ global_insertions = {
     <script src="../../oswm_codebase/assets/webscripts/stats_funcs.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
+    
+    <title>OSWM Dashboard</title>
+
     """,
 }
 

@@ -30,13 +30,15 @@ def file_as_string(inputpath:str):
     else:
         raise(FileNotFoundError)
     
-def str_to_file(inputstr:str,outputpath:str):
-    if os.path.exists(outputpath):
-        with open(outputpath,'w+',encoding='utf8') as writer:
-            writer.write(inputstr)
-            sleep(0.1)
-    else:
-        raise(FileNotFoundError)
+def str_to_file(inputstr:str,outputpath:str,check_path=False):
+    if check_path:
+       if not os.path.exists(outputpath):
+            raise(FileNotFoundError)
+
+
+    with open(outputpath,'w+',encoding='utf8') as writer:
+        writer.write(inputstr)
+        sleep(0.1)
 
 class fileAsStrHandler:
 
