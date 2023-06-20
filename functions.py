@@ -464,9 +464,6 @@ def get_datetime_last_update(featureid,featuretype='way',onlylast=True,return_pa
         else:
             return []
 
-    print(featureid)
-
-
     if response.status_code == 200:
         tree = ElementTree.fromstring(response.content)
 
