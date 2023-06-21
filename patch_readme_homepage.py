@@ -24,7 +24,7 @@ fifths_for_replace_between = [
 
 for i,fifth in enumerate(fifths_for_replace_between):
     # firstly, finding matches:
-    for match in find_between_strings(fifth[3].content,fifth[0],fifth[1],exclusions=['buttons','opensidewalkmap'],include_linebreaks=fifth[4]):
+    for match in find_between_strings(fifth[3].content,fifth[0],fifth[1],exclusions=['buttons'],include_linebreaks=fifth[4]):
         if len(match) < 100:
             print(i,'replacing between',fifth[0],fifth[1],'match: ',match)
 
