@@ -116,4 +116,4 @@ for category in generated_list_dict:
 # to record data aging:
 record_datetime('Statistical Charts')
 # generate the "report" of the updating info
-gen_updating_infotable_page()
+gen_updating_infotable_page(node_page_url=node_homepage_url)

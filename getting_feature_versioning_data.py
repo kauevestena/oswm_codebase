@@ -56,4 +56,4 @@ record_datetime('Versioning Data')
 sleep(.1)
 
 # generate the "report" of the updating info
-gen_updating_infotable_page()
+gen_updating_infotable_page(node_page_url=node_homepage_url)

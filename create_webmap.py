@@ -382,11 +382,11 @@ GroupedLayerControl(
 
 # LOGO/IMAGES
 # thx: https://stackoverflow.com/a/47873895/4436950
-logo_path = 'oswm_codebase/assets/are_sidewalks_acessible_typog.png'
+logo_path = 'https://kauevestena.github.io/oswm_codebase/oswm_codebase/assets/are_sidewalks_acessible_typog.png'
 
 float_image_1 = FloatImage(logo_path,bottom=.5,left=.5).add_to(m)
 
-footer_path = 'oswm_codebase/assets/footer.png'
+footer_path = 'https://kauevestena.github.io/oswm_codebase/oswm_codebase/assets/footer.png'
 
 float_image_2 = FloatImage(footer_path,bottom=.5,left=0).add_to(m)
 
@@ -484,4 +484,4 @@ print('Generating updating info...')
 record_datetime('Webmap Generation')
 
 # generate the "report" of the updating info
-gen_updating_infotable_page()
+gen_updating_infotable_page(node_page_url=node_homepage_url)

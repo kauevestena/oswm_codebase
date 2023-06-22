@@ -230,7 +230,7 @@ for quality_category in categories_dict_keys:
 
     for category in gdf_dict:
 
-        tablepart += f'<td>  <a href="https://kauevestena.github.io/opensidewalkmap_beta/quality_check/pages/{quality_category}_{category}.html"> {categories_dict_keys[quality_category]["occ_count"][category]} </a> </td>'
+        tablepart += f'<td>  <a href="{node_homepage_url}quality_check/pages/{quality_category}_{category}.html"> {categories_dict_keys[quality_category]["occ_count"][category]} </a> </td>'
 
     
     tablepart += "</tr>\n"
@@ -286,7 +286,7 @@ h1 {{
 
 <title>OpenSidewalkMap Data Quality Tool</title>
 
-<link rel="icon" type="image/x-icon" href="../assets/homepage/favicon_homepage.png">
+<link rel="icon" type="image/x-icon" href="https://kauevestena.github.io/oswm_codebase/assets/homepage/favicon_homepage.png">
 
 <body>
 
@@ -310,7 +310,7 @@ currently, there are the categories presented at the table,<br> each one with th
 
 <p>
 The information here can be <b>outdated</b><br>
-<a href="https://kauevestena.github.io/opensidewalkmap_beta/data/data_updating.html">here you can check the last update and read more about this</a>
+<a href="{node_homepage_url}data/data_updating.html">here you can check the last update and read more about this</a>
 <br>
 </p>
 
@@ -338,4 +338,4 @@ with open(qc_mainpage_path,'w+') as writer:
 record_datetime("Data Quality Tool")
 sleep(.1)
 
-gen_updating_infotable_page()
+gen_updating_infotable_page(node_page_url=node_homepage_url)

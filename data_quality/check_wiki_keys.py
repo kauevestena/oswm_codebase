@@ -1,6 +1,7 @@
 import sys
 sys.path.append('oswm_codebase')
 from functions import *
+from constants import *
 
 
 tags_dict = read_json('quality_check/feature_keys.json')
@@ -25,4 +26,4 @@ record_datetime('Wiki check for keys')
 sleep(.1)
 
 # generate the "report" of the updating info
-gen_updating_infotable_page()
+gen_updating_infotable_page(node_page_url=node_homepage_url)

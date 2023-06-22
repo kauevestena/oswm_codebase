@@ -184,5 +184,5 @@ for category in gdf_dict:
 record_datetime('Data Pre-Processing')
 sleep(.1)
 
-gen_updating_infotable_page()
+gen_updating_infotable_page(node_page_url=node_homepage_url)
 

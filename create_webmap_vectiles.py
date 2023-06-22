@@ -423,11 +423,11 @@ GroupedLayerControl(
 
 # LOGO/IMAGES
 # thx: https://stackoverflow.com/a/47873895/4436950
-logo_path = 'assets/are_sidewalks_acessible_typog.png'
+logo_path = 'https://kauevestena.github.io/oswm_codebase/assets/are_sidewalks_acessible_typog.png'
 
 float_image_1 = FloatImage(logo_path,bottom=.5,left=.5).add_to(m)
 
-footer_path = 'assets/footer.png'
+footer_path = 'https://kauevestena.github.io/oswm_codebase/assets/footer.png'
 
 float_image_2 = FloatImage(footer_path,bottom=.5,left=0).add_to(m)
 

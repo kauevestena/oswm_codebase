@@ -118,7 +118,7 @@ TABLES_STYLE = f"""
 
 """
 
-def gen_updating_infotable_page(outpath='data/data_updating.html',json_path='data/last_updated.json'):
+def gen_updating_infotable_page(outpath='data/data_updating.html',json_path='data/last_updated.json',node_page_url='https://kauevestena.github.io/opensidewalkmap_beta/'):
 
 
     tablepart = ''
