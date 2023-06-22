@@ -25,7 +25,7 @@ for category in columns_dict:
     for osmkey in columns_dict[category]:
         unique_values_dict[category][osmkey] = list(gdf_dict[category][osmkey].unique())
 
-dump_json(unique_values_dict,'unique_tag_values.json')
+dump_json(unique_values_dict,unique_values_path)
 
 valid_tag_values = {}
 
@@ -37,8 +37,9 @@ for category in fields_values_properties:
             valid_tag_values[category][osmkey] = []
 
             for valid_value in fields_values_properties[category][osmkey]:
-                if valid_value not in ('?'):
-                    valid_tag_values[category][osmkey].append(valid_value)
+                if valid_value:
+                    if valid_value not in ('?'):
+                        valid_tag_values[category][osmkey].append(valid_value)
 
 
-dump_json(valid_tag_values,'valid_tag_values.json')
+dump_json(valid_tag_values,valid_values_path)
