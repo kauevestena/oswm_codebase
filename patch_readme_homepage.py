@@ -34,9 +34,13 @@ for i,fifth in enumerate(fifths_for_replace_between):
         fifth[3].simple_replace(original_str,new_str)
 
 
+
+
 triads_for_simple_replacements = [
     # always: [ORIGINAL STRING, NEW STRING, FILE OBJ]
+    ['https://opensidewalkmap.github.io/oswm_codebase/','https://kauevestena.github.io/oswm_codebase/',files_obj_dict['homepage']], # doing the ugly way, temporarily
 ]
+
     
 for triad in triads_for_simple_replacements:
     triad[2].simple_replace(triad[0],triad[1])
