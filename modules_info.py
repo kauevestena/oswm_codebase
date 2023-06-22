@@ -5,7 +5,7 @@ css_class_ref = 'media_image responsive'
 inner_div_class_ref = 'media__body'
 outer_div_class_ref = 'media'
 img_css_class_ref = 'media_image responsive'
-assets_base_path = 'oswm_codebase/assets/homepage/'
+assets_base_path = f'{codebase_homepage}assets/homepage/'
 
 modules_metadata = {
     'webmap': {

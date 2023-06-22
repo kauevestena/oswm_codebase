@@ -333,8 +333,8 @@ global_insertions = {
 
     <head>
 
-    <link rel="stylesheet" href="../../oswm_codebase/assets/styles/stats_styles.css">
-    <script src="../../oswm_codebase/assets/webscripts/stats_funcs.js"></script>
+    <link rel="stylesheet" href="https://kauevestena.github.io/oswm_codebase/assets/styles/stats_styles.css">
+    <script src="https://kauevestena.github.io/oswm_codebase/assets/webscripts/stats_funcs.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
     

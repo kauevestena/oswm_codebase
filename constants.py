@@ -53,6 +53,9 @@ user_basepage_url = f'https://{USERNAME}.github.io/'
 node_homepage_url = f'https://{USERNAME}.github.io/{REPO_NAME}/'
 data_updating_utl = f'https://{USERNAME}.github.io/{REPO_NAME}/data/data_updating.html'
 
+# codebase as page:
+codebase_homepage = 'https://kauevestena.github.io/oswm_codebase/'
+
 paths_dict = {
     'data' :{
         'sidewalks': sidewalks_path,
