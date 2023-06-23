@@ -222,14 +222,15 @@ def gen_quality_report_page(outpath,tabledata,feat_type,category,quality_categor
 
 
     for line in tabledata:
-        line[0] = return_weblinkV2(str(line[0]),feat_type)
-
-        tablepart += "<tr>"
-
-        for element in line:
-            tablepart += f"<td>{str(element)}</td>"
-
-        tablepart += "</tr>\n"
+        if line[2] != 'nan': # another temporaty ugly solution
+            line[0] = return_weblinkV2(str(line[0]),feat_type)
+    
+            tablepart += "<tr>"
+    
+            for element in line:
+                tablepart += f"<td>{str(element)}</td>"
+    
+            tablepart += "</tr>\n"
 
 
     with open(outpath,'w+') as writer:
