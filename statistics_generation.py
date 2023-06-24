@@ -1,7 +1,7 @@
 from statistics_specs import *
 # reading data:
 
-
+str_to_file(node_home_path,'current_homepath.txt')
 
 
 for category in paths_dict['data']:
@@ -57,6 +57,8 @@ topbar = f"""
     <div class="topnav" id="stTopnav">
         <a href="{node_homepage_url}" class="active">Home</a>
     """
+
+str_to_file(node_home_path,'current_homepath2.txt')
 
 for category in generated_list_dict:
     category_homepage = get_url(generated_list_dict[category][0])
@@ -117,3 +119,5 @@ for category in generated_list_dict:
 record_datetime('Statistical Charts')
 # generate the "report" of the updating info
 gen_updating_infotable_page(node_page_url=node_homepage_url)
+
+str_to_file(node_home_path,'current_homepath3.txt')
