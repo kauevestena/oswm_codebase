@@ -2,7 +2,6 @@ from osm_fetch import *
 from constants import *
 from oswm_codebase.functions import *
 from time import sleep
-import geopandas as gpd
 
 import osmnx as ox
 
@@ -30,21 +29,18 @@ for key in queries_dict:
     else:
         print('generating ', key, '\n')
 
-        try:
-            as_gdf = ox.geometries_from_bbox(
-                BOUNDING_BOX[2], BOUNDING_BOX[0], BOUNDING_BOX[3], BOUNDING_BOX[1], queries_dict[key])
+        as_gdf = ox.geometries_from_bbox(
+            BOUNDING_BOX[2], BOUNDING_BOX[0], BOUNDING_BOX[3], BOUNDING_BOX[1], queries_dict[key])
 
-            # working around with Fiona couldn't handling columns parsed as lists
-            for column in as_gdf.columns:
-                if as_gdf[column].dtype == object:
-                    as_gdf[column] = as_gdf[column].astype(str)
+        # working around with Fiona couldn't handling columns parsed as lists
+        for column in as_gdf.columns:
+            if as_gdf[column].dtype == object:
+                as_gdf[column] = as_gdf[column].astype(str)
 
-            # small adaptations as OSMNX works differently
-            as_gdf.reset_index(inplace=True)
-            as_gdf.replace('nan', None, inplace=True)
-            as_gdf.rename(columns={'osmid': 'id'}, inplace=True)
-        except:
-            as_gdf = gpd.GeoDataFrame()
+        # small adaptations as OSMNX works differently
+        as_gdf.reset_index(inplace=True)
+        as_gdf.replace('nan', None, inplace=True)
+        as_gdf.rename(columns={'osmid': 'id'}, inplace=True)
 
         as_gdf.to_file(outpath, driver='GeoJSON')
 
