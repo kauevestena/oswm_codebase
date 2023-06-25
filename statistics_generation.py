@@ -11,7 +11,9 @@ for category in paths_dict['data']:
     elif geom_type_dict[category] == 'Point':
         create_weblink_field(gdfs_dict[category],'Point')
 
-    gdfs_dict[category]['Year of Survey'] = gdfs_dict[category]['survey:date'].apply(get_year_surveydate)
+    if 'survey:date' in gdfs_dict[category].columns:
+
+        gdfs_dict[category]['Year of Survey'] = gdfs_dict[category]['survey:date'].apply(get_year_surveydate)
 
 
     create_folder_if_not_exists(os.path.join('statistics',category))
