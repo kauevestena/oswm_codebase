@@ -170,21 +170,20 @@ for category in gdf_dict:
         # print(quality_category['occurrences'])
 
 
+        gen_quality_report_page_and_files(pagepath,list(curr['occurrences'][category].values()),type_dict[category],category,quality_category,curr['about'],curr['type'],csvpath)
 
-        with open(csvpath,'w+') as file:
-            writer = csv.writer(file,delimiter=',',quotechar='"')
+        # with open(csvpath,'w+') as file:
+        #     writer = csv.writer(file,delimiter=',',quotechar='"')
 
-            # header
-            writer.writerow(['osm_id','key','value','commentary'])
-
-
-            for line_as_list in curr['occurrences'][category].values():
-                # writer.write(','.join(list(map(str,linelist)))+'\n')
+        #     # header
+        #     writer.writerow(['osm_id','key','value','commentary'])
 
 
-                writer.writerow(line_as_list)
+        #     for line_as_list in curr['occurrences'][category].values():
+        #         # writer.write(','.join(list(map(str,linelist)))+'\n')
 
-        gen_quality_report_page(pagepath,list(curr['occurrences'][category].values()),type_dict[category],category,quality_category,curr['about'],curr['type'])
+        #         writer.writerow(line_as_list)
+    
 
     number_occ_pagepath  = f'quality_check/pages/count_by_feature_{category}.html'
 
@@ -194,7 +193,7 @@ for category in gdf_dict:
     
     
 
-    gen_quality_report_page(number_occ_pagepath,list(map(list,sorted_occ_dict.items())),type_dict[category],category,'occurrence_per_feature','Features with more than one occurrence may be prioritized!!','count',True)
+    gen_quality_report_page_and_files(number_occ_pagepath,list(map(list,sorted_occ_dict.items())),type_dict[category],category,'occurrence_per_feature','Features with more than one occurrence may be prioritized!!','count',f'quality_check/tables/counts_{category}.csv',True)
 
 
 

@@ -195,7 +195,7 @@ if the data is too outdated you may <a href="https://github.com/kauevestena/open
         writer.write(page_as_txt)
 
 
-def gen_quality_report_page(outpath,tabledata,feat_type,category,quality_category,text,occ_type,count_page=False):
+def gen_quality_report_page_and_files(outpath,tabledata,feat_type,category,quality_category,text,occ_type,csvpath,count_page=False):
 
     pagename_base = f'{quality_category}_{category}'
 
@@ -220,26 +220,32 @@ def gen_quality_report_page(outpath,tabledata,feat_type,category,quality_categor
 
         csv_url = ""
 
+    with open(csvpath,'w+') as file:
+            writer = csv.writer(file,delimiter=',',quotechar='"')
+            writer.writerow(['osm_id','key','value','commentary'])
 
-    for line in tabledata:
-        try:
-            line_as_str = ''
-            if line:
-                if len(line)> 1:
-                    if line[2] != 'nan': # another temporaty ugly solution
-                        line[0] = return_weblinkV2(str(line[0]),feat_type)
-                
-                        line_as_str += "<tr>"
-                
-                        for element in line:
-                            line_as_str += f"<td>{str(element)}</td>"
-                
-                        line_as_str += "</tr>\n"
+            for line in tabledata:
+                try:
+                    line_as_str = ''
+                    if line:
+                        if len(line)> 2:
+                            if not pd.isna(line[2]): 
 
-                        tablepart += line_as_str
-        except:
-            if line:
-                print('skipped',line)
+                                writer.writerow(line)
+
+                                line[0] = return_weblinkV2(str(line[0]),feat_type)
+                        
+                                line_as_str += "<tr>"
+                        
+                                for element in line:
+                                    line_as_str += f"<td>{str(element)}</td>"
+                        
+                                line_as_str += "</tr>\n"
+
+                                tablepart += line_as_str
+                except:
+                    if line:
+                        print('skipped',line)
 
 
     with open(outpath,'w+') as writer:
@@ -287,6 +293,8 @@ def gen_quality_report_page(outpath,tabledata,feat_type,category,quality_categor
         """
 
         writer.write(page)
+
+
 
 def find_map_ref(input_htmlpath):
     with open(input_htmlpath) as inf:
