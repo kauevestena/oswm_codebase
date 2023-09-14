@@ -6,6 +6,7 @@ from datetime import datetime
 import json, requests
 from xml.etree import ElementTree
 import geopandas as gpd
+from constants import *
 
 
 """
@@ -268,8 +269,8 @@ def gen_quality_report_page_and_files(outpath,tabledata,feat_type,category,quali
 
         </head>
         <body>
-
-        <h1><a href="https://kauevestena.github.io/opensidewalkmap_beta">OSWM</a> Data Quality Tool: {category} {quality_category}</h1>
+        
+        <h1><a href="{node_homepage_url}">OSWM</a> Data Quality Tool: {category} {quality_category}</h1>
 
         <h2>About: {text}</h2>
         <h2>Type: {occ_type}</h2>

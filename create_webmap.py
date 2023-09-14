@@ -3,7 +3,7 @@ import geopandas as gpd
 import folium
 from folium.plugins import FloatImage
 from functions import *
-from constants import *
+# from constants import *
 from webmap_insertions import *
 
 from folium.plugins import GroupedLayerControl

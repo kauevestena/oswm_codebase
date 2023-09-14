@@ -2,7 +2,7 @@
  module intended for only the vector tiles-relevant functions
 '''
 from functions import *
-from constants import *
+# from constants import *
 
 def vectile_base_insertions(filepath):
 

@@ -1,7 +1,7 @@
 import sys
 sys.path.append('oswm_codebase')
 from functions import *
-from constants import *
+# from constants import *
 
 sidewalks_gdf = gpd.read_file(sidewalks_path_raw)
 crossings_gdf = gpd.read_file(crossings_path_raw)

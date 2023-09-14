@@ -5,7 +5,6 @@ sys.path.append('oswm_codebase')
 sys.path.append('oswm_codebase/data_quality')
 from quality_dicts import *
 from functions import *
-from constants import *
 
 def add_to_occurrences(category,id):
     if id in occurrence_per_feature[category]:
