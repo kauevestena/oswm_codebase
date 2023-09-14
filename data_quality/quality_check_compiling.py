@@ -170,7 +170,11 @@ for category in gdf_dict:
         # print(quality_category['occurrences'])
 
 
-        gen_quality_report_page_and_files(pagepath,list(curr['occurrences'][category].values()),type_dict[category],category,quality_category,curr['about'],curr['type'],csvpath)
+
+        curr['occ_count'][category] = gen_quality_report_page_and_files(pagepath,list(curr['occurrences'][category].values()),type_dict[category],category,quality_category,curr['about'],curr['type'],csvpath)
+
+        print(curr['occ_count'][category])
+
 
         # with open(csvpath,'w+') as file:
         #     writer = csv.writer(file,delimiter=',',quotechar='"')

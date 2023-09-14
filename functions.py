@@ -220,6 +220,8 @@ def gen_quality_report_page_and_files(outpath,tabledata,feat_type,category,quali
 
         csv_url = ""
 
+    valid_featcount = 0
+
     with open(csvpath,'w+') as file:
             writer = csv.writer(file,delimiter=',',quotechar='"')
             writer.writerow(['osm_id','key','value','commentary'])
@@ -243,6 +245,8 @@ def gen_quality_report_page_and_files(outpath,tabledata,feat_type,category,quali
                                 line_as_str += "</tr>\n"
 
                                 tablepart += line_as_str
+
+                                valid_featcount += 1
                 except:
                     if line:
                         print('skipped',line)
@@ -293,6 +297,8 @@ def gen_quality_report_page_and_files(outpath,tabledata,feat_type,category,quali
         """
 
         writer.write(page)
+
+    return valid_featcount
 
 
 
