@@ -1,5 +1,3 @@
-'File'
-
 from constants import *
 from oswm_codebase.functions import *
 import pandas as pd

@@ -8,7 +8,6 @@ from xml.etree import ElementTree
 import geopandas as gpd
 from constants import *
 
-
 """
 
     READ/ DUMP STUFF
@@ -607,3 +606,38 @@ def create_folder_if_not_exists(folderpath):
 def remove_if_exists(pathfile):
     if os.path.exists(pathfile):
         os.remove(pathfile)
+
+def listdir_fullpath(path):
+    return [os.path.join(path, file) for file in os.listdir(path)]
+
+
+def get_territory_polygon(place_name,outpath=None):
+    """
+    This function takes a place name as input and retrieves the corresponding territory polygon using the Nominatim API. It can also optionally save the polygon as a GeoJSON file.
+
+    Parameters:
+        place_name (str): The name of the place for which the territory polygon is to be retrieved.
+        outpath (str, optional): The path where the GeoJSON file should be saved. If not provided, the polygon will not be saved.
+
+    Returns:
+        dict: The territory polygon as a GeoJSON object.
+    """
+    # Make a request to Nominatim API with the place name
+    url = "https://nominatim.openstreetmap.org/search"
+    params = {"q": place_name, "format": "json", "polygon_geojson": 1}
+    response = requests.get(url, params=params)
+
+    # Parse the response as a JSON object
+    data = response.json()
+
+    # sort data by "importance", that is a key in each dictionary of the list:
+    data.sort(key=lambda x: x["importance"], reverse=True)
+
+    # Get the polygon of the territory as a GeoJSON object
+    polygon = data[0]['geojson']
+
+    if outpath:
+        dump_json(polygon, outpath)
+
+    # Return the polygon
+    return polygon

@@ -7,9 +7,6 @@ from config import *
 # intended for common values and constants, to setup the node for your city, please go to config.py
 ###############
 
-# Wheter to use OSMNX or to use the 'osm_fetch.py' functions
-USE_OSMNX = True
-
 # global min zoom level
 min_zoom = 10
 
@@ -509,4 +506,5 @@ statistics_basepath = 'statistics'
 # defined here to avoid circular importing problems
 def get_url(relative_url,base_url=node_homepage_url):
     return os.path.join(base_url,relative_url)
+
 
