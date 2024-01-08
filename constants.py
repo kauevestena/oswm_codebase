@@ -13,9 +13,6 @@ min_zoom = 10
 # global max zoom level
 max_zoom = 22
 
-# elevation available for routing:
-routing_elevation = False
-
 # node archives general paths
 map_page_name = "./map.html"
 readme_path = "./README.md"
@@ -29,15 +26,18 @@ OGR2OGR_PATH = 'ogr2ogr'
 sidewalks_path = 'data/sidewalks.geojson'
 crossings_path = 'data/crossings.geojson'
 kerbs_path = 'data/kerbs.geojson'
+# other_footways_path = 'data/other_footways.geojson'
 
 sidewalks_path_raw = 'data/sidewalks_raw.geojson'
 crossings_path_raw = 'data/crossings_raw.geojson'
 kerbs_path_raw = 'data/kerbs_raw.geojson'
+# other_footways_path_raw = 'data/other_footways_raw.geojson'
 
 
 sidewalks_path_versioning = 'data/sidewalks_versioning.json'
 crossings_path_versioning = 'data/crossings_versioning.json'
 kerbs_path_versioning = 'data/kerbs_versioning.json'
+# other_footways_path_versioning = 'data/other_footways_versioning.json'
 
 # data quality jsons path
 feat_keys_path = 'quality_check/feature_keys.json'
@@ -58,16 +58,19 @@ paths_dict = {
         'sidewalks': sidewalks_path,
         'crossings': crossings_path,
         'kerbs': kerbs_path,
+        # 'other_footways' : other_footways_path
     },
     'data_raw' : {
         'sidewalks': sidewalks_path_raw,
         'crossings': crossings_path_raw,
         'kerbs': kerbs_path_raw,
+        # 'other_footways' : other_footways_path_raw
     },
     'versioning' : {
         'sidewalks': sidewalks_path_versioning,
         'crossings': crossings_path_versioning,
         'kerbs': kerbs_path_versioning,
+        # 'other_footways' : other_footways_path_versioning
     }
 }
 
@@ -496,9 +499,10 @@ wrong_misspelled_values ={
 }
 
 geom_type_dict = {
-    'sidewalks':'LineString',
-    'crossings':'LineString',
-    'kerbs':'Point',
+    'sidewalks':['LineString'],
+    'crossings':['LineString'],
+    'kerbs':['Point'],
+    # 'other_footways':['LineString','Area'] # TODO: 
 }
 
 statistics_basepath = 'statistics'
@@ -506,5 +510,3 @@ statistics_basepath = 'statistics'
 # defined here to avoid circular importing problems
 def get_url(relative_url,base_url=node_homepage_url):
     return os.path.join(base_url,relative_url)
-
-

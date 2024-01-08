@@ -20,7 +20,7 @@ for key in queries_dict:
     as_gdf = ox.features_from_bbox(
         BOUNDING_BOX[2], BOUNDING_BOX[0], BOUNDING_BOX[3], BOUNDING_BOX[1], queries_dict[key])
 
-    # working around with Fiona couldn't handling columns parsed as lists
+    # working around with Fiona not supporting columns parsed as lists
     for column in as_gdf.columns:
         if as_gdf[column].dtype == object:
             as_gdf[column] = as_gdf[column].astype(str)
