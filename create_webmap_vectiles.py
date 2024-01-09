@@ -9,7 +9,7 @@ from folium.plugins import GroupedLayerControl
 
 print('reading data...')
 
-# overriding while it stills experimental:
+# overriding while it's still experimental:
 map_page_name = "./map_experimental.html"
 
 # reading also as geodataframes:

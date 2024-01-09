@@ -17,27 +17,46 @@ max_zoom = 22
 map_page_name = "./map.html"
 readme_path = "./README.md"
 node_home_path = "./index.html"
+boundaries_path = "./data/boundaries.geojson"
+boundaries_md_path = "./data/boundaries_md.json"
+workflows_path = '.github/workflows'
 
 
 # ogr2ogr path
 OGR2OGR_PATH = 'ogr2ogr'
 
+layer_tags_dict = {
+    'kerbs': {'kerb': True, 'barrier': 'kerb'},
+    'sidewalks': {'footway': 'sidewalk'},
+    'crossings': {'footway': 'crossing'},
+    'other_footways' : OTHER_FOOTWAY_RULES
+    }
+
+layer_exclusion_tags = {
+    'kerbs': {},
+    'sidewalks': {},
+    'crossings': {},
+    'other_footways' : OTHER_FOOTWAY_EXCLUSION_RULES,
+}
+
+bbox_as_list = ()
+
 # data paths
 sidewalks_path = 'data/sidewalks.geojson'
 crossings_path = 'data/crossings.geojson'
 kerbs_path = 'data/kerbs.geojson'
-# other_footways_path = 'data/other_footways.geojson'
+other_footways_path = 'data/other_footways.geojson'
 
 sidewalks_path_raw = 'data/sidewalks_raw.geojson'
 crossings_path_raw = 'data/crossings_raw.geojson'
 kerbs_path_raw = 'data/kerbs_raw.geojson'
-# other_footways_path_raw = 'data/other_footways_raw.geojson'
+other_footways_path_raw = 'data/other_footways_raw.geojson'
 
 
 sidewalks_path_versioning = 'data/sidewalks_versioning.json'
 crossings_path_versioning = 'data/crossings_versioning.json'
 kerbs_path_versioning = 'data/kerbs_versioning.json'
-# other_footways_path_versioning = 'data/other_footways_versioning.json'
+other_footways_path_versioning = 'data/other_footways_versioning.json'
 
 # data quality jsons path
 feat_keys_path = 'quality_check/feature_keys.json'
@@ -58,19 +77,19 @@ paths_dict = {
         'sidewalks': sidewalks_path,
         'crossings': crossings_path,
         'kerbs': kerbs_path,
-        # 'other_footways' : other_footways_path
+        'other_footways' : other_footways_path
     },
     'data_raw' : {
         'sidewalks': sidewalks_path_raw,
         'crossings': crossings_path_raw,
         'kerbs': kerbs_path_raw,
-        # 'other_footways' : other_footways_path_raw
+        'other_footways' : other_footways_path_raw
     },
     'versioning' : {
         'sidewalks': sidewalks_path_versioning,
         'crossings': crossings_path_versioning,
         'kerbs': kerbs_path_versioning,
-        # 'other_footways' : other_footways_path_versioning
+        'other_footways' : other_footways_path_versioning
     }
 }
 
@@ -79,9 +98,6 @@ max_radius_cutoff = 50
 
 # default note for features without values (in order to be different from zero)
 default_score = 0.5
-
-
-
 
 fields_values_properties = {
     'sidewalks':{
@@ -502,7 +518,7 @@ geom_type_dict = {
     'sidewalks':['LineString'],
     'crossings':['LineString'],
     'kerbs':['Point'],
-    # 'other_footways':['LineString','Area'] # TODO: 
+    'other_footways':['LineString','Polygon'] # TODO: 
 }
 
 statistics_basepath = 'statistics'

@@ -1,8 +1,8 @@
-- Create the new modules:
-    - The Data Watcher
-    - The Data Acquisition Hub
-- Improvements on data Quality
-    - Add the geometric filters
-    - External Providers 
-- Deprecate the current routing modules
-    - Complete the Streamlit app to a main repo as a simple demo
+[ ] Create the new modules:
+    [ ] The Data Watcher
+    [ ] The Data Acquisition Hub
+[ ] Improvements on data Quality
+    [ ] Add the geometric filters
+    [ ] External Providers 
+[ ] Deprecate the current routing modules
+    [ ] Complete the Streamlit app to a main repo as a simple demo

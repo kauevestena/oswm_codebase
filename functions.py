@@ -7,6 +7,7 @@ import json, requests
 from xml.etree import ElementTree
 import geopandas as gpd
 from constants import *
+from shapely import box
 
 """
 
@@ -611,7 +612,7 @@ def listdir_fullpath(path):
     return [os.path.join(path, file) for file in os.listdir(path)]
 
 
-def get_territory_polygon(place_name,outpath=None):
+def get_territory_polygon(place_name,outpath=None,outpath_metadata=None):
     """
     This function takes a place name as input and retrieves the corresponding territory polygon using the Nominatim API. It can also optionally save the polygon as a GeoJSON file.
 
@@ -630,6 +631,7 @@ def get_territory_polygon(place_name,outpath=None):
     # Parse the response as a JSON object
     data = response.json()
 
+
     # sort data by "importance", that is a key in each dictionary of the list:
     data.sort(key=lambda x: x["importance"], reverse=True)
 
@@ -639,5 +641,24 @@ def get_territory_polygon(place_name,outpath=None):
     if outpath:
         dump_json(polygon, outpath)
 
+    if outpath_metadata:
+
+        if 'geojson' in data[0]:
+            del data[0]['geojson']
+
+        dump_json(data[0], outpath_metadata)
+
     # Return the polygon
     return polygon
+
+def geodataframe_from_a_geometry(geometry):
+    return gpd.GeoDataFrame(geometry=[geometry])
+
+def bbox_geodataframe(bbox,resort=True):
+    if resort:
+        bbox = resort_bbox(bbox)
+
+    return gpd.GeoDataFrame(geometry=[box(*bbox)])
+
+def resort_bbox(bbox):
+    return [bbox[1],bbox[0],bbox[3],bbox[2]]
