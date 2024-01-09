@@ -662,3 +662,20 @@ def bbox_geodataframe(bbox,resort=True):
 
 def resort_bbox(bbox):
     return [bbox[1],bbox[0],bbox[3],bbox[2]]
+
+def merge_list_of_dictionaries(list_of_dicts):
+    merged_dict = {}
+
+    for dictionary in list_of_dicts:
+        for key, value in dictionary.items():
+            if key in merged_dict:
+                if not isinstance(merged_dict[key], list):
+                    merged_dict[key] = [merged_dict[key]]
+                if isinstance(value, list):
+                    merged_dict[key].extend(value)
+                else:
+                    merged_dict[key].append(value)
+            else:
+                merged_dict[key] = value if not isinstance(value, list) else value.copy()
+
+    return merged_dict

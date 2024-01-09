@@ -1,12 +1,13 @@
 from osm_fetch import *
 from constants import *
 from oswm_codebase.functions import *
-from time import sleep
+from time import sleep, time
 
 import osmnx as ox
 
-
+# Getting the boundaries:
 # downloading the boundaries if doesn't exist:
+print('checking boundaries...')
 if not os.path.exists(boundaries_path):
     try:
         get_territory_polygon(CITY_NAME,boundaries_path,boundaries_md_path)
@@ -28,29 +29,38 @@ else:
     boundary_polygon = boundaries_gdf['geometry'].iloc[0]
 
 
+# New approach: download all categories at once and then split in different layers:
+print ('downloading all data')
 
-for key in layer_tags_dict:
-    outpath = f'data/{key}_raw.geojson'
+t1 = time()
+as_gdf = ox.features_from_polygon(boundary_polygon,merge_list_of_dictionaries(layer_tags_dict.values()))
+print(f'    took {time()-t1:.2f} seconds, with {len(as_gdf)} features')
 
-    print('generating ', key, '\n')
+# removing all with globally invalid values:
+as_gdf = as_gdf[~as_gdf.isin(OTHER_FOOTWAY_EXCLUSION_RULES).any(axis=1)]
+print(f'    now with {len(as_gdf)} features after filtering out with exclusion rules')
+
+# working around with Fiona not supporting columns parsed as lists
+for column in as_gdf.columns:
+    if as_gdf[column].dtype == object:
+        as_gdf[column] = as_gdf[column].astype(str)
+
+print('splitting layers:')
+# small adaptations as OSMNX works differentlydownloaded in
+for category in layer_tags_dict:
+    # outpath = f'data/{category}_raw.geojson'
+    outpath = paths_dict['data_raw'][category]
+
+    belonging = as_gdf.isin(layer_tags_dict[category]).any(axis=1)
+
+    as_gdf[belonging].to_file(outpath)
+
+    as_gdf = as_gdf[~belonging]
+
+    print('    picking', category,'from data, with', len(as_gdf),'remaining')
 
     # as_gdf = ox.features_from_bbox(
-    # BOUNDING_BOX[2], BOUNDING_BOX[0], BOUNDING_BOX[3], BOUNDING_BOX[1], layer_tags_dict[key])
-
-    as_gdf = ox.features_from_polygon(boundary_polygon, layer_tags_dict[key])
-
-    # working around with Fiona not supporting columns parsed as lists
-    for column in as_gdf.columns:
-        if as_gdf[column].dtype == object:
-            as_gdf[column] = as_gdf[column].astype(str)
-
-    # small adaptations as OSMNX works differently
-    as_gdf.reset_index(inplace=True)
-    as_gdf.replace('nan', None, inplace=True)
-    as_gdf.rename(columns={'osmid': 'id'}, inplace=True)
-
-    as_gdf.to_file(outpath, driver='GeoJSON')
-
+    # BOUNDING_BOX[2], BOUNDING_BOX[0], BOUNDING_BOX[3], BOUNDING_BOX[1], layer_tags_dict[category])
 
 # to record data aging:
 record_datetime('Data Fetching')

@@ -26,9 +26,9 @@ workflows_path = '.github/workflows'
 OGR2OGR_PATH = 'ogr2ogr'
 
 layer_tags_dict = {
-    'kerbs': {'kerb': True, 'barrier': 'kerb'},
-    'sidewalks': {'footway': 'sidewalk'},
-    'crossings': {'footway': 'crossing'},
+    'kerbs': {'kerb': ['lowered','raised','flush','rolled','no','yes'], 'barrier': ['kerb']},
+    'sidewalks': {'footway': ['sidewalk']},
+    'crossings': {'footway': ['crossing']},
     'other_footways' : OTHER_FOOTWAY_RULES
     }
 
