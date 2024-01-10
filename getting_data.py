@@ -48,6 +48,11 @@ for column in as_gdf.columns:
     if as_gdf[column].dtype == object:
         as_gdf[column] = as_gdf[column].astype(str)
 
+# adapting osmnx output:
+as_gdf.reset_index(inplace=True)
+as_gdf.replace('nan', None, inplace=True)
+as_gdf.rename(columns={'osmid': 'id'}, inplace=True)
+
 print('splitting layers:')
 # small adaptations as OSMNX works differentlydownloaded in
 for category in layer_tags_dict:

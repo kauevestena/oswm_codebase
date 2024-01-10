@@ -734,4 +734,3 @@ def get_gdfs_dict(raw_data=False):
     category_group = 'data_raw' if raw_data else 'data'
 
     return {category: gpd.read_parquet(paths_dict[category_group][category]) for category in paths_dict[category_group]}
-    

@@ -67,10 +67,10 @@ crossings_path_raw = 'data/crossings_raw' + data_format
 kerbs_path_raw = 'data/kerbs_raw' + data_format
 other_footways_path_raw = 'data/other_footways_raw' + data_format
 
-sidewalks_path_versioning = 'data/sidewalks_versioning.json'
-crossings_path_versioning = 'data/crossings_versioning.json'
-kerbs_path_versioning = 'data/kerbs_versioning.json'
-other_footways_path_versioning = 'data/other_footways_versioning.json'
+sidewalks_path_versioning = 'data/versioning/sidewalks_versioning.json'
+crossings_path_versioning = 'data/versioning/crossings_versioning.json'
+kerbs_path_versioning = 'data/versioning/kerbs_versioning.json'
+other_footways_path_versioning = 'data/versioning/other_footways_versioning.json'
 
 # data quality jsons path
 feat_keys_path = 'quality_check/feature_keys.json'
@@ -528,6 +528,9 @@ wrong_misspelled_values ={
 
     },
     'crossings':{
+
+    },
+    'other_footways':{
 
     },
 }

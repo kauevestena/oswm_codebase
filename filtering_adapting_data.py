@@ -20,9 +20,19 @@ print('- Fetching updating info')
 # for datalayerpath in paths_dict['versioning']:
 # 	updating_dict[datalayerpath] = pd.read_json(paths_dict['versioning'][datalayerpath])
 
-updating_dict = {datalayerpath: pd.read_json(paths_dict['versioning'][datalayerpath])
-                for datalayerpath 
-                in paths_dict['versioning']}
+# updating_dict = {datalayerpath: pd.read_json(paths_dict['versioning'].get(datalayerpath,StringIO(r"{}")))
+#                 for datalayerpath 
+#                 in paths_dict['versioning']}
+
+updating_dict = {}
+for category in paths_dict['versioning']:
+    category_path = paths_dict['versioning'][category]
+
+    if os.path.exists(category_path):
+        updating_dict[category] = pd.read_json(category_path)
+    else:
+        updating_dict[category] = pd.DataFrame()
+
 
 # sidewalks_updating = pd.read_json(sidewalks_path_versioning)
 # crossings_updating = pd.read_json(crossings_path_versioning)
@@ -48,12 +58,12 @@ for category in gdf_dict:
     print(category)
 
     
-    if category != 'sidewalks':
+    if category != 'sidewalks' or category != 'other_footways':
         print('- Removing unconnected crossings and kerbs')
 
         create_folder_if_not_exists(disjointed_folderpath)
 
-        # TODO: include other footways in this
+        # TODO: include other footways here
         disjointed = gdf_dict[category].disjoint(sidewalks_big_unary_buffer)
 
         outfilepath = os.path.join(disjointed_folderpath,f'{category}_disjointed' + data_format)
@@ -146,17 +156,24 @@ for category in gdf_dict:
 
 
     print('- Adding update data')
+    
     # inserting last update:
-    updating_dict[category]['update_date'] = updating_dict[category]['rev_day'].astype(str) + "-" + updating_dict[category]['rev_month'].astype(str) + "-" + updating_dict[category]['rev_year'].astype(str)
+    if not updating_dict[category].empty:
 
-    # print(updating_dict[category].set_index('osmid')['last_update'])
+        updating_dict[category]['last_update'] = updating_dict[category]['rev_day'].astype(str) + "-" + updating_dict[category]['rev_month'].astype(str) + "-" + updating_dict[category]['rev_year'].astype(str)
 
-    gdf_dict[category] = gdf_dict[category].set_index('id').join(updating_dict[category].set_index('osmid')['update_date']
-    # ,rsuffix = 'r_remove',lsuffix = 'l_remove',
-    ).reset_index()
+        # joining the updating info dict to the geodataframe:
+        gdf_dict[category] = gdf_dict[category].set_index('id').join(updating_dict[category].set_index('osmid')['last_update']
+        # ,rsuffix = 'r_remove',lsuffix = 'l_remove',
+        ).reset_index()
+    else:
+        gdf_dict[category]['last_update'] = ''
 
-    gdf_dict[category]['last_update'] = gdf_dict[category]['update_date']
+    # gdf_dict[category]['last_update'] = gdf_dict[category]['update_date']
 
+    # now spliting the Other_Footways into categories:
+    if category == 'other_footways':
+        pass
 
     # gdf_dict[category].to_file(f'data/{category}' + data_format)
     save_geoparquet(gdf_dict[category],f'data/{category}' + data_format)
