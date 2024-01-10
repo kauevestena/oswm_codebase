@@ -524,10 +524,9 @@ geom_type_dict = {
 }
 
 other_footways_subcatecories = {
-    'stairs' : {'highway':['steps']},
-    'primary' : {'highway':['footway','living_street'],'foot':['designated']},
-    'secondary' : {'highway':['footway','living_street']},
-    'other' : {'highway':['path','track'],'footway': ['alley','path','yes']},
+    'stairways' : {'highway':['steps']},
+    'main' : {'highway':['footway','living_street'],'foot':['designated']},
+    'others' : {'highway':['path','track'],'footway': ['alley','path','yes']},
     'informal' : {'foot':['yes','permissive']},
 }
 
