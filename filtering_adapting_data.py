@@ -8,39 +8,9 @@ import os
 
 print('- Reading Data')
 
-gdf_dict = {datalayerpath: gpd.read_file(paths_dict['data_raw'][datalayerpath])
-            for datalayerpath in 
-            paths_dict['data_raw']}
+# gdf_dict = {datalayerpath: gpd.read_parquet(paths_dict['data_raw'][datalayerpath]) for datalayerpath in paths_dict['data_raw']}
 
-# # reading as geodataframes:
-# sidewalks_gdf = gpd.read_file(sidewalks_path_raw) #,index='id')
-# crossings_gdf = gpd.read_file(crossings_path_raw) #,index='id')
-# kerbs_gdf = gpd.read_file(kerbs_path_raw) #,index='id')
-# #other_footways_gdf = gpd.read_file(other_footways_path_raw)
-
-# # creating dataframes of scores for joining afterwards:
-# scores_dfs = {}
-# scores_dfs_fieldnames = {}
-# for category in fields_values_properties:
-#     scores_dfs[category] = {}
-#     scores_dfs_fieldnames[category] = {}
-
-#     # print(scores_dfs)
-
-#     for osm_key in fields_values_properties[category]:
-#         # print(category,' : ',osm_key)
-#         scores_dfs[category][osm_key],scores_dfs_fieldnames[category][osm_key] = get_score_df(fields_values_properties,category,osm_key)
-
-
-
-# # putting data in a dict
-# gdf_dict = {
-#     'sidewalks':sidewalks_gdf,
-#     'crossings':crossings_gdf,
-#     'kerbs':kerbs_gdf,
-#     }
-
-
+gdf_dict = get_gdfs_dict(raw_data=True)
 
 print('- Fetching updating info')
 # updating info:
@@ -81,10 +51,16 @@ for category in gdf_dict:
     if category != 'sidewalks':
         print('- Removing unconnected crossings and kerbs')
 
+        create_folder_if_not_exists(disjointed_folderpath)
 
+        # TODO: include other footways in this
         disjointed = gdf_dict[category].disjoint(sidewalks_big_unary_buffer)
 
-        gdf_dict[category][disjointed].to_file(os.path.join('data','disjointed',f'{category}_disjointed' + data_format))
+        outfilepath = os.path.join(disjointed_folderpath,f'{category}_disjointed' + data_format)
+
+        # gdf_dict[category][disjointed].to_file(os.path.join(disjointed_folderpath,f'{category}_disjointed' + data_format))
+
+        save_geoparquet(gdf_dict[category][disjointed],outfilepath)
 
         gdf_dict[category] = gdf_dict[category][~disjointed]
 
@@ -92,16 +68,20 @@ for category in gdf_dict:
     print(' - Removing features with improper geometry type')
     #removing the ones that aren't of the specific intended geometry type:
     # but first saving them for quality tool:
-    outpath_improper = os.path.join('data','improper_geoms',f'{category}_improper_geoms' + data_format)
+
+    create_folder_if_not_exists(improper_geoms_folderpath)
+    outpath_improper = os.path.join(improper_geoms_folderpath,f'{category}_improper_geoms' + data_format)
     # the boolean Series:
     are_proper_geom = gdf_dict[category].geometry.type.isin(geom_type_dict[category]) # TODO: test this out-of-the-box
     # saving:
-    gdf_dict[category][~are_proper_geom].to_file(outpath_improper)
+    # gdf_dict[category][~are_proper_geom].to_file(outpath_improper)
+
+    save_geoparquet(gdf_dict[category][~are_proper_geom],outpath_improper)
 
     # now keeping only the ones with proper geometries:
     gdf_dict[category] = gdf_dict[category][are_proper_geom]
 
-    print('- Filling invalids with "?"')
+    # print('- Filling invalids with "?"')
 
     # # referencing the geodataframe:
     # for req_col in req_fields[category]:
@@ -178,7 +158,8 @@ for category in gdf_dict:
     gdf_dict[category]['last_update'] = gdf_dict[category]['update_date']
 
 
-    gdf_dict[category].to_file(f'data/{category}' + data_format)
+    # gdf_dict[category].to_file(f'data/{category}' + data_format)
+    save_geoparquet(gdf_dict[category],f'data/{category}' + data_format)
 
 
 

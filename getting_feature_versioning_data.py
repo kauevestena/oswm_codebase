@@ -13,15 +13,17 @@ import pandas as pd
 
 
 # reading as geodataframes:
-sidewalks_gdf = gpd.read_file(sidewalks_path)
-crossings_gdf = gpd.read_file(crossings_path)
-kerbs_gdf = gpd.read_file(kerbs_path)
+# sidewalks_gdf = gpd.read_parquet(sidewalks_path)
+# crossings_gdf = gpd.read_parquet(crossings_path)
+# kerbs_gdf = gpd.read_parquet(kerbs_path)
 
-gdf_dict = {
-    'sidewalks':sidewalks_gdf,
-    'crossings':crossings_gdf,
-    'kerbs':kerbs_gdf,
-    }
+# gdf_dict = {
+#     'sidewalks':sidewalks_gdf,
+#     'crossings':crossings_gdf,
+#     'kerbs':kerbs_gdf,
+#     }
+
+gdf_dict = get_gdfs_dict()
 
 for category in gdf_dict:
 

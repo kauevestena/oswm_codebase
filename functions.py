@@ -697,3 +697,41 @@ def save_geoparquet(input_gdf, outpath):
         gpd.GeoDataFrame(columns=['geometry']).to_parquet(outpath)
     else:
         input_gdf.to_parquet(outpath)
+
+def row_query(df, querydict, mode='any',reverse=False):
+    """
+    Apply a query to each row in a DataFrame and return a boolean result.
+
+    Args:
+        df (DataFrame): The DataFrame/GeoDataFrame to be queried.
+        querydict (dict): A dictionary containing the values to query for each column.
+        selector (callable): The function to apply to the boolean result for each row. Defaults to any().
+
+    Returns:
+        Series: A boolean result for each row of the DataFrame.
+
+    Examples:
+        >>> df = pd.DataFrame({'A': [1, 2, 3], 'B': [4, 5, 6]})
+        >>> querydict = {'A': 2, 'B': 6}
+        >>> row_query(df, querydict)
+        0    False
+        1     True
+        2    False
+        dtype: bool
+    """
+    if mode == 'any':
+        selection =  df.isin(querydict).any(axis=1)
+    elif mode == 'all':
+        selection =  df.isin(querydict).all(axis=1)
+    
+    if reverse:
+        return ~selection
+    else:
+        return selection
+    
+def get_gdfs_dict(raw_data=False):
+    # used dict: paths_dict
+    category_group = 'data_raw' if raw_data else 'data'
+
+    return {category: gpd.read_parquet(paths_dict[category_group][category]) for category in paths_dict[category_group]}
+    

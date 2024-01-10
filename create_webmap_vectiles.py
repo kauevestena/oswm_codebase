@@ -13,9 +13,9 @@ print('reading data...')
 map_page_name = "./map_experimental.html"
 
 # reading also as geodataframes:
-sidewalks_gdf = gpd.read_file(sidewalks_path,index='id')
-crossings_gdf = gpd.read_file(crossings_path,index='id')
-kerbs_gdf = gpd.read_file(kerbs_path,index='id')
+sidewalks_gdf = gpd.read_parquet(sidewalks_path,index='id')
+crossings_gdf = gpd.read_parquet(crossings_path,index='id')
+kerbs_gdf = gpd.read_parquet(kerbs_path,index='id')
 
 
 # keeping only really required fields

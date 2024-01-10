@@ -30,9 +30,9 @@ tenb_nodes, tenb_edges = ox.utils_graph.graph_to_gdfs(G_tenblocks)
 working_crs = tenb_edges.estimate_utm_crs()
 
 
-sidewalks_gdf = gpd.read_file(sidewalks_path) #.to_crs(WORKING_CRS)
-crossings_gdf = gpd.read_file(crossings_path).set_index(['id']) #.to_crs(WORKING_CRS)
-kerbs_gdf = gpd.read_file(kerbs_path).set_index(['id']) #.to_crs(WORKING_CRS)
+sidewalks_gdf = gpd.read_parquet(sidewalks_path) #.to_crs(WORKING_CRS)
+crossings_gdf = gpd.read_parquet(crossings_path).set_index(['id']) #.to_crs(WORKING_CRS)
+kerbs_gdf = gpd.read_parquet(kerbs_path).set_index(['id']) #.to_crs(WORKING_CRS)
 
 kerbs_gdf['final_score'].fillna(-30,inplace=True)
 crossings_gdf['final_score'].fillna(0,inplace=True)

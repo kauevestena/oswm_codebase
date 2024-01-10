@@ -3,7 +3,10 @@
     [ ] The Data Acquisition Hub
 [ ] Improvements on data Quality
     [ ] Add the geometric filters
-    [ ] External Providers
+    [ ] External Providers, such as OSMCHA
+    [ ] Add the Overpass API calls to get the categories
+    [ ] Links directly to edit mode, maybe even to JOSM
+        [ ] If possible with suggested edits
 [ ] Deprecate the current routing modules
     [ ] Complete the Streamlit app to a main repo as a simple demo
     [ ] Test the hopeful hope using Geojson Path Finder, as in oswm_codebase/other/for_future/path_finder.html

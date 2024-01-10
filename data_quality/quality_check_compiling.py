@@ -13,9 +13,9 @@ def add_to_occurrences(category,id):
         occurrence_per_feature[category][id] = 1
 
 # gdfs:
-sidewalks_gdf = gpd.read_file('data/sidewalks_raw' + data_format)
-crossings_gdf = gpd.read_file('data/crossings_raw' + data_format)
-kerbs_gdf = gpd.read_file('data/kerbs_raw' + data_format)
+sidewalks_gdf = gpd.read_parquet('data/sidewalks_raw' + data_format)
+crossings_gdf = gpd.read_parquet('data/crossings_raw' + data_format)
+kerbs_gdf = gpd.read_parquet('data/kerbs_raw' + data_format)
 
 # dict for iteration
 gdf_dict = {'sidewalks':sidewalks_gdf,'crossings':crossings_gdf,'kerbs':kerbs_gdf}

@@ -7,24 +7,28 @@ import osmnx as ox
 # Getting the boundaries:
 # downloading the boundaries if doesn't exist:
 print('checking boundaries...')
-if not os.path.exists(boundaries_path):
+if not os.path.exists(boundaries_geojson_path):
     try:
-        get_territory_polygon(CITY_NAME,boundaries_path,boundaries_md_path)
-        boundaries_gdf = gpd.read_file(boundaries_path)
+        get_territory_polygon(CITY_NAME,boundaries_geojson_path,boundaries_md_path)
+        boundaries_gdf = gpd.read_file(boundaries_geojson_path)
         boundary_polygon = boundaries_gdf['geometry'].iloc[0]
 
         # test if it's a polygon:
         if boundary_polygon.geom_type != 'Polygon' or boundary_polygon.geom_type != 'MultiPolygon':
             raise ValueError('not a polygon')
+        
+        # if it's a polygon, save it as geoparquet:
+        save_geoparquet(boundaries_gdf, boundaries_path)
     except:
         # if there's no polygon, use the bounding box as input polygon:
         boundaries_gdf = bbox_geodataframe(BOUNDING_BOX)
-        boundaries_gdf.to_file(boundaries_path)
+        boundaries_gdf.to_file(boundaries_geojson_path)
+        save_geoparquet(boundaries_gdf, boundaries_path)
         metadata = {"class": "bounding_box"}
         dump_json(metadata, boundaries_md_path)
         boundary_polygon = boundaries_gdf['geometry'].iloc[0]
 else:
-    boundaries_gdf = gpd.read_file(boundaries_path)
+    boundaries_gdf = gpd.read_file(boundaries_geojson_path)
     boundary_polygon = boundaries_gdf['geometry'].iloc[0]
 
 
@@ -52,7 +56,8 @@ for category in layer_tags_dict:
 
     belonging = as_gdf.isin(layer_tags_dict[category]).any(axis=1)
 
-    as_gdf[belonging].to_file(outpath)
+    # as_gdf[belonging].to_file(outpath)
+    save_geoparquet(as_gdf[belonging], outpath)
 
     as_gdf = as_gdf[~belonging]
 

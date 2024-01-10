@@ -11,9 +11,9 @@ from folium.plugins import GroupedLayerControl
 print('reading data...')
 
 # reading also as geodataframes:
-sidewalks_gdf = gpd.read_file(sidewalks_path,index='id')
-crossings_gdf = gpd.read_file(crossings_path,index='id')
-kerbs_gdf = gpd.read_file(kerbs_path,index='id')
+sidewalks_gdf = gpd.read_parquet(sidewalks_path,index='id')
+crossings_gdf = gpd.read_parquet(crossings_path,index='id')
+kerbs_gdf = gpd.read_parquet(kerbs_path,index='id')
 
 
 # 

@@ -5,7 +5,7 @@ updating_dicts = {}
 
 
 for category in paths_dict['data']:
-    gdfs_dict[category] = gpd.read_file(paths_dict['data'][category])
+    gdfs_dict[category] = gpd.read_parquet(paths_dict['data'][category])
 
     updating_dicts[category] = pd.read_json(paths_dict['versioning'][category])
 

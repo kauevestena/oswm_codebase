@@ -13,16 +13,29 @@ min_zoom = 10
 # global max zoom level
 max_zoom = 22
 
-data_format = '.geojson'
+data_format = '.parquet'
 
 # node archives general paths
 map_page_name = "./map.html"
 readme_path = "./README.md"
 node_home_path = "./index.html"
 boundaries_path = "./data/boundaries" + data_format
+boundaries_geojson_path = "./data/boundaries.geojson"
 boundaries_md_path = "./data/boundaries_md.json"
 workflows_path = '.github/workflows'
 
+# folderpaths:
+improper_geoms_folderpath = 'data/improper_geoms'
+disjointed_folderpath = 'data/disjointed'
+versioning_folderpath = 'data/versioning'
+other_footways_folderpath = 'data/other_footways'
+
+other_footways_subcatecories = {
+    'stairways' : {'highway':['steps']},
+    'main' : {'highway':['footway','living_street'],'foot':['designated']},
+    'others' : {'highway':['path','track'],'footway': ['alley','path','yes']},
+    'informal' : {'foot':['yes','permissive']},
+}
 
 # ogr2ogr path
 OGR2OGR_PATH = 'ogr2ogr'
@@ -53,7 +66,6 @@ sidewalks_path_raw = 'data/sidewalks_raw' + data_format
 crossings_path_raw = 'data/crossings_raw' + data_format
 kerbs_path_raw = 'data/kerbs_raw' + data_format
 other_footways_path_raw = 'data/other_footways_raw' + data_format
-
 
 sidewalks_path_versioning = 'data/sidewalks_versioning.json'
 crossings_path_versioning = 'data/crossings_versioning.json'
@@ -94,6 +106,10 @@ paths_dict = {
         'other_footways' : other_footways_path_versioning
     }
 }
+
+# paths for other_footways subcategories:
+for subcategory in other_footways_subcatecories:
+    paths_dict['data']['other_footways_subcategories'] = os.path.join(other_footways_folderpath, subcategory)
 
 # max radius to cut off unconnected crossings and kerbs
 max_radius_cutoff = 50
@@ -523,12 +539,7 @@ geom_type_dict = {
     'other_footways':['LineString','Polygon','MultiPolygon'] 
 }
 
-other_footways_subcatecories = {
-    'stairways' : {'highway':['steps']},
-    'main' : {'highway':['footway','living_street'],'foot':['designated']},
-    'others' : {'highway':['path','track'],'footway': ['alley','path','yes']},
-    'informal' : {'foot':['yes','permissive']},
-}
+
 
 statistics_basepath = 'statistics'
 

@@ -3,9 +3,9 @@ sys.path.append('oswm_codebase')
 from functions import *
 # from constants import *
 
-sidewalks_gdf = gpd.read_file(sidewalks_path_raw)
-crossings_gdf = gpd.read_file(crossings_path_raw)
-kerbs_gdf = gpd.read_file(kerbs_path_raw)
+sidewalks_gdf = gpd.read_parquet(sidewalks_path_raw)
+crossings_gdf = gpd.read_parquet(crossings_path_raw)
+kerbs_gdf = gpd.read_parquet(kerbs_path_raw)
 
 gdf_dict = {'sidewalks':sidewalks_gdf,'crossings':crossings_gdf,'kerbs':kerbs_gdf}
 
