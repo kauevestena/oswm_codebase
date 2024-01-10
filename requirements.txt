@@ -9,3 +9,4 @@ osm2geojson
 requests
 shapely
 scikit-learn
+pyarrow

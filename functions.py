@@ -48,7 +48,7 @@ class fileAsStrHandler:
         self.content = file_as_string(self.path)
 
     def simple_replace(self,original_part,new_part=''):
-        """default is empty to just remove"""
+        """default is empty for just remove the selected content"""
         self.content = self.content.replace(original_part,new_part)
 
     def rewrite(self):
@@ -685,3 +685,15 @@ def join_to_node_homepage(input_list_or_str):
         return os.path.join(node_homepage_url,*input_list_or_str)
     else:
         return os.path.join(node_homepage_url,input_list_or_str)
+
+def save_geoparquet(input_gdf, outpath):
+    """
+    Saves a GeoDataFrame to a Parquet file. 
+    If the GeoDataFrame is empty, creates an empty Parquet file.
+
+    Workaround for: https://github.com/geopandas/geopandas/issues/3137
+    """
+    if input_gdf.empty:
+        gpd.GeoDataFrame(columns=['geometry']).to_parquet(outpath)
+    else:
+        input_gdf.to_parquet(outpath)

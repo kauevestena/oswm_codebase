@@ -5,7 +5,7 @@
 """
 
 # Full city name, it may contain special characters, spaces...
-# It can be also the name of a neighborhood if is such a big city or you just want a node
+# It can be also the name of a neighborhood if is such a big city or you just want a node for it
 # Sometimes being more specific can help, so if you for example want the city of Salvador (Brazil)
 # you can use 'Salvador, Brazil', since 'Salvador' probably will return "El Salvador", the country
 CITY_NAME = 'Curitiba'
@@ -30,13 +30,15 @@ BOUNDING_BOX = (
     )
 
 
-### MORE DELICATE ONES: (leave unchanged by default)
+### MORE DELICATE ONES: (leave them unchanged by default)
 
 # TAGS FOR ADDITIONAL FOOTWAYS
 # you can check the reason behind those default ones at: https://kauevestena.github.io/opensidewalkmap/information/other_footways.html
 
+# Values must all be set as a list, even if there's a single value!!
+
 # depending on local rules, the other types of footways can differ, so you migh tune the options
-OTHER_FOOTWAY_RULES = {'highway':['steps','living_street','pedestrian','track','path'],'foot':['yes','designated','permissive'],'footway': ['alley','path','yes']}
+OTHER_FOOTWAY_RULES = {'highway':['footway','steps','living_street','pedestrian','track','path'],'foot':['yes','designated','permissive'],'footway': ['alley','path','yes']}
 
 # since we download all features containing the tags of the previous rule-set, if there's another tag hierarchically above, we should exclude those features:
-OTHER_FOOTWAY_EXCLUSION_RULES = {'highway': ['trunk','motorway','primary','trunk_link','motorway_link','primary_link']}
+OTHER_FOOTWAY_EXCLUSION_RULES = {'highway': ['trunk','motorway','primary','secondary','trunk_link','motorway_link','primary_link'],'access':['no','private']}
