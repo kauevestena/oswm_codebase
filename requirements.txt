@@ -8,7 +8,4 @@ pandas
 osm2geojson
 requests
 shapely
-streamlit
-streamlit_folium
 scikit-learn
-

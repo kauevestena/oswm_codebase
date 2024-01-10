@@ -84,7 +84,7 @@ for category in gdf_dict:
 
         disjointed = gdf_dict[category].disjoint(sidewalks_big_unary_buffer)
 
-        gdf_dict[category][disjointed].to_file(os.path.join('data','disjointed',f'{category}_disjointed.geojson'))
+        gdf_dict[category][disjointed].to_file(os.path.join('data','disjointed',f'{category}_disjointed' + data_format))
 
         gdf_dict[category] = gdf_dict[category][~disjointed]
 
@@ -92,7 +92,7 @@ for category in gdf_dict:
     print(' - Removing features with improper geometry type')
     #removing the ones that aren't of the specific intended geometry type:
     # but first saving them for quality tool:
-    outpath_improper = os.path.join('data','improper_geoms',f'{category}_improper_geoms.geojson')
+    outpath_improper = os.path.join('data','improper_geoms',f'{category}_improper_geoms' + data_format)
     # the boolean Series:
     are_proper_geom = gdf_dict[category].geometry.type.isin(geom_type_dict[category]) # TODO: test this out-of-the-box
     # saving:
@@ -178,7 +178,7 @@ for category in gdf_dict:
     gdf_dict[category]['last_update'] = gdf_dict[category]['update_date']
 
 
-    gdf_dict[category].to_file(f'data/{category}.geojson',driver='GeoJSON')
+    gdf_dict[category].to_file(f'data/{category}' + data_format)
 
 
 
@@ -186,5 +186,5 @@ for category in gdf_dict:
 record_datetime('Data Pre-Processing')
 sleep(.1)
 
-gen_updating_infotable_page(node_page_url=node_homepage_url)
+gen_updating_infotable_page()
 

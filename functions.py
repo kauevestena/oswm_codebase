@@ -119,7 +119,7 @@ TABLES_STYLE = f"""
 
 """
 
-def gen_updating_infotable_page(outpath='data/data_updating.html',json_path='data/last_updated.json',node_page_url='https://kauevestena.github.io/opensidewalkmap_beta/'):
+def gen_updating_infotable_page(outpath='data/data_updating.html',json_path='data/last_updated.json'):
 
 
     tablepart = ''
@@ -163,23 +163,23 @@ if the data is too outdated you may <a href="https://github.com/kauevestena/open
 
 <tr>
   <th>Sidewalks</th>
-  <th><a href="https://kauevestena.github.io/opensidewalkmap_beta/data/sidewalks_raw.geojson">Raw</a></th>
-  <th><a href="https://kauevestena.github.io/opensidewalkmap_beta/data/sidewalks.geojson">Filtered</a></th>
-  <th><a href="https://kauevestena.github.io/opensidewalkmap_beta/data/sidewalks_versioning.json">Versioning</a></th>
+  <th><a href="{node_homepage_url}data/sidewalks_raw{data_format}">Raw</a></th>
+  <th><a href="{node_homepage_url}data/sidewalks{data_format}">Filtered</a></th>
+  <th><a href="{node_homepage_url}data/sidewalks_versioning.json">Versioning</a></th>
 </tr>
 
 <tr>
   <th>Crossings</th>
-  <th><a href="https://kauevestena.github.io/opensidewalkmap_beta/data/crossings_raw.geojson">Raw</a></th>
-  <th><a href="https://kauevestena.github.io/opensidewalkmap_beta/data/crossings.geojson">Filtered</a></th>
-  <th><a href="https://kauevestena.github.io/opensidewalkmap_beta/data/crossings_versioning.json">Versioning</a></th>
+  <th><a href="{node_homepage_url}data/crossings_raw{data_format}">Raw</a></th>
+  <th><a href="{node_homepage_url}data/crossings{data_format}">Filtered</a></th>
+  <th><a href="{node_homepage_url}data/crossings_versioning.json">Versioning</a></th>
 </tr>
 
 <tr>
   <th>Kerbs</th>
-  <th><a href="https://kauevestena.github.io/opensidewalkmap_beta/data/kerbs_raw.geojson">Raw</a></th>
-  <th><a href="https://kauevestena.github.io/opensidewalkmap_beta/data/kerbs.geojson">Filtered</a></th>
-  <th><a href="https://kauevestena.github.io/opensidewalkmap_beta/data/kerbs_versioning.json">Versioning</a></th>
+  <th><a href="{node_homepage_url}data/kerbs_raw{data_format}">Raw</a></th>
+  <th><a href="{node_homepage_url}data/kerbs{data_format}">Filtered</a></th>
+  <th><a href="{node_homepage_url}data/kerbs_versioning.json">Versioning</a></th>
 </tr>
 
 
@@ -202,7 +202,7 @@ def gen_quality_report_page_and_files(outpath,tabledata,feat_type,category,quali
 
     csv_url = f"""<h2>  
         
-            <a href="https://kauevestena.github.io/opensidewalkmap_beta/quality_check/tables/{pagename_base}.csv"> You can also download the raw .csv table </a>
+            <a href="{node_homepage_url}quality_check/tables/{pagename_base}.csv"> You can also download the raw .csv table </a>
 
         </h2>"""
 
@@ -577,7 +577,7 @@ def gdf_to_js_file(input_gdf,output_path,output_varname):
         returns the importing to be included in the html file
     """
 
-    input_gdf.to_file(output_path,driver='GeoJSON')
+    input_gdf.to_file(output_path)
 
     as_str = f"{output_varname} = "+ file_as_string(output_path)
 
@@ -679,3 +679,9 @@ def merge_list_of_dictionaries(list_of_dicts):
                 merged_dict[key] = value if not isinstance(value, list) else value.copy()
 
     return merged_dict
+
+def join_to_node_homepage(input_list_or_str):
+    if isinstance(input_list_or_str,list):
+        return os.path.join(node_homepage_url,*input_list_or_str)
+    else:
+        return os.path.join(node_homepage_url,input_list_or_str)

@@ -13,9 +13,9 @@ def add_to_occurrences(category,id):
         occurrence_per_feature[category][id] = 1
 
 # gdfs:
-sidewalks_gdf = gpd.read_file('data/sidewalks_raw.geojson')
-crossings_gdf = gpd.read_file('data/crossings_raw.geojson')
-kerbs_gdf = gpd.read_file('data/kerbs_raw.geojson')
+sidewalks_gdf = gpd.read_file('data/sidewalks_raw' + data_format)
+crossings_gdf = gpd.read_file('data/crossings_raw' + data_format)
+kerbs_gdf = gpd.read_file('data/kerbs_raw' + data_format)
 
 # dict for iteration
 gdf_dict = {'sidewalks':sidewalks_gdf,'crossings':crossings_gdf,'kerbs':kerbs_gdf}
@@ -340,4 +340,4 @@ with open(qc_mainpage_path,'w+') as writer:
 record_datetime("Data Quality Tool")
 sleep(.1)
 
-gen_updating_infotable_page(node_page_url=node_homepage_url)
+gen_updating_infotable_page()

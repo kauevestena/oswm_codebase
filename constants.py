@@ -13,11 +13,13 @@ min_zoom = 10
 # global max zoom level
 max_zoom = 22
 
+data_format = '.geojson'
+
 # node archives general paths
 map_page_name = "./map.html"
 readme_path = "./README.md"
 node_home_path = "./index.html"
-boundaries_path = "./data/boundaries.geojson"
+boundaries_path = "./data/boundaries" + data_format
 boundaries_md_path = "./data/boundaries_md.json"
 workflows_path = '.github/workflows'
 
@@ -42,15 +44,15 @@ layer_exclusion_tags = {
 bbox_as_list = ()
 
 # data paths
-sidewalks_path = 'data/sidewalks.geojson'
-crossings_path = 'data/crossings.geojson'
-kerbs_path = 'data/kerbs.geojson'
-other_footways_path = 'data/other_footways.geojson'
+sidewalks_path = 'data/sidewalks' + data_format
+crossings_path = 'data/crossings' + data_format
+kerbs_path = 'data/kerbs' + data_format
+other_footways_path = 'data/other_footways' + data_format
 
-sidewalks_path_raw = 'data/sidewalks_raw.geojson'
-crossings_path_raw = 'data/crossings_raw.geojson'
-kerbs_path_raw = 'data/kerbs_raw.geojson'
-other_footways_path_raw = 'data/other_footways_raw.geojson'
+sidewalks_path_raw = 'data/sidewalks_raw' + data_format
+crossings_path_raw = 'data/crossings_raw' + data_format
+kerbs_path_raw = 'data/kerbs_raw' + data_format
+other_footways_path_raw = 'data/other_footways_raw' + data_format
 
 
 sidewalks_path_versioning = 'data/sidewalks_versioning.json'
@@ -67,7 +69,7 @@ valid_values_path = 'quality_check/valid_tag_values.json'
 # node homepage:
 user_basepage_url = f'https://{USERNAME}.github.io/'
 node_homepage_url = f'https://{USERNAME}.github.io/{REPO_NAME}/'
-data_updating_utl = f'https://{USERNAME}.github.io/{REPO_NAME}/data/data_updating.html'
+data_updating_url = f'https://{USERNAME}.github.io/{REPO_NAME}/data/data_updating.html'
 
 # codebase as page:
 codebase_homepage = 'https://kauevestena.github.io/oswm_codebase/'
@@ -518,7 +520,7 @@ geom_type_dict = {
     'sidewalks':['LineString'],
     'crossings':['LineString'],
     'kerbs':['Point'],
-    'other_footways':['LineString','Polygon'] # TODO: 
+    'other_footways':['LineString','Polygon','MultiPolygon'] 
 }
 
 statistics_basepath = 'statistics'

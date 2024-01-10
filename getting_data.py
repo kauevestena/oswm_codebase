@@ -2,7 +2,6 @@ from osm_fetch import *
 from constants import *
 from oswm_codebase.functions import *
 from time import sleep, time
-
 import osmnx as ox
 
 # Getting the boundaries:
@@ -15,12 +14,12 @@ if not os.path.exists(boundaries_path):
         boundary_polygon = boundaries_gdf['geometry'].iloc[0]
 
         # test if it's a polygon:
-        if boundary_polygon.geom_type != 'Polygon':
+        if boundary_polygon.geom_type != 'Polygon' or boundary_polygon.geom_type != 'MultiPolygon':
             raise ValueError('not a polygon')
     except:
         # if there's no polygon, use the bounding box as input polygon:
         boundaries_gdf = bbox_geodataframe(BOUNDING_BOX)
-        boundaries_gdf.to_file(boundaries_path, driver='GeoJSON')
+        boundaries_gdf.to_file(boundaries_path)
         metadata = {"class": "bounding_box"}
         dump_json(metadata, boundaries_md_path)
         boundary_polygon = boundaries_gdf['geometry'].iloc[0]
@@ -62,9 +61,10 @@ for category in layer_tags_dict:
     # as_gdf = ox.features_from_bbox(
     # BOUNDING_BOX[2], BOUNDING_BOX[0], BOUNDING_BOX[3], BOUNDING_BOX[1], layer_tags_dict[category])
 
+print('finishing...')
 # to record data aging:
 record_datetime('Data Fetching')
 sleep(.1)
 
 # generate the "report" of the updating info
-gen_updating_infotable_page(node_page_url=node_homepage_url)
+gen_updating_infotable_page()

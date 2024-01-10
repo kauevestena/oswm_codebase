@@ -484,4 +484,4 @@ print('Generating updating info...')
 record_datetime('Webmap Generation')
 
 # generate the "report" of the updating info
-gen_updating_infotable_page(node_page_url=node_homepage_url)
+gen_updating_infotable_page()

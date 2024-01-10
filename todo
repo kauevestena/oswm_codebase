@@ -1,10 +1,11 @@
-[ ] Create the new modules:
+[ ] Create the new modules
     [ ] The Data Watcher
     [ ] The Data Acquisition Hub
 [ ] Improvements on data Quality
     [ ] Add the geometric filters
-    [ ] External Providers 
+    [ ] External Providers
 [ ] Deprecate the current routing modules
     [ ] Complete the Streamlit app to a main repo as a simple demo
     [ ] Test the hopeful hope using Geojson Path Finder, as in oswm_codebase/other/for_future/path_finder.html
 [ ] Transition to a more compact and better performant format than geojson
+[ ] Global modules, including the map with the discrepancies between footways and roads, and routing streamlit demo
