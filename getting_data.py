@@ -14,7 +14,7 @@ if not os.path.exists(boundaries_geojson_path):
         boundary_polygon = boundaries_gdf['geometry'].iloc[0]
 
         # test if it's a polygon:
-        if boundary_polygon.geom_type != 'Polygon' or boundary_polygon.geom_type != 'MultiPolygon':
+        if (boundary_polygon.geom_type != 'Polygon') and (boundary_polygon.geom_type != 'MultiPolygon'):
             raise ValueError('not a polygon')
         
         # if it's a polygon, save it as geoparquet:

@@ -3,6 +3,7 @@ from oswm_codebase.functions import *
 import pandas as pd
 import geopandas as gpd
 from time import sleep
+from shapely import unary_union
 
 import os
 
@@ -47,24 +48,31 @@ for category in paths_dict['versioning']:
 
 # creating the symlinks for specific stuff:
 sidewalks_gdf = gdf_dict['sidewalks']
+crossings_gdf = gdf_dict['crossings']
 local_utm = sidewalks_gdf.estimate_utm_crs() # TODO: establish a global method to have this
 
 # # removing unconnected crossings and kerbs (preparation):
 sidewalks_big_unary_buffer = sidewalks_gdf.to_crs(local_utm).buffer(max_radius_cutoff).to_crs('EPSG:4326').unary_union
+
+crossings_big_unary_buffer = crossings_gdf.to_crs(local_utm).buffer(max_radius_cutoff).to_crs('EPSG:4326').unary_union
+
+sidewalks_crossings_unary_buffer = unary_union([sidewalks_big_unary_buffer,crossings_big_unary_buffer])
 
 # removing entries that arent in the buffer:
 # dealing with the data:
 for category in gdf_dict:
     print(category)
 
-    
-    if category != 'sidewalks' or category != 'other_footways':
-        print('     - Removing unconnected crossings and kerbs')
+    if (category != 'sidewalks') and (category != 'other_footways'):
+        print(f'     - Removing unconnected features')
 
         create_folder_if_not_exists(disjointed_folderpath)
 
         # TODO: include other footways here
-        disjointed = gdf_dict[category].disjoint(sidewalks_big_unary_buffer)
+        if category != 'kerbs':
+            disjointed = gdf_dict[category].disjoint(sidewalks_big_unary_buffer)
+        else:
+            disjointed = gdf_dict[category].disjoint(sidewalks_crossings_unary_buffer)
 
         outfilepath = os.path.join(disjointed_folderpath,f'{category}_disjointed' + data_format)
 
@@ -109,8 +117,9 @@ for category in gdf_dict:
 
     # replacing wrong values with "?" (unknown) or misspelled with the nearest valid:
     # TODO: check if this is the better approach to handle invalid values
+    print('     - Replacing Utterly invalid values')
     for subkey in wrong_misspelled_values[category]:
-        gdf_dict[category][subkey].replace(wrong_misspelled_values[category][subkey],inplace=True)
+        gdf_dict[category].loc[:, subkey] = gdf_dict[category][subkey].replace(wrong_misspelled_values[category][subkey])
         
     # print('     - Computing scores')
     # # conservation state (as a score):
