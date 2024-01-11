@@ -32,9 +32,10 @@ other_footways_folderpath = 'data/other_footways'
 
 other_footways_subcatecories = {
     'stairways' : {'highway':['steps']},
-    'main' : {'highway':['footway','living_street'],'foot':['designated']},
-    'others' : {'highway':['path','track'],'footway': ['alley','path','yes']},
+    'main' : {'highway':['footway','living_street'],'foot':['designated'],'footway': ['alley','path','yes']},
+    'potential' : {'highway':['path','track']},
     'informal' : {'foot':['yes','permissive']},
+    'pedestrian_areas' : {} #defined only by geometry type (Polygon,Multipolygon)
 }
 
 # ogr2ogr path
@@ -104,12 +105,13 @@ paths_dict = {
         'crossings': crossings_path_versioning,
         'kerbs': kerbs_path_versioning,
         'other_footways' : other_footways_path_versioning
-    }
+    },
+    'other_footways_subcategories' : {},
 }
 
 # paths for other_footways subcategories:
 for subcategory in other_footways_subcatecories:
-    paths_dict['data']['other_footways_subcategories'] = os.path.join(other_footways_folderpath, subcategory)
+    paths_dict['other_footways_subcategories'][subcategory] = os.path.join(other_footways_folderpath, subcategory+data_format)
 
 # max radius to cut off unconnected crossings and kerbs
 max_radius_cutoff = 50
