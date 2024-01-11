@@ -84,7 +84,7 @@ zoom_control=False,tiles=None,min_lat=BOUNDING_BOX[0],min_lon=BOUNDING_BOX[1],ma
 
 # tile customization
 
-# # positron (in doubt about license):
+# positron (in doubt about license):
 # folium.TileLayer(tiles='CartoDB positron',max_zoom=25,max_native_zoom=25,opacity=.5).add_to(m)
 
 # # # darkmatter (in doubt about license):
@@ -99,9 +99,9 @@ zoom_control=False,tiles=None,min_lat=BOUNDING_BOX[0],min_lon=BOUNDING_BOX[1],ma
 
 
 # standard:
-std_baselayer =  folium.TileLayer(name='OpenStreetMap std.',
+std_baselayer =  folium.TileLayer(tiles='CartoDB positron',
 min_zoom=min_zoom,
-opacity=.5,max_zoom=22,max_native_zoom=19) #.add_to(m)
+opacity=.7,max_zoom=22,max_native_zoom=19) #.add_to(m)
 m.add_child(std_baselayer)
 
 # # cycloMAP:  (REVEALED BUGGY, suspended for now)
@@ -109,9 +109,9 @@ m.add_child(std_baselayer)
 # min_zoom=min_zoom,max_zoom=25,max_native_zoom=18).add_to(m)
 
 # HUMANITARIAN:
-humanitarian_baselayer = folium.TileLayer(tiles='https://a.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png',name='Humanitarian OSM',opacity=.5,attr='Humanitarian OSM',
-min_zoom=min_zoom,max_zoom=22,max_native_zoom=18) #.add_to(m)
-m.add_child(humanitarian_baselayer)
+# humanitarian_baselayer = folium.TileLayer(tiles='https://a.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png',name='Humanitarian OSM',opacity=.5,attr='Humanitarian OSM',
+# min_zoom=min_zoom,max_zoom=22,max_native_zoom=18) #.add_to(m)
+# m.add_child(humanitarian_baselayer)
 
 
 
@@ -377,7 +377,7 @@ print('Creating Resources...')
 # thx Folium developers:
 # https://github.com/python-visualization/folium/pull/1592
 GroupedLayerControl(
-    groups={'Sidewalks Layers': [sidewalk_surface_layer, sidewalk_smoothness_layer],'Crossings Layers':[crossings_layer],'Kerbs Layers':[kerbs_layer],'Base Layers':[std_baselayer,humanitarian_baselayer,opvnkarte_baselayer]},
+    groups={'Sidewalks Layers': [sidewalk_surface_layer, sidewalk_smoothness_layer],'Crossings Layers':[crossings_layer],'Kerbs Layers':[kerbs_layer],'Base Layers':[std_baselayer,opvnkarte_baselayer]},
     collapsed=True,
 ).add_to(m)
 
