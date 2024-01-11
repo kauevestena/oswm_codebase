@@ -12,42 +12,42 @@ print('reading data...')
 # overriding while it's still experimental:
 map_page_name = "./map_experimental.html"
 
-# reading also as geodataframes:
-sidewalks_gdf = gpd.read_parquet(sidewalks_path,index='id')
-crossings_gdf = gpd.read_parquet(crossings_path,index='id')
-kerbs_gdf = gpd.read_parquet(kerbs_path,index='id')
+# # reading also as geodataframes:
+# sidewalks_gdf = gpd.read_parquet(sidewalks_path,index='id')
+# crossings_gdf = gpd.read_parquet(crossings_path,index='id')
+# kerbs_gdf = gpd.read_parquet(kerbs_path,index='id')
 
 
 # keeping only really required fields
-extra_fields = ['id','geometry']
+mandatory_fields = ['id','geometry','element_type']
 
-sidewalks_gdf = sidewalks_gdf[req_fields['sidewalks']+extra_fields]
-crossings_gdf = crossings_gdf[req_fields['crossings']+extra_fields]
-kerbs_gdf = kerbs_gdf[req_fields['kerbs']+extra_fields]
+# sidewalks_gdf = sidewalks_gdf[req_fields['sidewalks']+extra_fields]
+# crossings_gdf = crossings_gdf[req_fields['crossings']+extra_fields]
+# kerbs_gdf = kerbs_gdf[req_fields['kerbs']+extra_fields]
 
 
-gdf_dict = {
-    'sidewalks': sidewalks_gdf,
-    'crossings': crossings_gdf,
-    'kerbs' : kerbs_gdf,
-}
+# gdf_dict = {
+#     'sidewalks': sidewalks_gdf,
+#     'crossings': crossings_gdf,
+#     'kerbs' : kerbs_gdf,
+# }
 
-type_dict = {
-    'sidewalks': 'way',
-    'crossings': 'way',
-    'kerbs' : 'node',
-}
+gdf_dict = get_gdfs_dict('map_layers')
 
+for layername in gdf_dict:
+    gdf_dict[layername].reindex(columns=req_fields['sidewalks']+mandatory_fields,fill_value="?")
 
 # creating the ref for the layers in this brand new version
 layers_ref_str = """"""
 
 # formatting "id" field as a formatted "osm_id":
 for category in gdf_dict:
-    if category == 'kerbs':
-        gdf_dict[category]['osm_id'] = gdf_dict[category]['id'].astype('string').apply(return_weblink_node)
-    else:
-        gdf_dict[category]['osm_id'] = gdf_dict[category]['id'].astype('string').apply(return_weblink_way)
+    # if category == 'kerbs':
+    #     gdf_dict[category]['osm_id'] = gdf_dict[category]['id'].astype('string').apply(return_weblink_node)
+    # else:
+    #     gdf_dict[category]['osm_id'] = gdf_dict[category]['id'].astype('string').apply(return_weblink_way)
+
+    gdf_dict[category]['osm_id'] = (gdf_dict[category]['element_type'].astype('string')+'_'+gdf_dict[category]['id'].astype('string')).apply(return_weblink_V3)
 
     l_ref_str = gdf_to_js_file(gdf_dict[category],f'assets/mapdata/{category}.js',category+'_layer')
 
@@ -63,18 +63,16 @@ for category in gdf_dict:
 
 print('Creating Map...')
 
-
-# CENTER OF THE MAP:
-# mid_lat = (BOUNDING_BOX_SAMPLE[0]+BOUNDING_BOX_SAMPLE[2])/2
-# MID_LGT = (BOUNDING_BOX_SAMPLE[1]+BOUNDING_BOX_SAMPLE[3])/2
-
-
 # CREATING THE MAP
 m = folium.Map(location=[MID_LAT, MID_LGT],zoom_start=18,min_zoom=min_zoom,
 max_zoom=20,
 zoom_control=False,tiles=None,min_lat=BOUNDING_BOX[0],min_lon=BOUNDING_BOX[1],max_lat=BOUNDING_BOX[2],max_lon=BOUNDING_BOX[3],max_bounds=True)
 
 def end_script_exec(savemap=True):
+    """
+        created like this to ease up the process of adaptating the old script
+    """
+
     if savemap:
         m.save(map_page_name)
 
@@ -118,7 +116,7 @@ def end_script_exec(savemap=True):
 
 
 # standard:
-std_baselayer =  folium.TileLayer(name='OpenStreetMap std.',
+std_baselayer =  folium.TileLayer(name='CartoDB positron',
 min_zoom=min_zoom,
 opacity=.3,max_zoom=22,max_native_zoom=19) #.add_to(m)
 m.add_child(std_baselayer)

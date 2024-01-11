@@ -236,7 +236,7 @@ def gen_quality_report_page_and_files(outpath,tabledata,feat_type,category,quali
 
                                 writer.writerow(line)
 
-                                line[0] = return_weblinkV2(str(line[0]),feat_type)
+                                line[0] = return_weblink_V2(str(line[0]),feat_type)
                         
                                 line_as_str += "<tr>"
                         
@@ -453,7 +453,11 @@ def return_weblink_way(string_id):
 def return_weblink_node(string_id):
     return f"<a href=https://www.openstreetmap.org/node/{string_id}>{string_id}</a>"
 
-def return_weblinkV2(string_id,featuretype):
+def return_weblink_V2(string_id,featuretype):
+    return f"<a href=https://www.openstreetmap.org/{featuretype}/{string_id}>{string_id}</a>"
+
+def return_weblink_V3(type_id_string):
+    featuretype,string_id = type_id_string.split('_')
     return f"<a href=https://www.openstreetmap.org/{featuretype}/{string_id}>{string_id}</a>"
 
 '''
@@ -734,6 +738,13 @@ def get_gdfs_dict(raw_data=False):
     category_group = 'data_raw' if raw_data else 'data'
 
     return {category: gpd.read_parquet(paths_dict[category_group][category]) for category in paths_dict[category_group]}
+
+def get_gdfs_dict_v2(category='data'):
+    """
+    available categories: 'data', 'data_raw','other_footways_subcategories', 'map_layers'
+    """
+
+    return {category: gpd.read_parquet(paths_dict[category][category]) for category in paths_dict[category]}
 
 def remove_empty_columns(gdf,report=False):
     if report:

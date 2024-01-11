@@ -80,7 +80,7 @@ unique_values_path = 'quality_check/unique_tag_values.json'
 valid_values_path = 'quality_check/valid_tag_values.json'
 
 # node homepage:
-user_basepage_url = f'https://{USERNAME}.github.io/'
+user_basepage_url = f'https://{USERNAME}.github.io/'.astype('string')
 node_homepage_url = f'https://{USERNAME}.github.io/{REPO_NAME}/'
 data_updating_url = f'https://{USERNAME}.github.io/{REPO_NAME}/data/data_updating.html'
 
@@ -107,11 +107,19 @@ paths_dict = {
         'other_footways' : other_footways_path_versioning
     },
     'other_footways_subcategories' : {},
+    'map_layers' : {
+        'sidewalks': sidewalks_path,
+        'crossings': crossings_path,
+        'kerbs': kerbs_path,
+    },
 }
 
 # paths for other_footways subcategories:
 for subcategory in other_footways_subcatecories:
-    paths_dict['other_footways_subcategories'][subcategory] = os.path.join(other_footways_folderpath, subcategory+data_format)
+    subcategory_path = os.path.join(other_footways_folderpath, subcategory+data_format)
+    paths_dict['other_footways_subcategories'][subcategory] = subcategory
+    paths_dict['map_layers'][subcategory] = subcategory
+
 
 # max radius to cut off unconnected crossings and kerbs
 max_radius_cutoff = 50
