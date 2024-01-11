@@ -11,25 +11,38 @@ from folium.plugins import GroupedLayerControl
 print('reading data...')
 
 # reading also as geodataframes:
-sidewalks_gdf = gpd.read_parquet(sidewalks_path,index='id')
-crossings_gdf = gpd.read_parquet(crossings_path,index='id')
-kerbs_gdf = gpd.read_parquet(kerbs_path,index='id')
 
+# TODO: index in a dict
+sidewalks_gdf = gpd.read_parquet(sidewalks_path)
+crossings_gdf = gpd.read_parquet(crossings_path)
+kerbs_gdf = gpd.read_parquet(kerbs_path)
 
-# 
-# keeping only really required fields
-extra_fields = ['id','geometry']
-
-sidewalks_gdf = sidewalks_gdf[req_fields['sidewalks']+extra_fields]
-crossings_gdf = crossings_gdf[req_fields['crossings']+extra_fields]
-kerbs_gdf = kerbs_gdf[req_fields['kerbs']+extra_fields]
-
+# sidewalks_gdf.set_index('id',inplace=True)
+# crossings_gdf.set_index('id',inplace=True)
+# kerbs_gdf.set_index('id',inplace=True)
 
 gdf_dict = {
     'sidewalks': sidewalks_gdf,
     'crossings': crossings_gdf,
     'kerbs' : kerbs_gdf,
 }
+
+# 
+# keeping only really required fields
+mandatory_fields = ['id','geometry']
+
+#   but first, initialize the required fields:
+# thx: https://stackoverflow.com/a/43995812/4436950
+sidewalks_gdf = sidewalks_gdf.reindex(columns=req_fields['sidewalks']+mandatory_fields,fill_value="?")
+crossings_gdf = crossings_gdf.reindex(columns=req_fields['crossings']+mandatory_fields,fill_value="?")
+kerbs_gdf = kerbs_gdf.reindex(columns=req_fields['kerbs']+mandatory_fields,fill_value="?")
+
+sidewalks_gdf = sidewalks_gdf[req_fields['sidewalks']+mandatory_fields]
+crossings_gdf = crossings_gdf[req_fields['crossings']+mandatory_fields]
+kerbs_gdf = kerbs_gdf[req_fields['kerbs']+mandatory_fields]
+
+
+
 
 type_dict = {
     'sidewalks': 'way',
@@ -56,12 +69,12 @@ print('Creating Map...')
 
 
 # CENTER OF THE MAP:
-mid_lat = (BOUNDING_BOX_SAMPLE[0]+BOUNDING_BOX_SAMPLE[2])/2
-mid_lgt = (BOUNDING_BOX_SAMPLE[1]+BOUNDING_BOX_SAMPLE[3])/2
+# mid_lat = (BOUNDING_BOX_SAMPLE[0]+BOUNDING_BOX_SAMPLE[2])/2
+# MID_LGT = (BOUNDING_BOX_SAMPLE[1]+BOUNDING_BOX_SAMPLE[3])/2
 
 
 # CREATING THE MAP
-m = folium.Map(location=[mid_lat, mid_lgt],zoom_start=18,min_zoom=min_zoom,
+m = folium.Map(location=[MID_LAT, MID_LGT],zoom_start=18,min_zoom=min_zoom,
 max_zoom=20,
 zoom_control=False,tiles=None,min_lat=BOUNDING_BOX[0],min_lon=BOUNDING_BOX[1],max_lat=BOUNDING_BOX[2],max_lon=BOUNDING_BOX[3],max_bounds=True)
 

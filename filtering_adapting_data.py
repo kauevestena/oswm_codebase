@@ -75,7 +75,7 @@ for category in gdf_dict:
         gdf_dict[category] = gdf_dict[category][~disjointed]
 
 
-    print('      - Removing features with improper geometry type')
+    print('     - Removing features with improper geometry type')
     #removing the ones that aren't of the specific intended geometry type:
     # but first saving them for quality tool:
 
@@ -179,9 +179,14 @@ for category in gdf_dict:
         # first of all, saving the polygons/multipolygons to a separate category, called "pedestrian areas":
         are_areas = gdf_dict[category].geometry.type.isin(['Polygon','MultiPolygon'])
         print('       - Saving pedestrian areas')
-        save_geoparquet(gdf_dict[category][are_areas],paths_dict['other_footways_subcategories']['pedestrian_areas'])
 
-        gdf_dict[category] = gdf_dict[category][~are_areas]
+        ped_areas_gdf = gdf_dict[category][are_areas].copy()
+        remove_empty_columns(ped_areas_gdf)
+
+        save_geoparquet(ped_areas_gdf,paths_dict['other_footways_subcategories']['pedestrian_areas'])
+
+        other_footways_gdf = gdf_dict[category][~are_areas].copy()
+        remove_empty_columns(other_footways_gdf)
 
         for subcategory in other_footways_subcatecories:
             print('       - Saving ',subcategory)
@@ -189,13 +194,18 @@ for category in gdf_dict:
             if subcategory == 'pedestrian_areas':
                 continue
 
-            belonging = row_query(gdf_dict[category],other_footways_subcatecories[subcategory])
-            save_geoparquet(gdf_dict[category][belonging],paths_dict['other_footways_subcategories'][subcategory])
+            belonging = row_query(other_footways_gdf,other_footways_subcatecories[subcategory])
+
+            belonging_gdf = other_footways_gdf[belonging].copy()
+            remove_empty_columns(belonging_gdf)
+
+            save_geoparquet(belonging_gdf,paths_dict['other_footways_subcategories'][subcategory])
 
             # optimize keeping only the remaining rows
-            gdf_dict[category] = gdf_dict[category][~belonging]
+            other_footways_gdf = other_footways_gdf[~belonging]
 
-    # gdf_dict[category].to_file(f'data/{category}' + data_format)
+    # removing empty columns:
+    remove_empty_columns(gdf_dict[category])
     save_geoparquet(gdf_dict[category],f'data/{category}' + data_format)
 
 

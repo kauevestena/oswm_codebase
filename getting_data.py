@@ -48,6 +48,9 @@ for column in as_gdf.columns:
     if as_gdf[column].dtype == object:
         as_gdf[column] = as_gdf[column].astype(str)
 
+# to get rid of fragmentation warning:
+as_gdf = as_gdf.copy()
+
 # adapting osmnx output:
 as_gdf.reset_index(inplace=True)
 as_gdf.replace('nan', None, inplace=True)
@@ -61,10 +64,16 @@ for category in layer_tags_dict:
 
     belonging = as_gdf.isin(layer_tags_dict[category]).any(axis=1)
 
+    to_save = as_gdf[belonging].copy()
+
+    remove_empty_columns(to_save)
+
     # as_gdf[belonging].to_file(outpath)
-    save_geoparquet(as_gdf[belonging], outpath)
+    save_geoparquet(to_save, outpath)
 
     as_gdf = as_gdf[~belonging]
+
+
 
     print('    picking', category,'from data, with', len(as_gdf),'remaining')
 

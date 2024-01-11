@@ -734,3 +734,12 @@ def get_gdfs_dict(raw_data=False):
     category_group = 'data_raw' if raw_data else 'data'
 
     return {category: gpd.read_parquet(paths_dict[category_group][category]) for category in paths_dict[category_group]}
+
+def remove_empty_columns(gdf,report=False):
+    if report:
+        prev = len(gdf.columns)
+
+    gdf.dropna(axis='columns',how='all',inplace=True)
+
+    if report:
+        print(f'    removed {prev-len(gdf.columns)} empty columns')

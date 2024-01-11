@@ -65,12 +65,12 @@ print('Creating Map...')
 
 
 # CENTER OF THE MAP:
-mid_lat = (BOUNDING_BOX_SAMPLE[0]+BOUNDING_BOX_SAMPLE[2])/2
-mid_lgt = (BOUNDING_BOX_SAMPLE[1]+BOUNDING_BOX_SAMPLE[3])/2
+# mid_lat = (BOUNDING_BOX_SAMPLE[0]+BOUNDING_BOX_SAMPLE[2])/2
+# MID_LGT = (BOUNDING_BOX_SAMPLE[1]+BOUNDING_BOX_SAMPLE[3])/2
 
 
 # CREATING THE MAP
-m = folium.Map(location=[mid_lat, mid_lgt],zoom_start=18,min_zoom=min_zoom,
+m = folium.Map(location=[MID_LAT, MID_LGT],zoom_start=18,min_zoom=min_zoom,
 max_zoom=20,
 zoom_control=False,tiles=None,min_lat=BOUNDING_BOX[0],min_lon=BOUNDING_BOX[1],max_lat=BOUNDING_BOX[2],max_lon=BOUNDING_BOX[3],max_bounds=True)
 
