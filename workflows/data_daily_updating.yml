@@ -54,6 +54,8 @@ jobs:
       
       - run: python oswm_codebase/filtering_adapting_data.py
 
+      - run: python oswm_codebase/generation/vec_tiles_gen.py
+
       - run: python oswm_codebase/create_webmap.py
 
       - run: python oswm_codebase/data_quality/tag_values_checking.py

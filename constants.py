@@ -24,17 +24,18 @@ boundaries_geojson_path = "./data/boundaries.geojson"
 boundaries_md_path = "./data/boundaries_md.json"
 workflows_path = '.github/workflows'
 
-# folderpaths:
+# data folderpaths:
 improper_geoms_folderpath = 'data/improper_geoms'
 disjointed_folderpath = 'data/disjointed'
 versioning_folderpath = 'data/versioning'
 other_footways_folderpath = 'data/other_footways'
+tiles_folderpath = 'data/tiles'
 
 other_footways_subcatecories = {
     'stairways' : {'highway':['steps']},
-    'main' : {'highway':['footway','living_street'],'foot':['designated'],'footway': ['alley','path','yes']},
-    'potential' : {'highway':['path','track']},
-    'informal' : {'foot':['yes','permissive']},
+    'main_footways' : {'highway':['footway','living_street'],'foot':['designated'],'footway': ['alley','path','yes']},
+    'potential_footways' : {'highway':['path','track']},
+    'informal_footways' : {'foot':['yes','permissive']},
     'pedestrian_areas' : {} #defined only by geometry type (Polygon,Multipolygon)
 }
 
@@ -80,7 +81,7 @@ unique_values_path = 'quality_check/unique_tag_values.json'
 valid_values_path = 'quality_check/valid_tag_values.json'
 
 # node homepage:
-user_basepage_url = f'https://{USERNAME}.github.io/'.astype('string')
+user_basepage_url = f'https://{USERNAME}.github.io/'
 node_homepage_url = f'https://{USERNAME}.github.io/{REPO_NAME}/'
 data_updating_url = f'https://{USERNAME}.github.io/{REPO_NAME}/data/data_updating.html'
 
@@ -117,8 +118,8 @@ paths_dict = {
 # paths for other_footways subcategories:
 for subcategory in other_footways_subcatecories:
     subcategory_path = os.path.join(other_footways_folderpath, subcategory+data_format)
-    paths_dict['other_footways_subcategories'][subcategory] = subcategory
-    paths_dict['map_layers'][subcategory] = subcategory
+    paths_dict['other_footways_subcategories'][subcategory] = subcategory_path
+    paths_dict['map_layers'][subcategory] = subcategory_path
 
 
 # max radius to cut off unconnected crossings and kerbs

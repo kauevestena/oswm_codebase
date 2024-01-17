@@ -1,0 +1,1 @@
+cp oswm_codebase/other/templates/config.py config.py

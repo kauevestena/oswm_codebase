@@ -1,8 +1,6 @@
 import sys
 sys.path.append('oswm_codebase')
 from functions import *
-# from constants import *
-
 
 tags_dict = read_json('quality_check/feature_keys.json')
 
