@@ -1,30 +1,34 @@
 from statistics_specs import *
 # reading data:
 
+exit('Suspended Temporarily')
+
 for category in paths_dict['data']:
+    if category != 'other_footways': #TODO: remove this to include this category also
+        print('Adaptations for:',category)
 
-    # creating additional fields
+        # creating additional fields
 
-    if geom_type_dict[category] == 'LineString':
-        create_length_field(gdfs_dict[category])
-        create_weblink_field(gdfs_dict[category])
-    elif geom_type_dict[category] == 'Point':
-        create_weblink_field(gdfs_dict[category],'Point')
+        if geom_type_dict[category] == 'LineString':
+            create_length_field(gdfs_dict[category])
+            create_weblink_field(gdfs_dict[category])
+        elif geom_type_dict[category] == 'Point':
+            create_weblink_field(gdfs_dict[category],'Point')
 
-    if 'survey:date' in gdfs_dict[category].columns:
+        if 'survey:date' in gdfs_dict[category].columns:
 
-        gdfs_dict[category]['Year of Survey'] = gdfs_dict[category]['survey:date'].apply(get_year_surveydate)
-
-
-    create_folder_if_not_exists(os.path.join('statistics',category))
-
-    # updating info:
-    updating_dicts[category]['month_year'] = updating_dicts[category]['rev_month'].map("{:02d}".format) + '_' + updating_dicts[category]['rev_year'].astype(str)
-
-    updating_dicts[category]['year_month'] =  updating_dicts[category]['rev_year'].astype(str) + "_" + updating_dicts[category]['rev_month'].map("{:02d}".format)
+            gdfs_dict[category]['Year of Survey'] = gdfs_dict[category]['survey:date'].apply(get_year_surveydate)
 
 
-    updating_dicts[category].sort_values('year_month',inplace=True)
+        create_folder_if_not_exists(os.path.join('statistics',category))
+
+        # updating info:
+        updating_dicts[category]['month_year'] = updating_dicts[category]['rev_month'].map("{:02d}".format) + '_' + updating_dicts[category]['rev_year'].astype(str)
+
+        updating_dicts[category]['year_month'] =  updating_dicts[category]['rev_year'].astype(str) + "_" + updating_dicts[category]['rev_month'].map("{:02d}".format)
+
+
+        updating_dicts[category].sort_values('year_month',inplace=True)
 
 generated_list_dict = {}
 charts_titles = {}
@@ -57,6 +61,7 @@ topbar = f"""
         <a href="{node_homepage_url}" class="active">Home</a>
     """
 
+print(generated_list_dict)
 
 for category in generated_list_dict:
     category_homepage = get_url(generated_list_dict[category][0])

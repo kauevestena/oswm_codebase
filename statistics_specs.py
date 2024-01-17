@@ -7,7 +7,11 @@ updating_dicts = {}
 for category in paths_dict['data']:
     gdfs_dict[category] = gpd.read_parquet(paths_dict['data'][category])
 
-    updating_dicts[category] = pd.read_json(paths_dict['versioning'][category])
+    if os.path.exists(paths_dict['versioning'].get(category)):
+        updating_dicts[category] = pd.read_json(paths_dict['versioning'][category])
+    else:
+        updating_dicts[category] = pd.DataFrame()
+
 
 
 charts_specs = {

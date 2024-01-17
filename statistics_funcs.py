@@ -60,7 +60,8 @@ def return_weblink(string_id,type='way'):
     return f"<a href=https://www.openstreetmap.org/{type}/{string_id}>{string_id}</a>"
 
 def get_year_surveydate(featuredate):
-    return featuredate.split('-')[0]
+    if featuredate:
+        return featuredate.split('-')[0]
 
 def double_scatter_bar(input_df,title,xs='surface',ys='smoothness',scolor=None,xh='count()',yh1='surface',yh2='smoothness',hcolor=None,fontsize=24,tooltip_fields=['element_type','id']):
 

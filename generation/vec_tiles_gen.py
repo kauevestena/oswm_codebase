@@ -18,5 +18,5 @@ for layername in layers_dict:
 
     runstring = f'docker run --rm -v ./data:/data {docker_img} ogr2ogr -f PMTiles {outpath} {layers_dict[layername]} -dsco MINZOOM={TILES_MIN_ZOOM} -dsco MAXZOOM={TILES_MAX_ZOOM} -progress'
 
-    print(runstring)
+    subprocess.run(runstring,shell=True)
 
