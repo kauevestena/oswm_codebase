@@ -1,7 +1,7 @@
 from statistics_specs import *
 # reading data:
 
-exit('Suspended Temporarily')
+exit(0)
 
 for category in paths_dict['data']:
     if category != 'other_footways': #TODO: remove this to include this category also
