@@ -9,6 +9,9 @@
         [ ] If possible with suggested edits
 [ ] Deprecate the current routing modules
     [ ] Complete the Streamlit app to a main repo as a simple demo
-    [ ] Test the hopeful hope using Geojson Path Finder, as in oswm_codebase/other/for_future/path_finder.html
-[ ] Transition to a more compact and better performant format than geojson
-[ ] Global modules, including the map with the discrepancies between footways and roads, and routing streamlit demo
+    [ ] Test the hopeful hope using Geojson Path Finder, as in oswm_codebase/other/for_future/path_finder.html or Turfjs! But it will be just for a subset, since it relies upon Geojson.
+[ ] Global modules, including the map with the discrepancies between footways and roads
+and routing streamlit demo
+[ ] Add VRT layers, both parquets and pmtiles:
+    [ ] On each module, for all layers in a dataset
+    [ ] Global Layers of each category and also the ones for each sub category
