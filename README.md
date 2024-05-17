@@ -6,3 +6,14 @@ OSWM is a decentered and modular project, leveraging OpenStreetMap data for side
 Project main repository: https://github.com/kauevestena/opensidewalkmap
 
 OSWM organization: https://github.com/opensidewalkmap/
+
+
+## Local development:
+
+Clone the original node, then initialize the submodules, most of this codebase is meant to run from the main folder of an OSWM node.:
+
+    git clone https://github.com/kauevestena/opensidewalkmap_beta
+    git submodule init
+    git submodule init
+
+You can do the same with other OSWM nodes.
