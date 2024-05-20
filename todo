@@ -15,3 +15,4 @@ and routing streamlit demo
 [ ] Add VRT layers, both parquets and pmtiles:
     [ ] On each module, for all layers in a dataset
     [ ] Global Layers of each category and also the ones for each sub category
+[ ] change data updating to become 

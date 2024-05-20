@@ -3,7 +3,7 @@ This repository holds the code that is used to create the static data for each n
 
 OSWM is a decentered and modular project, leveraging OpenStreetMap data for sidewalk data management.
 
-Project main repository: https://github.com/kauevestena/opensidewalkmap
+Project's main repository: https://github.com/kauevestena/opensidewalkmap
 
 OSWM organization: https://github.com/opensidewalkmap/
 

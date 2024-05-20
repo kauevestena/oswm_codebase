@@ -16,7 +16,12 @@ for layername in layers_dict:
 
     outpath = os.path.join(tiles_folderpath,layername+'.pmtiles')
 
-    runstring = f'docker run --rm -v ./data:/data {docker_img} ogr2ogr -f PMTiles {outpath} {layers_dict[layername]} -dsco MINZOOM={TILES_MIN_ZOOM} -dsco MAXZOOM={TILES_MAX_ZOOM} -progress'
+    runstring = f'docker run --rm -v ./data:/data {docker_img} ogr2ogr -skipfailures -of PMTiles {outpath} {layers_dict[layername]} -dsco MINZOOM={TILES_MIN_ZOOM} -dsco MAXZOOM={TILES_MAX_ZOOM} -progress'
 
     subprocess.run(runstring,shell=True)
+
+# cleaning up any errouneously created mbtiles:
+for filename in os.listdir(tiles_folderpath):
+    if filename.endswith('.mbtiles'):
+        os.remove(os.path.join(tiles_folderpath, filename))
 
