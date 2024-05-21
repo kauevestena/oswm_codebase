@@ -7,7 +7,6 @@ docker_img = 'ghcr.io/osgeo/gdal:alpine-normal-latest'
 
 create_folder_if_not_exists(tiles_folderpath)
 
-
 print(paths_dict)
 
 layers_dict = paths_dict['map_layers']
@@ -21,7 +20,6 @@ for layername in layers_dict:
     subprocess.run(runstring,shell=True)
 
 # cleaning up any errouneously created mbtiles:
-for filename in os.listdir(tiles_folderpath):
-    if filename.endswith('.mbtiles'):
-        os.remove(os.path.join(tiles_folderpath, filename))
+for filename in [f for f in os.listdir(tiles_folderpath) if f.endswith('.mbtiles')]:
+    os.remove(os.path.join(tiles_folderpath, filename))
 

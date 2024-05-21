@@ -30,6 +30,7 @@ disjointed_folderpath = 'data/disjointed'
 versioning_folderpath = 'data/versioning'
 other_footways_folderpath = 'data/other_footways'
 tiles_folderpath = 'data/tiles'
+vrts_folderpath = 'data/vrts'
 
 other_footways_subcatecories = {
     'stairways' : {'highway':['steps']},
