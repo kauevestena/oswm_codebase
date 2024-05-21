@@ -7,9 +7,10 @@ docker_img = 'ghcr.io/osgeo/gdal:alpine-normal-latest'
 
 create_folder_if_not_exists(tiles_folderpath)
 
-print(paths_dict)
+layers_dict = paths_dict['map_layers'].copy()
 
-layers_dict = paths_dict['map_layers']
+# MAYBE: generate boundaries also as vectiles?
+# layers_dict['boundaries'] = boundaries_geojson_path
 
 for layername in layers_dict:
 

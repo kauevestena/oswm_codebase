@@ -2,7 +2,7 @@
 
 <html>
     <head>
-        <title>PMTiles MapLibre Example</title>
+        <title>OSWM Node Webmap</title>
         <meta charset="utf-8"/>
         <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@3.3.1/dist/maplibre-gl.css">
         <script src="https://unpkg.com/maplibre-gl@3.3.1/dist/maplibre-gl.js"></script>
@@ -23,10 +23,10 @@
             let protocol = new pmtiles.Protocol();
             maplibregl.addProtocol("pmtiles",protocol.tile);
 
-            // let PMTILES_URL = "https://protomaps.github.io/PMTiles/protomaps(vector)ODbL_firenze.pmtiles";
-            let PMTILES_URL = "https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/sidewalks.pmtiles";
+            let PMTILES_URL_SIDEWALKS = "https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/sidewalks.pmtiles";
+            let PMTILES_URL_CROSSINGS = "https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/crossings.pmtiles";
 
-            const p = new pmtiles.PMTiles(PMTILES_URL);
+            const p = new pmtiles.PMTiles(PMTILES_URL_SIDEWALKS);
 
             // this is so we share one instance across the JS code and the map renderer
             protocol.add(p);
@@ -42,44 +42,121 @@
                     style: {
                         version:8,
                         sources: {
-                            "oswm_pmtiles": {
+                            "oswm_pmtiles_sidewalks": {
                                 type: "vector",
-                                url: "pmtiles://" + PMTILES_URL,
-                                attribution: '© <a href="https://openstreetmap.org">OpenStreetMap Contributors</a>'
+                                url: "pmtiles://" + PMTILES_URL_SIDEWALKS,
+                                // attribution: '© <a href="https://openstreetmap.org">OpenStreetMap Contributors</a>'
+                            },
+
+                            "oswm_pmtiles_crossings": {
+                                type: "vector",
+                                url: "pmtiles://" + PMTILES_URL_CROSSINGS,
+                                // attribution: '© <a href="https://openstreetmap.org">OpenStreetMap Contributors</a>'
+                            },
+
+
+                            'osm': {
+                            type: 'raster',
+                            tiles: ['https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png'],
+                            // attribution: '<a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                             }
+
                         },
                         layers: [
+
+                            {
+                            id: 'osm-baselayer',
+                            source: 'osm',
+                            type: 'raster',
+                            below: 'sidewalks' // Add this layer below other map elements (optional)
+                            },
+
                             {
                                 "id":"sidewalks",
-                                "source": "oswm_pmtiles",
+                                "source": "oswm_pmtiles_sidewalks",
                                 "source-layer":"sidewalks",
-                                "type": "fill",
+                                "type": "line",
                                 "paint": {
-                                    "fill-color": "steelblue"
+                                    "line-color": "steelblue",
+                                    "line-width": 3,
                                 }
-                            }
+                            },
+                            
+                            {
+                                "id":"crossings",
+                                "source": "oswm_pmtiles_crossings",
+                                "source-layer":"crossings",
+                                "type": "line",
+                                "paint": {
+                                    "line-color": "steelblue",
+                                    "line-width": 3,
+                                }
+                            },
+
+
                         ]
                     }
                 }
             
                 );
-                map.showTileBoundaries = true;
+                
+                // add controls
+                map.addControl(new maplibregl.NavigationControl());
+                map.addControl(new maplibregl.FullscreenControl());
+                map.addControl(new maplibregl.ScaleControl());
+                // map.addControl(new LogoControl({compact: false}));
 
-                // Replace 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' with your chosen tile server URL
-                map.addSource('osm', {
-                type: 'raster',
-                tiles: ['https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'],
-                attribution: '<a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                // add hash
+                // map.addControl(new maplibregl.Hash());
+
+                // add a global attribution:
+                map.addControl(new maplibregl.AttributionControl({
+                    'customAttribution': 'data: <a href="https://openstreetmap.org">OpenStreetMap Contributors</a> + <a href="https://kauevestena.github.io/opensidewalkmap/">OSWM project by Kauê Vestena</a>'
+                }));
+
+                // add geolocation
+                map.on('load', function () {
+                    map.addControl(new maplibregl.GeolocateControl({
+                        positionOptions: {
+                        enableHighAccuracy: true
+                        },
+                        trackUserLocation: true
+                    }));
                 });
 
-                // Add the OSM layer to the map, below any other map elements you might have
-                map.addLayer({
-                id: 'osm-baselayer',
-                source: 'osm',
-                type: 'raster',
-                below: 'sidewalks' // Add this layer below other map elements (optional)
+                map.on('click', 'sidewalks', (e) => {
+                const coordinates = e.features[0].geometry.coordinates.slice();
+
+                log(coordinates)
+
+                const description = e.features[0].properties.surface;
+
+                // Ensure that if the map is zoomed out such that multiple
+                // copies of the feature are visible, the popup appears
+                // over the copy being pointed to.
+                while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+                    coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+                }
+
+                const popupLngLat = new maplibregl.LngLat(coordinates[0], coordinates[1]);
+
+                new maplibregl.Popup()
+                    .setLngLat(popupLngLat)
+                    .setHTML(description)
+                    .addTo(map);
                 });
 
+                // Change the cursor to a pointer when the mouse is over the places layer.
+                map.on('mouseenter', 'sidewalks', () => {
+                    map.getCanvas().style.cursor = 'pointer';
+                    map.setFilter('sidewalks', ["!=", "final_score", 0]);
+                    map.setPaintProperty('sidewalks', 'line-width', 12);
+                });
+                map.on('mouseleave', 'sidewalks', () => {
+                    map.getCanvas().style.cursor = '';
+                    map.setFilter('sidewalks', null);
+                    map.setPaintProperty('sidewalks', 'line-width', 3);
+                });
 
             })
 
