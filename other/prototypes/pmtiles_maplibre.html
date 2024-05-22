@@ -125,9 +125,8 @@
                 });
 
                 map.on('click', 'sidewalks', (e) => {
-                const coordinates = e.features[0].geometry.coordinates.slice();
-
-                log(coordinates)
+                // const coordinates = e.features[0].geometry.coordinates.slice();
+                const coordinates = e.lngLat.toArray();
 
                 const description = e.features[0].properties.surface;
 
@@ -138,10 +137,10 @@
                     coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
                 }
 
-                const popupLngLat = new maplibregl.LngLat(coordinates[0], coordinates[1]);
+                // const popupLngLat = new maplibregl.LngLat(coordinates[0], coordinates[1]);
 
                 new maplibregl.Popup()
-                    .setLngLat(popupLngLat)
+                    .setLngLat(coordinates)
                     .setHTML(description)
                     .addTo(map);
                 });
