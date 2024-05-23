@@ -4,9 +4,14 @@
     <head>
         <title>OSWM Node Webmap</title>
         <meta charset="utf-8"/>
-        <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@3.3.1/dist/maplibre-gl.css">
-        <script src="https://unpkg.com/maplibre-gl@3.3.1/dist/maplibre-gl.js"></script>
+
+        <!-- <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@3.3.1/dist/maplibre-gl.css">
+        <script src="https://unpkg.com/maplibre-gl@3.3.1/dist/maplibre-gl.js"></script> -->
+        <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@4.3.2/dist/maplibre-gl.css' />
+        <script src='https://unpkg.com/maplibre-gl@4.3.2/dist/maplibre-gl.js'></script>
+
         <script src="https://unpkg.com/pmtiles@3.0.5/dist/pmtiles.js"></script>
+
         <style>
             body {
                 margin: 0;
@@ -19,6 +24,9 @@
     <body>
         <div id="map"></div>
         <script type="text/javascript">
+            var hoveredStateId_OSWMProject = null;
+
+
             // add the PMTiles plugin to the maplibregl global.
             let protocol = new pmtiles.Protocol();
             maplibregl.addProtocol("pmtiles",protocol.tile);
@@ -93,7 +101,12 @@
                                 "type": "line",
                                 "paint": {
                                     "line-color": "steelblue",
-                                    "line-width": 3,
+                                    "line-width":     [
+      "case",
+      ["==", ["get", "id"], hoveredStateId_OSWMProject], // Check for hovered feature ID
+      12, // Width for hovered feature
+      1 // Default width
+    ]
                                 }
                             },
 
@@ -128,42 +141,92 @@
                     }));
 
                     
-                });
 
-                map.on('click', 'sidewalks', (e) => {
-                // const coordinates = e.features[0].geometry.coordinates.slice();
-                const coordinates = e.lngLat.toArray();
 
-                const description = e.features[0].properties.surface;
+                    map.on('click', 'sidewalks', (e) => {
+                    // const coordinates = e.features[0].geometry.coordinates.slice();
+                    const coordinates = e.lngLat.toArray();
 
-                // Ensure that if the map is zoomed out such that multiple
-                // copies of the feature are visible, the popup appears
-                // over the copy being pointed to.
-                while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
-                    coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
-                }
+                    const description = e.features[0].properties.surface;
 
-                // const popupLngLat = new maplibregl.LngLat(coordinates[0], coordinates[1]);
+                    // Ensure that if the map is zoomed out such that multiple
+                    // copies of the feature are visible, the popup appears
+                    // over the copy being pointed to.
+                    while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+                        coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+                    }
 
-                new maplibregl.Popup()
-                    .setLngLat(coordinates)
-                    .setHTML(description)
-                    .addTo(map);
-                });
+                    // const popupLngLat = new maplibregl.LngLat(coordinates[0], coordinates[1]);
 
-                // Change the cursor to a pointer when the mouse is over one layer.
-                map.on('mouseenter', 'sidewalks', () => {
-                    map.getCanvas().style.cursor = 'pointer';
-                });
-                map.on('mouseleave', 'sidewalks', (
-                ) => {
-                    map.getCanvas().style.cursor = '';
+                    new maplibregl.Popup()
+                        .setLngLat(coordinates)
+                        .setHTML(description)
+                        .addTo(map);
+                    });
 
+                    // Change the cursor to a pointer when the mouse is over one layer.
+                    map.on('mouseenter', 'sidewalks', () => {
+                        map.getCanvas().style.cursor = 'pointer';
+                    });
+
+                    // map.on('mouseenter', 'crossings', () => {
+                    //     map.getCanvas().style.cursor = 'pointer';
+                    // });
+                    // map.on('mouseleave', 'crossings', () => {
+                    //     map.getCanvas().style.cursor = '';
+                    // });
+
+                    map.on('mouseleave', 'sidewalks', (
+                    ) => {
+                        map.getCanvas().style.cursor = '';
+
+                    });
+
+                    map.on('mousemove', 'crossings', (e) => {
+                    console.log(hoveredStateId_OSWMProject);
+                    if (e.features.length > 0) {
+                        // Clear previous hover state if any
+                        if (hoveredStateId_OSWMProject) {
+                        map.setFeatureState(
+                            {
+                            source: 'oswm_pmtiles_crossings',
+                            sourceLayer: 'crossings',
+                            id: hoveredStateId_OSWMProject
+                            },
+                            { hover: false }
+                        );
+                        }
+
+                        // Update hovered state with the current feature
+                        hoveredStateId_OSWMProject = e.features[0].properties.id;
+                        console.log(hoveredStateId_OSWMProject);
+                        map.setFeatureState( {
+                            source: 'oswm_pmtiles_crossings',
+                            sourceLayer: 'crossings',
+                            id: hoveredStateId_OSWMProject
+                        },
+                        { hover: true }
+                        );
+                    }
+                    });
+
+                // When the mouse leaves the state-fill layer, update the feature state of the
+                // previously hovered feature.
+                map.on('mouseleave', 'crossings', () => {
+                    if (hoveredStateId_OSWMProject) {
+                        map.setFeatureState(
+                            {source: 'oswm_pmtiles_crossings', 
+                            sourceLayer: 'crossings',
+                            id: hoveredStateId_OSWMProject},
+                            {hover: false}
+                        );
+                    }
+                    hoveredStateId_OSWMProject = null;
                 });
 
 
                 
-
+                });
 
             })
 
