@@ -68,7 +68,7 @@
                             id: 'osm-baselayer',
                             source: 'osm',
                             type: 'raster',
-                            below: 'sidewalks' // Add this layer below other map elements (optional)
+                            // below: 'sidewalks' // Add this layer below other map elements (optional)
                             },
 
                             {
@@ -76,6 +76,10 @@
                                 "source": "oswm_pmtiles_sidewalks",
                                 "source-layer":"sidewalks",
                                 "type": "line",
+                                // 'layout': {
+                                //     // 'line-cap': 'round',
+                                //     // 'line-join': 'round' 
+                                // },
                                 "paint": {
                                     "line-color": "steelblue",
                                     "line-width": 3,
@@ -122,6 +126,8 @@
                         },
                         trackUserLocation: true
                     }));
+
+                    
                 });
 
                 map.on('click', 'sidewalks', (e) => {
@@ -145,21 +151,23 @@
                     .addTo(map);
                 });
 
-                // Change the cursor to a pointer when the mouse is over the places layer.
+                // Change the cursor to a pointer when the mouse is over one layer.
                 map.on('mouseenter', 'sidewalks', () => {
                     map.getCanvas().style.cursor = 'pointer';
-                    map.setFilter('sidewalks', ["!=", "final_score", 0]);
-                    map.setPaintProperty('sidewalks', 'line-width', 12);
                 });
-                map.on('mouseleave', 'sidewalks', () => {
+                map.on('mouseleave', 'sidewalks', (
+                ) => {
                     map.getCanvas().style.cursor = '';
-                    map.setFilter('sidewalks', null);
-                    map.setPaintProperty('sidewalks', 'line-width', 3);
+
                 });
+
+
+                
+
 
             })
 
-
+            
 
         </script>
     </body>
