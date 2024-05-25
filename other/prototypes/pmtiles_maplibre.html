@@ -7,6 +7,8 @@
 
         <!-- <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@3.3.1/dist/maplibre-gl.css">
         <script src="https://unpkg.com/maplibre-gl@3.3.1/dist/maplibre-gl.js"></script> -->
+
+        // maplibre-gl
         <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@4.3.2/dist/maplibre-gl.css' />
         <script src='https://unpkg.com/maplibre-gl@4.3.2/dist/maplibre-gl.js'></script>
 
@@ -53,12 +55,15 @@
                             "oswm_pmtiles_sidewalks": {
                                 type: "vector",
                                 url: "pmtiles://" + PMTILES_URL_SIDEWALKS,
+                                attribution: '© <a href="https://openstreetmap.org">OpenStreetMap Contributors</a>'
                                 // attribution: '© <a href="https://openstreetmap.org">OpenStreetMap Contributors</a>'
                             },
 
                             "oswm_pmtiles_crossings": {
                                 type: "vector",
                                 url: "pmtiles://" + PMTILES_URL_CROSSINGS,
+                                promoteId:"id",
+                                attribution: '© <a href="https://openstreetmap.org">OpenStreetMap Contributors</a>'
                                 // attribution: '© <a href="https://openstreetmap.org">OpenStreetMap Contributors</a>'
                             },
 
@@ -99,14 +104,22 @@
                                 "source": "oswm_pmtiles_crossings",
                                 "source-layer":"crossings",
                                 "type": "line",
+                                'layout': {
+                                    'line-cap': 'round',
+                                    'line-join': 'round' 
+                                },
                                 "paint": {
                                     "line-color": "steelblue",
                                     "line-width":     [
-      "case",
-      ["==", ["get", "id"], hoveredStateId_OSWMProject], // Check for hovered feature ID
-      12, // Width for hovered feature
-      1 // Default width
-    ]
+                    'case',
+                    ['boolean', ['feature-state', 'hover'], false],
+                    12,
+                    1
+                ]
+            
+
+
+
                                 }
                             },
 
@@ -127,9 +140,9 @@
                 // map.addControl(new maplibregl.Hash());
 
                 // add a global attribution:
-                map.addControl(new maplibregl.AttributionControl({
-                    'customAttribution': 'data: <a href="https://openstreetmap.org">OpenStreetMap Contributors</a> + <a href="https://kauevestena.github.io/opensidewalkmap/">OSWM project by Kauê Vestena</a>'
-                }));
+                // map.addControl(new maplibregl.AttributionControl({
+                //     'customAttribution': 'data: <a href="https://openstreetmap.org">OpenStreetMap Contributors</a> + <a href="https://kauevestena.github.io/opensidewalkmap/">OSWM project by Kauê Vestena</a>'
+                // }));
 
                 // add geolocation
                 map.on('load', function () {
@@ -183,7 +196,7 @@
                     });
 
                     map.on('mousemove', 'crossings', (e) => {
-                    console.log(hoveredStateId_OSWMProject);
+                    // console.log(hoveredStateId_OSWMProject);
                     if (e.features.length > 0) {
                         // Clear previous hover state if any
                         if (hoveredStateId_OSWMProject) {
@@ -198,8 +211,9 @@
                         }
 
                         // Update hovered state with the current feature
-                        hoveredStateId_OSWMProject = e.features[0].properties.id;
-                        console.log(hoveredStateId_OSWMProject);
+                        // hoveredStateId_OSWMProject = e.features[0].properties.id;
+                        hoveredStateId_OSWMProject = e.features[0].id;
+                        // console.log(hoveredStateId_OSWMProject);
                         map.setFeatureState( {
                             source: 'oswm_pmtiles_crossings',
                             sourceLayer: 'crossings',
