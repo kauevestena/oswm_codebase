@@ -99,7 +99,14 @@
                                 //     // 'line-join': 'round' 
                                 // },
                                 "paint": {
-                                    "line-color": "steelblue",
+                                    "line-color": [
+        'case',
+        ['==', ['get', 'surface'], 'concrete'],
+        '#33C9EB', // blue
+        ['==', ['get', 'surface'], 'asphalt'],
+        '#F7455D', // red
+        'gray' // default color
+      ],
                                     "line-width": 3,
                                 }
                             },
