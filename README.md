@@ -14,6 +14,6 @@ Clone the original node, then initialize the submodules, most of this codebase i
 
     git clone https://github.com/kauevestena/opensidewalkmap_beta
     git submodule init
-    git submodule init
+    git submodule update
 
 You can do the same with other OSWM nodes.
