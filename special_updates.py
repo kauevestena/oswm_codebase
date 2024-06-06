@@ -11,9 +11,10 @@ rmtree(workflows_path,ignore_errors=True)
 copytree('./oswm_codebase/workflows',workflows_path)
 
 # copying requirements.txt:
-copy('./oswm_codebase/requirements.txt','./requirements.txt')
+# copy('./oswm_codebase/requirements.txt','./requirements.txt')
 
 # resetting the boundaries:
-remove_if_exists(boundaries_path)
-remove_if_exists(boundaries_md_path)
+# remove_if_exists(boundaries_path)
+# remove_if_exists(boundaries_md_path)
+
 # TODO: make a full resetting_node.py script
