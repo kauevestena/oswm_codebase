@@ -84,6 +84,7 @@ valid_values_path = 'quality_check/valid_tag_values.json'
 # node homepage:
 user_basepage_url = f'https://{USERNAME}.github.io/'
 node_homepage_url = f'https://{USERNAME}.github.io/{REPO_NAME}/'
+data_folder_url = f'https://{USERNAME}.github.io/{REPO_NAME}/data/'
 data_updating_url = f'https://{USERNAME}.github.io/{REPO_NAME}/data/data_updating.html'
 
 # codebase as page:
