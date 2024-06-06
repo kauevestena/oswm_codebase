@@ -192,8 +192,10 @@ if the data is too outdated you may <a href="https://github.com/kauevestena/open
 </html>    
     '''
 
-    with open(outpath,'w+') as writer:
-        writer.write(page_as_txt)
+    # with open(outpath,'w+') as writer:
+    #     writer.write(page_as_txt)
+    
+    str_to_file(page_as_txt,outpath)
 
 
 def gen_quality_report_page_and_files(outpath,tabledata,feat_type,category,quality_category,text,occ_type,csvpath,count_page=False):

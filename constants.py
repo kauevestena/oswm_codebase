@@ -561,3 +561,11 @@ statistics_basepath = 'statistics'
 # defined here to avoid circular importing problems
 def get_url(relative_url,base_url=node_homepage_url):
     return os.path.join(base_url,relative_url)
+
+
+# webmap stuff:
+BASEMAP_URL = 'https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png'
+webmap_params_original_path = 'oswm_codebase/webmap/webmap_params.json'
+webmap_params_path = 'webmap_params.json'
+webmap_base_path = 'oswm_codebase/webmap/webmap_base.html'
+webmap_path = 'map_new.html'
