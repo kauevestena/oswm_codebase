@@ -159,6 +159,21 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-#tests
+# svg
+svg-inkscape/
+
+# inskcape temp
+# !/assets/projects/*.svg # TODO
+*.RUQQN1
+*.TO1KN1
+*.KLEGN1
+*.RFARO1
+*.PQCRO1
+
+#OSMNX cache
+osmnx_routing/cache/
+cache/
+
+# the tests
+tests/
 tests.py
-/tests

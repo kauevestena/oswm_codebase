@@ -16,4 +16,5 @@ and routing streamlit demo
     [ ] On each module, for all layers in a dataset
     [ ] Global Layers of each category and also the ones for each sub category
 [ ] change data updating to become the "data" module
-[ ] 
+[ ] Styling stuff:
+    [ ] put a faded color on indoor stuff

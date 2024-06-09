@@ -143,14 +143,34 @@
                      },
                      layers: [
 
-
-
                          {
                          id: 'osm-baselayer',
                          source: 'osm',
                          type: 'raster',
-                         // below: 'sidewalks' // Add this layer below other map elements (optional)
                          },
+
+                         {
+                         "id": 'boundaries',
+                         "type": 'line',
+                         "source": 'boundaries',
+                         "paint": {
+                             'line-color': 'black',
+                             'line-opacity': .3
+                         }
+                         },
+
+                         {
+                            "id" : "pedestrian_areas",
+                            "source": "osmw_pmtiles_pedestrian_areas",
+                            "source-layer":"pedestrian_areas",
+                            "type": "fill",
+                            "paint": {
+                                "fill-color": "blue",
+                                "fill-opacity": 0.5
+                            }
+                         },
+
+                         
          
                          {
                              "id":"sidewalks",
@@ -174,15 +194,15 @@
                              }
                          },
 
+
                          {
-                         id: 'boundaries',
-                         type: 'line',
-                         source: 'boundaries',
-                         paint: {
-                             'line-color': 'black',
-                             'line-opacity': .3
-                         }
+                         "id":"kerbs",
+                         "source": "osmw_pmtiles_kerbs",
+                         "source-layer":"kerbs",
+                         "type": "circle",
+                         "minzoom": 16,
                          },
+
                          
                          {
                              "id":"crossings",
@@ -196,18 +216,61 @@
                              "paint": {
                                  "line-color": "steelblue",
                                  "line-width":     [
-                 'case',
-                 ['boolean', ['feature-state', 'hover'], false],
-                 12,
-                 6
-             ]
-         
-         
-         
-         
+                                'case',
+                                ['boolean', ['feature-state', 'hover'], false],
+                                12,
+                                6
+                                ]
+                        
                              }
                          },
-         
+
+                         {
+                            "id": 'main_footways',
+                            "type": 'line',
+                            "source": 'osmw_pmtiles_main_footways',
+                            "source-layer": 'main_footways',
+                            "paint": {
+                                'line-color': 'blue',
+                                'line-width': 2
+                            }
+                        },
+
+                         {
+                         "id": 'potential_footways',
+                         "type": 'line',
+                         "source": 'osmw_pmtiles_potential_footways',
+                         "source-layer": 'potential_footways',
+                         "paint": {
+                             'line-color': 'red',
+                             'line-width': 2
+                         }
+
+                        },
+
+                        {
+                         "id": 'informal_footways',
+                         "type": 'line',
+                         "source": 'osmw_pmtiles_informal_footways',
+                         "source-layer": 'informal_footways',
+                         "paint": {
+                             'line-color': 'orange',
+                             'line-width': 2
+                         }},
+
+                         {
+                         "id": 'stairways', 
+                         'type': 'line',
+                          'source': 'osmw_pmtiles_stairways',
+                        "source-layer": 'stairways',
+                        "paint": {
+                            'line-color': 'green',
+                            'line-width': 2
+                        }
+
+                        },
+
+                                 
          
                      ]
                  }
