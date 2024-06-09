@@ -9,7 +9,7 @@
       <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css' />
       <script src='https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js'></script> 
       <!-- pmtiles -->
-      <script src="https://unpkg.com/pmtiles@3.0.5/dist/pmtiles.js"></script>
+      <script src="https://unpkg.com/pmtiles@latest/dist/pmtiles.js"></script>
       <!-- legend module -->
       <link href='https://www.unpkg.com/@watergis/maplibre-gl-legend@latest/dist/maplibre-gl-legend.css' rel='stylesheet' />
       <script src="https://www.unpkg.com/@watergis/maplibre-gl-legend@latest/dist/maplibre-gl-legend.umd.js"></script>
@@ -143,6 +143,8 @@
                      },
                      layers: [
 
+
+
                          {
                          id: 'osm-baselayer',
                          source: 'osm',
@@ -170,7 +172,7 @@
                             }
                          },
 
-                         
+
          
                          {
                              "id":"sidewalks",
@@ -203,6 +205,7 @@
                          "minzoom": 16,
                          },
 
+
                          
                          {
                              "id":"crossings",
@@ -216,16 +219,16 @@
                              "paint": {
                                  "line-color": "steelblue",
                                  "line-width":     [
-                                'case',
-                                ['boolean', ['feature-state', 'hover'], false],
-                                12,
-                                6
-                                ]
-                        
-                             }
-                         },
+                 'case',
+                 ['boolean', ['feature-state', 'hover'], false],
+                 12,
+                 6
+             ]
+         
+             }
+            },
 
-                         {
+                        {
                             "id": 'main_footways',
                             "type": 'line',
                             "source": 'osmw_pmtiles_main_footways',
@@ -236,7 +239,7 @@
                             }
                         },
 
-                         {
+                        {
                          "id": 'potential_footways',
                          "type": 'line',
                          "source": 'osmw_pmtiles_potential_footways',
@@ -258,6 +261,7 @@
                              'line-width': 2
                          }},
 
+
                          {
                          "id": 'stairways', 
                          'type': 'line',
@@ -269,8 +273,7 @@
                         }
 
                         },
-
-                                 
+         
          
                      ]
                  }
