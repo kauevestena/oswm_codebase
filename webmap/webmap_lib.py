@@ -91,7 +91,7 @@ layertypes_basedict = {
         "source": "",
         "source-layer": "",
         "type": "circle",
-        "minzoom": 16,
+        "minzoom": 17,
         "paint": {
             "circle-color": "steelblue",
             "circle-opacity": 0.8
@@ -192,7 +192,7 @@ def create_base_style(sources=MAP_SOURCES,name='Footway Categories'):
     
     return style_dict
 
-def create_simple_map_style(name,color_schema,sources=MAP_SOURCES):
+def create_simple_map_style(name,color_schema,sources=MAP_SOURCES,generate_shadow_layers=True):
     style_dict = deepcopy(mapstyle_basedict)
     
     style_dict['sources'] = sources
@@ -200,6 +200,19 @@ def create_simple_map_style(name,color_schema,sources=MAP_SOURCES):
     style_dict['name'] = name
     
     style_dict['layers'].extend(deepcopy(immutable_layers))
+    
+    # creating "shadow layers" for line layers only:
+    if generate_shadow_layers:
+        for layername in ordered_map_layers:
+            if layertypes_dict[layername] == 'line':
+                layer_dict = deepcopy(layertypes_basedict['line'])
+                layer_dict['id'] = f'{layername}_shadow'
+                layer_dict['source'] = f'oswm_pmtiles_{layername}'
+                layer_dict['source-layer'] = layername
+                layer_dict['paint']['line-color'] = 'black'
+                layer_dict['paint']['line-width'] = 4
+                
+                style_dict['layers'].append(layer_dict)
     
     for layername in ordered_map_layers:
         layer_type = layertypes_dict[layername]
