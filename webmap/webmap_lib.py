@@ -2,6 +2,8 @@ import sys
 sys.path.append('oswm_codebase')
 from functions import *
 
+MAP_DATA_LAYERS = [l for l in paths_dict['map_layers']]
+
 # mapping geometry types to maplibre style
 map_geom_type_mapping = {
     'Polygon':'fill',
@@ -24,7 +26,7 @@ def get_sources(terrain_url=None,only_urls=False):
             "type": "vector",
             "url": f"pmtiles://{ret[f'{layername}_url']}",
             "promoteId":"id",
-            "attribution": '© <a href="https://openstreetmap.org">OpenStreetMap Contributors</a>'}
+            "attribution": r'© <a href="https://openstreetmap.org">OpenStreetMap Contributors</a>'}
         
     ret['boundaries_url'] = f'{node_homepage_url}data/boundaries.geojson'
 

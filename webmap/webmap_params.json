@@ -20,7 +20,6 @@
     "informal_footways_url": "https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/informal_footways.pmtiles",
     "pedestrian_areas_url": "https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/pedestrian_areas.pmtiles",
     "boundaries_url": "https://kauevestena.github.io/opensidewalkmap_beta/data/boundaries.geojson",
-
     "layers": [
         {
             "id": "osm-baselayer",
@@ -105,8 +104,8 @@
                         ],
                         false
                     ],
-                    12,
-                    6
+                    4,
+                    2
                 ]
             }
         },
@@ -210,5 +209,15 @@
             "type": "geojson",
             "data": "https://kauevestena.github.io/opensidewalkmap_beta/data/boundaries.geojson"
         }
-    }
+    },
+    "data_layers": [
+        "sidewalks",
+        "crossings",
+        "kerbs",
+        "stairways",
+        "main_footways",
+        "potential_footways",
+        "informal_footways",
+        "pedestrian_areas"
+    ]
 }

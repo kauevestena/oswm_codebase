@@ -12,10 +12,14 @@ in_dev = args.development
 params = read_json(webmap_params_original_path)
 
 # then override: (TODO)
+params['data_layers'] = MAP_DATA_LAYERS
 
 # # generating the "sources" and layernames:
 params.update(get_sources(only_urls=True))
 sources = get_sources()['sources']
+
+# very temporary:
+params['sources'] = sources
 
 
 # reading the base html
