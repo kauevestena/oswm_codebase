@@ -18,3 +18,6 @@ and routing streamlit demo
 [ ] change data updating to become the "data" module
 [ ] Styling stuff:
     [ ] put a faded color on indoor stuff
+[ ] Elevation stuff:
+    [ ] Add elevation to the map
+    [ ] Integrate https://portal.opentopography.org/apidocs/#/Public/getGlobalDem

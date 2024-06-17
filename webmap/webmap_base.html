@@ -18,15 +18,45 @@
          margin: 0;
          }
          #map {
-         height:100%; width:100%;
-         }
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
+
+        #style-changer {
+            position: absolute;
+            top: 10px;
+            right: 60px; /* Adjusted to avoid collision with the navigation control */
+            background: #fff;
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            border-radius: 4px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.10);
+            z-index: 1;
+        }
+        #style-selector {
+            border: none;
+            padding: 10px;
+            border-radius: 4px;
+            background-color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            width: 100%;
+        }
+        #style-selector:focus {
+            outline: none;
+            border: none;
+        }
       </style>
 
         <link rel="icon" type="image/x-icon" href="https://kauevestena.github.io/opensidewalkmap/assets/favicon_homepage.png">
    </head>
    <body>
-      <div id="map"></div>
-      <script type="text/javascript">
+       <div id="style-changer">
+           <select id="style-selector"></select>
+        </div>
+        <div id="map"></div>
+        <script type="text/javascript">
 
          // Global Control Variables
          var hoveredStateId_OSWMProject = null;
@@ -104,7 +134,8 @@
                      },
                      trackUserLocation: true
                  }));
-         
+
+                        
                  
          
          
@@ -213,7 +244,25 @@
             // //     })
             // //     );
          
+
+        // // //              // Dynamically populate the dropdown options
+        // // // const styleSelector = document.getElementById('style-selector');
+        // // // Object.keys(styles).forEach(styleKey => {
+        // // //     const option = document.createElement('option');
+        // // //     option.value = styleKey;
+        // // //     option.textContent = styleKey;
+        // // //     styleSelector.appendChild(option);
+        // // // });
+
+        // // // // Listen for style changes
+        // // // styleSelector.addEventListener('change', function (e) {
+        // // //     const style = e.target.value;
+        // // //     map.setStyle(styles[style]);
+        // // // });
+
+        // END of the big "then" statement:
          });
+         
          
          
          

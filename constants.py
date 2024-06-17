@@ -40,6 +40,8 @@ other_footways_subcatecories = {
     'pedestrian_areas' : {} #defined only by geometry type (Polygon,Multipolygon)
 }
 
+other_footways_geometry_types = {k:'LineString' for k, v in other_footways_subcatecories.items()}
+other_footways_geometry_types['pedestrian_areas'] = 'Polygon'
 # ogr2ogr path
 OGR2OGR_PATH = 'ogr2ogr'
 
@@ -555,6 +557,10 @@ geom_type_dict = {
     'other_footways':['LineString','Polygon','MultiPolygon'] 
 }
 
+all_layers_geom_types = {k:v[0] for k,v in geom_type_dict.items()}
+del all_layers_geom_types['other_footways']
+for subcategory in other_footways_geometry_types:
+    all_layers_geom_types[subcategory] = other_footways_geometry_types[subcategory]
 
 
 statistics_basepath = 'statistics'
