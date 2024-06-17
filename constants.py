@@ -40,8 +40,23 @@ other_footways_subcatecories = {
     'pedestrian_areas' : {} #defined only by geometry type (Polygon,Multipolygon)
 }
 
+# establishing other footways geometry types, default is 'LineString'
 other_footways_geometry_types = {k:'LineString' for k, v in other_footways_subcatecories.items()}
 other_footways_geometry_types['pedestrian_areas'] = 'Polygon'
+
+data_layer_descriptions = {
+    'kerbs' : 'Access points in the kerb lane where the sidewalk and the road meet, along a crossing.',
+    'sidewalks' : 'A footway that is juxtaposed to a road, a type of sidepath.',
+    'crossings' : 'The line that allows pedestrians to cross some road.',
+    'other_footways' : {
+        'stairways' : 'Pathways composed of steps.',
+        'main_footways' : 'Pathways which main usage is pedestrian displacement.',
+        'potential_footways' : 'Pathways with vague description, generally usable for pedestrians, but sometimes not as its main or sole purpose, such as some rural tracks.',
+        'informal_footways' : 'Pathways that are not made for pedestrian usage, but they generally used due to the absence of proper footways.',
+        'pedestrian_areas' : 'Areas where pedestrians can generally displace freely in normal circumstances.'
+    }
+}
+
 # ogr2ogr path
 OGR2OGR_PATH = 'ogr2ogr'
 

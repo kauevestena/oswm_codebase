@@ -21,3 +21,5 @@ and routing streamlit demo
 [ ] Elevation stuff:
     [ ] Add elevation to the map
     [ ] Integrate https://portal.opentopography.org/apidocs/#/Public/getGlobalDem
+[ ] Filter out globally the indoor stuff (not sure about this one)
+    [ ] create an indoor style

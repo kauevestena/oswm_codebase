@@ -11,17 +11,36 @@ in_dev = args.development
 # first, reading the parameters
 params = read_json(webmap_params_original_path)
 
-# then override: (TODO)
+# then override and fill in with the stuff:
 params['data_layers'] = MAP_DATA_LAYERS
+
+# the layers that by type:
+params['layer_types'] = layer_type_groups
 
 # # generating the "sources" and layernames:
 params.update(get_sources(only_urls=True))
-sources = get_sources()['sources']
+
 
 # very temporary:
-params['sources'] = sources
+# params['sources'] = MAP_SOURCES
 
+# getting colors
+interest_attributes = {
+    # key is raw attribute name, value is label (human readable)
+    "surface" : "Surface",
+    "smoothness" : "Smoothness",
+}
 
+params['styles'] = {
+    "footway_categories" : create_base_style()
+}
+
+for attribute in interest_attributes:
+    color_dict = get_color_dict(attribute)
+    color_schema = create_maplibre_color_schema(color_dict,attribute)
+    
+    params['styles'][attribute] = create_simple_map_style(interest_attributes[attribute],color_schema)
+    
 # reading the base html
 webmap_html = file_as_string(webmap_base_path)
 
