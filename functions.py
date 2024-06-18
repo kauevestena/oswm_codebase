@@ -756,3 +756,6 @@ def remove_empty_columns(gdf,report=False):
 
     if report:
         print(f'    removed {prev-len(gdf.columns)} empty columns')
+        
+def get_boundaries_bbox():
+    return list(gpd.read_file(boundaries_geojson_path).total_bounds)

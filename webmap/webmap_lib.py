@@ -5,6 +5,13 @@ from copy import deepcopy
 
 MAP_DATA_LAYERS = [l for l in paths_dict['map_layers']]
 
+# webmap stuff:
+BASEMAP_URL = 'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png'
+webmap_params_original_path = 'oswm_codebase/webmap/webmap_params.json'
+webmap_params_path = 'webmap_params.json'
+webmap_base_path = 'oswm_codebase/webmap/webmap_base.html'
+webmap_path = 'map_new.html'
+
 # mapping geometry types to maplibre style
 map_geom_type_mapping = {
     'Polygon':'fill',
@@ -36,15 +43,18 @@ layer_type_groups = {
 immutable_layers=  [{
             "id": "osm-baselayer",
             "source": "osm",
-            "type": "raster"
+            "type": "raster",
+            "paint": {
+                "raster-opacity": .9
+            }
         },
         {
             "id": "boundaries",
             "type": "line",
             "source": "boundaries",
             "paint": {
-                "line-color": "black",
-                "line-opacity": 0.3
+                "line-color": "white",
+                "line-opacity": 0.4
             }
         }]
 
@@ -73,7 +83,13 @@ layertypes_basedict = {
         "type": "line",
         "paint": {
             "line-color": "steelblue",
-            "line-width": 3
+            "line-width": [
+                    'case',
+                    ['boolean', ['feature-state', 'hover'], False],
+                    6,
+                    3
+                ]
+            
         }
     },
     'fill':{
@@ -83,7 +99,12 @@ layertypes_basedict = {
         "type": "fill",
         "paint": {
             "fill-color": "steelblue",
-            "fill-opacity": 0.5
+            "fill-opacity": [
+                    'case',
+                    ['boolean', ['feature-state', 'hover'], False],
+                    0.8,
+                    0.5
+                ]
         }
     },
     'circle':{
@@ -94,7 +115,13 @@ layertypes_basedict = {
         "minzoom": 17,
         "paint": {
             "circle-color": "steelblue",
-            "circle-opacity": 0.8
+            "circle-opacity": 0.8,
+            "circle-radius": [
+                    'case',
+                    ['boolean', ['feature-state', 'hover'], False],
+                    7,
+                    4
+                ]
         }
     }
 }
@@ -125,12 +152,14 @@ def get_sources(terrain_url=None,only_urls=False):
     ret['sources']['osm'] = {
         "type": "raster",
         "tiles": [BASEMAP_URL],
+        "attribution": r'© <a href="https://openstreetmap.org">OpenStreetMap Contributors</a>; basemap by <a href="https://carto.com/attribution">CARTO</a>'
     }
 
     # boundaries:
     ret['sources']['boundaries'] = {
         "type": "geojson",
-        "data": ret['boundaries_url']
+        "data": ret['boundaries_url'],
+        "attribution": r'© <a href="https://openstreetmap.org">OpenStreetMap Contributors</a>'
     }
     
     if terrain_url:

@@ -17,6 +17,9 @@ params['data_layers'] = MAP_DATA_LAYERS
 # the layers that by type:
 params['layer_types'] = layer_type_groups
 
+# boundaries:
+params['bounds'] = get_boundaries_bbox()
+
 # # generating the "sources" and layernames:
 params.update(get_sources(only_urls=True))
 
@@ -37,9 +40,9 @@ params['styles'] = {
 
 for attribute in interest_attributes:
     color_dict = get_color_dict(attribute)
-    color_schema = create_maplibre_color_schema(color_dict,attribute)
+    color_schema = create_maplibre_color_schema(color_dict,attribute,'gray')
     
-    params['styles'][attribute] = create_simple_map_style(interest_attributes[attribute],color_schema)
+    params['styles'][attribute] = create_simple_map_style(interest_attributes[attribute],color_schema,generate_shadow_layers=False)
     
 # reading the base html
 webmap_html = file_as_string(webmap_base_path)
