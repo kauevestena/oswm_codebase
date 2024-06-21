@@ -222,13 +222,14 @@
                             // Construct the rich description with a heading
                             const description = `
                                 <div class="popup-content">
-                                    <div class="popup-heading"><span>F.&nbsp;${properties.id}</span><span>:</span><span>${layerName}</span></div>
+                                    <div class="popup-heading"><span>Feat.&nbsp;${properties.id}</span><span>:</span><span>${layerName}</span></div>
                                     <div><span>Surface</span><span>:</span><span>${properties.surface || '?'}</span></div>
                                     <div><span>Smoothness</span><span>:</span><span>${properties.smoothness || '?'}</span></div>
                                     <div><span>Width</span><span>:</span><span>${properties.width || '?'}</span></div>
                                     <div><span>Incline</span><span>:</span><span>${properties.incline || '?'}</span></div>
                                     <div><span>Incline&nbsp;(across)</span><span>:</span><span>${properties['incline:across'] || '?'}</span></div>
                                     <div><span>Indoor</span><span>:</span><span>${properties.indoor || '?'}</span></div>
+                                    <div><span>Lit</span><span>:</span><span>${properties.lit || '?'}</span></div>
                                 </div>
                                 <div class="popup-links">
                                     <a href="https://www.openstreetmap.org/${properties.element_type}/${properties.id}" target="_blank">
