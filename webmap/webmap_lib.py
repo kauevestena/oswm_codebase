@@ -10,7 +10,7 @@ BASEMAP_URL = 'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png'
 webmap_params_original_path = 'oswm_codebase/webmap/webmap_params.json'
 webmap_params_path = 'webmap_params.json'
 webmap_base_path = 'oswm_codebase/webmap/webmap_base.html'
-webmap_path = 'map_new.html'
+webmap_path = 'map.html'
 
 # mapping geometry types to maplibre style
 map_geom_type_mapping = {

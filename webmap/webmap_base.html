@@ -117,6 +117,18 @@
             text-decoration: underline;
             /* Adds underline on hover */
         }
+
+        .logo_img{
+            position: fixed;
+            left: 2px;
+            top:  2px;
+            z-index: 99999999999999999;
+            }
+
+        .responsive {
+            max-width: 60%;
+            height: auto;
+        }
     </style>
 
     <link rel="icon" type="image/x-icon"
@@ -127,7 +139,21 @@
     <div id="style-changer">
         <select id="style-selector"></select>
     </div>
-    <div id="map"></div>
+    <div id="map">
+
+        <a href="https://kauevestena.github.io/opensidewalkmap_beta/" id="node_link">
+            <img 
+            src="https://kauevestena.github.io/opensidewalkmap_beta/oswm_codebase/assets/page_logo.png" 
+            alt="OSWM Page Logo"  
+            title="Click for more OSWM Node's Resources!!" 
+            class="logo_img responsive" 
+            ></img>
+        </a>
+
+    </div>
+
+    
+
     <script type="text/javascript">
 
         // Global Control Variables
@@ -184,6 +210,31 @@
                     }
 
                 );
+
+                const homePosition = {
+                center: [144, -37],
+                };
+
+                function addHomeButton(map) {
+                class HomeButton {
+                    onAdd(map) {
+                    const div = document.createElement("div");
+                    div.className = "mapboxgl-ctrl mapboxgl-ctrl-group";
+                    div.innerHTML = `<button>
+                        <svg focusable="false" viewBox="0 0 24 24" aria-hidden="true" style="font-size: 20px;"><title>Reset map</title><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"></path></svg>
+                        </button>`;
+                    div.addEventListener("contextmenu", (e) => e.preventDefault());
+                    // div.addEventListener("click", () => map.flyTo(homePosition));
+
+                    return div;
+                    }
+                }
+
+                // const homeButton = 
+                map.addControl(new HomeButton(), "top-left");
+
+                }
+
 
 
                 // add controls
@@ -270,6 +321,21 @@
                         });
                     }
 
+
+                    // Function used to update element's attributes:
+                    function changeElementAttribute(elementId, attributeName, attributeValue) {
+                        // Get the element using its ID
+                        const element = document.getElementById(elementId);
+
+                        if (element) {
+                            // Set the specified attribute with the provided value
+                            element[attributeName] = attributeValue;
+                        } else {
+                            console.error(`Element with ID "${elementId}" not found.`);
+                        }
+                        }
+
+                    changeElementAttribute("node_link","href",params['node_url']);
 
 
                     // Function to set up hover effect for a specific layer

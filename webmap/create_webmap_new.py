@@ -20,6 +20,9 @@ params['layer_types'] = layer_type_groups
 # boundaries:
 params['bounds'] = get_boundaries_bbox()
 
+# updating the node's url:
+params['node_url'] = node_homepage_url
+
 # # generating the "sources" and layernames:
 params.update(get_sources(only_urls=True))
 
