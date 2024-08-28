@@ -254,11 +254,42 @@ fields_values_properties = {
                 'score_default' : 10,
                 'color' : '#434343', #
             },
+        },
+
+        'wheelchair': {
+            '?':{
+                'score_default' : 0, # equivalent to "very horrible"
+                'color' : '#434343', #
+            },
+
+            'no':{
+                'score_default' : 0, # equivalent to "very horrible"
+                'color' : '#fc8d59', #
+            },
 
 
+            'limited':{
+                'score_default' : 0, # equivalent to "very horrible"
+                'color' : '#ffffbf', #
+            },
+
+            'yes':{
+                'score_default' : 0, # equivalent to "very horrible"
+                'color' : '#91bfdb', #
+            },
+
+            'designated':{
+                'score_default' : 0, # equivalent to "very horrible"
+                'color' : '#91bfdb', #
+            },
+
+
+        
 
 
         },
+
+
         'smoothness' : {
             # for absence:
             '?':{
@@ -365,20 +396,20 @@ fields_values_properties = {
         'tactile_paving':{
             'yes':{
                 'score_default' : 100,
-                'color' : '#000000', #black
+                'color' : '#0b7cf4', 
 
                 'opacity' : 1, 
             },
             'contrasted':{
                 'score_default' : 100,
-                'color' : '#000000', #black
+                'color' : '#0b7cf4', 
 
                 'opacity' : 1, 
 
             },
             'no':{
                 'score_default' : 0,
-                'color' : 'rgba(0, 0, 0, 1)', # transparent
+                'color' : '#df393f', 
 
                 'opacity' : 0, 
 
@@ -386,7 +417,7 @@ fields_values_properties = {
 
             '?':{
                 'score_default' : 0, # equivalent to "no"
-                'color' : 'rgba(0, 0, 0, 1)', #
+                'color' : "#717171",#"#434343", #
 
                 'opacity' : 0, 
 

@@ -30,15 +30,16 @@ params.update(get_sources(only_urls=True))
 # very temporary:
 # params['sources'] = MAP_SOURCES
 
-# getting colors
+params['styles'] = {
+    "footway_categories" : create_base_style()
+}
+
 interest_attributes = {
     # key is raw attribute name, value is label (human readable)
     "surface" : "Surface",
     "smoothness" : "Smoothness",
-}
-
-params['styles'] = {
-    "footway_categories" : create_base_style()
+    "tactile_paving" : "Tactile Paving",
+    "wheelchair" : "Rep. Wheelchair Acc.",
 }
 
 for attribute in interest_attributes:
