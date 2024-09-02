@@ -396,20 +396,20 @@ fields_values_properties = {
         'tactile_paving':{
             'yes':{
                 'score_default' : 100,
-                'color' : '#0b7cf4', 
+                'color' : '#6146d0', 
 
                 'opacity' : 1, 
             },
             'contrasted':{
                 'score_default' : 100,
-                'color' : '#0b7cf4', 
+                'color' : '#6146d0', 
 
                 'opacity' : 1, 
 
             },
             'no':{
                 'score_default' : 0,
-                'color' : '#df393f', 
+                'color' : '#bd1006', 
 
                 'opacity' : 0, 
 
