@@ -10,3 +10,5 @@ requests
 shapely
 scikit-learn
 pyarrow
+svg.py
+matplotlib
