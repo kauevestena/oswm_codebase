@@ -289,7 +289,7 @@ def get_color_dict(columnname):
         
     return colordict
 
-def create_maplibre_color_schema(attribute_dict,attribute_name, else_color="black"):
+def create_maplibre_color_schema(attribute_dict,attribute_name, else_color="gray"):
     schema = ["case"]
     for key, value in attribute_dict.items():
         schema.extend([
