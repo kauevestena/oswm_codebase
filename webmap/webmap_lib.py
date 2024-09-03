@@ -194,6 +194,17 @@ def sort_keys_by_order(input_dict, order_list):
 
 ordered_map_layers = sort_keys_by_order(layertypes_dict, layer_type_groups.keys())
 
+custom_layer_colors = {
+    'stairways':'#8a7e2f',
+    'main_footways':'#299077',
+    'informal_footways':'#b0645a',
+    'potential_footways':'#9569a4',
+}
+
+custom_layer_dash_patterns = {
+    "crossings": [1,0.5],
+}
+
 def create_base_style(sources=MAP_SOURCES,name='Footway Categories'):
     
     style_dict = deepcopy(mapstyle_basedict)
@@ -213,12 +224,17 @@ def create_base_style(sources=MAP_SOURCES,name='Footway Categories'):
         layer_dict['id'] = layername
         layer_dict['source'] = f'oswm_pmtiles_{layername}'
         layer_dict['source-layer'] = layername
+
+        if layername in custom_layer_colors:
+            layer_dict['paint']['line-color'] = custom_layer_colors[layername]
         
-                
+        if layername in custom_layer_dash_patterns:
+            layer_dict['paint']['line-dasharray'] = custom_layer_dash_patterns[layername]
+
+        # now the custom colors
+        
         style_dict['layers'].append(layer_dict)
         
-    
-    
     return style_dict
 
 def create_simple_map_style(name,color_schema,sources=MAP_SOURCES,generate_shadow_layers=True):
