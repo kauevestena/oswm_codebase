@@ -237,7 +237,8 @@ def create_base_style(sources=MAP_SOURCES,name='Footway Categories'):
         
     return style_dict
 
-def create_simple_map_style(name,color_schema,sources=MAP_SOURCES,generate_shadow_layers=True):
+def create_simple_map_style(name,color_schema,sources=MAP_SOURCES,generate_shadow_layers=False):
+
     style_dict = deepcopy(mapstyle_basedict)
     
     style_dict['sources'] = sources
@@ -298,3 +299,13 @@ def create_maplibre_color_schema(attribute_dict,attribute_name, else_color="gray
         ])
     schema.append(else_color)
     return schema
+
+def create_crossing_kerbs_style(sources=MAP_SOURCES,name='Crossings and Kerbs'):
+
+    style_dict = deepcopy(mapstyle_basedict)
+    
+    style_dict['sources'] = sources
+    
+    style_dict['name'] = name
+    
+    style_dict['layers'].extend(deepcopy(immutable_layers))
