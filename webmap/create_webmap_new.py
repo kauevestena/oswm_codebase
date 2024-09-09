@@ -47,6 +47,9 @@ for attribute in interest_attributes:
     color_schema = create_maplibre_color_schema(color_dict,attribute,'gray')
     
     params['styles'][attribute] = create_simple_map_style(interest_attributes[attribute],color_schema,generate_shadow_layers=False)
+
+
+create_crossings_kerbs_style()
     
 # reading the base html
 webmap_html = file_as_string(webmap_base_path)

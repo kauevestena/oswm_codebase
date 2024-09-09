@@ -26,7 +26,7 @@ def dump_json(inputdict,outputpath,indent=4):
 
 def file_as_string(inputpath:str):
     if os.path.exists(inputpath):
-        with open(inputpath) as reader:
+        with open(inputpath,encoding='utf8') as reader:
             return reader.read()
     else:
         raise(FileNotFoundError)

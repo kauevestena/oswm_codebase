@@ -270,7 +270,7 @@ def create_simple_map_style(name,color_schema,sources=MAP_SOURCES,generate_shado
         layer_dict['source'] = f'oswm_pmtiles_{layername}'
         layer_dict['source-layer'] = layername
         
-        layer_type = layertypes_dict[layername]
+        # layer_type = layertypes_dict[layername]
         
         layer_dict['paint'][color_attribute[layer_type]] = color_schema
         
@@ -300,7 +300,7 @@ def create_maplibre_color_schema(attribute_dict,attribute_name, else_color="gray
     schema.append(else_color)
     return schema
 
-def create_crossing_kerbs_style(sources=MAP_SOURCES,name='Crossings and Kerbs'):
+def create_crossings_kerbs_style(sources=MAP_SOURCES,name='Crossings and Kerbs'):
 
     style_dict = deepcopy(mapstyle_basedict)
     
@@ -309,3 +309,9 @@ def create_crossing_kerbs_style(sources=MAP_SOURCES,name='Crossings and Kerbs'):
     style_dict['name'] = name
     
     style_dict['layers'].extend(deepcopy(immutable_layers))
+
+    for layername in ordered_map_layers:
+        layer_type = layertypes_dict[layername]
+        
+        layer_dict = deepcopy(layertypes_basedict[layer_type])
+        
