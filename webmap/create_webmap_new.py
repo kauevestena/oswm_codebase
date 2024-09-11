@@ -40,12 +40,24 @@ interest_attributes = {
     "surface" : "Surface",
     "smoothness" : "Smoothness",
     "tactile_paving" : "Tactile Paving",
-    "wheelchair" : "Rep. Wheelchair Acc.",
+    'lit' : "Lighting",
+    'traffic_calming' : "Traffic Calming",
+    "wheelchair" : 'wheelchair=* tag',
+}
+
+attribute_layers = {
+    # default is "sidewalks", only specified if different:
+    'traffic_calming' : 'crossings',
+}
+
+different_else_color = {
+    # default is "gray", specifyed ony if different:
+    'traffic_calming' : '#63636366',
 }
 
 for attribute in interest_attributes:
-    color_dict = get_color_dict(attribute)
-    color_schema = create_maplibre_color_schema(color_dict,attribute,'gray')
+    color_dict = get_color_dict(attribute,attribute_layers.get(attribute,'sidewalks'))
+    color_schema = create_maplibre_color_schema(color_dict,attribute,different_else_color.get(attribute,'gray'))
     
     params['styles'][attribute] = create_simple_map_style(interest_attributes[attribute],color_schema,generate_shadow_layers=False)
 

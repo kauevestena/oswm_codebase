@@ -335,9 +335,35 @@ fields_values_properties = {
 
 
         # invalid values must be handled individually
-                                                                                                 
-
         },
+        'lit' : {
+            '?':{
+                'score_default' : 10,
+                'color' : '#434343', #
+            },
+
+            'yes':{
+                'score_default' : 10,
+                'color' : '#ffff99', #
+            },
+            'automatic':{
+                'score_default' : 10,
+                'color' : '#ffff99', #
+            },
+            'no':{
+                'score_default' : 10,
+                'color' : '#6a3d9a', #
+            },
+            'disused':{
+                'score_default' : 10,
+                'color' : '#6a3d9a', #
+            },
+            '24/7':{
+                'score_default' : 10,
+                'color' : '#ffff99', #
+            },
+        },
+
         'width':{
             '?':{
                 'score_default' : 10,
@@ -556,7 +582,7 @@ fields_values_properties = {
 
             '?':{
                 'score_default' : 0,
-                'color' : 'gray', #
+                'color' : '#63636399', #
             },
 
         }
