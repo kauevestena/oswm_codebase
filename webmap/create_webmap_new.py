@@ -31,7 +31,8 @@ params.update(get_sources(only_urls=True))
 # params['sources'] = MAP_SOURCES
 
 params['styles'] = {
-    "footway_categories" : create_base_style()
+    "footway_categories" : create_base_style(),
+    'crossings_and_kerbs' : create_crossings_kerbs_style()
 }
 
 interest_attributes = {
@@ -48,9 +49,6 @@ for attribute in interest_attributes:
     
     params['styles'][attribute] = create_simple_map_style(interest_attributes[attribute],color_schema,generate_shadow_layers=False)
 
-
-create_crossings_kerbs_style()
-    
 # reading the base html
 webmap_html = file_as_string(webmap_base_path)
 

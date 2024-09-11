@@ -194,18 +194,19 @@ def sort_keys_by_order(input_dict, order_list):
 
 ordered_map_layers = sort_keys_by_order(layertypes_dict, layer_type_groups.keys())
 
-custom_layer_colors = {
+
+def create_base_style(sources=MAP_SOURCES,name='Footway Categories'):
+
+    custom_layer_colors = {
     'stairways':'#8a7e2f',
     'main_footways':'#299077',
     'informal_footways':'#b0645a',
     'potential_footways':'#9569a4',
-}
+    }
 
-custom_layer_dash_patterns = {
-    "crossings": [1,0.5],
-}
-
-def create_base_style(sources=MAP_SOURCES,name='Footway Categories'):
+    custom_layer_dash_patterns = {
+        "crossings": [1,0.5],
+    }
     
     style_dict = deepcopy(mapstyle_basedict)
     
@@ -280,13 +281,22 @@ def create_simple_map_style(name,color_schema,sources=MAP_SOURCES,generate_shado
     
     return style_dict
 
-def get_color_dict(columnname):
+def get_color_dict(columnname,layer='sidewalks',attribute='color'):
+    """
+    Given a columnname, layername and attribute, returns a dictionary mapping each value in the column to its corresponding attribute value.
+    
+    :param columnname: column name
+    :param layer: layer name (default to 'sidewalks')
+    :param attribute: attribute name (default to 'color')
+    
+    :return: a dictionary mapping each value in the column to its corresponding attribute value
+    """
     colordict = {}
     
-    base_dict = fields_values_properties['sidewalks'][columnname]
+    base_dict = fields_values_properties[layer][columnname]
     
     for key in base_dict:
-        colordict[key] = base_dict[key]['color']
+        colordict[key] = base_dict[key][attribute]
         
     return colordict
 
@@ -300,7 +310,7 @@ def create_maplibre_color_schema(attribute_dict,attribute_name, else_color="gray
     schema.append(else_color)
     return schema
 
-def create_crossings_kerbs_style(sources=MAP_SOURCES,name='Crossings and Kerbs'):
+def create_crossings_kerbs_style(sources=MAP_SOURCES,name='Crossings and Kerbs',else_color='#63636380'):
 
     style_dict = deepcopy(mapstyle_basedict)
     
@@ -310,8 +320,42 @@ def create_crossings_kerbs_style(sources=MAP_SOURCES,name='Crossings and Kerbs')
     
     style_dict['layers'].extend(deepcopy(immutable_layers))
 
+    interest_layers = {
+        # layername : tag key
+        'crossings' : 'crossing',
+        'kerbs' : 'kerb',
+    }
+
     for layername in ordered_map_layers:
         layer_type = layertypes_dict[layername]
         
         layer_dict = deepcopy(layertypes_basedict[layer_type])
+
+        if layername in interest_layers:
+            # layer_dict.update(custom_crossing_kerbs_dict[layername])
+            color_dict = get_color_dict(interest_layers[layername],layername)
+            color_schema = create_maplibre_color_schema(color_dict,interest_layers[layername],'gray')
+            layer_dict['paint'][color_attribute[layer_type]] = color_schema
+
+            # making kerbs a little bigger
+            if layername == 'kerbs':
+                layer_dict['paint']['circle-radius'] = [
+                    'case',
+                    ['boolean', ['feature-state', 'hover'], False],
+                    8,
+                    5
+                ]
+        else:
+            # all other layers will be a very faded gray:
+            layer_dict['paint'][color_attribute[layer_type]] = else_color
+
+        # now we can set the id and source:
+        layer_dict['id'] = layername
+        layer_dict['source'] = f'oswm_pmtiles_{layername}'
+        layer_dict['source-layer'] = layername
+
+        style_dict['layers'].append(layer_dict)
+
+
+    return style_dict
         

@@ -425,9 +425,11 @@ fields_values_properties = {
 
         }
         },
+
     'crossings':{
         # default scores should be what was named "bonus"
         'crossing': {
+            # base color-scheme: ColorBrewer (thx!!) 12-class Paired
             'no':{
                 # 'score_default' : 0,
                 # 'bonus' : -100,
@@ -436,7 +438,7 @@ fields_values_properties = {
                 'dasharray' :"0",
                 'dashoffset': '0',
 
-                'color' : '#ff0000', # RED
+                'color' : '#e31a1c', # RED
 
             },
             'unmarked':{
@@ -450,7 +452,7 @@ fields_values_properties = {
                 'dashoffset': '0',
 
 
-                'color' : '#000000', #black
+                'color' : '#ffff99',
             },
             'marked':{
                 # 'score_default' : 90,
@@ -462,7 +464,7 @@ fields_values_properties = {
                 'dashoffset': '0',
 
 
-                'color' : '#000000', #black
+                'color' : '#a6cee3', 
             },
 
             'zebra':{
@@ -475,7 +477,7 @@ fields_values_properties = {
                 'dashoffset': '0',
 
 
-                'color' : '#000000', #black
+                'color' : '#a6cee3', 
             },
 
             'uncontrolled':{
@@ -488,7 +490,7 @@ fields_values_properties = {
                 'dashoffset': '0',
 
 
-                'color' : '#ffffff', #white
+                'color' : '#a6cee3', 
             },
 
             'traffic_signals':{
@@ -500,7 +502,7 @@ fields_values_properties = {
                 'dasharray' :"0",
                 'dashoffset': '0',
 
-                'color' : '#ffffff', #white
+                'color' : '#1f78b4', 
             },
 
             '?':{
@@ -513,7 +515,7 @@ fields_values_properties = {
                 'dashoffset': '0',
 
 
-                'color' : '#d9d9d9', #
+                'color' : 'gray', #
             },
 
 
@@ -533,7 +535,7 @@ fields_values_properties = {
                 'score_default' : 20,
 
                 # 'bonus' : 20,
-                'color' : '#ffffff',
+                'color' : '#ffff99',
             },
 
             'bump':{
@@ -541,7 +543,7 @@ fields_values_properties = {
                 'score_default' : 20,
 
                 # 'bonus' : 20,
-                'color' : '#ffffff',
+                'color' : '#ffff99',
             },
 
             'hump':{
@@ -549,12 +551,12 @@ fields_values_properties = {
                 'score_default' : 20,
 
                 # 'bonus' : 20,
-                'color' : '#ffffff',
+                'color' : '#ffff99',
             },
 
             '?':{
                 'score_default' : 0,
-                'color' : '#d9d9d9', #
+                'color' : 'gray', #
             },
 
         }
