@@ -5,27 +5,29 @@ css_class_ref = 'media_image responsive'
 inner_div_class_ref = 'media__body'
 outer_div_class_ref = 'media'
 img_css_class_ref = 'media_image responsive'
-assets_base_path = f'{codebase_homepage}assets/homepage/'
+assets_base_path = f'{codebase_homepage}assets/'
+assets_homepage_path = f'{codebase_homepage}assets/homepage/'
+assets_map_symbols_path = f'{codebase_homepage}assets/map_symbols/'
 
 modules_metadata = {
     'webmap': {
         'url' : f'{node_homepage_url}map.html',
-        'img_src' : f"{assets_base_path}oswm_webmap_img.png",
+        'img_src' : f"{assets_homepage_path}oswm_webmap_img.png",
         'text' : 'Webmap'
     },
     'routing': {
-        'url' : STREAMLIT_URL,
-        'img_src' : f"{assets_base_path}oswm_route_img.png",
+        'url' : 'https://kauevestena.github.io/opensidewalkmap_beta/routing.html',
+        'img_src' : f"{assets_homepage_path}oswm_route_img.png",
         'text' : 'Optimized Routing'
     },
     'dashboard': {
         'url' : f'{node_homepage_url}statistics/index.html',
-        'img_src' : f"{assets_base_path}oswm_statistics_img.png",
+        'img_src' : f"{assets_homepage_path}oswm_statistics_img.png",
         'text' : 'Dashboard'
     },
     'data_quality': {
         'url' : f'{node_homepage_url}quality_check/oswm_qc_main.html',
-        'img_src' : f"{assets_base_path}oswm_quality_check_img.png",
+        'img_src' : f"{assets_homepage_path}oswm_quality_check_img.png",
         'text' : 'Data Quality Tool'
     },
 }

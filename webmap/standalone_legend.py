@@ -63,12 +63,26 @@ class StandaloneLegend:
         """
         if element_type == 'line':
             self.add_line(label=label, **kwargs)
-        elif element_type == 'marker':
+        elif element_type == 'marker' or element_type == 'circle':
             self.add_marker(label=label, **kwargs)
-        elif element_type == 'patch':
+        elif element_type == 'patch' or element_type == 'fill':
             self.add_patch(label=label, **kwargs)
         else:
-            raise ValueError(f"Unknown element type: {element_type}. Supported types are 'line', 'marker', and 'patch'.")
+            raise ValueError(f"Unknown element type: {element_type}. Supported types are 'line', 'marker'/'circle', and 'patch'/'fill'.")
+        
+    def add_elements(self, elements):
+        """
+        Add multiple custom elements to the legend.
+
+        Parameters:
+        elements (list): A list of tuples containing the element type and its parameters.
+        """
+        for element_type, kwargs in elements:
+            self.add_element(element_type, **kwargs)
+
+    def __hash__(self) -> int:
+        # enable hashing of the object, example: legend = StandaloneLegend(); hash(legend)
+        return hash((self.legend_elements, self.legend_labels))
 
     def export(self, filename='legend.png'):
         # Export the legend to an image file

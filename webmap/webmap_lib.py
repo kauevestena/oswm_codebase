@@ -3,6 +3,8 @@ sys.path.append('oswm_codebase')
 from functions import *
 from copy import deepcopy
 
+from standalone_legend import *
+
 MAP_DATA_LAYERS = [l for l in paths_dict['map_layers']]
 
 # webmap stuff:
@@ -11,6 +13,9 @@ webmap_params_original_path = 'oswm_codebase/webmap/webmap_params.json'
 webmap_params_path = 'webmap_params.json'
 webmap_base_path = 'oswm_codebase/webmap/webmap_base.html'
 webmap_path = 'map.html'
+
+assets_path = 'oswm_codebase/assets/'
+map_symbols_assets_path = os.path.join(assets_path, 'map_symbols')
 
 # mapping geometry types to maplibre style
 map_geom_type_mapping = {
@@ -238,7 +243,7 @@ def create_base_style(sources=MAP_SOURCES,name='Footway Categories'):
         
     return style_dict
 
-def create_simple_map_style(name,color_schema,sources=MAP_SOURCES,generate_shadow_layers=False):
+def create_simple_map_style(name,color_schema,color_dict,filename,sources=MAP_SOURCES,generate_shadow_layers=False):
 
     style_dict = deepcopy(mapstyle_basedict)
     
@@ -277,7 +282,17 @@ def create_simple_map_style(name,color_schema,sources=MAP_SOURCES,generate_shado
         
                 
         style_dict['layers'].append(layer_dict)
-        
+
+    # now generating the map symbols
+    # TODO: check the hashing, otherwise no need to re-run
+    style_legend = StandaloneLegend()
+
+    for key in color_dict:
+        style_legend.add_line(label=key, color=color_dict[key])
+
+    style_legend.add_line(label='other', color=color_schema[-1])
+
+    style_legend.export(os.path.join(map_symbols_assets_path,f'{filename}.png'))
     
     return style_dict
 
@@ -358,4 +373,6 @@ def create_crossings_kerbs_style(sources=MAP_SOURCES,name='Crossings and Kerbs',
 
 
     return style_dict
-        
+
+# call just once:
+create_folderlist([map_symbols_assets_path])

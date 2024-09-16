@@ -610,6 +610,10 @@ def create_folder_if_not_exists(folderpath):
     if not os.path.exists(folderpath):
         os.makedirs(folderpath)
 
+def create_folderlist(folderlist):
+    for folder in folderlist:
+        create_folder_if_not_exists(folder)
+
 def remove_if_exists(pathfile):
     if os.path.exists(pathfile):
         os.remove(pathfile)
