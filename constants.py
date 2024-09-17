@@ -366,9 +366,13 @@ fields_values_properties = {
     },
     "kerbs": {
         "kerb": {
-            "raised": {
-                "score_default": -30,
-                "color": "#000000",  # black
+            "flush": {
+                "score_default": 60,
+                "color": "#ffffff",  # white
+            },
+            "lowered": {
+                "score_default": 50,
+                "color": "#ffffff",  # white
             },
             "rolled": {
                 "score_default": 0,
@@ -378,13 +382,9 @@ fields_values_properties = {
                 "score_default": 10,
                 "color": "#bebebe",  # 75% hray
             },
-            "lowered": {
-                "score_default": 50,
-                "color": "#ffffff",  # white
-            },
-            "flush": {
-                "score_default": 60,
-                "color": "#ffffff",  # white
+            "raised": {
+                "score_default": -30,
+                "color": "#000000",  # black
             },
             "?": {
                 "score_default": -10,  # equivalent to "raised"
@@ -418,22 +418,13 @@ fields_values_properties = {
         # default scores should be what was named "bonus"
         "crossing": {
             # base color-scheme: ColorBrewer (thx!!) 12-class Paired
-            "no": {
-                # 'score_default' : 0,
-                # 'bonus' : -100,
-                "score_default": -100,
+            "traffic_signals": {
+                # 'score_default' : 100,
+                # 'bonus' : 30,
+                "score_default": 30,
                 "dasharray": "0",
                 "dashoffset": "0",
-                "color": "#e31a1c",  # RED
-            },
-            "unmarked": {
-                # 'score_default' : 70,
-                # 'bonus' : 0,
-                "score_default": 0,
-                # may get help on: https://gigacore.github.io/demos/svg-stroke-dasharray-generator/
-                "dasharray": "5,10",
-                "dashoffset": "0",
-                "color": "#ffff99",
+                "color": "#1f78b4",
             },
             "marked": {
                 # 'score_default' : 90,
@@ -459,13 +450,22 @@ fields_values_properties = {
                 "dashoffset": "0",
                 "color": "#a6cee3",
             },
-            "traffic_signals": {
-                # 'score_default' : 100,
-                # 'bonus' : 30,
-                "score_default": 30,
+            "unmarked": {
+                # 'score_default' : 70,
+                # 'bonus' : 0,
+                "score_default": 0,
+                # may get help on: https://gigacore.github.io/demos/svg-stroke-dasharray-generator/
+                "dasharray": "5,10",
+                "dashoffset": "0",
+                "color": "#ffff99",
+            },
+            "no": {
+                # 'score_default' : 0,
+                # 'bonus' : -100,
+                "score_default": -100,
                 "dasharray": "0",
                 "dashoffset": "0",
-                "color": "#1f78b4",
+                "color": "#e31a1c",  # RED
             },
             "?": {
                 # 'score_default' : 10,

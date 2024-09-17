@@ -25,6 +25,9 @@ class StandaloneLegend:
 
         rename_dict_key(kwargs, "width", "linewidth")
 
+        if not kwargs.get("dashes"):
+            kwargs.pop("dashes", None)
+
         line = Line2D([0], [0], label=label, **kwargs)
         self.legend_elements.append(line)
         self.legend_labels.append(label)
@@ -42,6 +45,8 @@ class StandaloneLegend:
         # to standardize the key names
         rename_dict_key(kwargs, "color", "markerfacecolor")
         rename_dict_key(kwargs, "width", "markersize")
+
+        kwargs.pop("dashes", None)
 
         # Add default transparent color to kwargs if not provided
         kwargs.setdefault("color", (0.0, 0.0, 0.0, 0.0))
@@ -63,8 +68,8 @@ class StandaloneLegend:
 
         # rename_dict_key(kwargs, "facecolor", "markerfacecolor")
 
-        if "width" in kwargs:
-            kwargs.pop("width")
+        kwargs.pop("dashes", None)
+        kwargs.pop("width", None)
 
         patch = Patch(facecolor=facecolor, edgecolor=edgecolor, label=label, **kwargs)
         self.legend_elements.append(patch)
@@ -104,12 +109,14 @@ class StandaloneLegend:
         # enable hashing of the object, example: legend = StandaloneLegend(); hash(legend)
         return hash((self.legend_elements, self.legend_labels))
 
-    def export(self, filename="legend.png"):
+    def export(self, filename="legend.png", dpi=300, **kwargs):
         # Export the legend to an image file
         self.legendFig.legend(
             handles=self.legend_elements, labels=self.legend_labels, loc="center"
         )
-        self.legendFig.savefig(filename, bbox_inches="tight", transparent=True)
+        self.legendFig.savefig(
+            filename, bbox_inches="tight", transparent=True, dpi=dpi, **kwargs
+        )
         plt.close(self.legendFig)  # Close the figure to free memory
 
 

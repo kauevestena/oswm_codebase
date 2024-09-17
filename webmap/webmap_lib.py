@@ -250,6 +250,7 @@ def create_base_style(sources=MAP_SOURCES, name="Footway Categories"):
             **{
                 "color": custom_layer_colors.get(layername, default_color),
                 "width": custom_legend_widths.get(layername, 4),
+                "dashes": custom_layer_dash_patterns.get(layername),
             },
         )
 
@@ -353,7 +354,10 @@ def create_maplibre_color_schema(attribute_dict, attribute_name, else_color="gra
 
 
 def create_crossings_kerbs_style(
-    sources=MAP_SOURCES, name="Crossings and Kerbs", else_color="#63636380"
+    filename="crossings_and_kerbs",
+    sources=MAP_SOURCES,
+    name="Crossings and Kerbs",
+    else_color="#63636380",
 ):
 
     style_dict = deepcopy(mapstyle_basedict)
@@ -369,6 +373,19 @@ def create_crossings_kerbs_style(
         "crossings": "crossing",
         "kerbs": "kerb",
     }
+
+    legend_basenames = {
+        "crossings": "Crossings",
+        "kerbs": "Kerbs",
+    }
+
+    legend_widths = {
+        "crossings": 4,
+        "kerbs": 8,
+    }
+
+    # instantiating the legend:
+    style_legend = StandaloneLegend()
 
     for layername in ordered_map_layers:
         layer_type = layertypes_dict[layername]
@@ -391,6 +408,19 @@ def create_crossings_kerbs_style(
                     8,
                     5,
                 ]
+
+            color_dict[r"other/none"] = else_color
+
+            for key in color_dict:
+                style_legend.add_element(
+                    layer_type,
+                    f"{legend_basenames[layername]} - {key}",
+                    **{
+                        "color": color_dict[key],
+                        "width": legend_widths[layername],
+                    },
+                )
+
         else:
             # all other layers will be a very faded gray:
             layer_dict["paint"][color_attribute[layer_type]] = else_color
@@ -401,6 +431,8 @@ def create_crossings_kerbs_style(
         layer_dict["source-layer"] = layername
 
         style_dict["layers"].append(layer_dict)
+
+    style_legend.export(os.path.join(map_symbols_assets_path, f"{filename}.png"))
 
     return style_dict
 
