@@ -1,5 +1,6 @@
 import sys, os
-sys.path.append('.')
+
+sys.path.append(".")
 
 from config import *
 
@@ -13,7 +14,7 @@ min_zoom = 10
 # global max zoom level
 max_zoom = 22
 
-data_format = '.parquet'
+data_format = ".parquet"
 
 # node archives general paths
 map_page_name = "./map.html"
@@ -22,123 +23,134 @@ node_home_path = "./index.html"
 boundaries_path = "./data/boundaries" + data_format
 boundaries_geojson_path = "./data/boundaries.geojson"
 boundaries_md_path = "./data/boundaries_md.json"
-workflows_path = '.github/workflows'
+workflows_path = ".github/workflows"
 
 # data folderpaths:
-improper_geoms_folderpath = 'data/improper_geoms'
-disjointed_folderpath = 'data/disjointed'
-versioning_folderpath = 'data/versioning'
-other_footways_folderpath = 'data/other_footways'
-tiles_folderpath = 'data/tiles'
-vrts_folderpath = 'data/vrts'
+improper_geoms_folderpath = "data/improper_geoms"
+disjointed_folderpath = "data/disjointed"
+versioning_folderpath = "data/versioning"
+other_footways_folderpath = "data/other_footways"
+tiles_folderpath = "data/tiles"
+vrts_folderpath = "data/vrts"
 
 other_footways_subcatecories = {
-    'stairways' : {'highway':['steps']},
-    'main_footways' : {'highway':['footway','living_street'],'foot':['designated'],'footway': ['alley','path','yes']},
-    'potential_footways' : {'highway':['path','track']},
-    'informal_footways' : {'foot':['yes','permissive']},
-    'pedestrian_areas' : {} #defined only by geometry type (Polygon,Multipolygon)
+    "stairways": {"highway": ["steps"]},
+    "main_footways": {
+        "highway": ["footway", "living_street"],
+        "foot": ["designated"],
+        "footway": ["alley", "path", "yes"],
+    },
+    "potential_footways": {"highway": ["path", "track"]},
+    "informal_footways": {"foot": ["yes", "permissive"]},
+    "pedestrian_areas": {},  # defined only by geometry type (Polygon,Multipolygon)
 }
 
 # establishing other footways geometry types, default is 'LineString'
-other_footways_geometry_types = {k:'LineString' for k, v in other_footways_subcatecories.items()}
-other_footways_geometry_types['pedestrian_areas'] = 'Polygon'
+other_footways_geometry_types = {
+    k: "LineString" for k, v in other_footways_subcatecories.items()
+}
+other_footways_geometry_types["pedestrian_areas"] = "Polygon"
 
 data_layer_descriptions = {
-    'kerbs' : 'Access points in the kerb lane where the sidewalk and the road meet, along a crossing.',
-    'sidewalks' : 'A footway that is juxtaposed to a road, a type of sidepath.',
-    'crossings' : 'The line that allows pedestrians to cross some road.',
-    'other_footways' : {
-        'stairways' : 'Pathways composed of steps.',
-        'main_footways' : 'Pathways which main usage is pedestrian displacement.',
-        'potential_footways' : 'Pathways with vague description, generally usable for pedestrians, but sometimes not as its main or sole purpose, such as some rural tracks.',
-        'informal_footways' : 'Pathways that are not made for pedestrian usage, but they generally used due to the absence of proper footways.',
-        'pedestrian_areas' : 'Areas where pedestrians can generally displace freely in normal circumstances.'
-    }
+    "kerbs": "Access points in the kerb lane where the sidewalk and the road meet, along a crossing.",
+    "sidewalks": "A footway that is juxtaposed to a road, a type of sidepath.",
+    "crossings": "The line that allows pedestrians to cross some road.",
+    "other_footways": {
+        "stairways": "Pathways composed of steps.",
+        "main_footways": "Pathways which main usage is pedestrian displacement.",
+        "potential_footways": "Pathways with vague description, generally usable for pedestrians, but sometimes not as its main or sole purpose, such as some rural tracks.",
+        "informal_footways": "Pathways that are not made for pedestrian usage, but they generally used due to the absence of proper footways.",
+        "pedestrian_areas": "Areas where pedestrians can generally displace freely in normal circumstances.",
+    },
 }
 
 # ogr2ogr path
-OGR2OGR_PATH = 'ogr2ogr'
+OGR2OGR_PATH = "ogr2ogr"
 
 layer_tags_dict = {
-    'kerbs': {'kerb': ['lowered','raised','flush','rolled','no','yes'], 'barrier': ['kerb']},
-    'sidewalks': {'footway': ['sidewalk']},
-    'crossings': {'footway': ['crossing']},
-    'other_footways' : OTHER_FOOTWAY_RULES
-    }
+    "kerbs": {
+        "kerb": ["lowered", "raised", "flush", "rolled", "no", "yes"],
+        "barrier": ["kerb"],
+    },
+    "sidewalks": {"footway": ["sidewalk"]},
+    "crossings": {"footway": ["crossing"]},
+    "other_footways": OTHER_FOOTWAY_RULES,
+}
 
 layer_exclusion_tags = {
-    'kerbs': {},
-    'sidewalks': {},
-    'crossings': {},
-    'other_footways' : OTHER_FOOTWAY_EXCLUSION_RULES,
+    "kerbs": {},
+    "sidewalks": {},
+    "crossings": {},
+    "other_footways": OTHER_FOOTWAY_EXCLUSION_RULES,
 }
 
 bbox_as_list = ()
 
 # data paths
-sidewalks_path = 'data/sidewalks' + data_format
-crossings_path = 'data/crossings' + data_format
-kerbs_path = 'data/kerbs' + data_format
-other_footways_path = 'data/other_footways' + data_format
+sidewalks_path = "data/sidewalks" + data_format
+crossings_path = "data/crossings" + data_format
+kerbs_path = "data/kerbs" + data_format
+other_footways_path = "data/other_footways" + data_format
 
-sidewalks_path_raw = 'data/sidewalks_raw' + data_format
-crossings_path_raw = 'data/crossings_raw' + data_format
-kerbs_path_raw = 'data/kerbs_raw' + data_format
-other_footways_path_raw = 'data/other_footways_raw' + data_format
+sidewalks_path_raw = "data/sidewalks_raw" + data_format
+crossings_path_raw = "data/crossings_raw" + data_format
+kerbs_path_raw = "data/kerbs_raw" + data_format
+other_footways_path_raw = "data/other_footways_raw" + data_format
 
-sidewalks_path_versioning = 'data/versioning/sidewalks_versioning.json'
-crossings_path_versioning = 'data/versioning/crossings_versioning.json'
-kerbs_path_versioning = 'data/versioning/kerbs_versioning.json'
-other_footways_path_versioning = 'data/versioning/other_footways_versioning.json'
+sidewalks_path_versioning = "data/versioning/sidewalks_versioning.json"
+crossings_path_versioning = "data/versioning/crossings_versioning.json"
+kerbs_path_versioning = "data/versioning/kerbs_versioning.json"
+other_footways_path_versioning = "data/versioning/other_footways_versioning.json"
 
 # data quality jsons path
-feat_keys_path = 'quality_check/feature_keys.json'
-keys_without_wiki_path = 'quality_check/keys_without_wiki.json'
-unique_values_path = 'quality_check/unique_tag_values.json'
-valid_values_path = 'quality_check/valid_tag_values.json'
+feat_keys_path = "quality_check/feature_keys.json"
+keys_without_wiki_path = "quality_check/keys_without_wiki.json"
+unique_values_path = "quality_check/unique_tag_values.json"
+valid_values_path = "quality_check/valid_tag_values.json"
 
 # node homepage:
-user_basepage_url = f'https://{USERNAME}.github.io/'
-node_homepage_url = f'https://{USERNAME}.github.io/{REPO_NAME}/'
-data_folder_url = f'https://{USERNAME}.github.io/{REPO_NAME}/data/'
-data_updating_url = f'https://{USERNAME}.github.io/{REPO_NAME}/data/data_updating.html'
+user_basepage_url = f"https://{USERNAME}.github.io/"
+node_homepage_url = f"https://{USERNAME}.github.io/{REPO_NAME}/"
+data_folder_url = f"https://{USERNAME}.github.io/{REPO_NAME}/data/"
+data_updating_url = f"https://{USERNAME}.github.io/{REPO_NAME}/data/data_updating.html"
 
 # codebase as page:
-codebase_homepage = 'https://kauevestena.github.io/oswm_codebase/'
+codebase_homepage = "https://kauevestena.github.io/oswm_codebase/"
 
 paths_dict = {
-    'data' :{
-        'sidewalks': sidewalks_path,
-        'crossings': crossings_path,
-        'kerbs': kerbs_path,
-        'other_footways' : other_footways_path
+    "data": {
+        "sidewalks": sidewalks_path,
+        "crossings": crossings_path,
+        "kerbs": kerbs_path,
+        "other_footways": other_footways_path,
     },
-    'data_raw' : {
-        'sidewalks': sidewalks_path_raw,
-        'crossings': crossings_path_raw,
-        'kerbs': kerbs_path_raw,
-        'other_footways' : other_footways_path_raw
+    "data_raw": {
+        "sidewalks": sidewalks_path_raw,
+        "crossings": crossings_path_raw,
+        "kerbs": kerbs_path_raw,
+        "other_footways": other_footways_path_raw,
     },
-    'versioning' : {
-        'sidewalks': sidewalks_path_versioning,
-        'crossings': crossings_path_versioning,
-        'kerbs': kerbs_path_versioning,
-        'other_footways' : other_footways_path_versioning
+    "versioning": {
+        "sidewalks": sidewalks_path_versioning,
+        "crossings": crossings_path_versioning,
+        "kerbs": kerbs_path_versioning,
+        "other_footways": other_footways_path_versioning,
     },
-    'other_footways_subcategories' : {},
-    'map_layers' : {
-        'sidewalks': sidewalks_path,
-        'crossings': crossings_path,
-        'kerbs': kerbs_path,
+    "other_footways_subcategories": {},
+    "map_layers": {
+        "sidewalks": sidewalks_path,
+        "crossings": crossings_path,
+        "kerbs": kerbs_path,
     },
 }
 
 # paths for other_footways subcategories:
 for subcategory in other_footways_subcatecories:
-    subcategory_path = os.path.join(other_footways_folderpath, subcategory+data_format)
-    paths_dict['other_footways_subcategories'][subcategory] = subcategory_path
-    paths_dict['map_layers'][subcategory] = subcategory_path
+    subcategory_path = os.path.join(
+        other_footways_folderpath, subcategory + data_format
+    )
+    paths_dict["other_footways_subcategories"][subcategory] = subcategory_path
+    paths_dict["map_layers"][subcategory] = subcategory_path
 
 
 # max radius to cut off unconnected crossings and kerbs
@@ -148,498 +160,426 @@ max_radius_cutoff = 50
 default_score = 0.5
 
 fields_values_properties = {
-    'sidewalks':{
-        'surface': {
+    "sidewalks": {
+        "surface": {
             # colorscheme 12-class Set3 from colorbrewer (thx!!), avaliiable at:
             # https://colorbrewer2.org/?type=qualitative&scheme=Set3&n=12
-
-            'asphalt':{
-                'score_default' : 100,
-                'color' : '#fb8072', #
+            "asphalt": {
+                "score_default": 100,
+                "color": "#fb8072",  #
             },
-            'concrete':{
-                'score_default' : 100,
-                'color' : '#80b1d3', 
+            "concrete": {
+                "score_default": 100,
+                "color": "#80b1d3",
             },
-            'concrete:plates':{
-                'score_default' : 70,
-                'color' : '#fccde5', #
+            "concrete:plates": {
+                "score_default": 70,
+                "color": "#fccde5",  #
             },
-            'paving_stones':{
-                'score_default' : 90,
-                'color' : '#bebada', #
+            "paving_stones": {
+                "score_default": 90,
+                "color": "#bebada",  #
             },
-            'sett':{
-                'score_default' : 60,
-                'color' : '#ffed6f', #
+            "sett": {
+                "score_default": 60,
+                "color": "#ffed6f",  #
             },
-
-            'cobblestone':{
-                'score_default' : 60,
-                'color' : '#ffed6f', #
+            "cobblestone": {
+                "score_default": 60,
+                "color": "#ffed6f",  #
             },
-            
-            'unhewn_cobblestone':{
-                'score_default' : 50,
-                'color' : '#ffffb3', #black
+            "unhewn_cobblestone": {
+                "score_default": 50,
+                "color": "#ffffb3",  # black
             },
-
-            'ground':{
-                'score_default' : 30,
-                'color' : '#fdb462' }, #
-            'dirt':{
-                'score_default' : 30,
-                'color' : '#fdb462' }, #
-            'earth':{
-                'score_default' : 30,
-                'color' : '#fdb462', #
+            "ground": {"score_default": 30, "color": "#fdb462"},  #
+            "dirt": {"score_default": 30, "color": "#fdb462"},  #
+            "earth": {
+                "score_default": 30,
+                "color": "#fdb462",  #
             },
-            'sand':{
-                'score_default' : 30,
-                'color' : '#fdb462', #
+            "sand": {
+                "score_default": 30,
+                "color": "#fdb462",  #
             },
-            'grass':{
-                'score_default' : 30,
-                'color' : '#b3de69', #
+            "grass": {
+                "score_default": 30,
+                "color": "#b3de69",  #
             },
             # 'grass_paver':{
             #     'score_default' : 3,
             #     'color' : '#000000', #black
             # },
-
-            'paved':{
-                'score_default' : 60, # equals to worst paved: sett
-                'color' : '#ffffff', # white
+            "paved": {
+                "score_default": 60,  # equals to worst paved: sett
+                "color": "#ffffff",  # white
             },
-            'unpaved':{
-                'score_default' : 30,
-                'color' : '#d9d9d9', #
+            "unpaved": {
+                "score_default": 30,
+                "color": "#d9d9d9",  #
             },
-
             # a sample for uncommon values:
-
-            'gravel':{
-                'score_default' : 30,
-                'color' : '#bc80bd', #
+            "gravel": {
+                "score_default": 30,
+                "color": "#bc80bd",  #
             },
-
-            'compacted':{
-                'score_default' : 30,
-                'color' : '#bc80bd', #
+            "compacted": {
+                "score_default": 30,
+                "color": "#bc80bd",  #
             },
-
-
-            'ceramic:tiles':{
-                'score_default' : 70,
-                'color' : '#bc80bd', #
+            "ceramic:tiles": {
+                "score_default": 70,
+                "color": "#bc80bd",  #
             },
-
-            'wood':{
-                'score_default' : 50,
-                'color' : '#bc80bd', #
+            "wood": {
+                "score_default": 50,
+                "color": "#bc80bd",  #
             },
-
-            'metal':{
-                'score_default' : 100,
-                'color' : '#bc80bd', #
+            "metal": {
+                "score_default": 100,
+                "color": "#bc80bd",  #
             },
-
             # 'Petit_Pavê':{
             #     'score_default' : 65,
             #     'color' : '#bc80bd', #
             # },
-
             # for the filled ones:
-            '?':{
-                'score_default' : 10,
-                'color' : '#434343', #
+            "?": {
+                "score_default": 10,
+                "color": "#434343",  #
             },
         },
-
-        'wheelchair': {
-            '?':{
-                'score_default' : 0, # equivalent to "very horrible"
-                'color' : '#434343', #
+        "wheelchair": {
+            "yes": {
+                "score_default": 0,  # equivalent to "very horrible"
+                "color": "#91bfdb",  #
             },
-
-            'no':{
-                'score_default' : 0, # equivalent to "very horrible"
-                'color' : '#fc8d59', #
+            "designated": {
+                "score_default": 0,  # equivalent to "very horrible"
+                "color": "#91bfdb",  #
             },
-
-
-            'limited':{
-                'score_default' : 0, # equivalent to "very horrible"
-                'color' : '#ffffbf', #
+            "limited": {
+                "score_default": 0,  # equivalent to "very horrible"
+                "color": "#ffffbf",  #
             },
-
-            'yes':{
-                'score_default' : 0, # equivalent to "very horrible"
-                'color' : '#91bfdb', #
+            "no": {
+                "score_default": 0,  # equivalent to "very horrible"
+                "color": "#fc8d59",  #
             },
-
-            'designated':{
-                'score_default' : 0, # equivalent to "very horrible"
-                'color' : '#91bfdb', #
+            "?": {
+                "score_default": 0,  # equivalent to "very horrible"
+                "color": "#434343",  #
             },
-
-
-        
-
-
         },
-
-
-        'smoothness' : {
-            # for absence:
-            '?':{
-                'score_default' : 40, # equivalent to "very horrible"
-                'color' : '#434343', #
-            },
-
+        "smoothness": {
             # color scheme: ColorBrewer (thx!!) 11-class RdYlBu
-
             # valid:
-            'excellent':{
-                'score_default' : 10, 
-                'color' : '#4575b4', #
+            "excellent": {
+                "score_default": 10,
+                "color": "#4575b4",  #
             },
-            'good':{
-                'score_default' : 90, 
-                'color' : '#abd9e9', #
+            "good": {
+                "score_default": 90,
+                "color": "#abd9e9",  #
             },
-            'intermediate':{
-                'score_default' : 70, 
-                'color' : '#ffffbf', #
+            "intermediate": {
+                "score_default": 70,
+                "color": "#ffffbf",  #
             },
-            'bad':{
-                'score_default' : 50, 
-                'color' : '#fdae61', #
+            "bad": {
+                "score_default": 50,
+                "color": "#fdae61",  #
             },
-            'very_bad':{
-                'score_default' : 40, 
-                'color' : '#fdae61', #
+            "very_bad": {
+                "score_default": 40,
+                "color": "#fdae61",  #
             },
-            'horrible':{
-                'score_default' : 20, 
-                'color' : '#f46d43', #
+            "horrible": {
+                "score_default": 20,
+                "color": "#f46d43",  #
             },
-            'very_horrible':{
-                'score_default' : 10, 
-                'color' : '#f46d43', #
+            "very_horrible": {
+                "score_default": 10,
+                "color": "#f46d43",  #
             },
-            'impassable':{
-                'score_default' : 0, 
-                'color' : '#a50026', #
+            "impassable": {
+                "score_default": 0,
+                "color": "#a50026",  #
             },
-
-
-        # invalid values must be handled individually
+            # for absence:
+            "?": {
+                "score_default": 40,  # equivalent to "very horrible"
+                "color": "#434343",  #
+            },
+            # invalid values must be handled individually
         },
-        'lit' : {
-            '?':{
-                'score_default' : 10,
-                'color' : '#434343', #
+        "lit": {
+            "yes": {
+                "score_default": 10,
+                "color": "#ffff99",  #
             },
-
-            'yes':{
-                'score_default' : 10,
-                'color' : '#ffff99', #
+            "automatic": {
+                "score_default": 10,
+                "color": "#ffff99",  #
             },
-            'automatic':{
-                'score_default' : 10,
-                'color' : '#ffff99', #
+            "24/7": {
+                "score_default": 10,
+                "color": "#ffff99",  #
             },
-            'no':{
-                'score_default' : 10,
-                'color' : '#6a3d9a', #
+            "no": {
+                "score_default": 10,
+                "color": "#6a3d9a",  #
             },
-            'disused':{
-                'score_default' : 10,
-                'color' : '#6a3d9a', #
+            "disused": {
+                "score_default": 10,
+                "color": "#6a3d9a",  #
             },
-            '24/7':{
-                'score_default' : 10,
-                'color' : '#ffff99', #
+            "?": {
+                "score_default": 10,
+                "color": "#434343",  #
             },
         },
-
-        'width':{
-            '?':{
-                'score_default' : 10,
-                'color' : '#434343', #
+        "width": {
+            "?": {
+                "score_default": 10,
+                "color": "#434343",  #
             },
             # in a future...
         },
-        'incline':{
-            '?':{
-                'score_default' : 10,
-                'color' : '#434343', #
+        "incline": {
+            "?": {
+                "score_default": 10,
+                "color": "#434343",  #
             },
             # in a future...
         },
-        'tactile_paving':{
-            #CHECK KERBS
+        "tactile_paving": {
+            # CHECK KERBS
         },
-        'incline:across':{
-            '?':{
-                'score_default' : 10,
-                'color' : '#434343', #
+        "incline:across": {
+            "?": {
+                "score_default": 10,
+                "color": "#434343",  #
             },
             # in a future...
-        }
+        },
     },
-
-    'kerbs':{
-        'kerb':{
-            'raised':{
-                'score_default' : -30,
-                'color' : '#000000', #black
+    "kerbs": {
+        "kerb": {
+            "raised": {
+                "score_default": -30,
+                "color": "#000000",  # black
             },
-            'rolled':{
-                'score_default' : 0,
-                'color' : '#808080', #50% gray
+            "rolled": {
+                "score_default": 0,
+                "color": "#808080",  # 50% gray
             },
-            'no':{
-                'score_default' : 10,
-                'color' : '#bebebe', #75% hray
+            "no": {
+                "score_default": 10,
+                "color": "#bebebe",  # 75% hray
             },
-            'lowered':{
-                'score_default' : 50,
-                'color' : '#ffffff', #white
+            "lowered": {
+                "score_default": 50,
+                "color": "#ffffff",  # white
             },
-            'flush':{
-                'score_default' : 60,
-                'color' : '#ffffff', #white
+            "flush": {
+                "score_default": 60,
+                "color": "#ffffff",  # white
             },
-
-            '?':{
-                'score_default' : -10, # equivalent to "raised"
-                'color' : '#d9d9d9', #
+            "?": {
+                "score_default": -10,  # equivalent to "raised"
+                "color": "#d9d9d9",  #
             },
-
         },
-        'tactile_paving':{
-            'yes':{
-                'score_default' : 100,
-                'color' : '#6146d0', 
-
-                'opacity' : 1, 
+        "tactile_paving": {
+            "yes": {
+                "score_default": 100,
+                "color": "#6146d0",
+                "opacity": 1,
             },
-            'contrasted':{
-                'score_default' : 100,
-                'color' : '#6146d0', 
-
-                'opacity' : 1, 
-
+            "contrasted": {
+                "score_default": 100,
+                "color": "#6146d0",
+                "opacity": 1,
             },
-            'no':{
-                'score_default' : 0,
-                'color' : '#bd1006', 
-
-                'opacity' : 0, 
-
+            "no": {
+                "score_default": 0,
+                "color": "#bd1006",
+                "opacity": 0,
             },
-
-            '?':{
-                'score_default' : 0, # equivalent to "no"
-                'color' : "#717171",#"#434343", #
-
-                'opacity' : 0, 
-
+            "?": {
+                "score_default": 0,  # equivalent to "no"
+                "color": "#717171",  # "#434343", #
+                "opacity": 0,
             },
-
-        }
         },
-
-    'crossings':{
+    },
+    "crossings": {
         # default scores should be what was named "bonus"
-        'crossing': {
+        "crossing": {
             # base color-scheme: ColorBrewer (thx!!) 12-class Paired
-            'no':{
+            "no": {
                 # 'score_default' : 0,
                 # 'bonus' : -100,
-                'score_default' : -100,
-
-                'dasharray' :"0",
-                'dashoffset': '0',
-
-                'color' : '#e31a1c', # RED
-
+                "score_default": -100,
+                "dasharray": "0",
+                "dashoffset": "0",
+                "color": "#e31a1c",  # RED
             },
-            'unmarked':{
+            "unmarked": {
                 # 'score_default' : 70,
                 # 'bonus' : 0,
-                'score_default' : 0,
-
+                "score_default": 0,
                 # may get help on: https://gigacore.github.io/demos/svg-stroke-dasharray-generator/
-
-                'dasharray' :"5,10",
-                'dashoffset': '0',
-
-
-                'color' : '#ffff99',
+                "dasharray": "5,10",
+                "dashoffset": "0",
+                "color": "#ffff99",
             },
-            'marked':{
+            "marked": {
                 # 'score_default' : 90,
                 # 'bonus' : 20,
-
-                'score_default' : 20,
-
-                'dasharray' :"0",
-                'dashoffset': '0',
-
-
-                'color' : '#a6cee3', 
+                "score_default": 20,
+                "dasharray": "0",
+                "dashoffset": "0",
+                "color": "#a6cee3",
             },
-
-            'zebra':{
+            "zebra": {
                 # 'score_default' : 90,
                 # 'bonus' : 20,
-
-                'score_default' : 20,
-
-                'dasharray' :"0",
-                'dashoffset': '0',
-
-
-                'color' : '#a6cee3', 
+                "score_default": 20,
+                "dasharray": "0",
+                "dashoffset": "0",
+                "color": "#a6cee3",
             },
-
-            'uncontrolled':{
+            "uncontrolled": {
                 # 'score_default' : 100,
                 # 'bonus' : 30,
-
-                'score_default' : 30,
-
-                'dasharray' :"0",
-                'dashoffset': '0',
-
-
-                'color' : '#a6cee3', 
+                "score_default": 30,
+                "dasharray": "0",
+                "dashoffset": "0",
+                "color": "#a6cee3",
             },
-
-            'traffic_signals':{
+            "traffic_signals": {
                 # 'score_default' : 100,
                 # 'bonus' : 30,
-
-                'score_default' : 30,
-
-                'dasharray' :"0",
-                'dashoffset': '0',
-
-                'color' : '#1f78b4', 
+                "score_default": 30,
+                "dasharray": "0",
+                "dashoffset": "0",
+                "color": "#1f78b4",
             },
-
-            '?':{
+            "?": {
                 # 'score_default' : 10,
                 # 'bonus' : 0,
-
-                'score_default' : 0,
-
-                'dasharray' :"0",
-                'dashoffset': '0',
-
-
-                'color' : 'gray', #
+                "score_default": 0,
+                "dasharray": "0",
+                "dashoffset": "0",
+                "color": "gray",  #
             },
-
-
         },
-        'surface':{
+        "surface": {
             # CHECK SIDEWALKS
-
         },
-        'smoothness':{
+        "smoothness": {
             # CHECK SIDEWALKS
-
-
         },
-        'traffic_calming':{
-            'table':{
+        "traffic_calming": {
+            "table": {
                 # 'score_default' : 100,
-                'score_default' : 20,
-
+                "score_default": 20,
                 # 'bonus' : 20,
-                'color' : '#ffff99',
+                "color": "#ffff99",
             },
-
-            'bump':{
+            "bump": {
                 # 'score_default' : 100,
-                'score_default' : 20,
-
+                "score_default": 20,
                 # 'bonus' : 20,
-                'color' : '#ffff99',
+                "color": "#ffff99",
             },
-
-            'hump':{
+            "hump": {
                 # 'score_default' : 100,
-                'score_default' : 20,
-
+                "score_default": 20,
                 # 'bonus' : 20,
-                'color' : '#ffff99',
+                "color": "#ffff99",
             },
-
-            '?':{
-                'score_default' : 0,
-                'color' : '#63636399', #
+            "?": {
+                "score_default": 0,
+                "color": "#63636399",  #
             },
-
-        }
-}
+        },
+    },
 }
 
 layernames = [key for key in fields_values_properties]
 
 
 # values to be copied:
-fields_values_properties['sidewalks']['tactile_paving'] = fields_values_properties['kerbs']['tactile_paving']
+fields_values_properties["sidewalks"]["tactile_paving"] = fields_values_properties[
+    "kerbs"
+]["tactile_paving"]
 
-fields_values_properties['crossings']['surface'] = fields_values_properties['sidewalks']['surface']
+fields_values_properties["crossings"]["surface"] = fields_values_properties[
+    "sidewalks"
+]["surface"]
 
-fields_values_properties['crossings']['smoothness'] = fields_values_properties['sidewalks']['smoothness']
+fields_values_properties["crossings"]["smoothness"] = fields_values_properties[
+    "sidewalks"
+]["smoothness"]
 
 
 # required_fields:
 req_fields = {
-    'sidewalks':['surface','smoothness','width','incline','tactile_paving','incline:across','osm_id','last_update'],
-    'kerbs':['kerb','tactile_paving','osm_id','last_update'],
-    'crossings':['crossing','surface','smoothness','traffic_calming','osm_id','last_update'],
+    "sidewalks": [
+        "surface",
+        "smoothness",
+        "width",
+        "incline",
+        "tactile_paving",
+        "incline:across",
+        "osm_id",
+        "last_update",
+    ],
+    "kerbs": ["kerb", "tactile_paving", "osm_id", "last_update"],
+    "crossings": [
+        "crossing",
+        "surface",
+        "smoothness",
+        "traffic_calming",
+        "osm_id",
+        "last_update",
+    ],
 }
 
 # a case of "smoothness=concrete:pĺates" demanded this
-wrong_misspelled_values ={
-    'sidewalks':{
-        'smoothness':{'concrete:plates':'?'},
-        'surface':{'betão':'?','Petit_Pavê':'sett','porcelain tiles':'ceramic:tiles'}
+wrong_misspelled_values = {
+    "sidewalks": {
+        "smoothness": {"concrete:plates": "?"},
+        "surface": {
+            "betão": "?",
+            "Petit_Pavê": "sett",
+            "porcelain tiles": "ceramic:tiles",
+        },
     },
-    'kerbs':{
-
-    },
-    'crossings':{
-
-    },
-    'other_footways':{
-
-    },
+    "kerbs": {},
+    "crossings": {},
+    "other_footways": {},
 }
 
 geom_type_dict = {
-    'sidewalks':['LineString'],
-    'crossings':['LineString'],
-    'kerbs':['Point'],
-    'other_footways':['LineString','Polygon','MultiPolygon'] 
+    "sidewalks": ["LineString"],
+    "crossings": ["LineString"],
+    "kerbs": ["Point"],
+    "other_footways": ["LineString", "Polygon", "MultiPolygon"],
 }
 
-all_layers_geom_types = {k:v[0] for k,v in geom_type_dict.items()}
-del all_layers_geom_types['other_footways']
+all_layers_geom_types = {k: v[0] for k, v in geom_type_dict.items()}
+del all_layers_geom_types["other_footways"]
 for subcategory in other_footways_geometry_types:
     all_layers_geom_types[subcategory] = other_footways_geometry_types[subcategory]
 
 
-statistics_basepath = 'statistics'
+statistics_basepath = "statistics"
+
 
 # defined here to avoid circular importing problems
-def get_url(relative_url,base_url=node_homepage_url):
-    return os.path.join(base_url,relative_url)
-
+def get_url(relative_url, base_url=node_homepage_url):
+    return os.path.join(base_url, relative_url)

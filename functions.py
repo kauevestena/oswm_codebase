@@ -2,7 +2,7 @@ import csv, os, re
 import bs4
 from time import sleep, time
 import pandas as pd
-from datetime import datetime 
+from datetime import datetime
 import json, requests
 from xml.etree import ElementTree
 import geopandas as gpd
@@ -14,48 +14,53 @@ from shapely import box
     READ/ DUMP STUFF
 
 """
+
+
 def read_json(inputpath):
     with open(inputpath) as reader:
         data = reader.read()
 
     return json.loads(data)
-    
-def dump_json(inputdict,outputpath,indent=4):
-    with open(outputpath,'w+',encoding='utf8') as json_handle:
-        json.dump(inputdict,json_handle,indent=indent,ensure_ascii=False)
 
-def file_as_string(inputpath:str):
+
+def dump_json(inputdict, outputpath, indent=4):
+    with open(outputpath, "w+", encoding="utf8") as json_handle:
+        json.dump(inputdict, json_handle, indent=indent, ensure_ascii=False)
+
+
+def file_as_string(inputpath: str):
     if os.path.exists(inputpath):
-        with open(inputpath,encoding='utf8') as reader:
+        with open(inputpath, encoding="utf8") as reader:
             return reader.read()
     else:
-        raise(FileNotFoundError)
-    
-def str_to_file(inputstr:str,outputpath:str,check_path=False):
+        raise (FileNotFoundError)
+
+
+def str_to_file(inputstr: str, outputpath: str, check_path=False):
     if check_path:
-       if not os.path.exists(outputpath):
-            raise(FileNotFoundError)
+        if not os.path.exists(outputpath):
+            raise (FileNotFoundError)
 
-
-    with open(outputpath,'w+',encoding='utf8') as writer:
+    with open(outputpath, "w+", encoding="utf8") as writer:
         writer.write(inputstr)
         sleep(0.1)
 
+
 class fileAsStrHandler:
 
-    def __init__(self,inputpath:str):
+    def __init__(self, inputpath: str):
         self.path = inputpath
         self.content = file_as_string(self.path)
 
-    def simple_replace(self,original_part,new_part=''):
+    def simple_replace(self, original_part, new_part=""):
         """default is empty for just remove the selected content"""
-        self.content = self.content.replace(original_part,new_part)
+        self.content = self.content.replace(original_part, new_part)
 
     def rewrite(self):
-        str_to_file(self.content,self.path)
-    
-    def write_to_another_path(self,outputpath):
-        str_to_file(self.content,outputpath)
+        str_to_file(self.content, self.path)
+
+    def write_to_another_path(self, outputpath):
+        str_to_file(self.content, outputpath)
 
 
 """
@@ -64,30 +69,30 @@ class fileAsStrHandler:
 
 """
 
+
 def formatted_datetime_now():
     now = datetime.now()
     return now.strftime("%d/%m/%Y %H:%M:%S")
 
 
-
-def record_datetime(key,json_path='data/last_updated.json'):
+def record_datetime(key, json_path="data/last_updated.json"):
 
     datadict = read_json(json_path)
 
     datadict[key] = formatted_datetime_now()
 
-    dump_json(datadict,json_path)
+    dump_json(datadict, json_path)
 
-    sleep(.1)
+    sleep(0.1)
 
-def record_to_json(key,obj,json_path):
+
+def record_to_json(key, obj, json_path):
 
     datadict = read_json(json_path)
 
     datadict[key] = obj
 
-    dump_json(datadict,json_path)
-
+    dump_json(datadict, json_path)
 
 
 """
@@ -119,10 +124,12 @@ TABLES_STYLE = f"""
 
 """
 
-def gen_updating_infotable_page(outpath='data/data_updating.html',json_path='data/last_updated.json'):
 
+def gen_updating_infotable_page(
+    outpath="data/data_updating.html", json_path="data/last_updated.json"
+):
 
-    tablepart = ''
+    tablepart = ""
 
     records_dict = read_json(json_path)
 
@@ -131,7 +138,7 @@ def gen_updating_infotable_page(outpath='data/data_updating.html',json_path='dat
         <tr><th><b>{key}</b></th><th>{records_dict[key]}</th></tr>
         """
 
-    page_as_txt = f'''
+    page_as_txt = f"""
     <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -190,17 +197,27 @@ if the data is too outdated you may <a href="https://github.com/kauevestena/open
 
 </body>
 </html>    
-    '''
+    """
 
     # with open(outpath,'w+') as writer:
     #     writer.write(page_as_txt)
-    
-    str_to_file(page_as_txt,outpath)
+
+    str_to_file(page_as_txt, outpath)
 
 
-def gen_quality_report_page_and_files(outpath,tabledata,feat_type,category,quality_category,text,occ_type,csvpath,count_page=False):
+def gen_quality_report_page_and_files(
+    outpath,
+    tabledata,
+    feat_type,
+    category,
+    quality_category,
+    text,
+    occ_type,
+    csvpath,
+    count_page=False,
+):
 
-    pagename_base = f'{quality_category}_{category}'
+    pagename_base = f"{quality_category}_{category}"
 
     csv_url = f"""<h2>  
         
@@ -215,7 +232,6 @@ def gen_quality_report_page_and_files(outpath,tabledata,feat_type,category,quali
     <th><b>commentary</b></th>
     </tr>"""
 
-
     if count_page:
         tablepart = f"""<tr>
                     <th><b>OSM ID (link)</b></th>
@@ -225,37 +241,36 @@ def gen_quality_report_page_and_files(outpath,tabledata,feat_type,category,quali
 
     valid_featcount = 0
 
-    with open(csvpath,'w+') as file:
-            writer = csv.writer(file,delimiter=',',quotechar='"')
-            writer.writerow(['osm_id','key','value','commentary'])
+    with open(csvpath, "w+") as file:
+        writer = csv.writer(file, delimiter=",", quotechar='"')
+        writer.writerow(["osm_id", "key", "value", "commentary"])
 
-            for line in tabledata:
-                try:
-                    line_as_str = ''
-                    if line:
-                        if len(line)> 2:
-                            if not pd.isna(line[2]): 
+        for line in tabledata:
+            try:
+                line_as_str = ""
+                if line:
+                    if len(line) > 2:
+                        if not pd.isna(line[2]):
 
-                                writer.writerow(line)
+                            writer.writerow(line)
 
-                                line[0] = return_weblink_V2(str(line[0]),feat_type)
-                        
-                                line_as_str += "<tr>"
-                        
-                                for element in line:
-                                    line_as_str += f"<td>{str(element)}</td>"
-                        
-                                line_as_str += "</tr>\n"
+                            line[0] = return_weblink_V2(str(line[0]), feat_type)
 
-                                tablepart += line_as_str
+                            line_as_str += "<tr>"
 
-                                valid_featcount += 1
-                except:
-                    if line:
-                        print('skipped',line)
+                            for element in line:
+                                line_as_str += f"<td>{str(element)}</td>"
 
+                            line_as_str += "</tr>\n"
 
-    with open(outpath,'w+') as writer:
+                            tablepart += line_as_str
+
+                            valid_featcount += 1
+            except:
+                if line:
+                    print("skipped", line)
+
+    with open(outpath, "w+") as writer:
 
         page = f"""
 
@@ -304,40 +319,45 @@ def gen_quality_report_page_and_files(outpath,tabledata,feat_type,category,quali
     return valid_featcount
 
 
-
 def find_map_ref(input_htmlpath):
     with open(input_htmlpath) as inf:
         txt = inf.read()
-        soup = bs4.BeautifulSoup(txt,features='html5lib')
+        soup = bs4.BeautifulSoup(txt, features="html5lib")
 
-    refs = soup.find_all(attrs={'class':"folium-map"})
+    refs = soup.find_all(attrs={"class": "folium-map"})
 
     for found_ref in refs:
-        return found_ref['id']
+        return found_ref["id"]
 
 
-
-
-def find_html_name(input_htmlpath,specific_ref,tag_ref='img',specific_tag='src',identifier='id'):
+def find_html_name(
+    input_htmlpath, specific_ref, tag_ref="img", specific_tag="src", identifier="id"
+):
 
     with open(input_htmlpath) as inf:
         txt = inf.read()
-        soup = bs4.BeautifulSoup(txt,features='html5lib')
+        soup = bs4.BeautifulSoup(txt, features="html5lib")
 
     refs = soup.find_all(tag_ref)
-
 
     for found_ref in refs:
         # if specific_tag in found_ref:
 
         if found_ref[specific_tag] == specific_ref:
             return found_ref[identifier]
-            
 
-def style_changer(in_out_htmlpath,element_key,key='style',original='bottom',new='top',append_t=None):
+
+def style_changer(
+    in_out_htmlpath,
+    element_key,
+    key="style",
+    original="bottom",
+    new="top",
+    append_t=None,
+):
     with open(in_out_htmlpath) as inf:
         txt = inf.read()
-        soup = bs4.BeautifulSoup(txt,features='html5lib')
+        soup = bs4.BeautifulSoup(txt, features="html5lib")
 
     style_refs = soup.find_all(key)
 
@@ -346,7 +366,7 @@ def style_changer(in_out_htmlpath,element_key,key='style',original='bottom',new=
         if element_key in as_txt:
 
             if new:
-                new_text = as_txt.replace(original,new)
+                new_text = as_txt.replace(original, new)
             else:
                 new_text = as_txt
 
@@ -355,54 +375,53 @@ def style_changer(in_out_htmlpath,element_key,key='style',original='bottom',new=
 
             break
 
-
-    with open(in_out_htmlpath,'w+', encoding='utf-8') as writer:
-        writer.write(str(soup).replace(as_txt,new_text))
+    with open(in_out_htmlpath, "w+", encoding="utf-8") as writer:
+        writer.write(str(soup).replace(as_txt, new_text))
 
     sleep(0.2)
 
-        
-def add_to_page_after_first_tag(html_filepath,element_string,tag_or_txt='<head>',count=1):
-    '''
-    Quick and dirty way to insert some stuff directly on the webpage 
+
+def add_to_page_after_first_tag(
+    html_filepath, element_string, tag_or_txt="<head>", count=1
+):
+    """
+    Quick and dirty way to insert some stuff directly on the webpage
 
     Originally intended only for <head>
 
     beware of tags that repeat! the "count" argument is very important!
-    '''
-
+    """
 
     with open(html_filepath) as reader:
         pag_txt = reader.read()
 
-    replace_text = f'{tag_or_txt} \n{element_string}\n'
+    replace_text = f"{tag_or_txt} \n{element_string}\n"
 
-    
-    with open(html_filepath,'w+') as writer:
-        writer.write(pag_txt.replace(tag_or_txt,replace_text,count))
+    with open(html_filepath, "w+") as writer:
+        writer.write(pag_txt.replace(tag_or_txt, replace_text, count))
 
-    sleep(.1)
+    sleep(0.1)
 
-def replace_at_html(html_filepath,original_text,new_text,count=1):
-    '''
-    Quick and dirty way to replace some stuff directly on the webpage 
+
+def replace_at_html(html_filepath, original_text, new_text, count=1):
+    """
+    Quick and dirty way to replace some stuff directly on the webpage
 
     Originally intended only for <head>
 
     beware of tags that repeat! the "count" argument is very important!
-    '''
+    """
 
     if os.path.exists(html_filepath):
         with open(html_filepath) as reader:
             pag_txt = reader.read()
 
-        
-        with open(html_filepath,'w+') as writer:
-            writer.write(pag_txt.replace(original_text,new_text,count))
+        with open(html_filepath, "w+") as writer:
+            writer.write(pag_txt.replace(original_text, new_text, count))
     else:
-        raise('Error: file not found!!')
+        raise ("Error: file not found!!")
 
-    sleep(.1)
+    sleep(0.1)
 
 
 # def file_to_str(filepath):
@@ -412,13 +431,21 @@ def replace_at_html(html_filepath,original_text,new_text,count=1):
 
 #         return pag_txt
 
-def find_between_strings(string, start, end,return_unique=True,exclusions:list=None,include_linebreaks=False):
+
+def find_between_strings(
+    string,
+    start,
+    end,
+    return_unique=True,
+    exclusions: list = None,
+    include_linebreaks=False,
+):
     pattern = f"{start}(.*){end}"
     # print(pattern)
     if include_linebreaks:
-        matches =  re.findall(pattern, string,re.DOTALL)
+        matches = re.findall(pattern, string, re.DOTALL)
     else:
-        matches =  re.findall(pattern, string)
+        matches = re.findall(pattern, string)
 
     if return_unique:
         matches = list(set(matches))
@@ -430,68 +457,89 @@ def find_between_strings(string, start, end,return_unique=True,exclusions:list=N
 
 
 # (geo)Pandas stuff:
-def get_score_df(inputdict,category='sidewalks',osm_key='surface',input_field='score_default',output_field_base='score'):
+def get_score_df(
+    inputdict,
+    category="sidewalks",
+    osm_key="surface",
+    input_field="score_default",
+    output_field_base="score",
+):
 
-    output_field_name = f'{category}_{osm_key}_{output_field_base}'
-    dict = {osm_key:[],output_field_name:[]}
+    output_field_name = f"{category}_{osm_key}_{output_field_base}"
+    dict = {osm_key: [], output_field_name: []}
 
     for val_key in inputdict[category][osm_key]:
         dict[osm_key].append(val_key)
-        dict[output_field_name].append(inputdict[category][osm_key][val_key][input_field])
+        dict[output_field_name].append(
+            inputdict[category][osm_key][val_key][input_field]
+        )
 
-    return  pd.DataFrame(dict), output_field_name
+    return pd.DataFrame(dict), output_field_name
 
 
-def get_attr_dict(inputdict,category='sidewalks',osm_tag='surface',attr='color'):
+def get_attr_dict(inputdict, category="sidewalks", osm_tag="surface", attr="color"):
     color_dict = {}
     for tag_value in inputdict[category][osm_tag]:
         color_dict[tag_value] = inputdict[category][osm_tag][tag_value][attr]
 
     return color_dict
 
+
 def return_weblink_way(string_id):
     return f"<a href=https://www.openstreetmap.org/way/{string_id}>{string_id}</a>"
+
 
 def return_weblink_node(string_id):
     return f"<a href=https://www.openstreetmap.org/node/{string_id}>{string_id}</a>"
 
-def return_weblink_V2(string_id,featuretype):
+
+def return_weblink_V2(string_id, featuretype):
     return f"<a href=https://www.openstreetmap.org/{featuretype}/{string_id}>{string_id}</a>"
+
 
 def return_weblink_V3(type_id_string):
-    featuretype,string_id = type_id_string.split('_')
+    featuretype, string_id = type_id_string.split("_")
     return f"<a href=https://www.openstreetmap.org/{featuretype}/{string_id}>{string_id}</a>"
 
-'''
+
+"""
 
 HISTORY STUFF
 
-'''
+"""
 
-def get_feature_history_url(featureid,type='way'):
-    return f'https://www.openstreetmap.org/api/0.6/{type}/{featureid}/history'
 
-def parse_datetime_str(inputstr,format='ymdhms'):
+def get_feature_history_url(featureid, type="way"):
+    return f"https://www.openstreetmap.org/api/0.6/{type}/{featureid}/history"
+
+
+def parse_datetime_str(inputstr, format="ymdhms"):
 
     format_dict = {
-        'ymdhms' : '%Y-%m-%dT%H:%M:%S',
+        "ymdhms": "%Y-%m-%dT%H:%M:%S",
     }
 
-    return datetime.strptime(inputstr,format_dict[format])
+    return datetime.strptime(inputstr, format_dict[format])
 
 
-def get_datetime_last_update(featureid,featuretype='way',onlylast=True,return_parsed=True,return_special_tuple=True):
+def get_datetime_last_update(
+    featureid,
+    featuretype="way",
+    onlylast=True,
+    return_parsed=True,
+    return_special_tuple=True,
+):
 
-    h_url = get_feature_history_url(featureid,featuretype)
+    h_url = get_feature_history_url(featureid, featuretype)
 
     try:
         response = requests.get(h_url)
     except:
         if onlylast:
             if return_parsed and return_special_tuple:
-                return [None]*4 #4 Nones
+                return [None] * 4  # 4 Nones
 
-            return ''
+            return ""
         else:
             return []
 
@@ -501,20 +549,19 @@ def get_datetime_last_update(featureid,featuretype='way',onlylast=True,return_pa
         element_list = tree.findall(featuretype)
 
         if element_list:
-            date_rec = [element.attrib['timestamp'][:-1] for element in element_list]
+            date_rec = [element.attrib["timestamp"][:-1] for element in element_list]
 
             if onlylast:
                 if return_parsed:
                     if return_special_tuple:
                         # parsed = datetime.strptime(date_rec[-1],'%Y-%m-%dT%H:%M:%S')
                         parsed = parse_datetime_str(date_rec[-1])
-                        return len(date_rec),parsed.day,parsed.month,parsed.year
+                        return len(date_rec), parsed.day, parsed.month, parsed.year
 
                     else:
                         # return datetime.strptime(date_rec[-1],'%Y-%m-%dT%H:%M:%S')
                         return parse_datetime_str(date_rec[-1])
 
-                
                 else:
                     return date_rec[-1]
 
@@ -525,42 +572,49 @@ def get_datetime_last_update(featureid,featuretype='way',onlylast=True,return_pa
                 else:
                     return date_rec
 
-
         else:
             if onlylast:
-                return ''
+                return ""
             else:
                 return []
-    
+
     else:
-        print('bad request, check feature id/type')
+        print("bad request, check feature id/type")
         if onlylast:
-            return ''
+            return ""
         else:
             return []
 
 
 def get_datetime_last_update_node(featureid):
     # all default options
-    return get_datetime_last_update(featureid,featuretype='node')
+    return get_datetime_last_update(featureid, featuretype="node")
 
 
-def print_relevant_columnamesV2(input_df,not_include=('score','geometry','type','id'),outfilepath=None):
+def print_relevant_columnamesV2(
+    input_df, not_include=("score", "geometry", "type", "id"), outfilepath=None
+):
 
-    as_list = [column for column in input_df.columns if not any(word in column for word in not_include)]
+    as_list = [
+        column
+        for column in input_df.columns
+        if not any(word in column for word in not_include)
+    ]
 
     # print(*as_list)
 
     if outfilepath:
-        with open(outfilepath,'w+') as writer:
-            writer.write(','.join(as_list))
+        with open(outfilepath, "w+") as writer:
+            writer.write(",".join(as_list))
 
     return as_list
 
 
-def check_if_wikipage_exists(name,category="Key:",wiki_page='https://wiki.openstreetmap.org/wiki/'):
+def check_if_wikipage_exists(
+    name, category="Key:", wiki_page="https://wiki.openstreetmap.org/wiki/"
+):
 
-    url = f'{wiki_page}{category}{name}'
+    url = f"{wiki_page}{category}{name}"
 
     while True:
         try:
@@ -571,58 +625,71 @@ def check_if_wikipage_exists(name,category="Key:",wiki_page='https://wiki.openst
 
     return status == 200
 
+
 """
     geopandas
 
 """
 
-def gdf_to_js_file(input_gdf,output_path,output_varname):
-    """
-        this function converts a geopandas dataframe to a javascript file, was the only thing that worked for vectorGrid module 
 
-        returns the importing to be included in the html file
+def gdf_to_js_file(input_gdf, output_path, output_varname):
+    """
+    this function converts a geopandas dataframe to a javascript file, was the only thing that worked for vectorGrid module
+
+    returns the importing to be included in the html file
     """
 
     input_gdf.to_file(output_path)
 
-    as_str = f"{output_varname} = "+ file_as_string(output_path)
+    as_str = f"{output_varname} = " + file_as_string(output_path)
 
-    str_to_file(as_str,output_path)
+    str_to_file(as_str, output_path)
 
     return f'<script type="text/javascript" src="{output_path}"></script>'
 
-def create_length_field(input_gdf,fieldname='length(km)',in_km=True):
+
+def create_length_field(input_gdf, fieldname="length(km)", in_km=True):
     factor = 1
     if in_km:
         factor = 1000
 
     utm_crs = input_gdf.estimate_utm_crs()
-    input_gdf['length(km)'] = input_gdf.to_crs(utm_crs).length/factor
+    input_gdf["length(km)"] = input_gdf.to_crs(utm_crs).length / factor
 
-def create_weblink_field(input_gdf,featuretype='LineString',inputfield='id',fieldname='weblink'):
-    if featuretype == 'LineString':
-        input_gdf[fieldname] = input_gdf[inputfield].astype('string').apply(return_weblink_way)
-    if featuretype == 'Point':
-        input_gdf[fieldname] = input_gdf[inputfield].astype('string').apply(return_weblink_node)
+
+def create_weblink_field(
+    input_gdf, featuretype="LineString", inputfield="id", fieldname="weblink"
+):
+    if featuretype == "LineString":
+        input_gdf[fieldname] = (
+            input_gdf[inputfield].astype("string").apply(return_weblink_way)
+        )
+    if featuretype == "Point":
+        input_gdf[fieldname] = (
+            input_gdf[inputfield].astype("string").apply(return_weblink_node)
+        )
 
 
 def create_folder_if_not_exists(folderpath):
     if not os.path.exists(folderpath):
         os.makedirs(folderpath)
 
+
 def create_folderlist(folderlist):
     for folder in folderlist:
         create_folder_if_not_exists(folder)
+
 
 def remove_if_exists(pathfile):
     if os.path.exists(pathfile):
         os.remove(pathfile)
 
+
 def listdir_fullpath(path):
     return [os.path.join(path, file) for file in os.listdir(path)]
 
 
-def get_territory_polygon(place_name,outpath=None,outpath_metadata=None):
+def get_territory_polygon(place_name, outpath=None, outpath_metadata=None):
     """
     This function takes a place name as input and retrieves the corresponding territory polygon using the Nominatim API. It can also optionally save the polygon as a GeoJSON file.
 
@@ -641,37 +708,40 @@ def get_territory_polygon(place_name,outpath=None,outpath_metadata=None):
     # Parse the response as a JSON object
     data = response.json()
 
-
     # sort data by "importance", that is a key in each dictionary of the list:
     data.sort(key=lambda x: x["importance"], reverse=True)
 
     # Get the polygon of the territory as a GeoJSON object
-    polygon = data[0]['geojson']
+    polygon = data[0]["geojson"]
 
     if outpath:
         dump_json(polygon, outpath)
 
     if outpath_metadata:
 
-        if 'geojson' in data[0]:
-            del data[0]['geojson']
+        if "geojson" in data[0]:
+            del data[0]["geojson"]
 
         dump_json(data[0], outpath_metadata)
 
     # Return the polygon
     return polygon
 
+
 def geodataframe_from_a_geometry(geometry):
     return gpd.GeoDataFrame(geometry=[geometry])
 
-def bbox_geodataframe(bbox,resort=True):
+
+def bbox_geodataframe(bbox, resort=True):
     if resort:
         bbox = resort_bbox(bbox)
 
     return gpd.GeoDataFrame(geometry=[box(*bbox)])
 
+
 def resort_bbox(bbox):
-    return [bbox[1],bbox[0],bbox[3],bbox[2]]
+    return [bbox[1], bbox[0], bbox[3], bbox[2]]
+
 
 def merge_list_of_dictionaries(list_of_dicts):
     merged_dict = {}
@@ -686,29 +756,34 @@ def merge_list_of_dictionaries(list_of_dicts):
                 else:
                     merged_dict[key].append(value)
             else:
-                merged_dict[key] = value if not isinstance(value, list) else value.copy()
+                merged_dict[key] = (
+                    value if not isinstance(value, list) else value.copy()
+                )
 
     return merged_dict
 
+
 def join_to_node_homepage(input_list_or_str):
-    if isinstance(input_list_or_str,list):
-        return os.path.join(node_homepage_url,*input_list_or_str)
+    if isinstance(input_list_or_str, list):
+        return os.path.join(node_homepage_url, *input_list_or_str)
     else:
-        return os.path.join(node_homepage_url,input_list_or_str)
+        return os.path.join(node_homepage_url, input_list_or_str)
+
 
 def save_geoparquet(input_gdf, outpath):
     """
-    Saves a GeoDataFrame to a Parquet file. 
+    Saves a GeoDataFrame to a Parquet file.
     If the GeoDataFrame is empty, creates an empty Parquet file.
 
     Workaround for: https://github.com/geopandas/geopandas/issues/3137
     """
     if input_gdf.empty:
-        gpd.GeoDataFrame(columns=['geometry']).to_parquet(outpath)
+        gpd.GeoDataFrame(columns=["geometry"]).to_parquet(outpath)
     else:
         input_gdf.to_parquet(outpath)
 
-def row_query(df, querydict, mode='any',reverse=False):
+
+def row_query(df, querydict, mode="any", reverse=False):
     """
     Apply a query to each row in a DataFrame and return a boolean result.
 
@@ -729,37 +804,60 @@ def row_query(df, querydict, mode='any',reverse=False):
         2    False
         dtype: bool
     """
-    if mode == 'any':
-        selection =  df.isin(querydict).any(axis=1)
-    elif mode == 'all':
-        selection =  df.isin(querydict).all(axis=1)
-    
+    if mode == "any":
+        selection = df.isin(querydict).any(axis=1)
+    elif mode == "all":
+        selection = df.isin(querydict).all(axis=1)
+
     if reverse:
         return ~selection
     else:
         return selection
-    
+
+
 def get_gdfs_dict(raw_data=False):
     # used dict: paths_dict
-    category_group = 'data_raw' if raw_data else 'data'
+    category_group = "data_raw" if raw_data else "data"
 
-    return {category: gpd.read_parquet(paths_dict[category_group][category]) for category in paths_dict[category_group]}
+    return {
+        category: gpd.read_parquet(paths_dict[category_group][category])
+        for category in paths_dict[category_group]
+    }
 
-def get_gdfs_dict_v2(category='data'):
+
+def get_gdfs_dict_v2(category="data"):
     """
     available categories: 'data', 'data_raw','other_footways_subcategories', 'map_layers'
     """
 
-    return {category: gpd.read_parquet(paths_dict[category][category]) for category in paths_dict[category]}
+    return {
+        category: gpd.read_parquet(paths_dict[category][category])
+        for category in paths_dict[category]
+    }
 
-def remove_empty_columns(gdf,report=False):
+
+def remove_empty_columns(gdf, report=False):
     if report:
         prev = len(gdf.columns)
 
-    gdf.dropna(axis='columns',how='all',inplace=True)
+    gdf.dropna(axis="columns", how="all", inplace=True)
 
     if report:
-        print(f'    removed {prev-len(gdf.columns)} empty columns')
-        
+        print(f"    removed {prev-len(gdf.columns)} empty columns")
+
+
 def get_boundaries_bbox():
     return list(gpd.read_file(boundaries_geojson_path).total_bounds)
+
+
+def rename_dict_key(
+    dictionary, old_key, new_key, ignore_missing=True, ignore_existing=True
+):
+    if old_key in dictionary and not ignore_missing:
+        raise KeyError(f"Key {old_key} not found in dictionary")
+
+    if new_key in dictionary and not ignore_existing:
+        raise KeyError(f"Key {new_key} already exists in dictionary")
+
+    if old_key in dictionary:
+        dictionary[new_key] = dictionary.pop(old_key)
