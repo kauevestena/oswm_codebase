@@ -12,3 +12,4 @@ scikit-learn
 pyarrow
 svg.py
 matplotlib
+tqdm
