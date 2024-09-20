@@ -1,44 +1,43 @@
-
 from constants import *
 
-css_class_ref = 'media_image responsive'
-inner_div_class_ref = 'media__body'
-outer_div_class_ref = 'media'
-img_css_class_ref = 'media_image responsive'
-assets_base_path = f'{codebase_homepage}assets/'
-assets_homepage_path = f'{codebase_homepage}assets/homepage/'
-assets_map_symbols_path = f'{codebase_homepage}assets/map_symbols/'
+css_class_ref = "media_image responsive"
+inner_div_class_ref = "media__body"
+outer_div_class_ref = "media"
+img_css_class_ref = "media_image responsive"
+assets_base_path = f"{codebase_homepage}assets/"
+assets_homepage_path = f"{codebase_homepage}assets/homepage/"
+assets_map_symbols_path = f"{codebase_homepage}assets/map_symbols/"
 
 modules_metadata = {
-    'webmap': {
-        'url' : f'{node_homepage_url}map.html',
-        'img_src' : f"{assets_homepage_path}oswm_webmap_img.png",
-        'text' : 'Webmap'
+    "webmap": {
+        "url": f"{node_homepage_url}map.html",
+        "img_src": f"{assets_homepage_path}oswm_webmap_img.png",
+        "text": "Webmap",
     },
-    'routing': {
-        'url' : 'https://kauevestena.github.io/opensidewalkmap_beta/routing.html',
-        'img_src' : f"{assets_homepage_path}oswm_route_img.png",
-        'text' : 'Optimized Routing'
+    "routing": {
+        "url": "https://kauevestena.github.io/opensidewalkmap_beta/routing.html",
+        "img_src": f"{assets_homepage_path}oswm_route_img.png",
+        "text": "Optimized Routing",
     },
-    'dashboard': {
-        'url' : f'{node_homepage_url}statistics/index.html',
-        'img_src' : f"{assets_homepage_path}oswm_statistics_img.png",
-        'text' : 'Dashboard'
+    "dashboard": {
+        "url": f"{node_homepage_url}statistics/index.html",
+        "img_src": f"{assets_homepage_path}oswm_statistics_img.png",
+        "text": "Dashboard",
     },
-    'data_quality': {
-        'url' : f'{node_homepage_url}quality_check/oswm_qc_main.html',
-        'img_src' : f"{assets_homepage_path}oswm_quality_check_img.png",
-        'text' : 'Data Quality Tool'
+    "data_quality": {
+        "url": f"{node_homepage_url}quality_check/oswm_qc_main.html",
+        "img_src": f"{assets_homepage_path}oswm_quality_check_img.png",
+        "text": "Data Quality Tool",
     },
 }
 
-modules_as_str = ''
+modules_as_str = ""
 
 for modulename in modules_metadata:
     # mapping for short sake:
-    url = modules_metadata[modulename]['url']
-    img_src = modules_metadata[modulename]['img_src']
-    text =  modules_metadata[modulename]['text']
+    url = modules_metadata[modulename]["url"]
+    img_src = modules_metadata[modulename]["img_src"]
+    text = modules_metadata[modulename]["text"]
 
     modules_as_str += f"""
     

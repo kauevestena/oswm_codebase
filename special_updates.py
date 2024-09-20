@@ -7,11 +7,11 @@ script reserved for eventual modifications that shall happen on all nodes
 """
 
 # Replacing the workflows from the node to the newest ones:
-rmtree(workflows_path,ignore_errors=True)
-copytree('./oswm_codebase/workflows',workflows_path)
+rmtree(workflows_path, ignore_errors=True)
+copytree("./oswm_codebase/workflows", workflows_path)
 
 # copying the gitgnore:
-copyfile('./oswm_codebase/.gitignore','.gitignore')
+copyfile("./oswm_codebase/.gitignore", ".gitignore")
 
 
 # copying requirements.txt:
