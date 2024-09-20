@@ -27,18 +27,7 @@ jobs:
       # @see https://github.com/actions/checkout
       - uses: actions/checkout@v3
 
-      #### setup-python ________________________________________________________
-      # @see https://github.com/actions/setup-python
-      - uses: actions/setup-python@v4
-        with:
-          python-version: "3.12"
-          cache: 'pip' # caching pip dependencies
-
-      #### setup dependencies __________________________________________________
-      - run: pip install -r requirements.txt
-
-      #### main ________________________________________________________________
-
+      # download and update the submodule
       - run: |
           git submodule init
           git submodule update
