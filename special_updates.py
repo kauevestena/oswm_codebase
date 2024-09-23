@@ -4,6 +4,8 @@ from shutil import rmtree, copytree, copy, copyfile
 
 """
 script reserved for eventual modifications that shall happen on all nodes
+
+generally not works if running from a gh action workflow
 """
 
 # Replacing the workflows from the node to the newest ones:

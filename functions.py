@@ -529,6 +529,7 @@ def get_datetime_last_update(
     return_parsed=True,
     return_special_tuple=True,
 ):
+    # TODO: use osmapi!
 
     h_url = get_feature_history_url(featureid, featuretype)
 
