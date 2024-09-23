@@ -28,6 +28,9 @@ from random import shuffle
 
 gdf_dicts = get_gdfs_dict()
 
+# instantiate the object for datetiming:
+updates_obj = GetDatetimeLastUpdate()
+
 
 for category in gdf_dicts:
 
@@ -43,12 +46,18 @@ for category in gdf_dicts:
 
     print("category: ", category, "\n")
 
-    ids = gdf_dicts[category]["id"]
+    ids = tuple(gdf_dicts[category]["id"])
 
     if category != "kerbs":
-        to_include = list(tqdm(map(get_datetime_last_update, ids), total=len(ids)))
+        # to_include = list(tqdm(map(get_datetime_last_update, ids), total=len(ids)))
+        to_include = tuple(
+            tqdm(map(updates_obj.get_datetime_last_update_way, ids), total=len(ids))
+        )
     else:
-        to_include = list(tqdm(map(get_datetime_last_update_node, ids), total=len(ids)))
+        # to_include = list(tqdm(map(get_datetime_last_update_node, ids), total=len(ids)))
+        to_include = tuple(
+            tqdm(map(updates_obj.get_datetime_last_update_node, ids), total=len(ids))
+        )
 
     data["n_revs"] = [entry[0] for entry in to_include]
     data["rev_day"] = [entry[1] for entry in to_include]

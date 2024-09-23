@@ -587,6 +587,25 @@ def get_datetime_last_update(
             return []
 
 
+class GetDatetimeLastUpdate:
+    import osmapi
+
+    api = osmapi.OsmApi()
+
+    def __init__(self):
+        pass
+
+    def get_datetime_last_update_way(self, featureid):
+        res = self.api.WayGet(featureid)
+        dt = res["timestamp"]  # date time object
+        return res["version"], dt.day, dt.month, dt.year
+
+    def get_datetime_last_update_node(self, featureid):
+        res = self.api.NodeGet(featureid)
+        dt = res["timestamp"]  # date time object
+        return res["version"], dt.day, dt.month, dt.year
+
+
 def get_datetime_last_update_node(featureid):
     # all default options
     return get_datetime_last_update(featureid, featuretype="node")
@@ -832,8 +851,8 @@ def get_gdfs_dict_v2(category="data"):
     """
 
     return {
-        category: gpd.read_parquet(paths_dict[category][category])
-        for category in paths_dict[category]
+        category: gpd.read_parquet(paths_dict["data"][category])
+        for category in paths_dict["data"]
     }
 
 
