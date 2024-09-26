@@ -1,3 +1,7 @@
+import sys
+
+sys.path.append("oswm_codebase")
+
 from datetime import datetime
 from functions import *
 
