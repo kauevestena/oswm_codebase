@@ -1,6 +1,6 @@
 [ ] Create the new modules
     [ ] The Data Watcher
-    [ ] The Data Acquisition Hub
+    [ ] The Data Acquisition Hub (DAH)
 [ ] Improvements on data Quality
     [ ] Add the geometric filters
     [ ] External Providers, such as OSMCHA
@@ -16,6 +16,10 @@ and routing streamlit demo
     [ ] On each module, for all layers in a dataset
     [ ] Global Layers of each category and also the ones for each sub category
 [ ] change data updating to become the "data" module
+[ ] Create a system to stop updates, both in case of manual triggering of it, or for absence of updates (linked to DAH)
+
+LESS IMPORTANT:
+
 [ ] Styling stuff:
     [ ] put a faded color on indoor stuff
 [ ] Elevation stuff:

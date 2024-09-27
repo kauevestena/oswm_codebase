@@ -2,43 +2,67 @@ from statistics_specs import *
 
 # reading data:
 
-exit(0)
 
-for category in paths_dict["data"]:
-    if category != "other_footways":  # TODO: remove this to include this category also
-        print("Adaptations for:", category)
+for category in gdfs_dict:
+    # creating the  folder if it does not exist
+    create_folder_if_not_exists(os.path.join("statistics", category))
 
-        # creating additional fields
+    # creating a ref to improve readability
+    cat_gdf = gdfs_dict[category]
+    update_df = updating_dicts[category]
 
-        if geom_type_dict[category] == "LineString":
-            create_length_field(gdfs_dict[category])
-            create_weblink_field(gdfs_dict[category])
-        elif geom_type_dict[category] == "Point":
-            create_weblink_field(gdfs_dict[category], "Point")
+    print("Adaptations for:", category)
 
-        if "survey:date" in gdfs_dict[category].columns:
+    # creating additional fields
 
-            gdfs_dict[category]["Year of Survey"] = gdfs_dict[category][
-                "survey:date"
-            ].apply(get_year_surveydate)
+    if "LineString" in geom_type_dict[category]:
+        create_length_field(cat_gdf)
+        create_weblink_field(cat_gdf)
+    elif "Point" in geom_type_dict[category]:
+        create_weblink_field(cat_gdf, "Point")
 
-        create_folder_if_not_exists(os.path.join("statistics", category))
+    # uncertain about polygon cases
+    # elif (:
+    #     geom_type_dict[category] == "Polygon"
+    #     or geom_type_dict[category] == "MultiPolygon"
+    # ):
+    #     create_weblink_field(gdfs_dict[category])
 
-        # updating info:
-        updating_dicts[category]["month_year"] = (
-            updating_dicts[category]["rev_month"].map("{:02d}".format)
-            + "_"
-            + updating_dicts[category]["rev_year"].astype(str)
-        )
+    if "survey:date" in cat_gdf.columns:
 
-        updating_dicts[category]["year_month"] = (
-            updating_dicts[category]["rev_year"].astype(str)
-            + "_"
-            + updating_dicts[category]["rev_month"].map("{:02d}".format)
-        )
+        cat_gdf["Year of Survey"] = cat_gdf["survey:date"].apply(get_year_surveydate)
 
-        updating_dicts[category].sort_values("year_month", inplace=True)
+    # updating info:
+    update_df["month_year"] = (
+        update_df["rev_month"].map("{:02d}".format)
+        + "_"
+        + update_df["rev_year"].astype(str)
+    )
 
+    update_df["year_month"] = (
+        update_df["rev_year"].astype(str)
+        + "_"
+        + update_df["rev_month"].map("{:02d}".format)
+    )
+
+    update_df.sort_values("year_month", inplace=True)
+
+    # Fill missing values with a default (e.g., 1 for month or day) TODO: move to data adaptation script
+    update_df["rev_year"] = (
+        update_df["rev_year"].fillna(default_missing_year).astype(int)
+    )
+    update_df["rev_month"] = (
+        update_df["rev_month"].fillna(default_missing_month).astype(int)
+    )
+    update_df["rev_day"] = update_df["rev_day"].fillna(default_missing_day).astype(int)
+
+    update_df["rev_date_obj"] = update_df.apply(create_rev_date, axis=1)
+
+    update_df["age_years"] = (
+        pd.Timestamp(datetime.today()) - update_df["rev_date_obj"]
+    ).dt.days / 365.25
+
+# storing chart infos:
 generated_list_dict = {}
 charts_titles = {}
 
@@ -79,6 +103,10 @@ topbar = f"""
 print(generated_list_dict)
 
 for category in generated_list_dict:
+    if not generated_list_dict[category]:
+        print("no charts generated for: ", category)
+        continue
+
     category_homepage = get_url(generated_list_dict[category][0])
 
     topbar += f'<a href="{category_homepage}">{category.capitalize()} Charts</a>\n'

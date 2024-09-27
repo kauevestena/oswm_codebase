@@ -66,7 +66,9 @@ for category in gdf_dicts:
 
     as_df = pd.DataFrame(data)
 
-    as_df.to_json(f"data/{category}_versioning.json")
+    # as_df.to_json(f"data/{category}_versioning.json")
+
+    as_df.to_json(paths_dict["versioning"][category])
 
 # to record data aging:
 record_datetime("Versioning Data")

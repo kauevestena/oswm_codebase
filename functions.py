@@ -674,7 +674,7 @@ def create_length_field(input_gdf, fieldname="length(km)", in_km=True):
         factor = 1000
 
     utm_crs = input_gdf.estimate_utm_crs()
-    input_gdf["length(km)"] = input_gdf.to_crs(utm_crs).length / factor
+    input_gdf[fieldname] = input_gdf.to_crs(utm_crs).length / factor
 
 
 def create_weblink_field(
@@ -845,14 +845,14 @@ def get_gdfs_dict(raw_data=False):
     }
 
 
-def get_gdfs_dict_v2(category="data"):
+def get_gdfs_dict_v2():
     """
-    available categories: 'data', 'data_raw','other_footways_subcategories', 'map_layers'
+    shall include also the specialized categories
     """
 
     return {
-        category: gpd.read_parquet(paths_dict["data"][category])
-        for category in paths_dict["data"]
+        category: gpd.read_parquet(paths_dict["map_layers"][category])
+        for category in paths_dict["map_layers"]
     }
 
 

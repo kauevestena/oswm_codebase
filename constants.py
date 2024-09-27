@@ -152,6 +152,7 @@ for subcategory in other_footways_subcatecories:
     paths_dict["other_footways_subcategories"][subcategory] = subcategory_path
     paths_dict["map_layers"][subcategory] = subcategory_path
 
+versioning_dict = paths_dict["versioning"]
 
 # max radius to cut off unconnected crossings and kerbs
 max_radius_cutoff = 50
@@ -583,3 +584,10 @@ statistics_basepath = "statistics"
 # defined here to avoid circular importing problems
 def get_url(relative_url, base_url=node_homepage_url):
     return os.path.join(base_url, relative_url)
+
+
+# to fill in default values for dates:
+default_missing_day = 9
+default_missing_month = 8
+default_missing_year = 2004
+# OSM's foundation date :-)

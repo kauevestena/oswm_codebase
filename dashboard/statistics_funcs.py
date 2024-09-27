@@ -23,9 +23,9 @@ def get_count_df(input_df, fieldname, str_to_append=" type"):
         input_df[fieldname]
         .value_counts()
         .reset_index()
-        .rename(columns={"index": outfieldname, fieldname: "count"})
         .sort_values(by="count", ascending=False),
         outfieldname,
+        # .rename(columns={"index": outfieldname, fieldname: "count"})
     )
 
 
@@ -33,7 +33,7 @@ def create_barchart(
     input_df,
     fieldname,
     title,
-    str_to_append=" type",
+    str_to_append="",
     title_fontsize=24,
     tooltip="count",
     x_sort="-y",
@@ -161,7 +161,7 @@ def double_scatter_bar(
             width=600,
             height=350,
         )
-        .add_selection(interval)
+        .add_params(interval)
     )
 
     hist_base = (
@@ -189,4 +189,13 @@ def double_scatter_bar(
     return (scatter & hist).configure_title(fontSize=fontsize, align="center")
 
 
-# 'Surface x Smoothness'
+def create_rev_date(row):
+    try:
+        return datetime(
+            year=int(row["rev_year"]),
+            month=int(row["rev_month"]),
+            day=int(row["rev_day"]),
+        )
+    except ValueError:
+        # Handle invalid dates, you can return None or a specific default date
+        return None

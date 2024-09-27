@@ -1,14 +1,13 @@
 from statistics_funcs import *
 
-gdfs_dict = {}
+gdfs_dict = get_gdfs_dict()
 updating_dicts = {}
 
 
 for category in paths_dict["data"]:
-    gdfs_dict[category] = gpd.read_parquet(paths_dict["data"][category])
 
     if os.path.exists(paths_dict["versioning"].get(category)):
-        updating_dicts[category] = pd.read_json(paths_dict["versioning"][category])
+        updating_dicts[category] = pd.read_json(versioning_dict[category])
     else:
         updating_dicts[category] = pd.DataFrame()
 
@@ -87,15 +86,15 @@ charts_specs = {
             ),
             "title": "Incline Values",
         },
-        "sidewalks_survey_year": {
-            "function": create_barchart,
-            "params": (
-                gdfs_dict["sidewalks"],
-                "Year of Survey",
-                "Year of Survey Image (sidewalks)",
-            ),
-            "title": "Year of Survey Image",
-        },
+        # "sidewalks_survey_year": {
+        #     "function": create_barchart,
+        #     "params": (
+        #         gdfs_dict["sidewalks"],
+        #         "Year of Survey",
+        #         "Year of Survey Image (sidewalks)",
+        #     ),
+        #     "title": "Year of Survey Image",
+        # },
         "sidewalks_yr_moth_update": {
             "function": create_barchart,
             "params": (
@@ -159,15 +158,15 @@ charts_specs = {
             ),
             "title": "Surface x Smoothness",
         },
-        "crossings_survey_year": {
-            "function": create_barchart,
-            "params": (
-                gdfs_dict["crossings"],
-                "Year of Survey",
-                "Year of Survey Image (crossings)",
-            ),
-            "title": "Year of Survey Image",
-        },
+        # "crossings_survey_year": {
+        #     "function": create_barchart,
+        #     "params": (
+        #         gdfs_dict["crossings"],
+        #         "Year of Survey",
+        #         "Year of Survey Image (crossings)",
+        #     ),
+        #     "title": "Year of Survey Image",
+        # },
         "crossings_yr_moth_update": {
             "function": create_barchart,
             "params": (
@@ -240,15 +239,15 @@ charts_specs = {
             ),
             "title": "Wheelchair Acessibility",
         },
-        "kerbs_survey_year": {
-            "function": create_barchart,
-            "params": (
-                gdfs_dict["kerbs"],
-                "Year of Survey",
-                "Year of Survey Image (kerbs)",
-            ),
-            "title": "Year of Survey Image",
-        },
+        # "kerbs_survey_year": {
+        #     "function": create_barchart,
+        #     "params": (
+        #         gdfs_dict["kerbs"],
+        #         "Year of Survey",
+        #         "Year of Survey Image (kerbs)",
+        #     ),
+        #     "title": "Year of Survey Image",
+        # },
         "kerbs_yr_moth_update": {
             "function": create_barchart,
             "params": (
@@ -268,6 +267,60 @@ charts_specs = {
                 updating_dicts["kerbs"],
                 "n_revs",
                 "Year and Month Of Update (Kerbs)",
+                " type",
+                24,
+                "count",
+                "-x",
+            ),
+            "title": "Number Of Revisions",
+        },
+    },
+    "other_footways": {
+        "other_footways_surface": {
+            "function": create_barchart,
+            "params": (
+                updating_dicts["other_footways"],
+                "surface",
+                "other_footways Surface",
+            ),
+            "title": "Other Footways Surface",
+        },
+        "other_footways_smoothness_x_surface": {
+            "function": double_scatter_bar,
+            "params": (
+                gdfs_dict["other_footways"],
+                "Surface x Smoothness (other_footways)",
+                "surface",
+                "smoothness",
+                None,
+                "count()",
+                "surface",
+                "smoothness",
+                "crossing",
+                24,
+                ["element_type", "id"],
+            ),
+            "title": "Surface x Smoothness",
+        },
+        "other_footways_yr_moth_update": {
+            "function": create_barchart,
+            "params": (
+                updating_dicts["other_footways"],
+                "year_month",
+                "Year and Month Of Update (other_footways)",
+                " type",
+                24,
+                "count",
+                "-x",
+            ),
+            "title": "Year and Month Of Update",
+        },
+        "other_footways_number_revisions": {
+            "function": create_barchart,
+            "params": (
+                updating_dicts["other_footways"],
+                "n_revs",
+                "Year and Month Of Update (other_footways)",
                 " type",
                 24,
                 "count",
