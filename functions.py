@@ -596,14 +596,20 @@ class GetDatetimeLastUpdate:
         pass
 
     def get_datetime_last_update_way(self, featureid):
-        res = self.api.WayGet(featureid)
-        dt = res["timestamp"]  # date time object
-        return res["version"], dt.day, dt.month, dt.year
+        try:
+            res = self.api.WayGet(featureid)
+            dt = res["timestamp"]  # date time object
+            return res["version"], dt.day, dt.month, dt.year
+        except:
+            return -1, default_missing_day, default_missing_month, default_missing_year
 
     def get_datetime_last_update_node(self, featureid):
-        res = self.api.NodeGet(featureid)
-        dt = res["timestamp"]  # date time object
-        return res["version"], dt.day, dt.month, dt.year
+        try:
+            res = self.api.NodeGet(featureid)
+            dt = res["timestamp"]  # date time object
+            return res["version"], dt.day, dt.month, dt.year
+        except:
+            return -1, default_missing_day, default_missing_month, default_missing_year
 
 
 def get_datetime_last_update_node(featureid):
