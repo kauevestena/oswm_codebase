@@ -579,6 +579,7 @@ for subcategory in other_footways_geometry_types:
 
 
 statistics_basepath = "statistics"
+statistcs_specs_path = "statistics_specs"
 
 
 # defined here to avoid circular importing problems

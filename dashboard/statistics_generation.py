@@ -3,7 +3,8 @@ from statistics_specs import *
 # data adaptation
 for category in gdfs_dict:
     # creating the  folder if it does not exist
-    create_folder_if_not_exists(os.path.join("statistics", category))
+    create_folder_if_not_exists(os.path.join(statistics_basepath, category))
+    create_folder_if_not_exists(os.path.join(statistcs_specs_path, category))
 
     # creating a ref to improve readability
     cat_gdf = gdfs_dict[category]
@@ -75,11 +76,19 @@ with open(os.path.join(statistics_basepath, "failed_gen.txt"), "w+") as error_re
                     statistics_basepath, category, chart_spec + ".html"
                 )
 
+                # the json spec:
+                json_outpath = os.path.join(
+                    statistcs_specs_path, category, chart_spec + ".json"
+                )
+
                 # remove_if_exists(outpath)
 
                 print("generating ", outpath)
                 chart_obj = spec["function"](*spec["params"])
                 chart_obj.save(outpath)
+
+                print("generating ", json_outpath)
+                chart_obj.save(json_outpath)
 
                 generated_list_dict[category].append(outpath)
                 charts_titles[outpath] = spec["title"]
