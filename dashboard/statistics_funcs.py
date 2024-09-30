@@ -198,4 +198,6 @@ def create_rev_date(row):
         )
     except ValueError:
         # Handle invalid dates, you can return None or a specific default date
-        return None
+        return datetime(
+            default_missing_year, default_missing_month, default_missing_day
+        )

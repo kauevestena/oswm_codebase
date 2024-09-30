@@ -881,3 +881,31 @@ def rename_dict_key(
 
     if old_key in dictionary:
         dictionary[new_key] = dictionary.pop(old_key)
+
+
+def create_rev_date(row):
+    try:
+        return datetime(
+            year=int(row["rev_year"]),
+            month=int(row["rev_month"]),
+            day=int(row["rev_day"]),
+        )
+    except ValueError:
+        # Handle invalid dates, you can return None or a specific default date
+        return datetime(
+            default_missing_year, default_missing_month, default_missing_day
+        )
+
+
+def create_date_age(row):
+    try:
+        rev = datetime(
+            year=int(row["rev_year"]),
+            month=int(row["rev_month"]),
+            day=int(row["rev_day"]),
+        )
+    except ValueError:
+        # Handle invalid dates, you can return None or a specific default date
+        return -1
+
+    return (datetime.today() - rev).days / 365.25

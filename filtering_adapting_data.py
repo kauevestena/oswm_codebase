@@ -190,6 +190,10 @@ for category in gdf_dict:
             + updating_dict[category]["rev_year"].astype(str)
         )
 
+        updating_dict[category]["age"] = updating_dict[category].apply(
+            create_date_age, axis=1
+        )
+
         # joining the updating info dict to the geodataframe:
         gdf_dict[category] = (
             gdf_dict[category]
@@ -201,7 +205,8 @@ for category in gdf_dict:
             .reset_index()
         )
     else:
-        gdf_dict[category]["last_update"] = ""
+        gdf_dict[category]["last_update"] = "unavailable"
+        gdf_dict[category]["age"] = -1
 
     # gdf_dict[category]['last_update'] = gdf_dict[category]['update_date']
 
