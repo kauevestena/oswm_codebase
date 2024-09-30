@@ -17,7 +17,12 @@ now = datetime.now()
 dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
 
 
-def get_count_df(input_df, fieldname, str_to_append=" type"):
+def get_count_df(
+    input_df,
+    fieldname,
+    str_to_append="",
+    #  " type"
+):
     outfieldname = fieldname + str_to_append
     return (
         input_df[fieldname]

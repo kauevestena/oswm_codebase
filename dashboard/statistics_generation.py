@@ -1,8 +1,6 @@
 from statistics_specs import *
 
-# reading data:
-
-
+# data adaptation
 for category in gdfs_dict:
     # creating the  folder if it does not exist
     create_folder_if_not_exists(os.path.join("statistics", category))
