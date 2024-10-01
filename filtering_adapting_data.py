@@ -184,9 +184,9 @@ for category in gdf_dict:
 
         updating_dict[category]["last_update"] = (
             updating_dict[category]["rev_day"].astype(str)
-            + "     -"
+            + "-"
             + updating_dict[category]["rev_month"].astype(str)
-            + "     -"
+            + "-"
             + updating_dict[category]["rev_year"].astype(str)
         )
 

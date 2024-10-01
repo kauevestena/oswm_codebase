@@ -437,5 +437,11 @@ def create_crossings_kerbs_style(
     return style_dict
 
 
+def create_age_style():
+    # TODO
+    # style picker: https://waldyrious.net/viridis-palette-generator/
+    pass
+
+
 # call just once:
 create_folderlist([map_symbols_assets_path])
