@@ -131,11 +131,11 @@ sidebar_begin = '<div class="sidebar">\n'
 
 category_bars = {}
 
-full_url_dict = {}
-
 for category in generated_list_dict:
     # url_list = [get_url(rel_path) for rel_path in generated_list_dict[category]]
 
+    # this dict is meant to be temporary and merely classwise:
+    full_url_dict = {}
     for rel_path in generated_list_dict[category]:
         full_url_dict[rel_path] = get_url(rel_path)
 

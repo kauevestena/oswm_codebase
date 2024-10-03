@@ -140,8 +140,19 @@ def double_scatter_bar(
     yh2="smoothness",
     hcolor=None,
     fontsize=24,
-    tooltip_fields=["element_type", "id"],
+    tooltip_fields: list = ["element_type", "id"],
 ):
+
+    # preselect only the needed columns:
+    needed_columns = tooltip_fields + [xs, ys, xh, yh1, yh2, hcolor, scolor]
+
+    # remove None, and any one with "()":
+    needed_columns = [column for column in needed_columns if column]
+    needed_columns = [column for column in needed_columns if "()" not in column]
+    needed_columns = list(set(needed_columns))
+
+    # only keep the needed columns:
+    input_df = input_df[needed_columns].copy()
 
     interval = alt.selection_interval()
 

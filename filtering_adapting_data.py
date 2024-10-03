@@ -128,8 +128,8 @@ for category in gdf_dict:
     #         # also creating a default note
     #         gdf_dict[category][f'{req_col}_score'] = default_score
 
-    # gdf_dict[category].fillna('?',inplace=True)
-    # TODO: the '?' should only be set only at generate_webmap.py
+    # # replacing missing values with '?', again:
+    gdf_dict[category].fillna("?", inplace=True)
 
     # replacing wrong values with "?" (unknown) or misspelled with the nearest valid:
     # TODO: check if this is the better approach to handle invalid values

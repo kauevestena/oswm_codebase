@@ -77,6 +77,26 @@ layer_tags_dict = {
     "other_footways": OTHER_FOOTWAY_RULES,
 }
 
+# columns to keep in the parquet files
+# TODO: complete and apply it
+in_all = [
+    "surface",
+    "smoothness",
+    "width",
+    "incline",
+    "tactile_paving",
+    "incline:across",
+    "osm_id",
+    "last_update",
+]
+in_linear = in_all + ["highway"]
+
+columns_to_keep = {}
+
+for k, v in layer_tags_dict.items():
+    columns_to_keep[k] = in_all.copy() if k == "kerbs" else in_linear.copy()
+    columns_to_keep[k].extend(list(v.keys()))
+
 layer_exclusion_tags = {
     "kerbs": {},
     "sidewalks": {},
