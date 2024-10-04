@@ -70,8 +70,6 @@ for category in layer_tags_dict:
 
     to_save = as_gdf[belonging].copy()
 
-    remove_empty_columns(to_save)
-
     # as_gdf[belonging].to_file(outpath)
     save_geoparquet(to_save, outpath)
 

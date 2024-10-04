@@ -276,6 +276,17 @@ charts_specs = {
         },
     },
     "other_footways": {
+        "other_footways_surface_subcategory": {
+            "function": create_barchartV2,
+            "params": (
+                gdfs_dict["other_footways"],
+                oswm_footway_fieldname,
+                "Sub-category (Layer)",
+                # "",
+                # 24,
+            ),
+            "title": "Incline Values",
+        },
         "other_footways_surface": {
             "function": create_barchart,
             "params": (

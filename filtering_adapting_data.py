@@ -75,6 +75,9 @@ sidewalks_crossings_unary_buffer = unary_union(
 # removing entries that arent in the buffer:
 # dealing with the data:
 for category in gdf_dict:
+    # creating the reference:
+    curr_gdf = gdf_dict[category]
+
     print(category)
 
     if (category != "sidewalks") and (category != "other_footways"):
@@ -84,19 +87,19 @@ for category in gdf_dict:
 
         # TODO: include other footways here
         if category != "kerbs":
-            disjointed = gdf_dict[category].disjoint(sidewalks_big_unary_buffer)
+            disjointed = curr_gdf.disjoint(sidewalks_big_unary_buffer)
         else:
-            disjointed = gdf_dict[category].disjoint(sidewalks_crossings_unary_buffer)
+            disjointed = curr_gdf.disjoint(sidewalks_crossings_unary_buffer)
 
         outfilepath = os.path.join(
             disjointed_folderpath, f"{category}_disjointed" + data_format
         )
 
-        # gdf_dict[category][disjointed].to_file(os.path.join(disjointed_folderpath,f'{category}_disjointed' + data_format))
+        # curr_gdf[disjointed].to_file(os.path.join(disjointed_folderpath,f'{category}_disjointed' + data_format))
 
-        save_geoparquet(gdf_dict[category][disjointed], outfilepath)
+        save_geoparquet(curr_gdf[disjointed], outfilepath)
 
-        gdf_dict[category] = gdf_dict[category][~disjointed]
+        curr_gdf = curr_gdf[~disjointed]
 
     print("     - Removing features with improper geometry type")
     # removing the ones that aren't of the specific intended geometry type:
@@ -107,57 +110,57 @@ for category in gdf_dict:
         improper_geoms_folderpath, f"{category}_improper_geoms" + data_format
     )
     # the boolean Series:
-    are_proper_geom = gdf_dict[category].geometry.type.isin(
+    are_proper_geom = curr_gdf.geometry.type.isin(
         geom_type_dict[category]
     )  # TODO: test this out     -of     -the     -box
     # saving:
-    # gdf_dict[category][~are_proper_geom].to_file(outpath_improper)
+    # curr_gdf[~are_proper_geom].to_file(outpath_improper)
 
-    save_geoparquet(gdf_dict[category][~are_proper_geom], outpath_improper)
+    save_geoparquet(curr_gdf[~are_proper_geom], outpath_improper)
 
     # now keeping only the ones with proper geometries:
-    gdf_dict[category] = gdf_dict[category][are_proper_geom]
+    curr_gdf = curr_gdf[are_proper_geom]
 
     # print('     - Filling invalids with "?"')
 
     # # referencing the geodataframe:
     # for req_col in req_fields[category]:
-    #     if not req_col in gdf_dict[category]:
-    #         gdf_dict[category][req_col] = '?'
+    #     if not req_col in curr_gdf:
+    #         curr_gdf[req_col] = '?'
 
     #         # also creating a default note
-    #         gdf_dict[category][f'{req_col}_score'] = default_score
+    #         curr_gdf[f'{req_col}_score'] = default_score
 
     # # replacing missing values with '?', again:
-    gdf_dict[category].fillna("?", inplace=True)
+    # # incorporated to the save_geoparquet
 
     # replacing wrong values with "?" (unknown) or misspelled with the nearest valid:
     # TODO: check if this is the better approach to handle invalid values
     print("     - Replacing Utterly invalid values")
     for subkey in wrong_misspelled_values[category]:
-        gdf_dict[category].loc[:, subkey] = gdf_dict[category][subkey].replace(
+        curr_gdf.loc[:, subkey] = curr_gdf[subkey].replace(
             wrong_misspelled_values[category][subkey]
         )
 
     # print('     - Computing scores')
     # # conservation state (as a score):
     # if category != 'kerbs':
-    #     gdf_dict[category]['conservation_score'] = [smoothness_surface_conservation[surface][smoothness] for surface,smoothness in zip(gdf_dict[category]['surface'],gdf_dict[category]['smoothness'])]
+    #     curr_gdf['conservation_score'] = [smoothness_surface_conservation[surface][smoothness] for surface,smoothness in zip(curr_gdf['surface'],curr_gdf['smoothness'])]
 
     # # creating a score for each field, based on the "default_scores"
     # # in future other categories may be crated
     # for osm_key in fields_values_properties[category]:
     #     # print(category,' : ',osm_key)
-    #     gdf_dict[category] = gdf_dict[category].join(scores_dfs[category][osm_key].set_index(osm_key), on=osm_key)
+    #     curr_gdf = curr_gdf.join(scores_dfs[category][osm_key].set_index(osm_key), on=osm_key)
 
     # if category != 'kerbs':
-    #     # gdf_dict[category]['initial_score'] = 'Point'
+    #     # curr_gdf['initial_score'] = 'Point'
     #     # crating aliases
-    #     sf = gdf_dict[category][scores_dfs_fieldnames[category]['surface']]
-    #     co = gdf_dict[category]['conservation_score']
+    #     sf = curr_gdf[scores_dfs_fieldnames[category]['surface']]
+    #     co = curr_gdf['conservation_score']
 
     #     # harmonic mean:
-    #     gdf_dict[category]['final_score'] = (2*sf*co)/(sf+co)
+    #     curr_gdf['final_score'] = (2*sf*co)/(sf+co)
 
     # mapping surface+smoothness to score of conservation:
 
@@ -168,14 +171,14 @@ for category in gdf_dict:
     # if category == 'kerbs':
     #     # just a mere copy, but it may be improved in the future...
 
-    #     gdf_dict[category]['final_score'] = gdf_dict[category][scores_dfs_fieldnames[category]['kerb']]
+    #     curr_gdf['final_score'] = curr_gdf[scores_dfs_fieldnames[category]['kerb']]
 
     #     pass
 
     # if category == 'crossings':
     #     # same as sidewalks but with bonifications
 
-    #     gdf_dict[category]['final_score'] += gdf_dict[category][scores_dfs_fieldnames[category]['crossing']]
+    #     curr_gdf['final_score'] += curr_gdf[scores_dfs_fieldnames[category]['crossing']]
 
     print("     - Adding update data")
 
@@ -195,9 +198,8 @@ for category in gdf_dict:
         )
 
         # joining the updating info dict to the geodataframe:
-        gdf_dict[category] = (
-            gdf_dict[category]
-            .set_index("id")
+        curr_gdf = (
+            curr_gdf.set_index("id")
             .join(
                 updating_dict[category].set_index("osmid")["last_update"]
                 # ,rsuffix = 'r_remove',lsuffix = 'l_remove',
@@ -205,30 +207,34 @@ for category in gdf_dict:
             .reset_index()
         )
     else:
-        gdf_dict[category]["last_update"] = "unavailable"
-        gdf_dict[category]["age"] = -1
+        curr_gdf["last_update"] = "unavailable"
+        curr_gdf["age"] = -1
 
-    # gdf_dict[category]['last_update'] = gdf_dict[category]['update_date']
+    # curr_gdf['last_update'] = curr_gdf['update_date']
 
     # now spliting the Other_Footways into categories:
     if category == "other_footways":
+        # TODO: put the footway classification into a column in curr_gdf
+        curr_gdf[oswm_footway_fieldname] = None
         create_folder_if_not_exists(other_footways_folderpath)
 
         print("     - Splitting Other_Footways into subcategories")
         # first of all, saving the polygons/multipolygons to a separate category, called "pedestrian areas":
-        are_areas = gdf_dict[category].geometry.type.isin(["Polygon", "MultiPolygon"])
+        are_areas = curr_gdf.geometry.type.isin(["Polygon", "MultiPolygon"])
         print("       - Saving pedestrian areas")
 
-        ped_areas_gdf = gdf_dict[category][are_areas].copy()
-        remove_empty_columns(ped_areas_gdf)
+        ped_areas_gdf = curr_gdf[are_areas].copy()
+        curr_gdf.loc[are_areas, oswm_footway_fieldname] = pedestrian_areas_layername
+        # ped_areas_gdf[oswm_footway_fieldname] = (
+        #     pedestrian_areas_layername  # adding the layer name
+        # )
 
         save_geoparquet(
             ped_areas_gdf,
             paths_dict["other_footways_subcategories"]["pedestrian_areas"],
         )
 
-        other_footways_gdf = gdf_dict[category][~are_areas].copy()
-        remove_empty_columns(other_footways_gdf)
+        other_footways_gdf = curr_gdf[~are_areas].copy()
 
         for subcategory in other_footways_subcatecories:
             print("       - Saving ", subcategory)
@@ -241,19 +247,22 @@ for category in gdf_dict:
             )
 
             belonging_gdf = other_footways_gdf[belonging].copy()
-            remove_empty_columns(belonging_gdf)
+
+            original_rows = curr_gdf["id"].isin(belonging_gdf["id"])
+
+            curr_gdf.loc[original_rows, oswm_footway_fieldname] = subcategory
 
             save_geoparquet(
                 belonging_gdf, paths_dict["other_footways_subcategories"][subcategory]
             )
 
-            # optimize keeping only the remaining rows
-            other_footways_gdf = other_footways_gdf[~belonging]
+            # optimize, keeping only the remaining rows
+            other_footways_gdf = other_footways_gdf[~belonging].copy()
 
-    # removing empty columns:
-    remove_empty_columns(gdf_dict[category])
-    save_geoparquet(gdf_dict[category], f"data/{category}" + data_format)
+    save_geoparquet(curr_gdf, f"data/{category}" + data_format)
 
+
+print("Finishing...")
 
 # generate the "report" of the updating info
 record_datetime("Data Pre     -Processing")

@@ -33,16 +33,23 @@ other_footways_folderpath = "data/other_footways"
 tiles_folderpath = "data/tiles"
 vrts_folderpath = "data/vrts"
 
+# declare, so we reuse
+stairways_layername = "stairways"
+main_footways_layername = "main_footways"
+potential_footways_layername = "potential_footways"
+informal_footways_layername = "informal_footways"
+pedestrian_areas_layername = "pedestrian_areas"
+
 other_footways_subcatecories = {
-    "stairways": {"highway": ["steps"]},
-    "main_footways": {
+    stairways_layername: {"highway": ["steps"]},
+    main_footways_layername: {
         "highway": ["footway", "living_street"],
         "foot": ["designated"],
         "footway": ["alley", "path", "yes"],
     },
-    "potential_footways": {"highway": ["path", "track"]},
-    "informal_footways": {"foot": ["yes", "permissive"]},
-    "pedestrian_areas": {},  # defined only by geometry type (Polygon,Multipolygon)
+    potential_footways_layername: {"highway": ["path", "track"]},
+    informal_footways_layername: {"foot": ["yes", "permissive"]},
+    pedestrian_areas_layername: {},  # defined only by geometry type (Polygon,Multipolygon)
 }
 
 # establishing other footways geometry types, default is 'LineString'
@@ -80,6 +87,8 @@ layer_tags_dict = {
 # columns to keep in the parquet files
 # TODO: complete and apply it
 in_all = [
+    "geometry",  # of course
+    "id",
     "surface",
     "smoothness",
     "width",
@@ -612,3 +621,6 @@ default_missing_day = 9
 default_missing_month = 8
 default_missing_year = 2004
 # OSM's foundation date :-)
+
+# Footway types fieldname
+oswm_footway_fieldname = "oswm_footway"

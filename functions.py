@@ -796,7 +796,7 @@ def join_to_node_homepage(input_list_or_str):
         return os.path.join(node_homepage_url, input_list_or_str)
 
 
-def save_geoparquet(input_gdf, outpath):
+def save_geoparquet(input_gdf, outpath, rem_empty_columns=True, replace_invalid="?"):
     """
     Saves a GeoDataFrame to a Parquet file.
     If the GeoDataFrame is empty, creates an empty Parquet file.
@@ -806,6 +806,13 @@ def save_geoparquet(input_gdf, outpath):
     if input_gdf.empty:
         gpd.GeoDataFrame(columns=["geometry"]).to_parquet(outpath)
     else:
+        # do all default operations for data exporting
+        if rem_empty_columns:
+            input_gdf = input_gdf.dropna(axis="columns", how="all")
+
+        if replace_invalid:
+            input_gdf = input_gdf.fillna(replace_invalid)
+
         input_gdf.to_parquet(outpath)
 
 
