@@ -276,7 +276,7 @@ charts_specs = {
         },
     },
     "other_footways": {
-        "other_footways_surface_subcategory": {
+        "other_footways_subcategory": {
             "function": create_barchartV2,
             "params": (
                 gdfs_dict["other_footways"],
