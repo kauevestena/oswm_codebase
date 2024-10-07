@@ -132,7 +132,7 @@ for category in gdf_dict:
     #         curr_gdf[f'{req_col}_score'] = default_score
 
     # # replacing missing values with '?', again:
-    # # incorporated to the save_geoparquet
+    curr_gdf = curr_gdf.fillna("?")
 
     # replacing wrong values with "?" (unknown) or misspelled with the nearest valid:
     # TODO: check if this is the better approach to handle invalid values
@@ -197,18 +197,22 @@ for category in gdf_dict:
             create_date_age, axis=1
         )
 
+        updating_dict[category] = updating_dict[category].set_index("osmid")
+
         # joining the updating info dict to the geodataframe:
         curr_gdf = (
             curr_gdf.set_index("id")
+            # .join(updating_dict[category]["last_update"])
+            # .join(updating_dict[category]["age"])
+            # .join(updating_dict[category]["n_revs"])
             .join(
-                updating_dict[category].set_index("osmid")["last_update"]
-                # ,rsuffix = 'r_remove',lsuffix = 'l_remove',
-            )
-            .reset_index()
+                updating_dict[category][["last_update", "age", "n_revs"]]
+            ).reset_index()
         )
     else:
         curr_gdf["last_update"] = "unavailable"
         curr_gdf["age"] = -1
+        curr_gdf["n_revs"] = -1
 
     # curr_gdf['last_update'] = curr_gdf['update_date']
 
