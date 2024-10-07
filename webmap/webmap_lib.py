@@ -176,6 +176,31 @@ def get_sources(terrain_url=None, only_urls=False):
 MAP_SOURCES = get_sources()["sources"]
 
 
+def intialize_style_dict(name, sources=MAP_SOURCES):
+    style_dict = deepcopy(mapstyle_basedict)
+
+    style_dict["sources"] = sources
+
+    style_dict["name"] = name
+
+    style_dict["layers"].extend(deepcopy(immutable_layers))
+
+    return style_dict
+
+
+def initialize_layer_dict(layername):
+    layer_type = layertypes_dict[layername]
+
+    layer_dict = deepcopy(layertypes_basedict[layer_type])
+
+    # now we can set the id and source:
+    layer_dict["id"] = layername
+    layer_dict["source"] = f"oswm_pmtiles_{layername}"
+    layer_dict["source-layer"] = layername
+
+    return layer_dict, layer_type
+
+
 def sort_keys_by_order(input_dict, order_list):
     ordered_keys = []
     remaining_keys = list(input_dict.keys())
@@ -211,26 +236,13 @@ def create_base_style(sources=MAP_SOURCES, name="Footway Categories"):
 
     custom_legend_widths = {"kerbs": 8}
 
-    style_dict = deepcopy(mapstyle_basedict)
-
-    style_dict["sources"] = sources
-
-    style_dict["name"] = name
-
-    style_dict["layers"].extend(deepcopy(immutable_layers))
+    style_dict = intialize_style_dict(name, sources)
 
     # declaring the legend:
     style_legend = StandaloneLegend()
 
     for layername in ordered_map_layers:
-        layer_type = layertypes_dict[layername]
-
-        layer_dict = deepcopy(layertypes_basedict[layer_type])
-
-        # now we can set the id and source:
-        layer_dict["id"] = layername
-        layer_dict["source"] = f"oswm_pmtiles_{layername}"
-        layer_dict["source-layer"] = layername
+        layer_dict, layer_type = initialize_layer_dict(layername)
 
         if layername in custom_layer_colors:
             layer_dict["paint"]["line-color"] = custom_layer_colors[layername]
@@ -263,20 +275,15 @@ def create_base_style(sources=MAP_SOURCES, name="Footway Categories"):
 
 def create_simple_map_style(
     name,
-    color_schema,
     color_dict,
-    filename,
+    attribute_name,
+    else_color="gray",
     sources=MAP_SOURCES,
-    generate_shadow_layers=False,
+    generate_shadow_layers=False,  # DEPRECATED
 ):
+    style_dict = intialize_style_dict(name, sources)
 
-    style_dict = deepcopy(mapstyle_basedict)
-
-    style_dict["sources"] = sources
-
-    style_dict["name"] = name
-
-    style_dict["layers"].extend(deepcopy(immutable_layers))
+    color_schema = create_maplibre_color_schema(color_dict, attribute_name, else_color)
 
     # creating "shadow layers" for line layers only:
     if generate_shadow_layers:
@@ -292,14 +299,7 @@ def create_simple_map_style(
                 style_dict["layers"].append(layer_dict)
 
     for layername in ordered_map_layers:
-        layer_type = layertypes_dict[layername]
-
-        layer_dict = deepcopy(layertypes_basedict[layer_type])
-
-        # now we can set the id and source:
-        layer_dict["id"] = layername
-        layer_dict["source"] = f"oswm_pmtiles_{layername}"
-        layer_dict["source-layer"] = layername
+        layer_dict, layer_type = initialize_layer_dict(layername)
 
         # layer_type = layertypes_dict[layername]
 
@@ -320,7 +320,7 @@ def create_simple_map_style(
 
     style_legend.add_line(label="other", color=color_schema[-1], **custom_line_args)
 
-    style_legend.export(os.path.join(map_symbols_assets_path, f"{filename}.png"))
+    style_legend.export(os.path.join(map_symbols_assets_path, f"{attribute_name}.png"))
 
     return style_dict
 
@@ -360,13 +360,7 @@ def create_crossings_kerbs_style(
     else_color="#63636380",
 ):
 
-    style_dict = deepcopy(mapstyle_basedict)
-
-    style_dict["sources"] = sources
-
-    style_dict["name"] = name
-
-    style_dict["layers"].extend(deepcopy(immutable_layers))
+    style_dict = intialize_style_dict(name, sources)
 
     interest_layers = {
         # layername : tag key
@@ -437,10 +431,118 @@ def create_crossings_kerbs_style(
     return style_dict
 
 
-def create_age_style():
-    # TODO
-    # style picker: https://waldyrious.net/viridis-palette-generator/
-    pass
+def create_simple_numeric_style(
+    name,
+    color_dict,
+    attribute_name,
+    default_color,
+    default_value=0,
+    invalid_color="#808080",
+    invalid_threshold=0,
+    invalid_operator="<",
+    n_digits=2,
+    sources=MAP_SOURCES,
+    invalid_value_above=False,
+):
+    """
+    Creates a simple style for numeric values, where values in the color_dict are mapped to their corresponding colors.
+
+    :param name: name of the style
+    :param color_dict: a dictionary mapping each value to its corresponding color
+    :param attribute_name: name of the attribute to style
+    :param default_color: default color
+    :param invalid_color: color for invalid values
+    :param invalid_threshold: threshold for invalid values
+    :param invalid_operator: operator for invalid values
+    :param sources: sources for the style
+    :param invalid_value_above: if True, values above the threshold are invalid
+    :return: the style dictionary
+
+    To generate discretized good styles, use: https://waldyrious.net/viridis-palette-generator/
+
+    """
+    style_dict = intialize_style_dict(name, sources)
+
+    color_schema = [
+        "case",
+        [invalid_operator, ["get", attribute_name], invalid_threshold],
+        invalid_color,  #
+        [
+            "step",
+            ["get", attribute_name],
+            default_color,
+            # 2,
+            # "#7CFC00",  # // Age >= 2
+            # 4,
+            # "#ADFF2F",  # // Age >= 4
+            # 6,
+            # "#FFD700",  # // Age >= 6
+            # 8,
+            # "#FF8C00",  # // Age >= 8
+            # 10,
+            # "#FF0000",  # // Age >= 10
+        ],
+    ]
+
+    # to make it easier to read, we sort the keys:
+    sorted_keys = list(sorted(color_dict.keys(), key=float))
+
+    for key in sorted_keys:
+        value = color_dict[key]
+        color_schema[3].append(float(key))
+        color_schema[3].append(value)
+
+    for layername in ordered_map_layers:
+        # seems that all layers will have the same style:
+        layer_dict, layer_type = initialize_layer_dict(layername)
+
+        layer_dict["paint"][color_attribute[layer_type]] = color_schema
+
+        style_dict["layers"].append(layer_dict)
+
+    # instantiating the legend:
+    style_legend = StandaloneLegend()
+
+    custom_line_args = {
+        "linewidth": 4,
+    }
+
+    # the invalid, if above:
+    if invalid_value_above:
+        style_legend.add_line(label="n.a.", color=invalid_color, **custom_line_args)
+
+    # adding regular values
+    style_legend.add_line(
+        # label=f"{default_value}{get_spaces(default_value)}-  {sorted_keys[0]}",
+        label=get_formatted_interval_string(default_value, sorted_keys[0], n_digits),
+        color=default_color,
+        **custom_line_args,
+    )
+
+    last_position = len(sorted_keys) - 1
+    for i, key in enumerate(sorted_keys):
+
+        if i == last_position:
+            label_name = f"{key} +"
+
+        else:  # avoiding invalid positions at the call
+            # label_name = f"{key} - {sorted_keys[i+1]}"
+            label_name = get_formatted_interval_string(
+                key, sorted_keys[i + 1], n_digits
+            )
+
+        style_legend.add_line(
+            label=label_name, color=color_dict[key], **custom_line_args
+        )
+
+    # the invalid, if below:
+    if not invalid_value_above:
+        style_legend.add_line(label="n.a.", color=invalid_color, **custom_line_args)
+
+    # exporting
+    style_legend.export(os.path.join(map_symbols_assets_path, f"{attribute_name}.png"))
+
+    return style_dict
 
 
 # call just once:

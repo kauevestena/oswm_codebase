@@ -922,3 +922,25 @@ def create_date_age(row):
         return -1
 
     return (datetime.today() - rev).days / 365.25
+
+
+def get_spaces(number, max_digits=2):
+    total_length = max_digits + 1  # +1 for consistent spacing
+    num_digits = len(str(number))
+    num_spaces = total_length - num_digits
+    return " " * num_spaces
+
+
+def get_formatted_interval_string(n1, n2, max_digits=2):
+    spaces1 = get_spaces(n1, max_digits)
+    spaces2 = get_spaces(n2, max_digits)
+
+    # # a small correction in case of spaces1 and spaces2 are not equal
+    # # not sure if works for max_digits>2
+    # if len(spaces1) != len(spaces2):
+    #     spaces2 += " "
+
+    if spaces1 == "  ":
+        return f" {n1}{spaces1}-{spaces2}{n2}"
+    else:
+        return f"{n1}{spaces1}-{spaces2}{n2}"

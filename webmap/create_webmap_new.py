@@ -55,14 +55,25 @@ different_else_color = {
     "traffic_calming": "#63636366",
 }
 
+# adding the simple styles:
 for attribute in interest_attributes:
     color_dict = get_color_dict(attribute, attribute_layers.get(attribute, "sidewalks"))
-    color_schema = create_maplibre_color_schema(
-        color_dict, attribute, different_else_color.get(attribute, "gray")
-    )
+    # color_schema = create_maplibre_color_schema(
+    #     color_dict, attribute, different_else_color.get(attribute, "gray")
+    # )
 
     params["styles"][attribute] = create_simple_map_style(
-        interest_attributes[attribute], color_schema, color_dict, attribute
+        name=interest_attributes[attribute],
+        # color_schema=color_schema,
+        color_dict=color_dict,
+        attribute_name=attribute,
+        else_color=different_else_color.get(attribute, "gray"),
+    )
+
+# Now the numerical styles:
+for fieldname in numeric_themes:
+    params["styles"][fieldname] = create_simple_numeric_style(
+        attribute_name=fieldname, sources=MAP_SOURCES, **numeric_themes[fieldname]
     )
 
 # reading the base html

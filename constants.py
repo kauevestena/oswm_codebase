@@ -539,6 +539,45 @@ fields_values_properties = {
     },
 }
 
+# for the map:
+numeric_themes = {
+    "age": {
+        "name": "DQ - Data Age (Y)",
+        "invalid_color": "#808080",
+        "invalid_threshold": 0,
+        "invalid_operator": "<",
+        "invalid_value_above": False,
+        "default_color": "#fde725",
+        "default_value": 0,
+        "n_digits": 2,
+        "color_dict": {
+            "2": "#7ad151",
+            "4": "#22a884",
+            "6": "#2a788e",
+            "8": "#414487",
+            "10": "#440154",
+        },
+    },
+    "n_revs": {
+        "name": "DQ - N. of Revs.",
+        "invalid_color": "#808080",
+        "invalid_threshold": 0,
+        "invalid_operator": "<",
+        "invalid_value_above": False,
+        "default_color": "#1d1147",
+        "default_value": 0,
+        "n_digits": 2,
+        "color_dict": {
+            "5": "#51127c",
+            "10": "#832681",
+            "15": "#b73779",
+            "20": "#e75263",
+            "25": "#fc8961",
+            "30": "#fec488",
+        },
+    },
+}
+
 layernames = [key for key in fields_values_properties]
 
 
