@@ -95,6 +95,26 @@ charts_specs = {
         #     ),
         #     "title": "Year of Survey Image",
         # },
+        "sidewalks_age": {
+            "function": create_linked_boxplot_histogram,
+            "params": (
+                gdfs_dict["sidewalks"],
+                "age",
+                "Sidewalks Age",
+                ["element_type", "id"],
+            ),
+            "title": "Sidewalks Age",
+        },
+        "sidewalks_length": {
+            "function": create_linked_boxplot_histogram,
+            "params": (
+                gdfs_dict["sidewalks"],
+                "length(km)",
+                "Sidewalks Length (km)",
+                ["element_type", "id"],
+            ),
+            "title": "Sidewalks Length (km)",
+        },
         "sidewalks_yr_moth_update": {
             "function": create_barchart,
             "params": (

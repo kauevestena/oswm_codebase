@@ -542,7 +542,7 @@ fields_values_properties = {
 # for the map:
 numeric_themes = {
     "age": {
-        "name": "DQ - Data Age (Y)",
+        "name": "DQ - Update Age (Y)",
         "invalid_color": "#808080",
         "invalid_threshold": 0,
         "invalid_operator": "<",

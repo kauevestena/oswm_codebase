@@ -1,4 +1,12 @@
 from statistics_specs import *
+import argparse
+
+# add an option "--single" to generate a single chart specified as an string
+parser = argparse.ArgumentParser()
+parser.add_argument("--single", type=str, default=None)
+args = parser.parse_args()
+
+single_chart = args.single
 
 # data adaptation
 for category in gdfs_dict:
@@ -61,6 +69,11 @@ for category in gdfs_dict:
         pd.Timestamp(datetime.today()) - update_df["rev_date_obj"]
     ).dt.days / 365.25
 
+    cat_gdf["category"] = category
+
+# creating a meta-category "all_data" for all data:
+gdfs_dict["all_data"] = pd.concat(gdfs_dict.values(), ignore_index=True)
+
 # storing chart infos:
 generated_list_dict = {}
 charts_titles = {}
@@ -70,6 +83,12 @@ with open(os.path.join(statistics_basepath, "failed_gen.txt"), "w+") as error_re
     for category in charts_specs:
         generated_list_dict[category] = []
         for chart_spec in charts_specs[category]:
+
+            # to add the hability to generate a single chart, mainly for testing
+            if single_chart:
+                if chart_spec != single_chart:
+                    continue
+
             try:
                 spec = charts_specs[category][chart_spec]
                 outpath = os.path.join(

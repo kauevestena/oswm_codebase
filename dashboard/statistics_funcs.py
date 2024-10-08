@@ -205,6 +205,98 @@ def double_scatter_bar(
     return (scatter & hist).configure_title(fontSize=fontsize, align="center")
 
 
+def create_linked_boxplot_histogram(
+    df,
+    column,
+    boxplot_title,
+    tooltip_fields=None,
+    color_field=None,
+    hist_title="",
+    maxbins=10,
+    width=400,
+    height=100,
+):
+
+    # Ensure tooltip_fields is a list
+    if tooltip_fields is None:
+        tooltip_fields = []
+    elif not isinstance(tooltip_fields, list):
+        raise ValueError("tooltip_fields must be a list of column names.")
+
+    # Include the main column and color_field in the necessary columns
+    necessary_columns = [column] + tooltip_fields
+    if color_field and color_field not in necessary_columns:
+        necessary_columns.append(color_field)
+
+    # Filter the DataFrame to include only necessary columns
+    df_filtered = df[necessary_columns].copy()
+
+    # Define tooltip encoding
+    tooltip_encoding = []
+    for field in tooltip_fields:
+        if pd.api.types.is_numeric_dtype(df[field]):
+            field_type = "Q"
+        elif pd.api.types.is_datetime64_any_dtype(df[field]):
+            field_type = "T"
+        else:
+            field_type = "N"
+        tooltip_encoding.append(alt.Tooltip(f"{field}:{field_type}", title=field))
+
+    # Determine the type of the color field
+    if color_field:
+        if pd.api.types.is_numeric_dtype(df[color_field]):
+            color_type = "Q"  # Quantitative
+        elif pd.api.types.is_datetime64_any_dtype(df[color_field]):
+            color_type = "T"  # Temporal
+        else:
+            color_type = "N"  # Nominal
+        color_encoding = alt.Color(
+            f"{color_field}:{color_type}", legend=alt.Legend(title=color_field)
+        )
+    else:
+        color_encoding = alt.value(
+            "steelblue"
+        )  # Default color if no color_field is specified
+
+    # Create a selection for interactivity, bind it to scales
+    selection = alt.selection_interval(encodings=["x"], bind="scales", name="brush")
+
+    # Create a boxplot that responds to the selection
+    boxplot = (
+        alt.Chart(df_filtered)
+        .mark_boxplot()
+        .encode(
+            x=alt.X(f"{column}:Q", scale=alt.Scale(zero=False)),
+            color=color_encoding,
+            tooltip=tooltip_encoding,
+        )
+        .transform_filter(selection)  # Filter the boxplot based on the selection
+        .properties(title=boxplot_title, width=width, height=height)
+    )
+
+    # Create a histogram with the selection
+    hist = (
+        alt.Chart(df_filtered)
+        .mark_bar()
+        .encode(
+            alt.X(f"{column}:Q", bin=alt.Bin(maxbins=maxbins)),
+            y="count()",
+            color=color_encoding,
+            # tooltip=tooltip_encoding, # It's buggy
+            tooltip=alt.Tooltip("count()", title="count"),
+        )
+        .add_params(selection)  # Add the selection to the histogram
+        # .properties(title=hist_title, width=400, height=200)
+    )
+
+    # Combine both charts: boxplot above histogram
+    combined_chart = alt.vconcat(boxplot, hist).resolve_scale(
+        x="shared"
+    )  # Share the x-axis scale
+
+    return combined_chart
+
+
 def create_rev_date(row):
     try:
         return datetime(
