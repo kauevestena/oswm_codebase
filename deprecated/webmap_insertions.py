@@ -1,17 +1,17 @@
-'''
+"""
     File Just to host the replacements to be carried out!!
 
-'''
+"""
 
-def file_as_string(inputpath:str):
+
+def file_as_string(inputpath: str):
     # no problem recreating some functions, it can avoid circular imports
     with open(inputpath) as reader:
         return reader.read()
 
 
 insertions_dict = {
-    "<head>" :
-        f"""
+    "<head>": f"""
         <head>
 
         <title>OpenSidewalkMap</title>
@@ -28,18 +28,15 @@ insertions_dict = {
         </style>
 
 
-        """ , 
-
+        """,
     # fixed stuff at the beggining of body
-    "<body>" : """
+    "<body>": """
 
     <body>
     <script>var lastHoveredFeatureId;</script>
     
     """,
-
-    "</body>":
-        """
+    "</body>": """
 
                     <!-- the 4 side images: -->
             <div class="leg_div">
@@ -144,5 +141,5 @@ insertions_dict = {
             </div>
 
     </body>
-        """
+        """,
 }
