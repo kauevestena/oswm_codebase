@@ -15,7 +15,7 @@ for category in paths_dict["data"]:
 charts_specs = {
     "sidewalks": {
         "sidewalks_smoothness_x_surface": {
-            "function": double_scatter_bar,
+            "function": create_double_scatter_bar,
             "params": {
                 "input_df": gdfs_dict["sidewalks"],
                 "title": "Surface x Smoothness (sidewalks)",
@@ -145,7 +145,7 @@ charts_specs = {
             "title": "Crossing Surface",
         },
         "crossings_smoothness_x_surface": {
-            "function": double_scatter_bar,
+            "function": create_double_scatter_bar,
             "params": {
                 "input_df": gdfs_dict["crossings"],
                 "title": "Surface x Smoothness (crossings)",
@@ -182,7 +182,7 @@ charts_specs = {
     },
     "kerbs": {
         "kerbs_x_paving_x_wheelchair": {
-            "function": double_scatter_bar,
+            "function": create_double_scatter_bar,
             "params": {
                 "input_df": gdfs_dict["kerbs"],
                 "title": "Kerb x Tactile Paving x Wheelchair Acess.",
@@ -264,7 +264,7 @@ charts_specs = {
             "title": "Other Footways Surface",
         },
         "other_footways_smoothness_x_surface": {
-            "function": double_scatter_bar,
+            "function": create_double_scatter_bar,
             "params": {
                 "input_df": gdfs_dict["other_footways"],
                 "title": "Surface x Smoothness (other_footways)",

@@ -129,7 +129,7 @@ def get_year_surveydate(featuredate):
         return featuredate.split("-")[0]
 
 
-def double_scatter_bar(
+def create_double_scatter_bar(
     input_df,
     title,
     xs="surface",
@@ -144,6 +144,33 @@ def double_scatter_bar(
 ):
 
     # preselect only the needed columns:
+    """
+    Creates a double scatter-bar chart for visualizing two different features
+    of a given GeoDataFrame (or Pandas DataFrame).
+
+    Parameters
+    ----------
+    input_df : GeoPandas GeoDataFrame or Pandas DataFrame
+        The DataFrame containing the data to be plotted.
+    title : str
+        The title of the plot.
+    xs, ys : str
+        The column names of the two features to be plotted in the scatter plot.
+    scolor : str or None
+        The color for the scatter plot. If None, defaults to 'lightseagreen'.
+    xh, yh1, yh2 : str
+        The column names for the x and y axes of the histograms.
+    hcolor : str or None
+        The color for the histograms. If None, defaults to 'lightseagreen'.
+    fontsize : int
+        The font size for the title.
+    tooltip_fields : list
+        A list of column names to be included in the tooltip.
+
+    Returns
+    -------
+    An Altair chart object.
+    """
     needed_columns = tooltip_fields + [xs, ys, xh, yh1, yh2, hcolor, scolor]
 
     # remove None, and any one with "()":
