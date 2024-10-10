@@ -1,4 +1,3 @@
-from osm_fetch import *
 from constants import *
 from oswm_codebase.functions import *
 from time import sleep, time
