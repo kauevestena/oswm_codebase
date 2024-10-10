@@ -103,7 +103,7 @@ with open(os.path.join(statistics_basepath, "failed_gen.txt"), "w+") as error_re
                 # remove_if_exists(outpath)
 
                 print("generating ", outpath)
-                chart_obj = spec["function"](*spec["params"])
+                chart_obj = spec["function"](**spec["params"])
                 chart_obj.save(outpath)
 
                 print("generating ", json_outpath)
