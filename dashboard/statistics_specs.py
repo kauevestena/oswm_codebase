@@ -94,7 +94,7 @@ charts_specs = {
                 "boxplot_title": "Sidewalks Age",
                 "tooltip_fields": ["id"],
             },
-            "title": "Sidewalks Age",
+            "title": "Update Age",
         },
         "sidewalks_length": {
             "function": create_linked_boxplot_histogram,
@@ -116,15 +116,15 @@ charts_specs = {
             },
             "title": "Number of Revisions",
         },
-        "sidewalks_yr_moth_update": {
-            "function": create_barchart,
-            "params": {
-                "input_df": updating_dicts["sidewalks"],
-                "fieldname": "year_month",
-                "title": "Year and Month Of Update (Sidewalks)",
-            },
-            "title": "Year and Month Of Update",
-        },
+        # "sidewalks_yr_moth_update": {
+        #     "function": create_barchart,
+        #     "params": {
+        #         "input_df": updating_dicts["sidewalks"],
+        #         "fieldname": "year_month",
+        #         "title": "Year and Month Of Update (Sidewalks)",
+        #     },
+        #     "title": "Year and Month Of Update",
+        # },
         # "sidewalks_number_revisions": {
         #     "function": create_barchart,
         #     "params": {
@@ -182,23 +182,43 @@ charts_specs = {
             },
             "title": "Surface x Smoothness",
         },
-        "crossings_yr_moth_update": {
-            "function": create_barchart,
+        "crossings_age": {
+            "function": create_linked_boxplot_histogram,
             "params": {
-                "input_df": updating_dicts["crossings"],
-                "fieldname": "year_month",
-                "title": "Year and Month Of Update (Crossings)",
+                "df": gdfs_dict["crossings"],
+                "column": "age",
+                "boxplot_title": "Crossings Age",
+                "tooltip_fields": ["id"],
             },
-            "title": "Year and Month Of Update",
+            "title": "Update Age",
         },
-        "crossings_number_revisions": {
-            "function": create_barchart,
+        # "crossings_yr_moth_update": {
+        #     "function": create_barchart,
+        #     "params": {
+        #         "input_df": updating_dicts["crossings"],
+        #         "fieldname": "year_month",
+        #         "title": "Year and Month Of Update (Crossings)",
+        #     },
+        #     "title": "Year and Month Of Update",
+        # },
+        # "crossings_number_revisions": {
+        #     "function": create_barchart,
+        #     "params": {
+        #         "input_df": updating_dicts["crossings"],
+        #         "fieldname": "n_revs",
+        #         "title": "Number of Revisions (crossings)",
+        #     },
+        #     "title": "Number Of Revisions",
+        # },
+        "crossings_n_revs": {
+            "function": create_linked_boxplot_histogram,
             "params": {
-                "input_df": updating_dicts["crossings"],
-                "fieldname": "n_revs",
-                "title": "Number of Revisions (crossings)",
+                "df": gdfs_dict["crossings"],
+                "column": "n_revs",
+                "boxplot_title": "Crossings Number of Revisions",
+                "tooltip_fields": ["id"],
             },
-            "title": "Number Of Revisions",
+            "title": "Number of Revisions",
         },
     },
     "kerbs": {
@@ -258,23 +278,43 @@ charts_specs = {
             },
             "title": "Surface Type",
         },
-        "kerbs_yr_moth_update": {
-            "function": create_barchart,
+        # "kerbs_yr_moth_update": {
+        #     "function": create_barchart,
+        #     "params": {
+        #         "input_df": updating_dicts["kerbs"],
+        #         "fieldname": "year_month",
+        #         "title": "Year and Month Of Update (Kerbs)",
+        #     },
+        #     "title": "Year and Month Of Update",
+        # },
+        "kerbs_age": {
+            "function": create_linked_boxplot_histogram,
             "params": {
-                "input_df": updating_dicts["kerbs"],
-                "fieldname": "year_month",
-                "title": "Year and Month Of Update (Kerbs)",
+                "df": gdfs_dict["kerbs"],
+                "column": "age",
+                "boxplot_title": "Kerbs Age",
+                "tooltip_fields": ["id"],
             },
-            "title": "Year and Month Of Update",
+            "title": "Update Age",
         },
-        "kerbs_number_revisions": {
-            "function": create_barchart,
+        # "kerbs_number_revisions": {
+        #     "function": create_barchart,
+        #     "params": {
+        #         "input_df": updating_dicts["kerbs"],
+        #         "fieldname": "n_revs",
+        #         "title": "Number Of Revisions (Kerbs)",
+        #     },
+        #     "title": "Number Of Revisions",
+        # },
+        "kerbs_n_revs": {
+            "function": create_linked_boxplot_histogram,
             "params": {
-                "input_df": updating_dicts["kerbs"],
-                "fieldname": "n_revs",
-                "title": "Number Of Revisions (Kerbs)",
+                "df": gdfs_dict["kerbs"],
+                "column": "n_revs",
+                "boxplot_title": "Kerbs Number of Revisions",
+                "tooltip_fields": ["id"],
             },
-            "title": "Number Of Revisions",
+            "title": "Number of Revisions",
         },
     },
     "other_footways": {
@@ -324,23 +364,43 @@ charts_specs = {
             },
             "title": "Surface x Smoothness",
         },
-        "other_footways_yr_moth_update": {
-            "function": create_barchart,
+        # "other_footways_yr_moth_update": {
+        #     "function": create_barchart,
+        #     "params": {
+        #         "input_df": updating_dicts["other_footways"],
+        #         "fieldname": "year_month",
+        #         "title": "Year and Month Of Update (other_footways)",
+        #     },
+        #     "title": "Year and Month Of Update",
+        # },
+        "other_footways_age": {
+            "function": create_linked_boxplot_histogram,
             "params": {
-                "input_df": updating_dicts["other_footways"],
-                "fieldname": "year_month",
-                "title": "Year and Month Of Update (other_footways)",
+                "df": gdfs_dict["other_footways"],
+                "column": "age",
+                "boxplot_title": "Other Footways Age",
+                "tooltip_fields": ["id"],
             },
-            "title": "Year and Month Of Update",
+            "title": "Update Age",
         },
-        "other_footways_number_revisions": {
-            "function": create_barchart,
+        # "other_footways_number_revisions": {
+        #     "function": create_barchart,
+        #     "params": {
+        #         "input_df": updating_dicts["other_footways"],
+        #         "fieldname": "n_revs",
+        #         "title": "Number Of Revisions (other_footways)",
+        #     },
+        #     "title": "Number Of Revisions",
+        # },
+        "other_footways_n_revs": {
+            "function": create_linked_boxplot_histogram,
             "params": {
-                "input_df": updating_dicts["other_footways"],
-                "fieldname": "n_revs",
-                "title": "Number Of Revisions (other_footways)",
+                "df": gdfs_dict["other_footways"],
+                "column": "n_revs",
+                "boxplot_title": "Other Footways Number of Revisions",
+                "tooltip_fields": ["id"],
             },
-            "title": "Number Of Revisions",
+            "title": "Number of Revisions",
         },
     },
 }
