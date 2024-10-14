@@ -74,38 +74,64 @@ def create_barchartV2(
     input_gdf,
     fieldname,
     title,
+    filter_out_opt="?",  # value to filter out
+    filter_out_opt_text='Include "?" (Unknown)',
     str_to_append=" type",
     title_fontsize=24,
     len_field="length(km)",
 ):
+    import altair as alt
 
-    # bind = alt.selection_interval(bind='scales')
-    # .add_selection(bind)
-
+    # Create a modified fieldname for plotting
     fieldname_v2 = fieldname + str_to_append
 
+    # add a dummy "count" if no len_field
+    if not len_field:
+        input_gdf["count"] = 1
+        len_field = "count"
+
+    # Define the fields to plot
+    fields_to_plot = [fieldname, len_field]
+
+    # aggregation fields:
+    agg_fields = {fieldname: "count", len_field: "sum"}
+
+    # Aggregate the data for plotting
     data_to_plot = (
-        input_gdf[[len_field, fieldname]]
+        input_gdf[fields_to_plot]
         .groupby([fieldname])
-        .agg({fieldname: "count", len_field: "sum"})
+        .agg(agg_fields)
         .rename(columns={fieldname: "feature count"})
         .reset_index()
         .rename(columns={fieldname: fieldname_v2})
     )
 
-    return (
+    # Create an interactive selection for filtering (boolean checkbox)
+    filter_checkbox = alt.binding_checkbox(name=filter_out_opt_text)
+    selection = alt.param(
+        name="include_filter_out_opt", bind=filter_checkbox, value=True
+    )
+
+    # Create the bar chart with conditional filtering
+    chart = (
         alt.Chart(data_to_plot, title=title)
         .mark_bar()
         .encode(
             x=alt.X(fieldname_v2, sort="-y"),
             y=len_field,
-            tooltip=len_field,
+            tooltip=[fieldname_v2, len_field, "feature count"],
             color="feature count",
         )
         .properties(width=650, height=300)
         .configure_title(fontSize=title_fontsize)
+        .add_params(selection)
+        .transform_filter(
+            f"include_filter_out_opt || datum['{fieldname_v2}'] != '{filter_out_opt}'"
+        )
         .interactive()
     )
+
+    return chart
 
 
 def print_relevant_columnames(

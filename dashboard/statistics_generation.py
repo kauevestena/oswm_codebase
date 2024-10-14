@@ -135,7 +135,7 @@ for category in generated_list_dict:
 
     category_homepage = get_url(generated_list_dict[category][0])
 
-    topbar += f'<a href="{category_homepage}">{category.capitalize()} Charts</a>\n'
+    topbar += f'<a href="{category_homepage}">{category.replace("_", " ").title()} Charts</a>\n'
 
 
 topbar += """

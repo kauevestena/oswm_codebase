@@ -27,7 +27,7 @@ charts_specs = {
                 "yh2": "smoothness",
                 "hcolor": "length(km)",
                 "fontsize": 24,
-                "tooltip_fields": ["element_type", "id"],
+                "tooltip_fields": ["id"],
             },
             "title": "Surface x Smoothness",
         },
@@ -92,7 +92,7 @@ charts_specs = {
                 "df": gdfs_dict["sidewalks"],
                 "column": "age",
                 "boxplot_title": "Sidewalks Age",
-                "tooltip_fields": ["element_type", "id"],
+                "tooltip_fields": ["id"],
             },
             "title": "Sidewalks Age",
         },
@@ -102,9 +102,19 @@ charts_specs = {
                 "df": gdfs_dict["sidewalks"],
                 "column": "length(km)",
                 "boxplot_title": "Sidewalks Length (km)",
-                "tooltip_fields": ["element_type", "id"],
+                "tooltip_fields": ["id"],
             },
             "title": "Sidewalks Length (km)",
+        },
+        "sidewalks_n_revs": {
+            "function": create_linked_boxplot_histogram,
+            "params": {
+                "df": gdfs_dict["sidewalks"],
+                "column": "n_revs",
+                "boxplot_title": "Sidewalks Number of Revisions",
+                "tooltip_fields": ["id"],
+            },
+            "title": "Number of Revisions",
         },
         "sidewalks_yr_moth_update": {
             "function": create_barchart,
@@ -115,15 +125,15 @@ charts_specs = {
             },
             "title": "Year and Month Of Update",
         },
-        "sidewalks_number_revisions": {
-            "function": create_barchart,
-            "params": {
-                "input_df": updating_dicts["sidewalks"],
-                "fieldname": "n_revs",
-                "title": "Year and Month Of Update (Sidewalks)",
-            },
-            "title": "Number Of Revisions",
-        },
+        # "sidewalks_number_revisions": {
+        #     "function": create_barchart,
+        #     "params": {
+        #         "input_df": updating_dicts["sidewalks"],
+        #         "fieldname": "n_revs",
+        #         "title": "Number of Revisions (Sidewalks)",
+        #     },
+        #     "title": "Number Of Revisions",
+        # },
     },
     "crossings": {
         "crossing_types": {
@@ -135,14 +145,25 @@ charts_specs = {
             },
             "title": "Crossing Type",
         },
+        # "crossing_surface": {
+        #     "function": create_barchart,
+        #     "params": {
+        #         "input_df": gdfs_dict["crossings"],
+        #         "fieldname": "surface",
+        #         "title": "Crossing Surface",
+        #     },
+        #     "title": "Crossing Surface",
+        # },
         "crossing_surface": {
-            "function": create_barchart,
+            "function": create_barchartV2,
             "params": {
-                "input_df": gdfs_dict["crossings"],
+                "input_gdf": gdfs_dict["crossings"],
                 "fieldname": "surface",
-                "title": "Crossing Surface",
+                "title": "Crossings Surface Type",
+                "str_to_append": " type",
+                "title_fontsize": 24,
             },
-            "title": "Crossing Surface",
+            "title": "Surface Type",
         },
         "crossings_smoothness_x_surface": {
             "function": create_double_scatter_bar,
@@ -157,7 +178,7 @@ charts_specs = {
                 "yh2": "smoothness",
                 "hcolor": "crossing",
                 "fontsize": 24,
-                "tooltip_fields": ["element_type", "id"],
+                "tooltip_fields": ["id"],
             },
             "title": "Surface x Smoothness",
         },
@@ -175,7 +196,7 @@ charts_specs = {
             "params": {
                 "input_df": updating_dicts["crossings"],
                 "fieldname": "n_revs",
-                "title": "Year and Month Of Update (crossings)",
+                "title": "Number of Revisions (crossings)",
             },
             "title": "Number Of Revisions",
         },
@@ -194,7 +215,7 @@ charts_specs = {
                 "yh2": "tactile_paving",
                 "hcolor": "wheelchair",
                 "fontsize": 24,
-                "tooltip_fields": ["element_type", "id"],
+                "tooltip_fields": ["id"],
             },
             "title": "Surface x Smoothness",
         },
@@ -225,6 +246,18 @@ charts_specs = {
             },
             "title": "Wheelchair Acessibility",
         },
+        "kerbs_surface": {
+            "function": create_barchartV2,
+            "params": {
+                "input_gdf": gdfs_dict["kerbs"],
+                "fieldname": "surface",
+                "title": "Kerbs Surface Type",
+                "str_to_append": " type",
+                "title_fontsize": 24,
+                "len_field": None,
+            },
+            "title": "Surface Type",
+        },
         "kerbs_yr_moth_update": {
             "function": create_barchart,
             "params": {
@@ -254,14 +287,25 @@ charts_specs = {
             },
             "title": "Incline Values",
         },
+        # "other_footways_surface": {
+        #     "function": create_barchart,
+        #     "params": {
+        #         "input_df": gdfs_dict["other_footways"],
+        #         "fieldname": "surface",
+        #         "title": "other_footways Surface",
+        #     },
+        #     "title": "Other Footways Surface",
+        # },
         "other_footways_surface": {
-            "function": create_barchart,
+            "function": create_barchartV2,
             "params": {
-                "input_df": gdfs_dict["other_footways"],
+                "input_gdf": gdfs_dict["other_footways"],
                 "fieldname": "surface",
-                "title": "other_footways Surface",
+                "title": "Other Footways Surface Type",
+                "str_to_append": " type",
+                "title_fontsize": 24,
             },
-            "title": "Other Footways Surface",
+            "title": "Surface Type",
         },
         "other_footways_smoothness_x_surface": {
             "function": create_double_scatter_bar,
@@ -276,7 +320,7 @@ charts_specs = {
                 "yh2": "smoothness",
                 "hcolor": "crossing",
                 "fontsize": 24,
-                "tooltip_fields": ["element_type", "id"],
+                "tooltip_fields": ["id"],
             },
             "title": "Surface x Smoothness",
         },
