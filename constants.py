@@ -43,7 +43,7 @@ pedestrian_areas_layername = "pedestrian_areas"
 other_footways_subcatecories = {
     stairways_layername: {"highway": ["steps"]},
     main_footways_layername: {
-        "highway": ["footway", "living_street"],
+        "highway": ["footway", "living_street", "pedestrian"],
         "foot": ["designated"],
         "footway": ["alley", "path", "yes"],
     },
@@ -547,14 +547,14 @@ numeric_themes = {
         "invalid_threshold": 0,
         "invalid_operator": "<",
         "invalid_value_above": False,
-        "default_color": "#fde725",
+        "default_color": "#90d743",
         "default_value": 0,
         "n_digits": 2,
         "color_dict": {
-            "2": "#7ad151",
-            "4": "#22a884",
-            "6": "#2a788e",
-            "8": "#414487",
+            "2": "#35b779",
+            "4": "#21918c",
+            "6": "#31688e",
+            "8": "#443983",
             "10": "#440154",
         },
     },
