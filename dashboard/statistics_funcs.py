@@ -11,6 +11,7 @@ import geopandas as gpd
 import pandas as pd
 import altair as alt
 
+
 alt.data_transformers.disable_max_rows()
 
 now = datetime.now()
@@ -274,22 +275,23 @@ def create_linked_boxplot_histogram(
     df,
     column,
     boxplot_title,
-    tooltip_fields=None,
+    # tooltip_fields: list = [], # deprecated, as there's generally too much data
     color_field=None,
     hist_title="",
     maxbins=10,
     width=400,
     height=100,
+    color_share_y_boxplot=True,
 ):
 
     # Ensure tooltip_fields is a list
-    if tooltip_fields is None:
-        tooltip_fields = []
-    elif not isinstance(tooltip_fields, list):
-        raise ValueError("tooltip_fields must be a list of column names.")
+    # if tooltip_fields is None:
+    #     tooltip_fields = []
+    # elif not isinstance(tooltip_fields, list):
+    #     raise ValueError("tooltip_fields must be a list of column names.")
 
     # Include the main column and color_field in the necessary columns
-    necessary_columns = [column] + tooltip_fields
+    necessary_columns = [column]  # + tooltip_fields
     if color_field and color_field not in necessary_columns:
         necessary_columns.append(color_field)
 
@@ -297,15 +299,15 @@ def create_linked_boxplot_histogram(
     df_filtered = df[necessary_columns].copy()
 
     # Define tooltip encoding
-    tooltip_encoding = []
-    for field in tooltip_fields:
-        if pd.api.types.is_numeric_dtype(df[field]):
-            field_type = "Q"
-        elif pd.api.types.is_datetime64_any_dtype(df[field]):
-            field_type = "T"
-        else:
-            field_type = "N"
-        tooltip_encoding.append(alt.Tooltip(f"{field}:{field_type}", title=field))
+    # tooltip_encoding = []
+    # for field in tooltip_fields:
+    #     if pd.api.types.is_numeric_dtype(df[field]):
+    #         field_type = "Q"
+    #     elif pd.api.types.is_datetime64_any_dtype(df[field]):
+    #         field_type = "T"
+    #     else:
+    #         field_type = "N"
+    #     tooltip_encoding.append(alt.Tooltip(f"{field}:{field_type}", title=field))
 
     # Determine the type of the color field
     if color_field:
@@ -326,15 +328,20 @@ def create_linked_boxplot_histogram(
     # Create a selection for interactivity, bind it to scales
     selection = alt.selection_interval(encodings=["x"], bind="scales", name="brush")
 
+    box_encoding = {
+        "x": alt.X(f"{column}:Q", scale=alt.Scale(zero=False)),
+        "color": color_encoding,
+        "tooltip": alt.Tooltip(column),
+    }
+
+    if color_field and color_share_y_boxplot:
+        box_encoding["y"] = alt.Y(f"{color_field}:{color_type}")
+
     # Create a boxplot that responds to the selection
     boxplot = (
         alt.Chart(df_filtered)
         .mark_boxplot()
-        .encode(
-            x=alt.X(f"{column}:Q", scale=alt.Scale(zero=False)),
-            color=color_encoding,
-            tooltip=tooltip_encoding,
-        )
+        .encode(**box_encoding)
         .transform_filter(selection)  # Filter the boxplot based on the selection
         .properties(title=boxplot_title, width=width, height=height)
     )
