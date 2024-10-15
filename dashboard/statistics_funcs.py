@@ -166,7 +166,7 @@ def create_double_scatter_bar(
     yh2="smoothness",
     hcolor=None,
     fontsize=24,
-    tooltip_fields: list = ["element_type", "id"],
+    # tooltip_fields: list = ["element_type", "id"], # deprecated, as there's generally too much data
 ):
 
     # preselect only the needed columns:
@@ -190,14 +190,13 @@ def create_double_scatter_bar(
         The color for the histograms. If None, defaults to 'lightseagreen'.
     fontsize : int
         The font size for the title.
-    tooltip_fields : list
-        A list of column names to be included in the tooltip.
+
 
     Returns
     -------
     An Altair chart object.
     """
-    needed_columns = tooltip_fields + [xs, ys, xh, yh1, yh2, hcolor, scolor]
+    needed_columns = [xs, ys, xh, yh1, yh2, hcolor, scolor]
 
     # remove None, and any one with "()":
     needed_columns = [column for column in needed_columns if column]
@@ -224,7 +223,7 @@ def create_double_scatter_bar(
             x=xs,
             y=ys,
             color=scolor,
-            tooltip=alt.Tooltip(tooltip_fields),
+            tooltip=alt.Tooltip(["count()"], title="count:"),
         )
         .properties(
             width=600,
@@ -239,7 +238,7 @@ def create_double_scatter_bar(
         .encode(
             x=xh,
             color=hcolor,
-            tooltip=alt.Tooltip(tooltip_fields),
+            tooltip=alt.Tooltip(["count()"], title="count:"),
         )
         .properties(
             width=300,
@@ -253,7 +252,20 @@ def create_double_scatter_bar(
     # if hcolor:
     #      hist_base.encode(color=hcolor)
 
-    hist = hist_base.encode(y=yh1) | hist_base.encode(y=yh2)
+    # extra encoding rules
+    encoding_base = {}
+
+    # if hcolor:
+    #     encoding_base["color"] = hcolor
+
+    encoding_h1 = encoding_base.copy()
+    encoding_h1["y"] = yh1
+
+    encoding_h2 = encoding_base.copy()
+    encoding_h2["y"] = yh2
+
+    # define the histograms
+    hist = hist_base.encode(**encoding_h1) | hist_base.encode(**encoding_h2)
 
     return (scatter & hist).configure_title(fontSize=fontsize, align="center")
 
