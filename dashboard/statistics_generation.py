@@ -4,6 +4,10 @@ import argparse
 # add an option "--single" to generate a single chart specified as an string
 parser = argparse.ArgumentParser()
 parser.add_argument("--single", type=str, default=None)
+
+# add an argument to raise on failure:
+parser.add_argument("--to_raise", action="store_true")
+
 args = parser.parse_args()
 
 single_chart = args.single
@@ -118,6 +122,9 @@ with open(os.path.join(statistics_basepath, "failed_gen.txt"), "w+") as error_re
                     ' writing to report file at "statistics folder"',
                 )
                 error_report.write(chart_spec + "\n")
+
+                if args.to_raise:
+                    raise
 
 # the topbar for each category
 topbar = f"""
