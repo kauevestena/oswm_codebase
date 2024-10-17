@@ -1,21 +1,9 @@
 from statistics_funcs import *
 
-gdfs_dict = get_gdfs_dict()
-updating_dicts = {}
-
-
-for category in paths_dict["data"]:
-
-    if os.path.exists(paths_dict["versioning"].get(category)):
-        updating_dicts[category] = pd.read_json(versioning_dict[category])
-    else:
-        updating_dicts[category] = pd.DataFrame()
-
-
 charts_specs = {
     "sidewalks": {
         "sidewalks_smoothness_x_surface": {
-            "function": create_double_scatter_bar,
+            "function": create_double_mat_and_bar,
             "params": {
                 "input_df": gdfs_dict["sidewalks"],
                 "title": "Surface x Smoothness (sidewalks)",
@@ -170,7 +158,7 @@ charts_specs = {
             "title": "Surface Type",
         },
         "crossings_smoothness_x_surface": {
-            "function": create_double_scatter_bar,
+            "function": create_double_mat_and_bar,
             "params": {
                 "input_df": gdfs_dict["crossings"],
                 "title": "Surface x Smoothness (crossings)",
@@ -224,7 +212,7 @@ charts_specs = {
     },
     "kerbs": {
         "kerbs_x_paving_x_wheelchair": {
-            "function": create_double_scatter_bar,
+            "function": create_double_mat_and_bar,
             "params": {
                 "input_df": gdfs_dict["kerbs"],
                 "title": "Kerb x Tactile Paving x Wheelchair Acess.",
@@ -341,7 +329,7 @@ charts_specs = {
         #     "title": "Other Footways Surface",
         # },
         "other_footways_smoothness_x_surface": {
-            "function": create_double_scatter_bar,
+            "function": create_double_mat_and_bar,
             "params": {
                 "input_df": gdfs_dict["other_footways"],
                 "title": "Surface x Smoothness (other_footways)",
@@ -434,20 +422,3 @@ charts_specs = {
         },
     },
 }
-
-global_insertions = {
-    "<head>": """
-
-    <head>
-
-    <link rel="stylesheet" href="https://kauevestena.github.io/oswm_codebase/assets/styles/stats_styles.css">
-    <script src="https://kauevestena.github.io/oswm_codebase/assets/webscripts/stats_funcs.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-
-    
-    <title>OSWM Dashboard</title>
-
-    """,
-}
-
-global_exclusions = [{"points": ["<style>", "</style>"], "multiline": True}]

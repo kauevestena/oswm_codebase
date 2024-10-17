@@ -17,6 +17,8 @@ alt.data_transformers.disable_max_rows()
 now = datetime.now()
 dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
 
+default_color = alt.value("lightseagreen")
+
 
 def get_count_df(
     input_df,
@@ -156,7 +158,7 @@ def get_year_surveydate(featuredate):
         return featuredate.split("-")[0]
 
 
-def create_double_scatter_bar(
+def create_double_mat_and_bar(
     input_df,
     title,
     xs="surface",
@@ -209,8 +211,6 @@ def create_double_scatter_bar(
 
     interval = alt.selection_interval()
 
-    default_color = alt.value("lightseagreen")
-
     if not hcolor:
         hcolor = default_color
 
@@ -220,6 +220,7 @@ def create_double_scatter_bar(
     scatter = (
         alt.Chart(input_df, title=title)
         .mark_point()
+        # .mark_rect() # MAYBE? TODO: how to make it have a different color than the histogram
         .encode(
             x=xs,
             y=ys,
@@ -228,7 +229,7 @@ def create_double_scatter_bar(
         )
         .properties(
             width=600,
-            height=350,
+            # height=350,
         )
         .add_params(interval)
     )
@@ -237,7 +238,7 @@ def create_double_scatter_bar(
         alt.Chart(input_df)
         .mark_bar()
         .encode(
-            x=xh,
+            x=alt.X(xh, title=xh.replace("()", "").title() + " (selection)"),
             color=hcolor,
             tooltip=alt.Tooltip(["count()"], title="count:"),
         )
@@ -266,9 +267,15 @@ def create_double_scatter_bar(
     encoding_h2["y"] = yh2
 
     # define the histograms
-    hist = hist_base.encode(**encoding_h1) | hist_base.encode(**encoding_h2)
+    # hist = hist_base.encode(**encoding_h1) | hist_base.encode(**encoding_h2)
+    hist = alt.hconcat(
+        hist_base.encode(**encoding_h1),
+        hist_base.encode(**encoding_h2),
+        # title="selection",
+    )
 
-    return (scatter & hist).configure_title(fontSize=fontsize, align="center")
+    # return (scatter & hist).configure_title(fontSize=fontsize, align="center")
+    return alt.vconcat(scatter, hist).configure_title(fontSize=fontsize, align="center")
 
 
 def create_linked_boxplot_histogram(
@@ -381,3 +388,34 @@ def create_rev_date(row):
         return datetime(
             default_missing_year, default_missing_month, default_missing_day
         )
+
+
+global_insertions = {
+    "<head>": """
+
+    <head>
+
+    <link rel="stylesheet" href="https://kauevestena.github.io/oswm_codebase/assets/styles/stats_styles.css">
+    <script src="https://kauevestena.github.io/oswm_codebase/assets/webscripts/stats_funcs.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+
+    <title>OSWM Dashboard</title>
+
+    <link rel="icon" type="image/x-icon" href="https://kauevestena.github.io/oswm_codebase/assets/homepage/favicon_homepage.png">
+
+    """,
+}
+
+global_exclusions = [{"points": ["<style>", "</style>"], "multiline": True}]
+
+
+# it needs to be here rather than in the main script:
+gdfs_dict = get_gdfs_dict()
+updating_dicts = {}
+for category in paths_dict["data"]:
+
+    if os.path.exists(paths_dict["versioning"].get(category)):
+        updating_dicts[category] = pd.read_json(versioning_dict[category])
+    else:
+        updating_dicts[category] = pd.DataFrame()
