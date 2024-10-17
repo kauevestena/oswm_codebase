@@ -18,6 +18,9 @@ for category in gdfs_dict:
     create_folder_if_not_exists(os.path.join(statistics_basepath, category))
     create_folder_if_not_exists(os.path.join(statistcs_specs_path, category))
 
+    if category == "all_data":
+        continue
+
     # creating a ref to improve readability
     cat_gdf = gdfs_dict[category]
     update_df = updating_dicts[category]
@@ -28,9 +31,9 @@ for category in gdfs_dict:
 
     if "LineString" in geom_type_dict[category]:
         create_length_field(cat_gdf)
-        create_weblink_field(cat_gdf)
-    elif "Point" in geom_type_dict[category]:
-        create_weblink_field(cat_gdf, "Point")
+        # create_weblink_field(cat_gdf)
+    # elif "Point" in geom_type_dict[category]:
+    #     create_weblink_field(cat_gdf, "Point")
 
     # uncertain about polygon cases
     # elif (:
@@ -40,42 +43,41 @@ for category in gdfs_dict:
     #     create_weblink_field(gdfs_dict[category])
 
     if "survey:date" in cat_gdf.columns:
-
         cat_gdf["Year of Survey"] = cat_gdf["survey:date"].apply(get_year_surveydate)
 
-    # updating info:
-    update_df["month_year"] = (
-        update_df["rev_month"].map("{:02d}".format)
-        + "_"
-        + update_df["rev_year"].astype(str)
-    )
+    # # updating info:
+    # update_df["month_year"] = (
+    #     update_df["rev_month"].map("{:02d}".format)
+    #     + "_"
+    #     + update_df["rev_year"].astype(str)
+    # )
 
-    update_df["year_month"] = (
-        update_df["rev_year"].astype(str)
-        + "_"
-        + update_df["rev_month"].map("{:02d}".format)
-    )
+    # update_df["year_month"] = (
+    #     update_df["rev_year"].astype(str)
+    #     + "_"
+    #     + update_df["rev_month"].map("{:02d}".format)
+    # )
 
-    update_df.sort_values("year_month", inplace=True)
+    # update_df.sort_values("year_month", inplace=True)
 
-    # Fill missing values with a default (e.g., 1 for month or day) TODO: move to data adaptation script
-    update_df["rev_year"] = (
-        update_df["rev_year"].fillna(default_missing_year).astype(int)
-    )
-    update_df["rev_month"] = (
-        update_df["rev_month"].fillna(default_missing_month).astype(int)
-    )
-    update_df["rev_day"] = update_df["rev_day"].fillna(default_missing_day).astype(int)
+    # # Fill missing values with a default (e.g., 1 for month or day) TODO: move to data adaptation script
+    # update_df["rev_year"] = (
+    #     update_df["rev_year"].fillna(default_missing_year).astype(int)
+    # )
+    # update_df["rev_month"] = (
+    #     update_df["rev_month"].fillna(default_missing_month).astype(int)
+    # )
+    # update_df["rev_day"] = update_df["rev_day"].fillna(default_missing_day).astype(int)
 
-    update_df["rev_date_obj"] = update_df.apply(create_rev_date, axis=1)
+    # update_df["rev_date_obj"] = update_df.apply(create_rev_date, axis=1)
 
-    update_df["age_years"] = (
-        pd.Timestamp(datetime.today()) - update_df["rev_date_obj"]
-    ).dt.days / 365.25
+    # update_df["age_years"] = (
+    #     pd.Timestamp(datetime.today()) - update_df["rev_date_obj"]
+    # ).dt.days / 365.25
 
     cat_gdf["category"] = category
 
-# creating a meta-category "all_data" for all data:
+# # creating a meta-category "all_data" for all data:
 gdfs_dict["all_data"] = pd.concat(gdfs_dict.values(), ignore_index=True)
 
 # storing chart infos:
@@ -84,6 +86,8 @@ charts_titles = {}
 
 # generating the charts by using the specifications
 with open(os.path.join(statistics_basepath, "failed_gen.txt"), "w+") as error_report:
+    charts_specs = get_charts_specs()
+
     for category in charts_specs:
         generated_list_dict[category] = []
         for chart_spec in charts_specs[category]:

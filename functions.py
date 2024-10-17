@@ -753,14 +753,19 @@ def row_query(df, querydict, mode="any", reverse=False):
         return selection
 
 
-def get_gdfs_dict(raw_data=False):
+def get_gdfs_dict(raw_data=False, include_all_data_dummy=False):
     # used dict: paths_dict
     category_group = "data_raw" if raw_data else "data"
 
-    return {
+    ret_dict = {
         category: gpd.read_parquet(paths_dict[category_group][category])
         for category in paths_dict[category_group]
     }
+
+    if include_all_data_dummy:
+        ret_dict["all_data"] = gpd.GeoDataFrame()
+
+    return ret_dict
 
 
 def get_gdfs_dict_v2():
