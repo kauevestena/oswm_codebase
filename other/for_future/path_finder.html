@@ -114,8 +114,8 @@
             updatedData.features = updatedData.features.flatMap((feature) => {
                 if (feature.geometry.type === 'LineString') {
                     const line = turf.lineString(feature.geometry.coordinates);
-                    const splitStart = turf.lineSplit(line, startPoint);
-                    const splitEnd = turf.lineSplit(line, endPoint);
+                    let splitStart = turf.lineSplit(line, startPoint);
+                    let splitEnd = turf.lineSplit(line, endPoint);
 
                     // Combine all split segments if split occurs
                     if (splitStart.features.length > 1) {
@@ -124,6 +124,16 @@
                     if (splitEnd.features.length > 1) {
                         return splitEnd.features;
                     }
+                }
+                return feature;
+            });
+
+            // Post-process to ensure any new nodes are properly connected
+            updatedData.features = updatedData.features.flatMap((feature) => {
+                if (feature.geometry.type === 'LineString' && feature.geometry.coordinates.length > 2) {
+                    const splitLine = turf.lineString(feature.geometry.coordinates);
+                    const midpoint = turf.midpoint(turf.point(feature.geometry.coordinates[0]), turf.point(feature.geometry.coordinates[feature.geometry.coordinates.length - 1]));
+                    return turf.lineSplit(splitLine, midpoint).features;
                 }
                 return feature;
             });
