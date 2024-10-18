@@ -15,26 +15,6 @@
     <pre id="output"></pre>
 
     <script>
-        // GeoJSON data
-        const geoJson = {
-            "type": "FeatureCollection",
-            "features": [
-                {
-                    "type": "Feature",
-                    "properties": { "name": "test" },
-                    "geometry": {
-                        "type": "LineString",
-                        "coordinates": [
-                            [ -49.2649528941512, -25.443916806235375 ],
-                            [ -49.263111686616, -25.443274427873067 ],
-                            [ -49.262442156603193, -25.444596967825358 ],
-                            [ -49.260391720938998, -25.443790849963811 ]
-                        ]
-                    }
-                }
-            ]
-        };
-
         let start = null;
         let end = null;
         let pathFinder = null;
@@ -44,41 +24,52 @@
         const map = new maplibregl.Map({
             container: 'map',
             style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
-            center: [-49.263, -25.444],
+            center: [8.46113723842513,59.4949938765406], // Update center to match the external GeoJSON data
             zoom: 14
         });
 
         map.on('load', () => {
-            // Add GeoJSON line to the map
-            map.addSource('line', {
-                'type': 'geojson',
-                'data': geoJson
-            });
+            // Fetch external GeoJSON data
+            fetch('https://raw.githubusercontent.com/perliedman/geojson-path-finder/refs/heads/master/test/network.json')
+                .then(response => response.json())
+                .then(data => {
+                    // Add GeoJSON line to the map
+                    map.addSource('line', {
+                        'type': 'geojson',
+                        'data': data
+                    });
 
-            map.addLayer({
-                'id': 'line-layer',
-                'type': 'line',
-                'source': 'line',
-                'layout': {
-                    'line-join': 'round',
-                    'line-cap': 'round'
-                },
-                'paint': {
-                    'line-color': '#ff0000',
-                    'line-width': 4
-                }
-            });
+                    map.addLayer({
+                        'id': 'line-layer',
+                        'type': 'line',
+                        'source': 'line',
+                        'layout': {
+                            'line-join': 'round',
+                            'line-cap': 'round'
+                        },
+                        'paint': {
+                            'line-color': '#ff0000',
+                            'line-width': 4
+                        }
+                    });
 
-            // Initialize path finder with a network built from GeoJSON lines
-            pathFinder = new geojsonPathFinder(geoJson, {
-                precision: 1e-5,
-                weightFn: (a, b) => turf.distance(turf.point(a), turf.point(b))
-            });
+                    // Initialize path finder with a network built from GeoJSON lines
+                    pathFinder = new geojsonPathFinder(data, {
+                        precision: 1e-5,
+                        directed: false,
+                        weightFn: (a, b) => turf.distance(turf.point(a), turf.point(b))
+                    });
+                });
 
             // Add click event to select start and end points
             map.on('click', (e) => {
+                if (!pathFinder) {
+                    console.error("PathFinder not initialized yet.");
+                    return;
+                }
+
                 const coords = [e.lngLat.lng, e.lngLat.lat];
-                const snappedPoint = turf.nearestPointOnLine(geoJson, turf.point(coords));
+                const snappedPoint = turf.nearestPointOnLine(map.getSource('line')._data, turf.point(coords));
                 const snappedCoords = snappedPoint.geometry.coordinates;
 
                 if (!start) {
