@@ -168,11 +168,29 @@ for category in generated_list_dict:
 
         fileObj.rewrite()
 
-        if i == 0 and category == "sidewalks":
-            fileObj.write_to_another_path(
-                os.path.join(statistics_basepath, "index.html")
-            )
+        # # # dashboard homepage writing:
+        # if i == 0 and category == "sidewalks":
 
+        #     fileObj.write_to_another_path(
+        #         os.path.join(statistics_basepath, "index.html")
+        #     )
+
+# Dashboard homepage writing:
+fileObj = fileAsStrHandler(
+    os.path.join(statistics_basepath, "index.html"), start_over=True
+)
+
+fileObj.content = basic_html
+
+for insertpoint in global_insertions:
+    fileObj.simple_replace(insertpoint, global_insertions[insertpoint])
+
+fileObj.simple_replace("<head>", "<head>\n" + topbar)
+
+for inclusion in dashboard_main_page_insertions:
+    fileObj.simple_replace(inclusion, dashboard_main_page_insertions[inclusion])
+
+fileObj.rewrite()
 
 # to record data aging:
 record_datetime("Statistical Charts")

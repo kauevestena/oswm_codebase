@@ -435,3 +435,18 @@ global_insertions = {
 }
 
 global_exclusions = [{"points": ["<style>", "</style>"], "multiline": True}]
+
+dashboard_main_page_insertions = {
+    "<body>": """
+    <body>
+    <h1 style="text-align: center;">Welcome to the OSWM Node Dashboard!</h1>
+    <div style="text-align: center; padding: 5px;">
+        <img src="https://kauevestena.github.io/oswm_codebase/assets/homepage/project_logo.png" alt="OSWM Project Logo">
+    </div>
+    <h3 style="text-align: center; font-weight: normal;"><b>Select a category of data</b> or the aggregated on "All Data Charts"<br><br>Or click the blue button to go back to the node homepage!<br><br>Most <b>charts are interactive</b>, so try out some pan and zoom!<br></form></h3>
+
+    <h4 style="text-align: center; font-weight: normal;">They're made with the amazing Altair library!<br> so <b>you can click on the 3 dots on the upper right corner</b>,<br> to export to different formats and edit on the Vega Editor!</h4>
+
+
+    </body>"""
+}

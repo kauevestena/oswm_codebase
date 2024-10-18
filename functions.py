@@ -48,9 +48,13 @@ def str_to_file(inputstr: str, outputpath: str, check_path=False):
 
 class fileAsStrHandler:
 
-    def __init__(self, inputpath: str):
+    def __init__(self, inputpath: str, start_over=False):
         self.path = inputpath
-        self.content = file_as_string(self.path)
+
+        if start_over:
+            self.content = ""
+        else:
+            self.content = file_as_string(self.path)
 
     def simple_replace(self, original_part, new_part=""):
         """default is empty for just remove the selected content"""
@@ -854,3 +858,14 @@ def get_formatted_interval_string(n1, n2, max_digits=2):
         return f" {n1}{spaces1}-{spaces2}{n2}"
     else:
         return f"{n1}{spaces1}-{spaces2}{n2}"
+
+
+basic_html = """
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+</body>
+</html>
+"""
