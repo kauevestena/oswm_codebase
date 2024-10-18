@@ -82,6 +82,8 @@ def create_barchartV2(
     str_to_append=" type",
     title_fontsize=24,
     len_field="length(km)",
+    color_field="feature count",
+    excluding_categories=[],
 ):
     import altair as alt
 
@@ -90,14 +92,24 @@ def create_barchartV2(
 
     # add a dummy "count" if no len_field
     if not len_field:
+        input_gdf = input_gdf.copy()  # to avoid fragmentation
         input_gdf["count"] = 1
         len_field = "count"
 
+    if excluding_categories:
+        input_gdf = input_gdf[~input_gdf["category"].isin(excluding_categories)]
+
     # Define the fields to plot
-    fields_to_plot = [fieldname, len_field]
+    if color_field == "feature count":
+        fields_to_plot = [fieldname, len_field]
+    else:
+        fields_to_plot = [color_field, fieldname, len_field]
 
     # aggregation fields:
-    agg_fields = {fieldname: "count", len_field: "sum"}
+    if color_field == "feature count":
+        agg_fields = {fieldname: "count", len_field: "sum"}
+    else:
+        agg_fields = {color_field: "sum", fieldname: "count", len_field: "sum"}
 
     # Aggregate the data for plotting
     data_to_plot = (
@@ -110,10 +122,25 @@ def create_barchartV2(
     )
 
     # Create an interactive selection for filtering (boolean checkbox)
+    # if filter_out_opt: # TODO: implement the option for no filter
     filter_checkbox = alt.binding_checkbox(name=filter_out_opt_text)
     selection = alt.param(
         name="include_filter_out_opt", bind=filter_checkbox, value=True
     )
+    # else:
+    #     selection = alt.param(name="empty")
+
+    if color_field == "feature count":
+        tooltip_fields = [fieldname_v2, len_field, "feature count"]
+    else:
+        tooltip_fields = [color_field, fieldname_v2, len_field, "feature count"]
+
+        # avoiding dupes:
+        tooltip_fields = list(set(tooltip_fields))
+
+        # another workaround, geez:
+        if "feature count" and "count" in tooltip_fields:
+            tooltip_fields.remove("count")
 
     # Create the bar chart with conditional filtering
     chart = (
@@ -122,8 +149,8 @@ def create_barchartV2(
         .encode(
             x=alt.X(fieldname_v2, sort="-y"),
             y=len_field,
-            tooltip=[fieldname_v2, len_field, "feature count"],
-            color="feature count",
+            tooltip=tooltip_fields,
+            color=color_field,
         )
         .properties(width=650, height=300)
         .configure_title(fontSize=title_fontsize)

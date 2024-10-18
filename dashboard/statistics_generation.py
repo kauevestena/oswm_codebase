@@ -34,7 +34,13 @@ for category in gdfs_dict:
     if "LineString" in geom_type_dict[category]:
         create_length_field(cat_gdf)
 
-    cat_gdf["category"] = category
+    if category != "other_footways":
+        cat_gdf["category"] = category
+    else:
+        cat_gdf["category"] = cat_gdf[oswm_footway_fieldname]
+
+    # if category == "kerbs":
+    #     cat_gdf["length(km)"] = 0
 
 # # creating a meta-category "all_data" for all data:
 gdfs_dict["all_data"] = pd.concat(gdfs_dict.values(), ignore_index=True)
@@ -93,7 +99,7 @@ with open(os.path.join(statistics_basepath, "failed_gen.txt"), "w+") as error_re
 topbar = f"""
     
     <div class="topnav" id="stTopnav">
-        <a href="{node_homepage_url}" class="active">Home</a>
+        <a href="{node_homepage_url}" class="active">Go to Node Home</a>
     """
 
 print(generated_list_dict)

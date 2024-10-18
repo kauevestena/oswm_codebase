@@ -111,24 +111,6 @@ def get_charts_specs(gdfs_dict):
                 },
                 "title": "Number of Revisions",
             },
-            # "sidewalks_yr_moth_update": {
-            #     "function": create_barchart,
-            #     "params": {
-            #         "input_df": updating_dicts["sidewalks"],
-            #         "fieldname": "year_month",
-            #         "title": "Year and Month Of Update (Sidewalks)",
-            #     },
-            #     "title": "Year and Month Of Update",
-            # },
-            # "sidewalks_number_revisions": {
-            #     "function": create_barchart,
-            #     "params": {
-            #         "input_df": updating_dicts["sidewalks"],
-            #         "fieldname": "n_revs",
-            #         "title": "Number of Revisions (Sidewalks)",
-            #     },
-            #     "title": "Number Of Revisions",
-            # },
         },
         "crossings": {
             "crossing_types": {
@@ -140,15 +122,6 @@ def get_charts_specs(gdfs_dict):
                 },
                 "title": "Crossing Type",
             },
-            # "crossing_surface": {
-            #     "function": create_barchart,
-            #     "params": {
-            #         "input_df": gdfs_dict.get("crossings"),
-            #         "fieldname": "surface",
-            #         "title": "Crossing Surface",
-            #     },
-            #     "title": "Crossing Surface",
-            # },
             "crossing_surface": {
                 "function": create_barchartV2,
                 "params": {
@@ -269,15 +242,6 @@ def get_charts_specs(gdfs_dict):
                 },
                 "title": "Surface Type",
             },
-            # "kerbs_yr_moth_update": {
-            #     "function": create_barchart,
-            #     "params": {
-            #         "input_df": updating_dicts["kerbs"],
-            #         "fieldname": "year_month",
-            #         "title": "Year and Month Of Update (Kerbs)",
-            #     },
-            #     "title": "Year and Month Of Update",
-            # },
             "kerbs_age": {
                 "function": create_linked_boxplot_histogram,
                 "params": {
@@ -290,15 +254,6 @@ def get_charts_specs(gdfs_dict):
                 },
                 "title": "Update Age",
             },
-            # "kerbs_number_revisions": {
-            #     "function": create_barchart,
-            #     "params": {
-            #         "input_df": updating_dicts["kerbs"],
-            #         "fieldname": "n_revs",
-            #         "title": "Number Of Revisions (Kerbs)",
-            #     },
-            #     "title": "Number Of Revisions",
-            # },
             "kerbs_n_revs": {
                 "function": create_linked_boxplot_histogram,
                 "params": {
@@ -322,15 +277,6 @@ def get_charts_specs(gdfs_dict):
                 },
                 "title": "Subcategory",
             },
-            # "other_footways_surface": {
-            #     "function": create_barchart,
-            #     "params": {
-            #         "input_df": gdfs_dict.get("other_footways"),
-            #         "fieldname": "surface",
-            #         "title": "other_footways Surface",
-            #     },
-            #     "title": "Other Footways Surface",
-            # },
             "other_footways_smoothness_x_surface": {
                 "function": create_double_mat_and_bar,
                 "params": {
@@ -369,15 +315,6 @@ def get_charts_specs(gdfs_dict):
                 },
                 "title": "Smoothness",
             },
-            # "other_footways_yr_moth_update": {
-            #     "function": create_barchart,
-            #     "params": {
-            #         "input_df": updating_dicts["other_footways"],
-            #         "fieldname": "year_month",
-            #         "title": "Year and Month Of Update (other_footways)",
-            #     },
-            #     "title": "Year and Month Of Update",
-            # },
             "other_footways_length": {
                 "function": create_linked_boxplot_histogram,
                 "params": {
@@ -402,15 +339,6 @@ def get_charts_specs(gdfs_dict):
                 },
                 "title": "Update Age",
             },
-            # "other_footways_number_revisions": {
-            #     "function": create_barchart,
-            #     "params": {
-            #         "input_df": updating_dicts["other_footways"],
-            #         "fieldname": "n_revs",
-            #         "title": "Number Of Revisions (other_footways)",
-            #     },
-            #     "title": "Number Of Revisions",
-            # },
             "other_footways_n_revs": {
                 "function": create_linked_boxplot_histogram,
                 "params": {
@@ -425,6 +353,22 @@ def get_charts_specs(gdfs_dict):
             },
         },
         "all_data": {
+            "all_data_category": {
+                "function": create_barchartV2,
+                "params": {
+                    "input_gdf": gdfs_dict.get("all_data"),
+                    "fieldname": "category",
+                    "title": "All-Category Layers Feature Count",
+                    "str_to_append": " type",
+                    "title_fontsize": 24,
+                    "len_field": None,  # it works for count
+                    "color_field": "length(km)",
+                    "filter_out_opt": None,
+                    # "excluding_categories": ["kerbs"],  # include "pedestrian_areas" ?
+                    # TODO:
+                },
+                "title": "Layer Feature Count",
+            },
             "all_data_surface": {
                 "function": create_barchartV2,
                 "params": {
