@@ -103,12 +103,24 @@
         }
 
         // Function to split lines and find the path
-        function splitLinesAndFindPath() {
+        function splitLinesAndFindPath(retry = false) {
             const startPoint = turf.point(start);
             const endPoint = turf.point(end);
 
             // Create a deep copy of the original data to modify
             let updatedData = JSON.parse(JSON.stringify(originalData));
+
+            // Densify the line to add intermediate points
+            updatedData.features = updatedData.features.flatMap((feature) => {
+                if (feature.geometry.type === 'LineString') {
+                    const line = turf.lineString(feature.geometry.coordinates);
+                    const length = turf.length(line, { units: 'kilometers' });
+                    const numSegments = retry ? Math.ceil(length / 0.02) : Math.ceil(length / 0.05); // Split every 20 meters if retry, otherwise 50 meters
+                    const densifiedLine = turf.lineChunk(line, length / numSegments, { units: 'kilometers' });
+                    return densifiedLine.features;
+                }
+                return feature;
+            });
 
             // Split the lines at the start and end points
             updatedData.features = updatedData.features.flatMap((feature) => {
@@ -128,16 +140,6 @@
                 return feature;
             });
 
-            // Post-process to ensure any new nodes are properly connected
-            updatedData.features = updatedData.features.flatMap((feature) => {
-                if (feature.geometry.type === 'LineString' && feature.geometry.coordinates.length > 2) {
-                    const splitLine = turf.lineString(feature.geometry.coordinates);
-                    const midpoint = turf.midpoint(turf.point(feature.geometry.coordinates[0]), turf.point(feature.geometry.coordinates[feature.geometry.coordinates.length - 1]));
-                    return turf.lineSplit(splitLine, midpoint).features;
-                }
-                return feature;
-            });
-
             // Update the pathfinder with the new split data
             pathFinder = new geojsonPathFinder(updatedData, {
                 precision: 1e-5,
@@ -145,11 +147,11 @@
                 weightFn: (a, b) => turf.distance(turf.point(a), turf.point(b))
             });
 
-            findAndDisplayPath();
+            findAndDisplayPath(retry);
         }
 
         // Function to find and display the path
-        function findAndDisplayPath() {
+        function findAndDisplayPath(retry) {
             const startPoint = { type: 'Feature', geometry: { type: 'Point', coordinates: start } };
             const endPoint = { type: 'Feature', geometry: { type: 'Point', coordinates: end } };
             bestPath = pathFinder.findPath(startPoint, endPoint);
@@ -196,7 +198,12 @@
                 document.getElementById('output').textContent = JSON.stringify(bestPath, null, 2);
             } else {
                 console.error("Path not found");
-                document.getElementById('output').textContent = "Path not found";
+                if (!retry) {
+                    console.warn("Retrying with increased densification...");
+                    splitLinesAndFindPath(true);
+                } else {
+                    document.getElementById('output').textContent = "Path not found after retry";
+                }
             }
         }
 
