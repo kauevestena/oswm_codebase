@@ -408,18 +408,3 @@ global_insertions = {
 }
 
 global_exclusions = [{"points": ["<style>", "</style>"], "multiline": True}]
-
-
-# it needs to be here rather than in the main script:
-gdfs_dict = get_gdfs_dict(include_all_data_dummy=True)
-
-# # for the inclusion of all data:
-# gdfs_dict["all_data"] = None
-
-updating_dicts = {}
-for category in paths_dict["data"]:
-
-    if os.path.exists(paths_dict["versioning"].get(category)):
-        updating_dicts[category] = pd.read_json(versioning_dict[category])
-    else:
-        updating_dicts[category] = pd.DataFrame()

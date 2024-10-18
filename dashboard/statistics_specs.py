@@ -2,7 +2,7 @@ from statistics_funcs import *
 
 
 # to avoid issues with circular imports it was encapsulated in a function:
-def get_charts_specs():
+def get_charts_specs(gdfs_dict):
     return {
         "sidewalks": {
             "sidewalks_smoothness_x_surface": {
