@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GeoJSON Path Finder Demo with MapLibre</title>
     <script src="https://bundle.run/geojson-path-finder@1.5.3"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Turf.js/6.5.0/turf.min.js"></script>
     <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css' />
     <script src='https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js'></script>
 </head>
@@ -17,8 +18,6 @@
         // GeoJSON data
         const geoJson = {
             "type": "FeatureCollection",
-            "name": "simple_geojson",
-            "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
             "features": [
                 {
                     "type": "Feature",
@@ -70,25 +69,30 @@
                 }
             });
 
-            // Initialize path finder
-            pathFinder = new geojsonPathFinder(geoJson, { precision: 1e-5 });
+            // Initialize path finder with a network built from GeoJSON lines
+            pathFinder = new geojsonPathFinder(geoJson, {
+                precision: 1e-5,
+                weightFn: (a, b) => turf.distance(turf.point(a), turf.point(b))
+            });
 
             // Add click event to select start and end points
             map.on('click', (e) => {
                 const coords = [e.lngLat.lng, e.lngLat.lat];
+                const snappedPoint = turf.nearestPointOnLine(geoJson, turf.point(coords));
+                const snappedCoords = snappedPoint.geometry.coordinates;
 
                 if (!start) {
-                    start = { type: 'Feature', geometry: { type: 'Point', coordinates: coords } };
-                    addMarker(coords, 'start-marker', 'green');
+                    start = snappedCoords;
+                    addMarker(snappedCoords, 'start-marker', 'green');
                 } else if (!end) {
-                    end = { type: 'Feature', geometry: { type: 'Point', coordinates: coords } };
-                    addMarker(coords, 'end-marker', 'red');
+                    end = snappedCoords;
+                    addMarker(snappedCoords, 'end-marker', 'red');
                     findAndDisplayPath();
                 } else {
                     // Reset if both points are already selected
                     resetPath();
-                    start = { type: 'Feature', geometry: { type: 'Point', coordinates: coords } };
-                    addMarker(coords, 'start-marker', 'green');
+                    start = snappedCoords;
+                    addMarker(snappedCoords, 'start-marker', 'green');
                 }
             });
         });
@@ -107,7 +111,9 @@
 
         // Function to find and display the path
         function findAndDisplayPath() {
-            bestPath = pathFinder.findPath(start, end);
+            const startPoint = { type: 'Feature', geometry: { type: 'Point', coordinates: start } };
+            const endPoint = { type: 'Feature', geometry: { type: 'Point', coordinates: end } };
+            bestPath = pathFinder.findPath(startPoint, endPoint);
 
             if (bestPath && bestPath.path.length > 0) {
                 const pathGeoJson = {
@@ -142,13 +148,16 @@
                         },
                         'paint': {
                             'line-color': '#0000ff',
-                            'line-width': 4
+                            'line-width': 8
                         }
                     });
                 }
 
                 // Output the result
                 document.getElementById('output').textContent = JSON.stringify(bestPath, null, 2);
+            } else {
+                console.error("Path not found");
+                document.getElementById('output').textContent = "Path not found";
             }
         }
 
