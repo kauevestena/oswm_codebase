@@ -19,12 +19,13 @@
         let end = null;
         let pathFinder = null;
         let bestPath = null;
+        let originalData = null;
 
         // Initialize MapLibre map
         const map = new maplibregl.Map({
             container: 'map',
             style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
-            center: [8.46113723842513,59.4949938765406], // Update center to match the external GeoJSON data
+            center: [8.46113723842513, 59.4949938765406], // Update center to match the external GeoJSON data
             zoom: 14
         });
 
@@ -33,6 +34,7 @@
             fetch('https://raw.githubusercontent.com/perliedman/geojson-path-finder/refs/heads/master/test/network.json')
                 .then(response => response.json())
                 .then(data => {
+                    originalData = data;
                     // Add GeoJSON line to the map
                     map.addSource('line', {
                         'type': 'geojson',
@@ -78,7 +80,7 @@
                 } else if (!end) {
                     end = snappedCoords;
                     addMarker(snappedCoords, 'end-marker', 'red');
-                    findAndDisplayPath();
+                    splitLinesAndFindPath();
                 } else {
                     // Reset if both points are already selected
                     resetPath();
@@ -98,6 +100,42 @@
             el.style.borderRadius = '50%';
 
             new maplibregl.Marker(el).setLngLat(coords).addTo(map);
+        }
+
+        // Function to split lines and find the path
+        function splitLinesAndFindPath() {
+            const startPoint = turf.point(start);
+            const endPoint = turf.point(end);
+
+            // Create a deep copy of the original data to modify
+            let updatedData = JSON.parse(JSON.stringify(originalData));
+
+            // Split the lines at the start and end points
+            updatedData.features = updatedData.features.flatMap((feature) => {
+                if (feature.geometry.type === 'LineString') {
+                    const line = turf.lineString(feature.geometry.coordinates);
+                    const splitStart = turf.lineSplit(line, startPoint);
+                    const splitEnd = turf.lineSplit(line, endPoint);
+
+                    // Combine all split segments if split occurs
+                    if (splitStart.features.length > 1) {
+                        return splitStart.features;
+                    }
+                    if (splitEnd.features.length > 1) {
+                        return splitEnd.features;
+                    }
+                }
+                return feature;
+            });
+
+            // Update the pathfinder with the new split data
+            pathFinder = new geojsonPathFinder(updatedData, {
+                precision: 1e-5,
+                directed: false,
+                weightFn: (a, b) => turf.distance(turf.point(a), turf.point(b))
+            });
+
+            findAndDisplayPath();
         }
 
         // Function to find and display the path
