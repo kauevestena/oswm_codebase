@@ -20,6 +20,7 @@ def get_charts_specs(gdfs_dict):
                     "fontsize": 24,
                 },
                 "title": "Surface x Smoothness",
+                "explanation": f"This chart allows you to visualize the relationship between the {surface_link} type and the {smoothness_link} condition of the sidewalks.",
             },
             "sidewalks_surface": {
                 "function": create_barchartV2,
@@ -31,6 +32,7 @@ def get_charts_specs(gdfs_dict):
                     "title_fontsize": 24,
                 },
                 "title": "Surface Type",
+                "explanation": f"This chart allows you to visualize the different {surface_link} types of the sidewalks.",
             },
             "sidewalks_smoothness": {
                 "function": create_barchartV2,
@@ -42,6 +44,7 @@ def get_charts_specs(gdfs_dict):
                     "title_fontsize": 24,
                 },
                 "title": "Smoothness Condition",
+                "explanation": f"This chart allows you to visualize the different {smoothness_link} conditions of the sidewalks.",
             },
             "sidewalks_tactile_paving": {
                 "function": create_barchartV2,
@@ -53,6 +56,7 @@ def get_charts_specs(gdfs_dict):
                     "title_fontsize": 24,
                 },
                 "title": "Tactile Paving Presence",
+                "explanation": f"This chart allows you to visualize the different {tactile_paving_link} conditions of the sidewalks.",
             },
             "sidewalks_width": {
                 "function": create_barchartV2,
@@ -64,6 +68,7 @@ def get_charts_specs(gdfs_dict):
                     "title_fontsize": 24,
                 },
                 "title": "Width Values",
+                "explanation": f"This chart allows you to visualize the different {width_link} values of the sidewalks.",
             },
             "sidewalks_incline": {
                 "function": create_barchartV2,
@@ -75,6 +80,7 @@ def get_charts_specs(gdfs_dict):
                     "title_fontsize": 24,
                 },
                 "title": "Incline Values",
+                "explanation": f"This chart allows you to visualize the different {incline_link} values of the sidewalks.",
             },
             "sidewalks_age": {
                 "function": create_linked_boxplot_histogram,
@@ -87,6 +93,7 @@ def get_charts_specs(gdfs_dict):
                     # "tooltip_fields": ["id"],
                 },
                 "title": "Update Age",
+                "explanation": f"This chart allows you to visualize the distribution of the time since the last update of the sidewalk features.",
             },
             "sidewalks_length": {
                 "function": create_linked_boxplot_histogram,
@@ -98,6 +105,7 @@ def get_charts_specs(gdfs_dict):
                     "maxbins": 50,
                 },
                 "title": "Length (km)",
+                "explanation": f"This chart allows you to visualize the distribution of the length of the sidewalks in kilometers.",
             },
             "sidewalks_n_revs": {
                 "function": create_linked_boxplot_histogram,
@@ -110,6 +118,7 @@ def get_charts_specs(gdfs_dict):
                     # "tooltip_fields": ["id"],
                 },
                 "title": "Number of Revisions",
+                "explanation": f"This chart allows you to visualize the distribution of the number times that the sidewalks have been edited.",
             },
         },
         "crossings": {
@@ -121,6 +130,7 @@ def get_charts_specs(gdfs_dict):
                     "title": "Crossing Type",
                 },
                 "title": "Crossing Type",
+                "explanation": f"This chart allows you to visualize the different {crossing_link} types of the crossings.",
             },
             "crossing_surface": {
                 "function": create_barchartV2,
@@ -132,6 +142,7 @@ def get_charts_specs(gdfs_dict):
                     "title_fontsize": 24,
                 },
                 "title": "Surface Type",
+                "explanation": f"This chart allows you to visualize the different {surface_link} types of the crossings.",
             },
             "crossings_smoothness_x_surface": {
                 "function": create_double_mat_and_bar,
@@ -148,6 +159,7 @@ def get_charts_specs(gdfs_dict):
                     "fontsize": 24,
                 },
                 "title": "Surface x Smoothness",
+                "explanation": f"This chart allows you to visualize the relationship between the {surface_link} type and the {smoothness_link} condition of the crossings.",
             },
             "crossings_length": {
                 "function": create_linked_boxplot_histogram,
@@ -160,6 +172,7 @@ def get_charts_specs(gdfs_dict):
                     "maxbins": 50,
                 },
                 "title": "Length (km)",
+                "explanation": f"This chart allows you to visualize the distribution of the length of the crossings in kilometers.",
             },
             "crossings_age": {
                 "function": create_linked_boxplot_histogram,
@@ -172,6 +185,7 @@ def get_charts_specs(gdfs_dict):
                     # "tooltip_fields": ["id"],
                 },
                 "title": "Update Age",
+                "explanation": f"This chart allows you to visualize the distribution of the time since the last update of the crossing features.",
             },
             "crossings_n_revs": {
                 "function": create_linked_boxplot_histogram,
@@ -184,6 +198,7 @@ def get_charts_specs(gdfs_dict):
                     # "tooltip_fields": ["id"],
                 },
                 "title": "Number of Revisions",
+                "explanation": f"This chart allows you to visualize the distribution of the number times that the crossings have been edited.",
             },
         },
         "kerbs": {
@@ -202,6 +217,7 @@ def get_charts_specs(gdfs_dict):
                     "fontsize": 24,
                 },
                 "title": "Surface x Smoothness",
+                "explanation": f"This chart allows you to visualize the relationship between the {kerb_link} type and the {smoothness_link} condition of the kerbs.",
             },
             "kerb_types": {
                 "function": create_barchart,
@@ -211,6 +227,7 @@ def get_charts_specs(gdfs_dict):
                     "title": "Kerb Type",
                 },
                 "title": "Kerb Type",
+                "explanation": f"This chart allows you to visualize the different {kerb_link} types of the kerbs.",
             },
             "kerb_tactile_paving": {
                 "function": create_barchart,
@@ -220,6 +237,7 @@ def get_charts_specs(gdfs_dict):
                     "title": "Kerb Tactile Paving Presence",
                 },
                 "title": "Tactile Paving Presence",
+                "explanation": f"This chart allows you to visualize the different {tactile_paving_link} types existing on kerbs.",
             },
             "kerb_wheelchair_access": {
                 "function": create_barchart,
@@ -229,6 +247,7 @@ def get_charts_specs(gdfs_dict):
                     "title": "Kerb Wheelchair Acessibility",
                 },
                 "title": "Wheelchair Acessibility",
+                "explanation": f"This chart allows you to visualize the different {wheelchair_link} levels of access reported on kerbs.",
             },
             "kerbs_surface": {
                 "function": create_barchartV2,
@@ -241,6 +260,7 @@ def get_charts_specs(gdfs_dict):
                     "len_field": None,
                 },
                 "title": "Surface Type",
+                "explanation": f"This chart allows you to visualize the different types of {surface_link} present on kerbs.",
             },
             "kerbs_age": {
                 "function": create_linked_boxplot_histogram,
@@ -253,6 +273,7 @@ def get_charts_specs(gdfs_dict):
                     "height": 200,
                 },
                 "title": "Update Age",
+                "explanation": f"This chart allows you to visualize the distribution of the time since the last update of the kerb features.",
             },
             "kerbs_n_revs": {
                 "function": create_linked_boxplot_histogram,
@@ -265,6 +286,7 @@ def get_charts_specs(gdfs_dict):
                     # "tooltip_fields": ["id"],
                 },
                 "title": "Number of Revisions",
+                "explanation": f"This chart allows you to visualize the distribution of the number times that the kerbs have been edited.",
             },
         },
         "other_footways": {
@@ -276,6 +298,7 @@ def get_charts_specs(gdfs_dict):
                     "title": "Sub-category (Layer)",
                 },
                 "title": "Subcategory",
+                "explanation": f"This chart allows you to visualize the different types (layer) of the other footways.",
             },
             "other_footways_smoothness_x_surface": {
                 "function": create_double_mat_and_bar,
@@ -292,6 +315,7 @@ def get_charts_specs(gdfs_dict):
                     "fontsize": 24,
                 },
                 "title": "Surface x Smoothness",
+                "explanation": f"This chart allows you to visualize the relationship between the {surface_link} type and the {smoothness_link} condition of the other footways, different layers are represented by different colors.",
             },
             "other_footways_surface": {
                 "function": create_barchartV2,
@@ -303,6 +327,7 @@ def get_charts_specs(gdfs_dict):
                     "title_fontsize": 24,
                 },
                 "title": "Surface Type",
+                "explanation": f"This chart allows you to visualize the different types of {surface_link} present on other footways.",
             },
             "other_footways_smoothness": {
                 "function": create_barchartV2,
@@ -314,6 +339,7 @@ def get_charts_specs(gdfs_dict):
                     "title_fontsize": 24,
                 },
                 "title": "Smoothness",
+                "explanation": f"This chart allows you to visualize the different levels of {smoothness_link} present on other footways.",
             },
             "other_footways_length": {
                 "function": create_linked_boxplot_histogram,
@@ -327,6 +353,7 @@ def get_charts_specs(gdfs_dict):
                     "maxbins": 50,
                 },
                 "title": "Length (km)",
+                "explanation": f"This chart allows you to visualize the distribution of the length of the other footways.",
             },
             "other_footways_age": {
                 "function": create_linked_boxplot_histogram,
@@ -338,6 +365,7 @@ def get_charts_specs(gdfs_dict):
                     "height": 200,
                 },
                 "title": "Update Age",
+                "explanation": f"This chart allows you to visualize the distribution of the time since the last update of the other footways.",
             },
             "other_footways_n_revs": {
                 "function": create_linked_boxplot_histogram,
@@ -350,6 +378,7 @@ def get_charts_specs(gdfs_dict):
                     # "tooltip_fields": ["id"],
                 },
                 "title": "Number of Revisions",
+                "explanation": f"This chart allows you to visualize the distribution of the number of revisions of the other footways.",
             },
         },
         "all_data": {
@@ -367,6 +396,7 @@ def get_charts_specs(gdfs_dict):
                     # "excluding_categories": ["kerbs"],  # include "pedestrian_areas" ?
                 },
                 "title": "Layer Feature Count",
+                "explanation": f"This chart allows you to visualize the number of features in each layer of the data, featuring also the length of each in different shades. Keep in mind that kerbs have no length and pedestrian areas have their perimeter represented.",
             },
             "all_data_surface": {
                 "function": create_barchartV2,
@@ -378,6 +408,7 @@ def get_charts_specs(gdfs_dict):
                     "title_fontsize": 24,
                 },
                 "title": "Surface Type",
+                "explanation": f"This chart allows you to visualize the different types of {surface_link} present in the whole data.",
             },
             "all_data_smoothness": {
                 "function": create_barchartV2,
@@ -389,6 +420,7 @@ def get_charts_specs(gdfs_dict):
                     "title_fontsize": 24,
                 },
                 "title": "Smoothness Condition",
+                "explanation": f"This chart allows you to visualize the different levels of {smoothness_link} present in the whole data.",
             },
             "all_data_tactile_paving": {
                 "function": create_barchartV2,
@@ -400,6 +432,7 @@ def get_charts_specs(gdfs_dict):
                     "title_fontsize": 24,
                 },
                 "title": "Tactile Paving Presence",
+                "explanation": f"This chart allows you to visualize the reported presence of {tactile_paving_link} in the whole data.",
             },
             "all_data_lit": {
                 "function": create_barchartV2,
@@ -411,6 +444,7 @@ def get_charts_specs(gdfs_dict):
                     "title_fontsize": 24,
                 },
                 "title": "Lighting Status",
+                "explanation": f"This chart allows you to visualize the different lighting ({lit_link}) conditions in the whole data.",
             },
             "all_data_traffic_calming": {
                 "function": create_barchartV2,
@@ -424,6 +458,7 @@ def get_charts_specs(gdfs_dict):
                     "color_field": "length(km)",
                 },
                 "title": "Traffic Calming Status",
+                "explanation": f"This chart allows you to visualize the reported presence of {traffic_calming_link} in the whole data.",
             },
             "all_data_wheelchair_tag": {
                 "function": create_barchartV2,
@@ -437,6 +472,7 @@ def get_charts_specs(gdfs_dict):
                     "color_field": "length(km)",
                 },
                 "title": "wheelchair=*",
+                "explanation": f"This chart allows you to visualize the reported levels of {wheelchair_link} accessibility in the whole data.",
             },
             "all_data_age": {
                 "function": create_linked_boxplot_histogram,
@@ -448,6 +484,7 @@ def get_charts_specs(gdfs_dict):
                     "height": 200,
                 },
                 "title": "Update Age",
+                "explanation": f"This chart allows you to visualize the distribution of the age of the data in years, differencing categories by color.",
             },
             "all_data_n_revs": {
                 "function": create_linked_boxplot_histogram,
@@ -461,6 +498,7 @@ def get_charts_specs(gdfs_dict):
                     # "tooltip_fields": ["id"],
                 },
                 "title": "Number of Revisions",
+                "explanation": f"This chart allows you to visualize the distribution of the number of revisions of the data, differencing categories by color.",
             },
         },
     }

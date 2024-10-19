@@ -438,8 +438,9 @@ global_exclusions = [{"points": ["<style>", "</style>"], "multiline": True}]
 
 dashboard_main_page_insertions = {
     "<body>": """
+
     <body>
-    <h1 style="text-align: center;">Welcome to the OSWM Node Dashboard!</h1>
+    <h1 style="text-align: center;font-family: 'Poppins', sans-serif;">Welcome to the OSWM Node Dashboard!</h1>
     <div style="text-align: center; padding: 5px;">
         <img src="https://kauevestena.github.io/oswm_codebase/assets/homepage/project_logo.png" alt="OSWM Project Logo">
     </div>
@@ -447,9 +448,35 @@ dashboard_main_page_insertions = {
 
     <h4 style="text-align: center; font-weight: normal;">They're made with the amazing Altair library!<br> so <b>you can click on the 3 dots on the upper right corner</b>,<br> to export to different formats and edit on the Vega Editor!</h4>
 
+    <br>
+    <footer>
+        <p style="text-align: center; font-weight: normal;">&copy; <span id="year"></span> OSWM Project</p>
+        <p style="text-align: center; font-weight: normal;">want to report an issue? <a href="https://github.com/kauevestena/opensidewalkmap/issues">here</a></p>
+    </footer>
+    <script>
+        document.getElementById("year").textContent = new Date().getFullYear();
+    </script>
 
-    </body>"""
+    """
 }
 
+# stuff for the explanation
+explanation_base = '<h4 style="padding-left: 14%;font-weight: normal;font-family: sans-serif;"> - Explanation: {} </h4>'
 
-explanation_base = '<h1 style="padding-left: 14%;"> Explanation: {} </h1>'
+# the webpage links
+surface_link = "<a href='https://wiki.openstreetmap.org/wiki/Key:surface'>surface</a>"
+smoothness_link = (
+    "<a href='https://wiki.openstreetmap.org/wiki/Key:smoothness'>smoothness</a>"
+)
+lit_link = "<a href='https://wiki.openstreetmap.org/wiki/Key:lit'>lit</a>"
+tactile_paving_link = "<a href='https://wiki.openstreetmap.org/wiki/Key:tactile_paving'>Tactile Paving</a>"
+width_link = "<a href='https://wiki.openstreetmap.org/wiki/Key:width'>width</a>"
+crossing_link = (
+    "<a href='https://wiki.openstreetmap.org/wiki/Key:crossing'>crossing</a>"
+)
+kerb_link = "<a href='https://wiki.openstreetmap.org/wiki/Key:kerb'>kerb</a>"
+wheelchair_link = (
+    "<a href='https://wiki.openstreetmap.org/wiki/Key:wheelchair'>wheelchair</a>"
+)
+traffic_calming_link = "<a href='https://wiki.openstreetmap.org/wiki/Key:traffic_calming'>Traffic Calming</a>"
+incline_link = "<a href='https://wiki.openstreetmap.org/wiki/Key:incline'>incline</a>"

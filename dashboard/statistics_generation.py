@@ -53,6 +53,7 @@ gdfs_dict["all_data"] = pd.concat(gdfs_dict.values(), ignore_index=True)
 # storing chart infos:
 generated_list_dict = {}
 charts_titles = {}
+charts_explanations = {}
 
 # generating the charts by using the specifications
 with open(os.path.join(statistics_basepath, "failed_gen.txt"), "w+") as error_report:
@@ -88,7 +89,16 @@ with open(os.path.join(statistics_basepath, "failed_gen.txt"), "w+") as error_re
                 chart_obj.save(json_outpath)
 
                 generated_list_dict[category].append(outpath)
+
+                # # extra charts info:
+                # Title:
                 charts_titles[outpath] = spec["title"]
+
+                # Explanation:
+                charts_explanations[outpath] = explanation_base.format(
+                    spec["explanation"]
+                )
+
             except Exception as e:
                 print(
                     "failed ",
@@ -151,11 +161,14 @@ for category in generated_list_dict:
 # iterating again to modify pages only once:
 for category in generated_list_dict:
     for i, rel_path in enumerate(generated_list_dict[category]):
+        # creating the file handler object
         fileObj = fileAsStrHandler(rel_path)
 
+        # global insertions, they are meant to be inserted in every file
         for insertpoint in global_insertions:
             fileObj.simple_replace(insertpoint, global_insertions[insertpoint])
 
+        # global exclusions, they are meant to be removed in every file
         for exclusion_specs in global_exclusions:
             to_remove = find_between_strings(
                 fileObj.content,
@@ -169,7 +182,11 @@ for category in generated_list_dict:
                     + exclusion_specs["points"][1]
                 )
 
+        # category specific insertions (topbar and sidebar)
         fileObj.simple_replace("<head>", "<head>\n" + category_bars[category])
+
+        # inserting the explanations:
+        fileObj.simple_replace("</body>", charts_explanations[rel_path] + "\n</body>")
 
         fileObj.rewrite()
 
