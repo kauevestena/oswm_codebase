@@ -1,5 +1,6 @@
 from statistics_specs import *
 import argparse
+import numpy as np
 
 # add an option "--single" to generate a single chart specified as an string
 parser = argparse.ArgumentParser()
@@ -41,6 +42,10 @@ for category in gdfs_dict:
 
     # if category == "kerbs":
     #     cat_gdf["length(km)"] = 0
+
+    # replace the -1 in "n_revs" with np.nan
+    if "n_revs" in cat_gdf:
+        cat_gdf["n_revs"] = cat_gdf["n_revs"].replace(-1, np.nan)
 
 # # creating a meta-category "all_data" for all data:
 gdfs_dict["all_data"] = pd.concat(gdfs_dict.values(), ignore_index=True)

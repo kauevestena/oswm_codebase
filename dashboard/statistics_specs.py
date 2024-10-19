@@ -363,9 +363,8 @@ def get_charts_specs(gdfs_dict):
                     "title_fontsize": 24,
                     "len_field": None,  # it works for count
                     "color_field": "length(km)",
-                    "filter_out_opt": None,
+                    # "filter_out_opt": None, # TODO!
                     # "excluding_categories": ["kerbs"],  # include "pedestrian_areas" ?
-                    # TODO:
                 },
                 "title": "Layer Feature Count",
             },
@@ -401,6 +400,67 @@ def get_charts_specs(gdfs_dict):
                     "title_fontsize": 24,
                 },
                 "title": "Tactile Paving Presence",
+            },
+            "all_data_lit": {
+                "function": create_barchartV2,
+                "params": {
+                    "input_gdf": gdfs_dict.get("all_data"),
+                    "fieldname": "lit",
+                    "title": "All-Category Lighting Status",
+                    "str_to_append": " type",
+                    "title_fontsize": 24,
+                },
+                "title": "Lighting Status",
+            },
+            "all_data_traffic_calming": {
+                "function": create_barchartV2,
+                "params": {
+                    "input_gdf": gdfs_dict.get("all_data"),
+                    "fieldname": "traffic_calming",
+                    "title": "All-Category Traffic Calming Presence",
+                    "str_to_append": " type",
+                    "title_fontsize": 24,
+                    "len_field": None,  # it works for count
+                    "color_field": "length(km)",
+                },
+                "title": "Traffic Calming Status",
+            },
+            "all_data_wheelchair_tag": {
+                "function": create_barchartV2,
+                "params": {
+                    "input_gdf": gdfs_dict.get("all_data"),
+                    "fieldname": "wheelchair",
+                    "title": "All-Category Traffic wheelchair=* tag",
+                    "str_to_append": " type",
+                    "title_fontsize": 24,
+                    "len_field": None,  # it works for count
+                    "color_field": "length(km)",
+                },
+                "title": "wheelchair=*",
+            },
+            "all_data_age": {
+                "function": create_linked_boxplot_histogram,
+                "params": {
+                    "df": gdfs_dict.get("all_data"),
+                    "column": "age",
+                    "boxplot_title": "All-Category Update Age (Years)",
+                    "color_field": "category",
+                    "height": 200,
+                },
+                "title": "Update Age",
+            },
+            "all_data_n_revs": {
+                "function": create_linked_boxplot_histogram,
+                "params": {
+                    "df": gdfs_dict.get("all_data"),
+                    "column": "n_revs",
+                    "boxplot_title": "All-Category Number of Revisions",
+                    "color_field": "category",
+                    "maxbins": 30,
+                    "height": 200,
+                    # "tooltip_fields": ["id"],
+                },
+                "title": "Number of Revisions",
             },
         },
     }

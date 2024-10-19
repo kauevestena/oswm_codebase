@@ -450,3 +450,6 @@ dashboard_main_page_insertions = {
 
     </body>"""
 }
+
+
+explanation_base = '<h1 style="padding-left: 14%;"> Explanation: {} </h1>'
