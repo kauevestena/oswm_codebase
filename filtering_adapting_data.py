@@ -100,6 +100,7 @@ for category in gdf_dict:
             "nodes",
             "element_type",
             "id",
+            "ways",
         ]
     ]
 

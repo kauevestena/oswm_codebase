@@ -1,4 +1,5 @@
 import sys
+from tqdm import tqdm
 
 sys.path.append("oswm_codebase")
 from functions import *
@@ -7,10 +8,10 @@ tags_dict = read_json("quality_check/feature_keys.json")
 
 wiki_absence_dict = {}
 
-for category in tags_dict:
+for category in tqdm(tags_dict):
     wiki_absence_dict[category] = []
-    for osm_key in tags_dict[category]:
-        print("testing ", osm_key)
+    for osm_key in tqdm(tags_dict[category], desc=category):
+        # print("testing ", osm_key)
 
         if not check_if_wikipage_exists(osm_key):
             print("    ", osm_key, " absent!!")
