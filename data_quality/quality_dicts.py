@@ -18,29 +18,36 @@ category = {
 
 improper_keys = {
     "sidewalks": {
-        "kerb": 'sidewalks are drawn at path axis, kerb acess points should be literally at the kerb ("meio-fio", pt-br)',
+        "kerb": "sidewalks are drawn at path axis, kerb acess points should be literally at the kerb",
         "opening_hours": "if it has opening hours it may be a private pathway, not a sidewalk",
         "paving_stones": 'paving stones is a value for "surface key"',
         "crossing": "It's inappropriate for Sidewalks, probably mistakenly tagged",
         "barrier": "if there's a barrier it may be a node in the sidewalk, but not the sidewalk itself",
+        "building": "sidewalks are not buildings",
     },
     "crossings": {
         "kerb": "kerbs are points, crossings are lines",
         "barrier": "a crossing with a barrier may not be an actual crossing...",
+        "name": "most crossings have no name",
+        "building": "crossings are not buildings",
     },
     "kerbs": {
         "opening_hours": "a crossing may have opening hours (brigdes?), but not a kerb",
         "crossing": "It's inappropriate for Kerbs, it's for crossings",
         "crossing_ref": "It's inappropriate for Kerbs, it's for crossings",
         "name": "most kerbs have no name",
-        "traffic_calming": "generally the trafic calming refers to the crossing",
+        "building": "kerbs are not buildings",
+    },
+    "other_footways": {
+        "kerb": "kerbs are points, other footways are lines",
+        "building": "footways are not buildings",
     },
 }
 
 uncanny_keys = {
     "sidewalks": {
         "traffic_signals": "may be used for crossings",
-        "name": "most sidewalks dont have an actual name",
+        "name": "most sidewalks don't have an actual name",
     },
     "crossings": {
         "level": "according to wiki it may be used only for indoor or if bound to a floor..."
@@ -51,6 +58,7 @@ uncanny_keys = {
         "traffic_signals:vibration": "it may be referring to the crossing, may be OK",
         "crossing:island": "if in the middle of a crossing It's fine!! ",
     },
+    "other_footways": {},
 }
 
 replaceable_values = {
@@ -63,6 +71,7 @@ replaceable_values = {
         }
     },
     "kerbs": {},
+    "other_footways": {},
 }
 
 invalid_characters = {
@@ -79,11 +88,13 @@ categories_dict_keys = {
             "sidewalks": {},
             "crossings": {},
             "kerbs": {},
+            "other_footways": {},
         },
         "occ_count": {
             "sidewalks": 0,
             "crossings": 0,
             "kerbs": 0,
+            "other_footways": 0,
         },
     },
     "uncanny_keys": {
@@ -94,11 +105,13 @@ categories_dict_keys = {
             "sidewalks": {},
             "crossings": {},
             "kerbs": {},
+            "other_footways": {},
         },
         "occ_count": {
             "sidewalks": 0,
             "crossings": 0,
             "kerbs": 0,
+            "other_footways": 0,
         },
     },
     "keys_without_wiki": {
@@ -109,11 +122,13 @@ categories_dict_keys = {
             "sidewalks": {},
             "crossings": {},
             "kerbs": {},
+            "other_footways": {},
         },
         "occ_count": {
             "sidewalks": 0,
             "crossings": 0,
             "kerbs": 0,
+            "other_footways": 0,
         },
     },
     "replaceable_values": {
@@ -124,11 +139,13 @@ categories_dict_keys = {
             "sidewalks": {},
             "crossings": {},
             "kerbs": {},
+            "other_footways": {},
         },
         "occ_count": {
             "sidewalks": 0,
             "crossings": 0,
             "kerbs": 0,
+            "other_footways": 0,
         },
     },
     "wrong_mispelled_or_unlisted_values": {
@@ -139,11 +156,13 @@ categories_dict_keys = {
             "sidewalks": {},
             "crossings": {},
             "kerbs": {},
+            "other_footways": {},
         },
         "occ_count": {
             "sidewalks": 0,
             "crossings": 0,
             "kerbs": 0,
+            "other_footways": 0,
         },
     },
     "invalid_characters": {
@@ -154,11 +173,13 @@ categories_dict_keys = {
             "sidewalks": {},
             "crossings": {},
             "kerbs": {},
+            "other_footways": {},
         },
         "occ_count": {
             "sidewalks": 0,
             "crossings": 0,
             "kerbs": 0,
+            "other_footways": 0,
         },
     },
     # "missing_value": {
@@ -176,11 +197,4 @@ categories_dict_keys = {
     #                 'kerbs':     0,
     #             },
     # },
-}
-
-
-occurrence_per_feature = {
-    "sidewalks": {},
-    "crossings": {},
-    "kerbs": {},
 }

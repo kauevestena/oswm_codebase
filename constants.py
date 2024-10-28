@@ -525,7 +525,27 @@ fields_values_properties = {
             },
         },
     },
+    "other_footways": {
+        # by now just a copy of sidewalks, since mostly the same
+    },
 }
+
+
+# values to be copied:
+fields_values_properties["sidewalks"]["tactile_paving"] = fields_values_properties[
+    "kerbs"
+]["tactile_paving"]
+
+fields_values_properties["crossings"]["surface"] = fields_values_properties[
+    "sidewalks"
+]["surface"]
+
+fields_values_properties["crossings"]["smoothness"] = fields_values_properties[
+    "sidewalks"
+]["smoothness"]
+
+# adding fields for 'other_footways':
+fields_values_properties["other_footways"] = fields_values_properties["sidewalks"]
 
 # for the map:
 numeric_themes = {
@@ -566,21 +586,7 @@ numeric_themes = {
     },
 }
 
-layernames = [key for key in fields_values_properties]
-
-
-# values to be copied:
-fields_values_properties["sidewalks"]["tactile_paving"] = fields_values_properties[
-    "kerbs"
-]["tactile_paving"]
-
-fields_values_properties["crossings"]["surface"] = fields_values_properties[
-    "sidewalks"
-]["surface"]
-
-fields_values_properties["crossings"]["smoothness"] = fields_values_properties[
-    "sidewalks"
-]["smoothness"]
+# layernames = [key for key in fields_values_properties] # DEPRECATED
 
 
 # required_fields:

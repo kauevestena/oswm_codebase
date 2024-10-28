@@ -1,8 +1,6 @@
 import sys
 from tqdm import tqdm
-
-sys.path.append("oswm_codebase")
-from functions import *
+from dq_funcs import *
 
 tags_dict = read_json("quality_check/feature_keys.json")
 

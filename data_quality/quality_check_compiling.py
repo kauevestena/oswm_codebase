@@ -1,179 +1,182 @@
-import sys,csv
+import sys, csv
+
 # import pandas as pd
 import geopandas as gpd
-sys.path.append('oswm_codebase')
-sys.path.append('oswm_codebase/data_quality')
+from dq_funcs import *
 from quality_dicts import *
 from functions import *
 
-def add_to_occurrences(category,id):
-    if id in occurrence_per_feature[category]:
-        occurrence_per_feature[category][id] += 1
-    else:
-        occurrence_per_feature[category][id] = 1
 
-# gdfs:
-sidewalks_gdf = gpd.read_parquet('data/sidewalks_raw' + data_format)
-crossings_gdf = gpd.read_parquet('data/crossings_raw' + data_format)
-kerbs_gdf = gpd.read_parquet('data/kerbs_raw' + data_format)
+# # gdfs:
+# sidewalks_gdf = gpd.read_parquet("data/sidewalks_raw" + data_format)
+# crossings_gdf = gpd.read_parquet("data/crossings_raw" + data_format)
+# kerbs_gdf = gpd.read_parquet("data/kerbs_raw" + data_format)
 
-# dict for iteration
-gdf_dict = {'sidewalks':sidewalks_gdf,'crossings':crossings_gdf,'kerbs':kerbs_gdf}
+# # dict for iteration
+# gdf_dict = {"sidewalks": sidewalks_gdf, "crossings": crossings_gdf, "kerbs": kerbs_gdf}
 
-type_dict = {'sidewalks':'way','crossings':'way','kerbs':'node'}
+# type_dict = {"sidewalks": "way", "crossings": "way", "kerbs": "node"}
 
-# reading 
+gdf_dict = get_gdfs_dict(raw_data=True)
+
+type_dict = geom_type_dict.copy()
+
+type_dict = {k: v[0] for k, v in type_dict.items()}  # TODO: check if this works
+# reading
 existing_keys = read_json(feat_keys_path)
 
 
 # iterating through feature categories:
 for category in gdf_dict:
-    print('for: ',category)
-    for i,row in enumerate(gdf_dict[category].itertuples()):
+    print("for: ", category)
+    for i, row in enumerate(gdf_dict[category].itertuples()):
 
         if i % 50 == 0:
-            print('    ',i, ' features')
+            print("    ", i, " features")
 
         # iterating through quality categories:
         for quality_category in categories_dict_keys:
 
             # using an alias to create a shortcut:
             curr = categories_dict_keys[quality_category]
-            
-            if curr['type'] == 'keys':
-                if isinstance(curr['dict'],dict):
 
-                    for osmkey in curr['dict'][category]:
-                        value = getattr(row,osmkey,None)
+            if curr["type"] == "keys":
+                if isinstance(curr["dict"], dict):
+
+                    for osmkey in curr["dict"][category]:
+                        value = getattr(row, osmkey, None)
 
                         if value:
-                            if not row.id in curr['occurrences'][category]:
-                                val_list = [row.id,osmkey,value,curr['dict'][category][osmkey]]
+                            if not row.id in curr["occurrences"][category]:
+                                val_list = [
+                                    row.id,
+                                    osmkey,
+                                    value,
+                                    curr["dict"][category][osmkey],
+                                ]
 
-                                curr['occurrences'][category][row.id] = val_list
+                                curr["occurrences"][category][row.id] = val_list
 
+                                curr["occ_count"][category] += 1
 
-                                curr['occ_count'][category] += 1
+                                add_to_occurrences(category, row.id)
 
-                                add_to_occurrences(category,row.id)
-
-
-                if isinstance(curr['dict'],str):
-                    curr_ref_dict = read_json(curr['dict'])[category]
+                if isinstance(curr["dict"], str):
+                    curr_ref_dict = read_json(curr["dict"])[category]
 
                     for osmkey in curr_ref_dict:
 
-                        value = getattr(row,osmkey,None)
+                        value = getattr(row, osmkey, None)
 
                         if value:
-                            if not row.id in curr['occurrences'][category]:
+                            if not row.id in curr["occurrences"][category]:
 
-                                val_list = [row.id,osmkey,value,'no wiki page for this key']
+                                val_list = [
+                                    row.id,
+                                    osmkey,
+                                    value,
+                                    "no wiki page for this key",
+                                ]
 
-                                curr['occurrences'][category][row.id] = val_list
+                                curr["occurrences"][category][row.id] = val_list
 
+                                curr["occ_count"][category] += 1
 
-                                curr['occ_count'][category] += 1
+                                add_to_occurrences(category, row.id)
 
-                                add_to_occurrences(category,row.id)
+            if curr["type"] == "values":
+                if isinstance(curr["dict"], dict):
+                    for osmkey in curr["dict"][category]:
+                        for osmvalue in curr["dict"][category][osmkey]:
+                            if getattr(row, osmkey, None) == osmvalue:
+                                if not row.id in curr["occurrences"][category]:
 
+                                    val_list = [
+                                        row.id,
+                                        osmkey,
+                                        osmvalue,
+                                        curr["dict"][category][osmkey][osmvalue],
+                                    ]
 
+                                    curr["occurrences"][category][row.id] = val_list
 
-                
+                                    curr["occ_count"][category] += 1
 
+                                    add_to_occurrences(category, row.id)
 
-
-
-            if curr['type'] == 'values':
-                if isinstance(curr['dict'],dict):
-                    for osmkey in curr['dict'][category]:
-                        for osmvalue in curr['dict'][category][osmkey]:
-                            if getattr(row,osmkey,None) == osmvalue:
-                                if not row.id in curr['occurrences'][category]:
-                                
-                                
-                                    val_list = [row.id,osmkey,osmvalue,curr['dict'][category][osmkey][osmvalue]]
-                                    
-                                    
-                                    curr['occurrences'][category][row.id] = val_list
-
-                                    curr['occ_count'][category] += 1
-
-
-                                    add_to_occurrences(category,row.id)
-
-
-                if isinstance(curr['dict'],str):
-                    curr_ref_dict = read_json(curr['dict'])[category]
+                if isinstance(curr["dict"], str):
+                    curr_ref_dict = read_json(curr["dict"])[category]
 
                     for osmkey in curr_ref_dict:
                         for osmvalue in curr_ref_dict[osmkey]:
-                            value = getattr(row,osmkey,None)
+                            value = getattr(row, osmkey, None)
 
-                            if value :
+                            if value:
                                 if value not in curr_ref_dict[osmkey]:
-                                     if not row.id in curr['occurrences'][category]:
+                                    if not row.id in curr["occurrences"][category]:
 
+                                        val_list = [
+                                            row.id,
+                                            osmkey,
+                                            value,
+                                            "unlisted at accepted/known values, probably wrong/misspelled",
+                                        ]
 
+                                        curr["occurrences"][category][row.id] = val_list
 
-                                        val_list = [row.id,osmkey,value,'unlisted at accepted/known values, probably wrong/misspelled']
+                                        curr["occ_count"][category] += 1
 
-                                        curr['occurrences'][category][row.id] = val_list
+                                        add_to_occurrences(category, row.id)
 
+            if curr["type"] == "tags":
 
-                                        curr['occ_count'][category] += 1
-
-
-                                        add_to_occurrences(category,row.id)
-
-            if curr['type'] == 'tags':
-
-                for character in curr['dict']:
+                for character in curr["dict"]:
                     for field in row:
-                        if isinstance(field,str):
+                        if isinstance(field, str):
                             if character in field:
-                                val_list = [row.id,'ANY (check at feature link)',field,curr['dict'][character]]
+                                val_list = [
+                                    row.id,
+                                    "ANY (check at feature link)",
+                                    field,
+                                    curr["dict"][character],
+                                ]
 
-                                curr['occurrences'][category][row.id] = val_list
+                                curr["occurrences"][category][row.id] = val_list
 
+                                curr["occ_count"][category] += 1
 
-                                curr['occ_count'][category] += 1
-
-
-                                add_to_occurrences(category,row.id)
+                                add_to_occurrences(category, row.id)
 
                                 break
 
 
-
-
-    
-
-
-
 ######### PART 2: files generation
 
-print('generating subpages and files')
+print("generating subpages and files")
 
 # iterating again to generate the files:
 for category in gdf_dict:
     for quality_category in categories_dict_keys:
-        csvpath = f'quality_check/tables/{quality_category}_{category}.csv'
+        csvpath = f"quality_check/tables/{quality_category}_{category}.csv"
 
-        pagepath = f'quality_check/pages/{quality_category}_{category}.html'
-
-
+        pagepath = f"quality_check/pages/{quality_category}_{category}.html"
 
         curr = categories_dict_keys[quality_category]
 
         # print(quality_category['occurrences'])
 
+        curr["occ_count"][category] = gen_quality_report_page_and_files(
+            pagepath,
+            list(curr["occurrences"][category].values()),
+            type_dict[category],
+            category,
+            quality_category,
+            curr["about"],
+            curr["type"],
+            csvpath,
+        )
 
-
-        curr['occ_count'][category] = gen_quality_report_page_and_files(pagepath,list(curr['occurrences'][category].values()),type_dict[category],category,quality_category,curr['about'],curr['type'],csvpath)
-
-        print(curr['occ_count'][category])
-
+        print(curr["occ_count"][category])
 
         # with open(csvpath,'w+') as file:
         #     writer = csv.writer(file,delimiter=',',quotechar='"')
@@ -181,28 +184,38 @@ for category in gdf_dict:
         #     # header
         #     writer.writerow(['osm_id','key','value','commentary'])
 
-
         #     for line_as_list in curr['occurrences'][category].values():
         #         # writer.write(','.join(list(map(str,linelist)))+'\n')
 
         #         writer.writerow(line_as_list)
-    
 
-    number_occ_pagepath  = f'quality_check/pages/count_by_feature_{category}.html'
-
+    number_occ_pagepath = f"quality_check/pages/count_by_feature_{category}.html"
 
     # THX: https://stackoverflow.com/a/613218/4436950
-    sorted_occ_dict = dict(sorted(occurrence_per_feature[category].items(), key=lambda item: item[1],reverse=True))
-    
-    
+    sorted_occ_dict = dict(
+        sorted(
+            occurrence_per_feature[category].items(),
+            key=lambda item: item[1],
+            reverse=True,
+        )
+    )
 
-    gen_quality_report_page_and_files(number_occ_pagepath,list(map(list,sorted_occ_dict.items())),type_dict[category],category,'occurrence_per_feature','Features with more than one occurrence may be prioritized!!','count',f'quality_check/tables/counts_{category}.csv',True)
-
+    gen_quality_report_page_and_files(
+        number_occ_pagepath,
+        list(map(list, sorted_occ_dict.items())),
+        type_dict[category],
+        category,
+        "occurrence_per_feature",
+        "Features with more than one occurrence may be prioritized!!",
+        "count",
+        f"quality_check/tables/counts_{category}.csv",
+        True,
+    )
 
 
 ######### PART 3: Quality Check Main page
 
-print('generating QC main page')
+print("generating QC main page")
 
 tablepart = """
 
@@ -229,25 +242,20 @@ for quality_category in categories_dict_keys:
 
     tablepart += f"<td>{quality_category}</td>"
 
-
     for category in gdf_dict:
 
         tablepart += f'<td>  <a href="{node_homepage_url}quality_check/pages/{quality_category}_{category}.html"> {categories_dict_keys[quality_category]["occ_count"][category]} </a> </td>'
 
-    
     tablepart += "</tr>\n"
 
-    about_part += f"{quality_category} : {categories_dict_keys[quality_category]['about']}<br>\n"
+    about_part += (
+        f"{quality_category} : {categories_dict_keys[quality_category]['about']}<br>\n"
+    )
 
 about_part += "</h3>"
 
 
-        
-
-
-
-
-qc_mainpage_path = 'quality_check/oswm_qc_main.html'
+qc_mainpage_path = "quality_check/oswm_qc_main.html"
 
 qcmainpage_txt = f"""
 
@@ -330,14 +338,14 @@ in a future topological and geometric errors may be included!!
 
 """
 
-with open(qc_mainpage_path,'w+') as writer:
+with open(qc_mainpage_path, "w+") as writer:
     writer.write(qcmainpage_txt)
 
 
-# AGING PART:
+# AGING RECORD PART:
 
 # generate the "report" of the updating info
 record_datetime("Data Quality Tool")
-sleep(.1)
+sleep(0.1)
 
 gen_updating_infotable_page()
