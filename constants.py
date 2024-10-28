@@ -634,6 +634,16 @@ geom_type_dict = {
     "other_footways": ["LineString", "Polygon", "MultiPolygon"],
 }
 
+# basic geometry mapping, generally just to build feature links:
+geom_mapping = {
+    "Point": "node",
+    "LineString": "way",
+    "Polygon": "way",
+    "MultiPolygon": "relation",
+    "MultiLineString": "way",
+}
+
+
 all_layers_geom_types = {k: v[0] for k, v in geom_type_dict.items()}
 del all_layers_geom_types["other_footways"]
 for subcategory in other_footways_geometry_types:

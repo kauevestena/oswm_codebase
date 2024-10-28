@@ -245,7 +245,7 @@ def gen_quality_report_page_and_files(
 
     valid_featcount = 0
 
-    with open(csvpath, "w+") as file:
+    with open(csvpath, "w+", encoding="utf-8") as file:
         writer = csv.writer(file, delimiter=",", quotechar='"')
         writer.writerow(["osm_id", "key", "value", "commentary"])
 
@@ -274,7 +274,7 @@ def gen_quality_report_page_and_files(
                 if line:
                     print("skipped", line)
 
-    with open(outpath, "w+") as writer:
+    with open(outpath, "w+", encoding="utf-8") as writer:
 
         page = f"""
 
@@ -545,15 +545,15 @@ def print_relevant_columnamesV2(
     return as_list
 
 
-
-def check_if_wikipage_exists(name, category="Key:", wiki_page="https://wiki.openstreetmap.org/wiki/"):
+def check_if_wikipage_exists(
+    name, category="Key:", wiki_page="https://wiki.openstreetmap.org/wiki/"
+):
     url = f"{wiki_page}{category}{name}"
     try:
         response = requests.head(url)
         return response.status_code == 200
     except requests.RequestException:
         return False
-
 
 
 """

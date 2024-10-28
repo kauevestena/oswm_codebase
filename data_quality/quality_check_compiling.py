@@ -21,7 +21,9 @@ gdf_dict = get_gdfs_dict(raw_data=True)
 
 type_dict = geom_type_dict.copy()
 
-type_dict = {k: v[0] for k, v in type_dict.items()}  # TODO: check if this works
+type_dict = {
+    k: geom_mapping[v[0]] for k, v in type_dict.items()
+}  # TODO: check if this works
 # reading
 existing_keys = read_json(feat_keys_path)
 
