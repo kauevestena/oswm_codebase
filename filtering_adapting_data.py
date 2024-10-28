@@ -72,13 +72,36 @@ sidewalks_crossings_unary_buffer = unary_union(
     [sidewalks_big_unary_buffer, crossings_big_unary_buffer]
 )
 
+# to store the keys present in raw data:
+raw_data_keys = {}
+
 # removing entries that arent in the buffer:
 # dealing with the data:
 for category in gdf_dict:
+
     # creating the reference:
     curr_gdf = gdf_dict[category]
 
     print(category)
+
+    print("     - Creating dict of OSM keys in data")
+
+    raw_data_keys[category] = [
+        k
+        for k in gdf_dict[category].keys()
+        if k
+        not in [
+            "geometry",
+            "osmid",
+            "osm_type",
+            "osm_key",
+            "osm_value",
+            "osm_id",
+            "nodes",
+            "element_type",
+            "id",
+        ]
+    ]
 
     if (category != "sidewalks") and (category != "other_footways"):
         print(f"     - Removing unconnected features")
@@ -265,6 +288,8 @@ for category in gdf_dict:
 
     save_geoparquet(curr_gdf, f"data/{category}" + data_format)
 
+# saving the keys in data:
+dump_json(raw_data_keys, feat_keys_path)
 
 print("Finishing...")
 

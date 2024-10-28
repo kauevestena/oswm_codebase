@@ -545,20 +545,15 @@ def print_relevant_columnamesV2(
     return as_list
 
 
-def check_if_wikipage_exists(
-    name, category="Key:", wiki_page="https://wiki.openstreetmap.org/wiki/"
-):
 
+def check_if_wikipage_exists(name, category="Key:", wiki_page="https://wiki.openstreetmap.org/wiki/"):
     url = f"{wiki_page}{category}{name}"
+    try:
+        response = requests.head(url)
+        return response.status_code == 200
+    except requests.RequestException:
+        return False
 
-    while True:
-        try:
-            status = requests.head(url).status_code
-            break
-        except:
-            pass
-
-    return status == 200
 
 
 """
