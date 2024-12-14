@@ -171,12 +171,16 @@
             <p>Second click: End Point</p>
             <p>(then start over)</p>
             <h5>Keep in mind that it relies upon existing OSM data, so no-data islands can occur!</h5>
-            <div class="modal-footer">
+
+            <!-- TODO: Add checkbox for "Don't show again" -->
+            <!-- <div class="modal-footer">
                 <label>
                     <input type="checkbox" id="dontShowAgain">
                     Don't show this again
                 </label>
-            </div>
+            </div> -->
+
+
             <div class="actions">
                 <button id="modalOkBtn">OK</button>
             </div>
@@ -464,10 +468,14 @@
         }
 
         document.getElementById('modalOkBtn').addEventListener('click', () => {
-            const dontShowChecked = document.getElementById('dontShowAgain').checked;
-            if (dontShowChecked) {
-                localStorage.setItem('welcomeModalDontShow', 'true');
-            }
+
+            // TODO: Save dontShowAgain
+            // const dontShowChecked = document.getElementById('dontShowAgain').checked;
+            // if (dontShowChecked) {
+            //     localStorage.setItem('welcomeModalDontShow', 'true');
+            // }
+
+
             document.getElementById('welcomeModalOverlay').style.display = 'none';
         });
     </script>
