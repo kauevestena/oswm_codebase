@@ -15,7 +15,7 @@ modules_metadata = {
         "text": "Webmap",
     },
     "routing": {
-        "url": "https://kauevestena.github.io/opensidewalkmap_beta/routing.html",
+        "url": f"{node_homepage_url}oswm_codebase/routing/routing_demo.html",
         "img_src": f"{assets_homepage_path}oswm_route_img.png",
         "text": "Optimized Routing",
     },
