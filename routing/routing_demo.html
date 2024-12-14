@@ -135,7 +135,7 @@
                             'line-cap': 'round'
                         },
                         'paint': {
-                            'line-color': '#ff0000',
+                            'line-color': 'steelblue',
                             'line-width': 4
                         }
                     });
@@ -160,6 +160,23 @@
                         directed: false,
                         weightFn: (a, b) => turf.distance(turf.point(a), turf.point(b))
                     });
+
+                    // add the boundaries geojson:
+                    map.addSource('boundaries', {
+                        'type': 'geojson',
+                        'data': '../../data/boundaries.geojson'
+                    });
+
+                    map.addLayer({
+                        'id': 'boundary-layer',
+                        'type': 'line',
+                        'source': 'boundaries',
+
+                        'paint': {
+                            'line-color': '#000000',
+                            'line-width': .3
+                        }
+                    });
                 });
             })
 
@@ -176,8 +193,8 @@
 
             if (!start) {
                 start = snappedCoords;
-                addMarker(snappedCoords, 'start-marker', 'green');
-                showInfoBox(false); // Initially hide info if new start is chosen
+                addMarker(snappedCoords, 'start-marker', 'gray');
+                //showInfoBox(false); // Initially hide info if new start is chosen
             } else if (!end) {
                 end = snappedCoords;
                 addMarker(snappedCoords, 'end-marker', 'red');
@@ -186,7 +203,7 @@
                 // Reset if both points are already selected
                 resetPath();
                 start = snappedCoords;
-                addMarker(snappedCoords, 'start-marker', 'green');
+                addMarker(snappedCoords, 'start-marker', 'gray');
             }
         });
 
