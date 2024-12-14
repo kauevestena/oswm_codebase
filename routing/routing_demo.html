@@ -64,12 +64,81 @@
             position: fixed;
             left: 2px;
             top: 2px;
-            z-index: 999999;
+            z-index: 1000;
         }
 
         .responsive {
             max-width: 40%;
             height: auto;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+
+        .modal {
+            background: #fff;
+            width: 300px;
+            max-width: 80%;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: Arial, sans-serif;
+            position: relative;
+            margin: 0;
+            /* Remove default margin since it's now centered by flex */
+        }
+
+        .modal h2 {
+            margin-top: 0;
+        }
+
+        .modal p {
+            margin: 15px 0;
+        }
+
+        .modal .actions {
+            text-align: right;
+        }
+
+        .modal .actions button {
+            background: steelblue;
+            color: #fff;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .modal .actions button:hover {
+            background: #4682B4;
+        }
+
+        .modal-footer {
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-footer label {
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        .modal-footer input {
+            margin-right: 5px;
         }
     </style>
 
@@ -91,6 +160,26 @@
         <div class="distance">Distance: <span id="distanceVal">-</span> km</div>
         <div class="time">Est. Time: <span id="timeVal">-</span> min</div>
         <div class="no-route" style="display:none;">No route found</div>
+    </div>
+
+    <!-- Modal Structure -->
+    <div class="modal-overlay" id="welcomeModalOverlay">
+        <div class="modal" id="welcomeModal">
+            <h2>welcome to the OSWM Routing Demo</h2>
+            <h4>still experimental, in the future optimized profiles are coming!</h4>
+            <p>First click: Start Point</p>
+            <p>Second click: End Point</p>
+            <p>(then start over)</p>
+            <div class="modal-footer">
+                <label>
+                    <input type="checkbox" id="dontShowAgain">
+                    Don't show this again
+                </label>
+            </div>
+            <div class="actions">
+                <button id="modalOkBtn">OK</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -171,14 +260,16 @@
                         'id': 'boundary-layer',
                         'type': 'line',
                         'source': 'boundaries',
-
                         'paint': {
                             'line-color': '#000000',
                             'line-width': .3
                         }
                     });
+
+                    // Show modal if not disabled
+                    showWelcomeModalIfNeeded();
                 });
-            })
+            });
 
         // Add click event to select start and end points
         map.on('click', (e) => {
@@ -193,17 +284,17 @@
 
             if (!start) {
                 start = snappedCoords;
-                addMarker(snappedCoords, 'start-marker', 'gray');
-                //showInfoBox(false); // Initially hide info if new start is chosen
+                addMarker(snappedCoords, 'start-marker', '#1fb30d');
+                showInfoBox(false); // Initially hide info if new start is chosen
             } else if (!end) {
                 end = snappedCoords;
-                addMarker(snappedCoords, 'end-marker', 'red');
+                addMarker(snappedCoords, 'end-marker', '#ff4749');
                 splitLinesAndFindPath();
             } else {
                 // Reset if both points are already selected
                 resetPath();
                 start = snappedCoords;
-                addMarker(snappedCoords, 'start-marker', 'gray');
+                addMarker(snappedCoords, 'start-marker', '#1fb30d');
             }
         });
 
@@ -211,10 +302,11 @@
         function addMarker(coords, id, color) {
             const el = document.createElement('div');
             el.className = 'marker';
-            el.style.backgroundColor = color;
             el.style.width = '10px';
             el.style.height = '10px';
             el.style.borderRadius = '50%';
+            el.color = color;
+            // el.draggable = true; // TODO
 
             new maplibregl.Marker(el).setLngLat(coords).addTo(map);
         }
@@ -322,7 +414,7 @@
                     console.warn("Retrying with increased densification...");
                     splitLinesAndFindPath(true);
                 } else {
-                    showInfoBox(true, true); // Show no route found message
+                    showInfoBox(true, true);
                 }
             }
         }
@@ -361,6 +453,22 @@
                 }
             }
         }
+
+        // Modal Functions
+        function showWelcomeModalIfNeeded() {
+            const dontShow = localStorage.getItem('welcomeModalDontShow');
+            if (!dontShow) {
+                document.getElementById('welcomeModalOverlay').style.display = 'block';
+            }
+        }
+
+        document.getElementById('modalOkBtn').addEventListener('click', () => {
+            const dontShowChecked = document.getElementById('dontShowAgain').checked;
+            if (dontShowChecked) {
+                localStorage.setItem('welcomeModalDontShow', 'true');
+            }
+            document.getElementById('welcomeModalOverlay').style.display = 'none';
+        });
     </script>
 </body>
 
