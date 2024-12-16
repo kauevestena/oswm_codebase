@@ -98,7 +98,7 @@ for category in gdf_dict:
             "osm_value",
             "osm_id",
             "nodes",
-            "element_type",
+            "element",
             "id",
             "ways",
         ]

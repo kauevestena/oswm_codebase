@@ -196,7 +196,7 @@ def create_double_mat_and_bar(
     yh2="smoothness",
     hcolor=None,
     fontsize=24,
-    # tooltip_fields: list = ["element_type", "id"], # deprecated, as there's generally too much data
+    # tooltip_fields: list = ["element", "id"], # deprecated, as there's generally too much data
 ):
 
     # preselect only the needed columns:
