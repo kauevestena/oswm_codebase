@@ -156,8 +156,13 @@ for category in gdf_dict:
 
 print("generating subpages and files")
 
+# to have all categories in the header:
+table_category_headers = []
+
 # iterating again to generate the files:
 for category in gdf_dict:
+    table_category_headers.append(f"<th><b>{category}</b></th>")
+
     for quality_category in categories_dict_keys:
         csvpath = f"quality_check/tables/{quality_category}_{category}.csv"
 
@@ -219,13 +224,11 @@ for category in gdf_dict:
 
 print("generating QC main page")
 
-tablepart = """
+tablepart = f"""
 
     <tr>
     <th><b>Category</b></th>
-    <th><b>Sidewalks</b></th>
-    <th><b>Crossings</b></th>
-    <th><b>Kerbs</b></th>
+    {'\n'.join(table_category_headers)}
 
     
     </tr>
@@ -309,7 +312,7 @@ This Section is dedicated to find errors in the Features of interest in the Cont
 In some cases it's a clear mistake, but it can be just a mispelling or an uncommon value<br><br>
 
 currently, there are the categories presented at the table,<br> each one with the number of occurrences that are item-wise detailed at each link<br>
-<a href="https://github.com/kauevestena/opensidewalkmap_beta/issues">you can post suggestions at repo "issues" section</a>
+<a href="{node_homepage_url}issues">you can post suggestions at repo "issues" section</a>
 
 </p>
 
@@ -326,7 +329,7 @@ The information here can be <b>outdated</b><br>
 <br>
 </p>
 
-<h2>About Each category: </h2>
+<h2>Explaining Each category: </h2>
 
 {about_part}
 

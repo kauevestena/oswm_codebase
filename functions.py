@@ -156,10 +156,10 @@ def gen_updating_infotable_page(
 </head>
 <body>
 
-<h1><a href="https://kauevestena.github.io/opensidewalkmap_beta">OSWM</a> Updating Info</h1>
+<h1><a href="{node_homepage_url}">OSWM</a> Updating Info</h1>
 
 <p> About: OSWM is currently hosted at GitHub Pages, which means that it relies on commits to stay updated!!<br>
-if the data is too outdated you may <a href="https://github.com/kauevestena/opensidewalkmap_beta/issues">post an issue</a> or contact me!!</p>
+if the data is too outdated you may <a href="{node_homepage_url}issues">post an issue</a> or contact me!!</p>
 
 <table>
 
