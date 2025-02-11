@@ -21,19 +21,6 @@ for provider in PROVIDERS:
 
 topbar = write_dq_topbar(2)
 
-js_functions = f"""
-<script>
-    {file_as_string('oswm_codebase/assets/js_functions/topbar.js')}
-    
-</script>
-"""
-
-styles = f"""
-<style>
-    {file_as_string('oswm_codebase/assets/styles/topnav_styles.css')}
-    {file_as_string('oswm_codebase/assets/styles/accordion.css')}
-</style>
-"""
 
 external_qc_page = f"""
 
@@ -48,9 +35,9 @@ external_qc_page = f"""
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
    
    
-{styles}
+{styles_dq}
 
-{js_functions}	
+{js_functions_dq}	
 
 <title>OSWM DQ: Ext. Providers</title>
 
@@ -62,11 +49,16 @@ external_qc_page = f"""
 
 {topbar}
 
-<h1>OpenSidewalkMap DQ: External Providers</h1>
+<h2 style="text-align: center;">OpenSidewalkMap DQ: External Providers</h2>
 
 <p> Page in progress... </p>
 
+<p style="font-size: smaller"> This page holds DQ detections or visualizations from third-party providers, click to expand!</p>
+
+
 {main_content}
+
+<h6> Do you know/have any DQ tool that can be integrated here? please write and issue at <a href="{codebase_issues_url}">repository "issues" section</h6>
 
 </body>
 </html> 

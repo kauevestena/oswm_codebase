@@ -240,13 +240,6 @@ about_part = """
 
 topbar = write_dq_topbar(1)
 
-js_functions = f"""
-<script>
-    {file_as_string('oswm_codebase/assets/js_functions/topbar.js')}
-    
-</script>
-"""
-
 for quality_category in categories_dict_keys:
 
     tablepart += "<tr>"
@@ -279,9 +272,11 @@ qcmainpage_txt = f"""
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     
 
-{FONT_STYLE}
+{get_font_style(1)}
 
-{TABLES_STYLE}
+{get_tables_styles(1)}
+
+<link rel="stylesheet" href="../oswm_codebase/assets/styles/topnav_styles.css">
 
 <style>
 
@@ -308,7 +303,7 @@ h1 {{
 
 {topbar}
 
-{js_functions}
+{js_functions_dq}
 
 
 <title>OSWM DQ Home</title>

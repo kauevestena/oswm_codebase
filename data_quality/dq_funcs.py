@@ -10,6 +10,16 @@ qc_externalpage_path = "quality_check/oswm_qc_external.html"
 
 occurrence_per_feature = {k: {} for k in geom_type_dict.keys()}
 
+js_functions_dq = f"""
+    <script src="../oswm_codebase/assets/js_functions/topbar.js"></script>
+"""
+
+
+styles_dq = f"""
+    <link rel="stylesheet" href="../oswm_codebase/assets/styles/topnav_styles.css">
+    <link rel="stylesheet" href="../oswm_codebase/assets/styles/accordion.css">
+"""
+
 
 def add_to_occurrences(category, id):
     if id in occurrence_per_feature[category]:
@@ -22,7 +32,7 @@ def gen_content_OSMI():
     inner_content = f"""
     TBD
     """
-    content = details_item("OSMI", inner_content)
+    content = details_item("OSM Inspector (Geofabrik)", inner_content)
 
     return content
 
@@ -32,7 +42,7 @@ def gen_content_osmose():
     TBD
     """
 
-    content = details_item("Osmose", inner_content)
+    content = details_item("Osmose (OSM France)", inner_content)
 
     return content
 

@@ -105,29 +105,31 @@ def record_to_json(key, obj, json_path):
 
 """
 
-FONT_STYLE = f"""
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500&display=swap" rel="stylesheet"> 
+def relative_levels_string(levels_backward=1):
+    return "../" * levels_backward
 
 
-<style>
+def get_font_style(levels_backward=1):
 
-    {file_as_string('oswm_codebase/assets/styles/font_styles.css')}
+    relative_levels = relative_levels_string(levels_backward)
 
-</style>
+    return f"""
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500&display=swap" rel="stylesheet"> 
 
-"""
+    <link rel="stylesheet" href="{relative_levels}oswm_codebase/assets/styles/font_styles.css">
+    """
 
-TABLES_STYLE = f"""
 
-<style>
-    {file_as_string('oswm_codebase/assets/styles/table_styles.css')}
-    {file_as_string('oswm_codebase/assets/styles/topnav_styles.css')}
-</style>
+def get_tables_styles(levels_backward=1):
 
-"""
+    relative_levels = relative_levels_string(levels_backward)
+
+    return f"""
+    <link rel="stylesheet" href="{relative_levels}oswm_codebase/assets/styles/table_styles.css">
+    """
 
 
 def gen_updating_infotable_page(
@@ -148,11 +150,11 @@ def gen_updating_infotable_page(
 <html lang="en">
 <head>
 
-{FONT_STYLE}
+{get_font_style(1)}
 
 <title>OSWM Updating Info</title>
 
-{TABLES_STYLE}
+{get_tables_styles(1)}
 
 </head>
 <body>
@@ -283,11 +285,11 @@ def gen_quality_report_page_and_files(
         <html lang="en">
         <head>
 
-        {FONT_STYLE}
+        {get_font_style(2)}
 
         <title>OSWM DQT {category[0]} {quality_category}</title>
 
-        {TABLES_STYLE}
+        {get_tables_styles(2)}
 
         </head>
         <body>

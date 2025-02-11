@@ -134,6 +134,9 @@ data_updating_url = f"https://{USERNAME}.github.io/{REPO_NAME}/data/data_updatin
 # codebase as page:
 codebase_homepage = "https://kauevestena.github.io/oswm_codebase/"
 
+codebase_url = "https://github.com/kauevestena/oswm_codebase"
+codebase_issues_url = "https://github.com/kauevestena/oswm_codebase/issues"
+
 paths_dict = {
     "data": {
         "sidewalks": sidewalks_path,
