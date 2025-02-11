@@ -22,6 +22,7 @@ readme_path = "./README.md"
 node_home_path = "./index.html"
 boundaries_path = "./data/boundaries" + data_format
 boundaries_geojson_path = "./data/boundaries.geojson"
+boundaries_infos_path = "./data/boundary_infos.json"
 boundaries_md_path = "./data/boundaries_md.json"
 workflows_path = ".github/workflows"
 

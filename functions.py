@@ -17,7 +17,7 @@ from shapely import box
 
 
 def read_json(inputpath):
-    with open(inputpath) as reader:
+    with open(inputpath, encoding="utf8") as reader:
         data = reader.read()
 
     return json.loads(data)
@@ -856,6 +856,24 @@ def get_formatted_interval_string(n1, n2, max_digits=2):
         return f" {n1}{spaces1}-{spaces2}{n2}"
     else:
         return f"{n1}{spaces1}-{spaces2}{n2}"
+
+
+def get_boundaries_infos():
+    return read_json(boundaries_infos_path)
+
+
+def encode_url_urlib(base_url, params):
+    import urllib.parse
+
+    # Manually encode parameters with quote_via to enforce %20 for spaces
+    encoded_params = urllib.parse.urlencode(params, quote_via=urllib.parse.quote)
+
+    # Construct the full URL
+    return f"{base_url}?{encoded_params}"
+
+
+def encode_url_requests(base_url, params):
+    return requests.Request("GET", base_url, params=params).prepare().url
 
 
 basic_html = """

@@ -5,6 +5,10 @@ sys.path.append("oswm_codebase")
 from functions import *
 import csv
 
+used_z_level = 12
+
+boundaries_infos = get_boundaries_infos()
+
 qc_mainpage_path = "quality_check/oswm_qc_main.html"
 qc_externalpage_path = "quality_check/oswm_qc_external.html"
 
@@ -29,9 +33,41 @@ def add_to_occurrences(category, id):
 
 
 def gen_content_OSMI():
-    inner_content = f"""
-    TBD
+    base_url = "https://tools.geofabrik.de/osmi/"
+
+    params = {
+        "view": "geometry",  # let the default
+        "zoom": used_z_level,
+        "baselayer": "Geofabrik Topo",
+        "lat": boundaries_infos["center"][1],
+        "lon": boundaries_infos["center"][0],
+        "opacity": "0.5",
+    }
+
+    # the wrongly encoded base layer name:
+    wrongly_enc_bs_name = "Geofabrik+Topo"
+
+    url = encode_url_requests(base_url, params).replace(
+        wrongly_enc_bs_name, "Geofabrik Topo"
+    )
+
+    themes_content = f"""
+    <button><a href="{url}">Geometry Theme</a></button>
     """
+
+    inner_content = f"""
+        <p>
+            Geofabrik offers
+            <a href="https://wiki.openstreetmap.org/wiki/OSM_Inspector">
+                OSM Inspector.
+            </a>
+
+            We curated some themes that can be correlated to Pedestrian data, but some may include highways, bridges, etc.
+        </p>
+
+        {themes_content}
+    """
+
     content = details_item("OSM Inspector (Geofabrik)", inner_content)
 
     return content

@@ -10,10 +10,19 @@ OSWM organization: https://github.com/opensidewalkmap/
 
 ## Local development:
 
-Clone the original node, then initialize the submodules, most of this codebase is meant to run from the main folder of an OSWM node.:
+Clone the original node (or other alternatively), then initialize the submodules, most of this codebase is meant to run from the main folder of an OSWM node. :
 
     git clone https://github.com/kauevestena/opensidewalkmap_beta
     git submodule init
     git submodule update
+
+Then create & setup a virtual enviroment, install requirements from oswm_codebase/requirements.txt
+
+    pip install requirements -r oswm_codebase/requirements.txt
+
+
+#### If in vscode: 
+-Reload Window
+-change the checkout to main (it will create a random tag)
 
 You can do the same with other OSWM nodes.

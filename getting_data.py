@@ -32,6 +32,23 @@ else:
     boundaries_gdf = gpd.read_file(boundaries_geojson_path)
     boundary_polygon = boundaries_gdf["geometry"].iloc[0]
 
+# now generating some "boundaries infos" json:
+metric_bondary_polygon = boundaries_gdf.to_crs(boundaries_gdf.estimate_utm_crs())[
+    "geometry"
+].iloc[0]
+
+boundaries_infos = {
+    "name": CITY_NAME,
+    "area": round(
+        metric_bondary_polygon.area,
+        3,
+    ),
+    "perimeter": round(metric_bondary_polygon.length, 3),
+    "bbox": list(boundaries_gdf["geometry"].iloc[0].bounds),
+    "center": list(boundaries_gdf["geometry"].iloc[0].centroid.coords[0]),
+}
+
+dump_json(boundaries_infos, boundaries_infos_path)
 
 # New approach: download all categories at once and then split in different layers:
 print("downloading all data")
