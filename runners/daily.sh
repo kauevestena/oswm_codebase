@@ -12,4 +12,6 @@ python oswm_codebase/data_quality/tag_values_checking.py || echo "tag_values_che
 
 python oswm_codebase/data_quality/quality_check_compiling.py || echo "quality_check_compiling.py failed"; \
 
+python oswm_codebase/data_quality/external_qc.py || echo "quality_check_compiling.py failed"; \
+
 python oswm_codebase/dashboard/statistics_generation.py || echo "statistics_generation.py failed"

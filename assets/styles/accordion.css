@@ -1,0 +1,55 @@
+body {
+    font-family: sans-serif;
+    padding: 20px;
+    background-color: #f4f4f4;
+}
+
+h1 {
+    text-align: center;
+}
+
+details {
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin: 10px 0;
+    padding: 0;
+}
+
+summary {
+    padding: 12px;
+    cursor: pointer;
+    font-weight: bold;
+    list-style: none;
+    /* Removes default marker */
+    text-align: center;
+    /* Center align header text */
+    position: relative;
+    /* For positioning the plus/minus sign */
+}
+
+/* Hide default marker in WebKit browsers */
+summary::-webkit-details-marker {
+    display: none;
+}
+
+/* Insert a plus sign to the left of the header text */
+summary::before {
+    content: '+';
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 20px;
+    font-weight: bold;
+}
+
+/* Change plus sign to minus sign when the section is open */
+details[open] summary::before {
+    content: '-';
+}
+
+.content {
+    padding: 12px;
+    border-top: 1px solid #ccc;
+}

@@ -1,7 +1,4 @@
-import sys, csv
-
 # import pandas as pd
-import geopandas as gpd
 from dq_funcs import *
 from quality_dicts import *
 from functions import *
@@ -241,6 +238,15 @@ about_part = """
 """
 
 
+topbar = write_dq_topbar(1)
+
+js_functions = f"""
+<script>
+    {file_as_string('oswm_codebase/assets/js_functions/topbar.js')}
+    
+</script>
+"""
+
 for quality_category in categories_dict_keys:
 
     tablepart += "<tr>"
@@ -260,8 +266,6 @@ for quality_category in categories_dict_keys:
 about_part += "</h3>"
 
 
-qc_mainpage_path = "quality_check/oswm_qc_main.html"
-
 qcmainpage_txt = f"""
 
 <!DOCTYPE html>
@@ -270,6 +274,9 @@ qcmainpage_txt = f"""
 
 <html lang="en">
 <head>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     
 
 {FONT_STYLE}
@@ -299,10 +306,16 @@ h1 {{
 
 </style>
 
-<title>OpenSidewalkMap Data Quality Tool</title>
+{topbar}
+
+{js_functions}
+
+
+<title>OSWM DQ Home</title>
 
 <link rel="icon" type="image/x-icon" href="https://kauevestena.github.io/oswm_codebase/assets/homepage/favicon_homepage.png">
 
+</head>
 <body>
 
 <h1>OpenSidewalkMap Data Quality Tool</h1>
@@ -334,20 +347,14 @@ The information here can be <b>outdated</b><br>
 {about_part}
 
 
-<p>
-in a future topological and geometric errors may be included!! 
-</p>
-
 </body>
 </html> 
 
 """
 
-with open(qc_mainpage_path, "w+") as writer:
-    writer.write(qcmainpage_txt)
+str_to_file(qcmainpage_txt, qc_mainpage_path)
 
-
-# AGING RECORD PART:
+# AGING RECORDING PART:
 
 # generate the "report" of the updating info
 record_datetime("Data Quality Tool")

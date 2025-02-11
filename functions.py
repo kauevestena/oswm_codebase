@@ -43,7 +43,7 @@ def str_to_file(inputstr: str, outputpath: str, check_path=False):
 
     with open(outputpath, "w+", encoding="utf8") as writer:
         writer.write(inputstr)
-        sleep(0.1)
+        sleep(0.05)
 
 
 class fileAsStrHandler:
@@ -124,6 +124,7 @@ TABLES_STYLE = f"""
 
 <style>
     {file_as_string('oswm_codebase/assets/styles/table_styles.css')}
+    {file_as_string('oswm_codebase/assets/styles/topnav_styles.css')}
 </style>
 
 """
