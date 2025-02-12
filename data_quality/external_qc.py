@@ -36,6 +36,7 @@ external_qc_page = f"""
    
    
 {styles_dq}
+{get_tables_styles(1)}
 
 {js_functions_dq}	
 
