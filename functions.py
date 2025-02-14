@@ -876,6 +876,40 @@ def encode_url_requests(base_url, params):
     return requests.Request("GET", base_url, params=params).prepare().url
 
 
+def compose_osm_edit_url(lon, lat, z=19):
+    """
+    Generate an OpenStreetMap edit URL with the given longitude, latitude, and zoom level.
+
+    :param lon: Longitude of the location.
+    :param lat: Latitude of the location.
+    :param z: Zoom level (default is 19).
+    :return: Generated URL as a string.
+    """
+    base_url = "https://www.openstreetmap.org/edit"
+    fragment = f"map={z}/{lat}/{lon}"
+
+    return f"{base_url}#{fragment}"
+
+
+def compose_osm_map_url(lon, lat, z=19):
+    """
+    Generate an OpenStreetMap view URL with the given longitude, latitude, and zoom level.
+
+    :param lon: Longitude of the location.
+    :param lat: Latitude of the location.
+    :param z: Zoom level (default is 19).
+    :return: Generated URL as a string.
+    """
+    base_url = "https://www.openstreetmap.org/"
+    fragment = f"map={z}/{lat}/{lon}"
+
+    return f"{base_url}#{fragment}"
+
+
+def join_list_for_req(input_list, character=","):
+    return character.join(map(str, input_list))
+
+
 basic_html = """
 <!DOCTYPE html>
 <html>

@@ -1,4 +1,5 @@
 import sys
+from urllib.parse import urlencode
 
 sys.path.append("oswm_codebase")
 
@@ -7,6 +8,8 @@ import csv
 
 
 boundaries_infos = get_boundaries_infos()
+
+bbox_str = join_list_for_req(boundaries_infos["bbox"])
 
 qc_mainpage_path = "quality_check/oswm_qc_main.html"
 qc_externalpage_path = "quality_check/oswm_qc_external.html"
@@ -85,7 +88,7 @@ def gen_content_OSMI():
     for theme_name in themes_dict:
         # fixing the behavior of list encoding:
         theme_params = themes_dict[theme_name]["params"]
-        theme_params["overlays"] = ",".join(theme_params["overlays"])
+        theme_params["overlays"] = join_list_for_req(theme_params["overlays"])
 
         # update the params
         params.update(theme_params)
@@ -127,9 +130,222 @@ def gen_content_OSMI():
     return content
 
 
+def osmose_issue_mapurl(params):
+    """
+    Generate an Osmose issue map URL with the given parameters.
+
+    :param params: Dictionary containing item, zoom, lat, lon, and issue_uuid.
+    :return: Generated URL as a string.
+
+    # Example usage:
+    params = {
+        "item": 2130,
+        "zoom": 16,
+        "lat": -25.5157399,
+        "lon": -49.2146691,
+        "issue_uuid": "e6db259e-b438-85f8-8ca9-23129d292329"
+    }
+
+    generated_url = osmose_issue_mapurl(params)
+
+    """
+
+    base_url = "https://osmose.openstreetmap.fr/en/map/"
+
+    # Encode the parameters as a fragment (after '#')
+    fragment = urlencode(params)
+
+    # Construct and return the full URL
+    return f"{base_url}#{fragment}"
+
+
+def compose_osmose_issues_url(item, class_id, bbox, source="", username=""):
+    """
+    Generate an Osmose issues URL with the given parameters.
+
+    :param item: The item number (e.g., 9001).
+    :param class_id: The class identifier (e.g., 9001001).
+    :param bbox: A tuple representing the bounding box (min_lon, min_lat, max_lon, max_lat).
+    :param source: (Optional) The source parameter.
+    :param username: (Optional) The OSM username.
+    :return: Generated URL as a string.
+    """
+    base_url = "https://osmose.openstreetmap.fr/en/issues/open"
+    params = {
+        "item": item,
+        "source": source,
+        "class": class_id,
+        "username": username,
+        "bbox": bbox,
+    }
+    query_string = urlencode(params)
+    return f"{base_url}?{query_string}"
+
+
 def gen_content_osmose():
+    used_z = 19
+
+    endpoint_req = "http://osmose.openstreetmap.fr/api/0.3/issues"
+
+    details_baseurl = "https://osmose.openstreetmap.fr/en/issue/"
+
+    params = {"bbox": bbox_str}
+
+    themes = {
+        "Incomplete Footways": {
+            "params": {
+                "item": "2080",
+                "class": "20805",
+                "limit": 200,
+            },
+            "description": "sidewalk without highway=footway|construction|proposed",
+        },
+        "Wrongly Tagged Crossings": {
+            "params": {"item": "9004", "class": "9004002", "limit": 50},
+            "description": "wrong crossing tag on a way",
+        },
+        "Incomplete Crossings": {
+            "params": {
+                "item": "9018",
+                "class": "9018019",
+                "limit": 50,
+            },
+            "description": "crossing=* must be alongside highway=crossing",
+        },
+        "Conflict Between Tags": {
+            "params": {
+                "item": "4030",
+                "class": "40303",
+                "limit": 50,
+            },
+            "description": "Conflict between tags: `crossing=informal` must be used without `highway=crossing`",
+        },
+        "Node Like Way": {
+            "params": {
+                "item": "4090",
+                "class": "1",
+                "limit": 10,
+            },
+            "description": "Way node tagged like way",
+        },
+        "Bad Tag Value": {
+            "params": {
+                "item": "3040",
+                "class": "3040",
+                "limit": 10,
+            },
+            "description": "Bad tag value",
+        },
+        "Bad Cycle/footway Combination": {
+            "params": {
+                "item": "9001",
+                "class": "9001001",
+                "limit": 10,
+            },
+            "description": "Combined foot- and cycleway without segregated.",
+        },
+        "Overly Permissive Access Tag": {
+            "params": {
+                "item": "3220",
+                "class": "32201",
+                "limit": 10,
+            },
+            "description": "Overly permissive access (generally access=yes inconsistent with other tags).",
+        },
+    }
+
+    themes_content = ""
+
+    categories_content = "<table>"
+
+    # stablish the number of columns in the categories:
+    c_n_cols = 4
+
+    for i, theme in enumerate(themes):
+        params.update(themes[theme]["params"])
+        response = requests.get(endpoint_req, params=params)
+
+        category_url = compose_osmose_issues_url(
+            themes[theme]["params"]["item"],
+            themes[theme]["params"]["class"],
+            bbox_str,
+        )
+
+        if i % c_n_cols == 0:
+            categories_content += f"""
+                <tr>
+            """
+
+        categories_content += f"""
+            <td><a href="{category_url}">{theme}</a></td>
+        """
+
+        if (i + 1) % c_n_cols == 0:
+            categories_content += f"""
+                </tr>
+            """
+
+        if response.status_code == 200:
+            issues = response.json().get("issues", [])
+
+            for issue in issues:
+                lat = issue["lat"]
+                lon = issue["lon"]
+                id = issue["id"]
+                item = issue["item"]
+
+                osm_url = compose_osm_map_url(lon, lat, used_z)
+
+                osmose_url = osmose_issue_mapurl(
+                    {
+                        "item": item,
+                        "zoom": used_z,
+                        "lat": lat,
+                        "lon": lon,
+                        "issue_uuid": id,
+                    }
+                )
+
+                details_url = details_baseurl + str(id)
+
+                themes_content += f"""
+                    <tr>
+                        <td><a href="{osm_url}">{lon},{lat}</a></td>
+                        <td><a href="{osmose_url}">Map View</a></td>
+                        <td><a href="{details_url}">Details</a></td>
+                        <td><a href="{category_url}">{themes[theme]["description"]}</a></td>
+                    </tr>
+                """
+
+    categories_content += "</table>"
+
     inner_content = f"""
-    TBD
+        <p>
+            OSM France offers
+            <a href="https://wiki.openstreetmap.org/wiki/Osmose">
+                Osmose.
+            </a>
+            A tool for quality assurance of OSM data. We curated categories meant to be related with Pedestrian data. We recommend that you use the map view. Some Features can be at city's surroundings, the since the requests were made using just the bounding box, without further filtering. In few classes some detecttions may be unrelated to Pedestrian data.
+        </p>
+        
+        <p style="font-size: small">
+            They also offer a tool to check all detections related to your user,  <a href="https://osmose.openstreetmap.fr/en/byuser/">check it out</a>!
+        </p>
+        
+        {details_item("Categories (Overview at Osmose) - click to expand", categories_content)}
+        
+        <table>
+            <tr>
+                <th>Location (OSM View - Surroundings)</th>
+                <th>Osmose Map View</th>
+                <th>Osmose Details</th>
+                <th>Description (link to category overview at Osmose)</th>
+            </tr>
+
+            {themes_content}
+            
+        </table>
+        
     """
 
     content = details_item("Osmose (OSM France)", inner_content)

@@ -1,0 +1,15 @@
+meta
+{
+  title: "OSWM Validation Rules";
+  version: "2025-02-13";
+  description: "OSWM Rules, intended only to find pedestrian-related issues";
+  author: "Kaue de Moraes Vestena";
+  baselanguage: "en";
+  watch-modified: true;
+}
+
+/* ones based upon https://github.com/OSMBrasil/validador-josm/blob/master/Rules_Brazilian-Specific.validator.mapcss THX OSM Brasil!!  */
+
+*[crossing][!highway][!railway] {
+	throwWarning: tr("{0} must be used alongside {1}={0} or {2}={0}", "{0.key}", "{1.key}", "{2.key}");
+}
