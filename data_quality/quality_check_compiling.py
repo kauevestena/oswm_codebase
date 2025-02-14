@@ -30,7 +30,7 @@ for category in gdf_dict:
     print("for: ", category)
     for i, row in enumerate(gdf_dict[category].itertuples()):
 
-        if i % 50 == 0:
+        if i % 200 == 0:
             print("    ", i, " features")
 
         # iterating through quality categories:

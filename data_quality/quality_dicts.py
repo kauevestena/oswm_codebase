@@ -1,6 +1,6 @@
 """
 
-    FILE TO STORE THE CATEGORIES
+    FILE TO STORE THE CATEGORIES FOR OSWM DATA QUALITY
 
 """
 
@@ -15,6 +15,8 @@ category = {
 }
 
 """
+
+# Internal definition dicts for the functional part of categories:
 
 improper_keys = {
     "sidewalks": {
@@ -78,6 +80,8 @@ invalid_characters = {
     "=": "The '=' character is used ONLY in textual representation of tags to separate the key from the value",
 }
 
+
+# The dict for orchestration for the categories that are processed in the main pipeline:
 
 categories_dict_keys = {
     "improper_keys": {
