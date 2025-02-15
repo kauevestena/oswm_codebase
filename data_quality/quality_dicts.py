@@ -1,3 +1,5 @@
+from functions import *
+
 """
 
     FILE TO STORE THE CATEGORIES FOR OSWM DATA QUALITY
@@ -67,9 +69,9 @@ replaceable_values = {
     "sidewalks": {},
     "crossings": {
         "crossing": {
-            "marked": "uncontrolled",
-            "zebra": "uncontrolled",
-            "island": "should use the TAG 'crossing:island=yes' ",
+            "marked": "should use the tag 'crossing=uncontrolled' ",
+            "zebra": "should use the tag 'crossing=uncontrolled' ",
+            "island": "should use the tag 'crossing:island=yes' ",
         }
     },
     "kerbs": {},
@@ -80,6 +82,58 @@ invalid_characters = {
     "=": "The '=' character is used ONLY in textual representation of tags to separate the key from the value",
 }
 
+key_val_comm = "not appliable"
+
+improper_geoms_dict = {
+    "sidewalks": {
+        "insertions": [key_val_comm, key_val_comm, "Sidewalks are meant to be lines"]
+    },
+    "crossings": {
+        "insertions": [
+            key_val_comm,
+            key_val_comm,
+            "crossings are generally lines, but some people also map them as points, so <b>watch out for false positives</b>",
+        ]
+    },
+    "kerbs": {
+        "insertions": [
+            key_val_comm,
+            key_val_comm,
+            "kerbs are mostly points, but in few places people map also the whole 'kerb line' ",
+        ]
+    },
+    "other_footways": {
+        "insertions": [key_val_comm, key_val_comm, "check the feature in OSM"]
+    },
+}
+
+disjointed_geoms_dict = {
+    "sidewalks": {
+        "insertions": [
+            key_val_comm,
+            key_val_comm,
+            "sidewalks are part of a interconnected network, they should be connected to other linear features",
+        ]
+    },
+    "crossings": {
+        "insertions": [
+            key_val_comm,
+            key_val_comm,
+            "Crossings are generally connected to a sidewalk, but some map them lines separately, so <b>watch out for false positives</b>. In general, crossings are designed to be part of a network, they should be connected to other features",
+        ]
+    },
+    "kerbs": {
+        "insertions": [
+            key_val_comm,
+            key_val_comm,
+            "kerbs are generally drawn at the top of crossings, check the map",
+        ]
+    },
+    "other_footways": {
+        "insertions": [key_val_comm, key_val_comm, "check the feature in OSM"]
+    },
+}
+
 
 # The dict for orchestration for the categories that are processed in the main pipeline:
 
@@ -88,6 +142,7 @@ categories_dict_keys = {
         "about": "Keys that (almost certainly) shouldn't be used at that feature type",
         "dict": improper_keys,
         "type": "keys",
+        "invert_geomtype": False,
         "occurrences": {
             "sidewalks": {},
             "crossings": {},
@@ -105,6 +160,7 @@ categories_dict_keys = {
         "about": "Keys that may be OK in some specific situations, but may be a mistake",
         "dict": uncanny_keys,
         "type": "keys",
+        "invert_geomtype": False,
         "occurrences": {
             "sidewalks": {},
             "crossings": {},
@@ -122,6 +178,7 @@ categories_dict_keys = {
         "about": "Keys that may be wrong, because there's no wiki article for it",
         "dict": "quality_check/keys_without_wiki.json",
         "type": "keys",
+        "invert_geomtype": False,
         "occurrences": {
             "sidewalks": {},
             "crossings": {},
@@ -139,6 +196,7 @@ categories_dict_keys = {
         "about": "values that are not wrong, but there's a better  option that is in the commentary",
         "dict": replaceable_values,
         "type": "values",
+        "invert_geomtype": False,
         "occurrences": {
             "sidewalks": {},
             "crossings": {},
@@ -156,6 +214,7 @@ categories_dict_keys = {
         "about": "Values that are probably wrong, but they may be mispelled or just unlisted",
         "dict": "quality_check/valid_tag_values.json",
         "type": "values",
+        "invert_geomtype": False,
         "occurrences": {
             "sidewalks": {},
             "crossings": {},
@@ -173,6 +232,7 @@ categories_dict_keys = {
         "about": "characters that should not be in the value or in the key",
         "dict": invalid_characters,
         "type": "tags",
+        "invert_geomtype": False,
         "occurrences": {
             "sidewalks": {},
             "crossings": {},
@@ -201,4 +261,49 @@ categories_dict_keys = {
     #                 'kerbs':     0,
     #             },
     # },
+}
+
+
+# the geometric categories:
+geom_dict_keys = {
+    "disjointed_geometries": {
+        "about": "Features with geometries that are not connected to others, i.e. disjointed. This is generally a special matter of concern for crossings, kerbs and sidewalks",
+        "dict": disjointed_geoms_dict,
+        "path": disjointed_folderpath,
+        "suffix": disjointed_geoms_suffix,
+        "type": "geometries",
+        "invert_geomtype": False,
+        "occurrences": {
+            "sidewalks": {},
+            "crossings": {},
+            "kerbs": {},
+            "other_footways": {},
+        },
+        "occ_count": {
+            "sidewalks": 0,
+            "crossings": 0,
+            "kerbs": 0,
+            "other_footways": 0,
+        },
+    },
+    "improper_geometries": {
+        "about": "Features with geometries (more specifically geometry types) that are incompatible with the main tags",
+        "dict": improper_geoms_dict,
+        "path": improper_geoms_folderpath,
+        "suffix": improper_geoms_suffix,
+        "type": "geometries",
+        "invert_geomtype": True,
+        "occurrences": {
+            "sidewalks": {},
+            "crossings": {},
+            "kerbs": {},
+            "other_footways": {},
+        },
+        "occ_count": {
+            "sidewalks": 0,
+            "crossings": 0,
+            "kerbs": 0,
+            "other_footways": 0,
+        },
+    },
 }

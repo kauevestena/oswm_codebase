@@ -1,18 +1,7 @@
 # import pandas as pd
 from dq_funcs import *
 from quality_dicts import *
-from functions import *
 
-
-# # gdfs:
-# sidewalks_gdf = gpd.read_parquet("data/sidewalks_raw" + data_format)
-# crossings_gdf = gpd.read_parquet("data/crossings_raw" + data_format)
-# kerbs_gdf = gpd.read_parquet("data/kerbs_raw" + data_format)
-
-# # dict for iteration
-# gdf_dict = {"sidewalks": sidewalks_gdf, "crossings": crossings_gdf, "kerbs": kerbs_gdf}
-
-# type_dict = {"sidewalks": "way", "crossings": "way", "kerbs": "node"}
 
 gdf_dict = get_gdfs_dict(raw_data=True)
 
@@ -24,8 +13,7 @@ type_dict = {
 # reading
 existing_keys = read_json(feat_keys_path)
 
-
-# iterating through feature categories:
+# iterating through feature categories (main processing):
 for category in gdf_dict:
     print("for: ", category)
     for i, row in enumerate(gdf_dict[category].itertuples()):
@@ -58,7 +46,7 @@ for category in gdf_dict:
 
                                 curr["occ_count"][category] += 1
 
-                                add_to_occurrences(category, row.id)
+                                add_to_occurrences(row)
 
                 if isinstance(curr["dict"], str):
                     curr_ref_dict = read_json(curr["dict"])[category]
@@ -81,7 +69,7 @@ for category in gdf_dict:
 
                                 curr["occ_count"][category] += 1
 
-                                add_to_occurrences(category, row.id)
+                                add_to_occurrences(row)
 
             if curr["type"] == "values":
                 if isinstance(curr["dict"], dict):
@@ -101,7 +89,7 @@ for category in gdf_dict:
 
                                     curr["occ_count"][category] += 1
 
-                                    add_to_occurrences(category, row.id)
+                                    add_to_occurrences(row)
 
                 if isinstance(curr["dict"], str):
                     curr_ref_dict = read_json(curr["dict"])[category]
@@ -125,7 +113,7 @@ for category in gdf_dict:
 
                                         curr["occ_count"][category] += 1
 
-                                        add_to_occurrences(category, row.id)
+                                        add_to_occurrences(row)
 
             if curr["type"] == "tags":
 
@@ -144,10 +132,36 @@ for category in gdf_dict:
 
                                 curr["occ_count"][category] += 1
 
-                                add_to_occurrences(category, row.id)
+                                add_to_occurrences(row)
 
                                 break
 
+# add the "geoms_dicts_keys" to "categories_dict_keys":
+for category in geom_dict_keys:
+    categories_dict_keys[category] = geom_dict_keys[category]
+
+# add the  geometric categories, processed elsewhere:
+
+for category in geom_dict_keys:
+    curr = geom_dict_keys[category]
+
+    input_folderpath = curr["path"]
+
+    for filename in os.listdir(input_folderpath):
+        filepath = os.path.join(input_folderpath, filename)
+
+        data_category = filename.split(curr["suffix"])[0]
+
+        gdf = gpd.read_parquet(filepath)
+
+        for row in gdf.itertuples():
+            # all entries are detections already, we simply add them:
+            val_list = [row.id, *curr["dict"][data_category]["insertions"]]
+
+            curr["occurrences"][data_category][row.id] = val_list
+
+            curr["occ_count"][data_category] += 1
+            add_to_occurrences(row)
 
 ######### PART 2: files generation
 
@@ -178,6 +192,7 @@ for category in gdf_dict:
             curr["about"],
             curr["type"],
             csvpath,
+            invert_geom=curr["invert_geomtype"],
         )
 
         print(curr["occ_count"][category])
@@ -193,28 +208,31 @@ for category in gdf_dict:
 
         #         writer.writerow(line_as_list)
 
-    number_occ_pagepath = f"quality_check/pages/count_by_feature_{category}.html"
+    # # we're deprecating this sort of pages:
+    # number_occ_pagepath = f"quality_check/pages/count_by_feature_{category}.html"
 
-    # THX: https://stackoverflow.com/a/613218/4436950
-    sorted_occ_dict = dict(
-        sorted(
-            occurrence_per_feature[category].items(),
-            key=lambda item: item[1],
-            reverse=True,
-        )
-    )
+    # remove_if_exists(number_occ_pagepath)
 
-    gen_quality_report_page_and_files(
-        number_occ_pagepath,
-        list(map(list, sorted_occ_dict.items())),
-        type_dict[category],
-        category,
-        "occurrence_per_feature",
-        "Features with more than one occurrence may be prioritized!!",
-        "count",
-        f"quality_check/tables/counts_{category}.csv",
-        True,
-    )
+    # # # THX: https://stackoverflow.com/a/613218/4436950
+    # # sorted_occ_dict = dict(
+    # #     sorted(
+    # #         occurrence_per_feature[category].items(),
+    # #         key=lambda item: item[1],
+    # #         reverse=True,
+    # #     )
+    # # )
+
+    # # gen_quality_report_page_and_files(
+    # #     number_occ_pagepath,
+    # #     list(map(list, sorted_occ_dict.items())),
+    # #     type_dict[category],
+    # #     category,
+    # #     "occurrence_per_feature",
+    # #     "Features with more than one occurrence may be prioritized!!",
+    # #     "count",
+    # #     f"quality_check/tables/counts_{category}.csv",
+    # #     True,
+    # # )
 
 
 ######### PART 3: Quality Check Main page

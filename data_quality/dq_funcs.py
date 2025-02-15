@@ -14,7 +14,11 @@ bbox_str = join_list_for_req(boundaries_infos["bbox"])
 qc_mainpage_path = "quality_check/oswm_qc_main.html"
 qc_externalpage_path = "quality_check/oswm_qc_external.html"
 
+# dictionary that holds the occurrences per feature:
 occurrence_per_feature = {k: {} for k in geom_type_dict.keys()}
+
+# dict to hold a representative point for each feature:
+rep_points = {}
 
 js_functions_dq = f"""
     <script src="../oswm_codebase/assets/js_functions/topbar.js"></script>
@@ -27,11 +31,19 @@ styles_dq = f"""
 """
 
 
-def add_to_occurrences(category, id):
-    if id in occurrence_per_feature[category]:
-        occurrence_per_feature[category][id] += 1
-    else:
-        occurrence_per_feature[category][id] = 1
+def add_to_occurrences(row_tuple):
+
+    # part 1: counting the number of occurrences (deprecated):
+    # # if id in occurrence_per_feature[category]:
+    # #     occurrence_per_feature[category][id] += 1
+    # # else:
+    # #     occurrence_per_feature[category][id] = 1
+
+    # part  2: keeping a representative point of the geometry:
+    if not row_tuple.id in rep_points:
+        rep_point = row_tuple.geometry.representative_point()
+
+        rep_points[id] = (rep_point.x, rep_point.y)
 
 
 def gen_content_OSMI():

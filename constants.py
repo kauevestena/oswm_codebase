@@ -17,13 +17,14 @@ max_zoom = 22
 data_format = ".parquet"
 
 # node archives general paths
-map_page_name = "./map.html"
-readme_path = "./README.md"
-node_home_path = "./index.html"
-boundaries_path = "./data/boundaries" + data_format
-boundaries_geojson_path = "./data/boundaries.geojson"
-boundaries_infos_path = "./data/boundary_infos.json"
-boundaries_md_path = "./data/boundaries_md.json"
+map_page_name = "map.html"
+readme_path = "README.md"
+node_home_path = "index.html"
+boundaries_path = "data/boundaries" + data_format
+boundaries_geojson_path = "data/boundaries.geojson"
+boundaries_infos_path = "data/boundary_infos.json"
+boundaries_md_path = "data/boundaries_md.json"
+updating_infos_path = "data/last_updated.json"
 workflows_path = ".github/workflows"
 
 # data folderpaths:
@@ -86,6 +87,14 @@ in_all = [
     "incline:across",
     "osm_id",
     "last_update",
+    "access",
+    "foot",
+    "lit",
+    "motor_vehicle",
+    "bicycle",
+    "wheelchair",
+    "mapillary",
+    "barrier",
 ]
 in_linear = in_all + ["highway"]
 
@@ -671,3 +680,8 @@ default_missing_year = 2004
 
 # Footway types fieldname
 oswm_footway_fieldname = "oswm_footway"
+
+
+# stuff for the geometric quality assurance:
+improper_geoms_suffix = "_improper_geoms"
+disjointed_geoms_suffix = "_disjointed"

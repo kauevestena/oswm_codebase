@@ -133,7 +133,7 @@ def get_tables_styles(levels_backward=1):
 
 
 def gen_updating_infotable_page(
-    outpath="data/data_updating.html", json_path="data/last_updated.json"
+    outpath="data/data_updating.html", json_path=updating_infos_path
 ):
 
     tablepart = ""
@@ -196,8 +196,6 @@ if the data is too outdated you may <a href="{node_homepage_url}issues">post an 
   <th><a href="{node_homepage_url}data/kerbs_versioning.json">Versioning</a></th>
 </tr>
 
-
-
 </table>
 
 
@@ -222,11 +220,12 @@ def gen_quality_report_page_and_files(
     occ_type,
     csvpath,
     count_page=False,
+    invert_geom=False,
 ):
 
     pagename_base = f"{quality_category}_{category}"
 
-    csv_url = f"""<h2>  
+    csv_url_part = f"""<h2>  
         
             <a href="{node_homepage_url}quality_check/tables/{pagename_base}.csv"> You can also download the raw .csv table </a>
 
@@ -244,10 +243,18 @@ def gen_quality_report_page_and_files(
                     <th><b>OSM ID (link)</b></th>
                     <th><b>count</b></th>"""
 
-        csv_url = ""
+        csv_url_part = ""
 
     valid_featcount = 0
 
+    # inverting feature type, if needed:
+    if invert_geom:
+        if feat_type == "way":
+            feat_type = "node"
+        elif feat_type == "node":
+            feat_type = "way"
+
+    # the main iteration
     with open(csvpath, "w+", encoding="utf-8") as file:
         writer = csv.writer(file, delimiter=",", quotechar='"')
         writer.writerow(["osm_id", "key", "value", "commentary"])
@@ -298,7 +305,7 @@ def gen_quality_report_page_and_files(
 
         <h2>About: {text}</h2>
         <h2>Type: {occ_type}</h2>
-        {csv_url}
+        {csv_url_part}
 
 
 

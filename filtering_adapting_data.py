@@ -116,7 +116,7 @@ for category in gdf_dict:
             disjointed = curr_gdf.disjoint(sidewalks_crossings_unary_buffer)
 
         outfilepath = os.path.join(
-            disjointed_folderpath, f"{category}_disjointed" + data_format
+            disjointed_folderpath, f"{category}{disjointed_geoms_suffix}" + data_format
         )
 
         # curr_gdf[disjointed].to_file(os.path.join(disjointed_folderpath,f'{category}_disjointed' + data_format))
@@ -131,7 +131,7 @@ for category in gdf_dict:
 
     create_folder_if_not_exists(improper_geoms_folderpath)
     outpath_improper = os.path.join(
-        improper_geoms_folderpath, f"{category}_improper_geoms" + data_format
+        improper_geoms_folderpath, f"{category}{improper_geoms_suffix}" + data_format
     )
     # the boolean Series:
     are_proper_geom = curr_gdf.geometry.type.isin(
@@ -140,7 +140,10 @@ for category in gdf_dict:
     # saving:
     # curr_gdf[~are_proper_geom].to_file(outpath_improper)
 
-    save_geoparquet(curr_gdf[~are_proper_geom], outpath_improper)
+    if category != "other_footways":
+        # "other_footways" got a way broader set of definitions, so we remove them from the data, but we ain't report them. Therefore we don't generate an "improper_geoms" file for them.
+
+        save_geoparquet(curr_gdf[~are_proper_geom], outpath_improper)
 
     # now keeping only the ones with proper geometries:
     curr_gdf = curr_gdf[are_proper_geom]
@@ -295,7 +298,7 @@ dump_json(raw_data_keys, feat_keys_path)
 print("Finishing...")
 
 # generate the "report" of the updating info
-record_datetime("Data Pre     -Processing")
+record_datetime("Data Pre-Processing")
 sleep(0.1)
 
 gen_updating_infotable_page()
