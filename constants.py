@@ -685,3 +685,13 @@ oswm_footway_fieldname = "oswm_footway"
 # stuff for the geometric quality assurance:
 improper_geoms_suffix = "_improper_geoms"
 disjointed_geoms_suffix = "_disjointed"
+
+basic_html = """
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+</body>
+</html>
+"""

@@ -6,7 +6,7 @@ sys.path.append("oswm_codebase")
 from functions import *
 import csv
 
-
+# # # constants and setup:
 boundaries_infos = get_boundaries_infos()
 
 bbox_str = join_list_for_req(boundaries_infos["bbox"])
@@ -17,8 +17,8 @@ qc_externalpage_path = "quality_check/oswm_qc_external.html"
 # dictionary that holds the occurrences per feature:
 occurrence_per_feature = {k: {} for k in geom_type_dict.keys()}
 
-# dict to hold a representative point for each feature:
-rep_points = {}
+# data_dict for the map view:
+map_view_data = {}
 
 js_functions_dq = f"""
     <script src="../oswm_codebase/assets/js_functions/topbar.js"></script>
@@ -30,20 +30,44 @@ styles_dq = f"""
     <link rel="stylesheet" href="../oswm_codebase/assets/styles/accordion.css">
 """
 
+# # # subfolders:
+dq_rootfolder = os.path.join("quality_check")
 
-def add_to_occurrences(row_tuple):
+qc_categories_index_path = os.path.join(dq_rootfolder, "categories.json")
 
-    # part 1: counting the number of occurrences (deprecated):
-    # # if id in occurrence_per_feature[category]:
-    # #     occurrence_per_feature[category][id] += 1
-    # # else:
-    # #     occurrence_per_feature[category][id] = 1
+subfoldernames = ["pages", "tables", "maps", "json"]  # TODO: "data"
 
-    # part  2: keeping a representative point of the geometry:
-    if not row_tuple.id in rep_points:
+subfolderpaths = {name: os.path.join(dq_rootfolder, name) for name in subfoldernames}
+
+for name in subfoldernames:
+    create_folder_if_not_exists(subfolderpaths[name])
+
+
+# # # functions:
+def add_to_map_data(row_tuple, quality_category):
+    if not row_tuple.id in map_view_data:
         rep_point = row_tuple.geometry.representative_point()
+        id = row_tuple.id
 
-        rep_points[id] = (rep_point.x, rep_point.y)
+        if not id in map_view_data:
+            map_view_data[id] = {
+                "id": row_tuple.id,
+                "point": (rep_point.x, rep_point.y),
+                # as a set:
+                "quality_category": {quality_category},
+                "feat_type": row_tuple.element,
+            }
+        else:
+            map_view_data[id]["quality_category"].add(quality_category)
+
+
+def add_to_occurrences(curr, category, val_list, feature_id, feature_type):
+    # "curr" is the current category and "category" is the data layer (sidewalks, kerbs, etc.)
+    curr["occurrences"][category][feature_id] = val_list
+
+    curr["occ_count"][category] += 1
+
+    curr["feature_types"][feature_id] = feature_type
 
 
 def gen_content_OSMI():
@@ -406,3 +430,168 @@ def write_dq_topbar(active_index=1):
     """
 
     return topbar
+
+
+def create_marker_cluster_html(outpath, centerpoint, z_level, tiles="Cartodb Positron"):
+    import folium
+
+    from folium.plugins import MarkerCluster
+
+    m = folium.Map(location=centerpoint, zoom_start=z_level, tiles=tiles)
+
+    # "map_view_data" is the source of the data:
+    locations = [item["point"] for item in map_view_data.values()]
+
+    icon_create_function = """\
+    function(cluster) {
+        return L.divIcon({
+        html: '<b>' + cluster.getChildCount() + '</b>',
+        className: 'marker-cluster marker-cluster-large',
+        iconSize: new L.Point(20, 20)
+        });
+    }"""
+
+    popup_mold = 'categories: {} <br> </a href="{}">Access on OSM ({})</a>'
+
+    popups = [
+        popup_mold.format(
+            item["quality_category"],
+            osm_feature_url(item["id"], item["feat_type"]),
+            item["id"],
+        )
+        for item in map_view_data.values()
+    ]
+
+    marker_cluster = MarkerCluster(
+        locations=locations,
+        popups=popups,
+        name="OSWM DQ Markers (clustered)",
+        icon_create_function=icon_create_function,
+    )
+
+    marker_cluster.add_to(m)
+
+    m.save(outpath)
+
+
+def gen_quality_report_page_and_files(
+    outpath,
+    tabledata,
+    feat_types,
+    category,
+    quality_category,
+    text,
+    occ_type,
+    csvpath,
+    invert_geom=False,
+):
+
+    pagename_base = f"{quality_category}_{category}"
+
+    files_url_part = f"""<h2>  
+        
+            <a href="{node_homepage_url}quality_check/tables/{pagename_base}.csv"> You can also download the raw .csv table </a>
+            <a href="{node_homepage_url}quality_check/json/{pagename_base}.json"> You can also access the raw .json </a>
+
+        </h2>"""
+
+    tablepart = f"""<tr>
+    <th><b>OSM ID (link)</b></th>
+    <th><b>key</b></th>
+    <th><b>value</b></th>
+    <th><b>commentary</b></th>
+    </tr>"""
+
+    valid_featcount = 0
+
+    # inverting feature type, if needed:
+    if invert_geom:
+        feat_types = {k: osm_feat_type_inverter(v) for k, v in feat_types.items()}
+
+    # the main iteration
+    with open(csvpath, "w+", encoding="utf-8") as file:
+        writer = csv.writer(file, delimiter=",", quotechar='"')
+        writer.writerow(["osm_id", "feat_type", "key", "value", "commentary"])
+
+        for line in tabledata:
+            try:
+                line_as_str = ""
+                if line:
+                    if len(line) > 2:
+                        if not pd.isna(line[2]):
+
+                            feat_type = feat_types[line[0]]
+
+                            writer.writerow(
+                                # I know it's kinda ugly:
+                                [line[0], feat_type, line[1], line[2], line[3]]
+                            )
+
+                            line[0] = return_weblink_V2(line[0], feat_type)
+
+                            line_as_str += "<tr>"
+
+                            for element in line:
+                                line_as_str += f"<td>{str(element)}</td>"
+
+                            line_as_str += "</tr>\n"
+
+                            tablepart += line_as_str
+
+                            valid_featcount += 1
+            except:
+                if line:
+                    print("skipped", line)
+
+    # read just to export as a json:
+    csv_as_df = pd.read_csv(csvpath)
+    json_outpath = os.path.join(subfolderpaths["json"], f"{pagename_base}.json")
+    csv_as_df.to_json(json_outpath, orient="records")
+
+    with open(outpath, "w+", encoding="utf-8") as writer:
+
+        page = f"""
+
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+
+        {get_font_style(2)}
+
+        <title>OSWM DQT {category[0]} {quality_category}</title>
+
+        {get_tables_styles(2)}
+
+        </head>
+        <body>
+        
+        <h1><a href="{node_homepage_url}">OSWM</a> Data Quality Tool: {category} {quality_category}</h1>
+
+        <h2>About: {text}</h2>
+        <h2>Type: {occ_type}</h2>
+        {files_url_part}
+
+
+
+
+        <table>
+
+        {tablepart}
+
+        </table>
+
+        
+
+
+        </table>
+
+
+
+        </body>
+        </html>   
+
+        """
+
+        writer.write(page)
+
+    return valid_featcount

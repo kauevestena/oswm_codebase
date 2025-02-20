@@ -210,129 +210,6 @@ if the data is too outdated you may <a href="{node_homepage_url}issues">post an 
     str_to_file(page_as_txt, outpath)
 
 
-def gen_quality_report_page_and_files(
-    outpath,
-    tabledata,
-    feat_type,
-    category,
-    quality_category,
-    text,
-    occ_type,
-    csvpath,
-    count_page=False,
-    invert_geom=False,
-):
-
-    pagename_base = f"{quality_category}_{category}"
-
-    csv_url_part = f"""<h2>  
-        
-            <a href="{node_homepage_url}quality_check/tables/{pagename_base}.csv"> You can also download the raw .csv table </a>
-
-        </h2>"""
-
-    tablepart = f"""<tr>
-    <th><b>OSM ID (link)</b></th>
-    <th><b>key</b></th>
-    <th><b>value</b></th>
-    <th><b>commentary</b></th>
-    </tr>"""
-
-    if count_page:
-        tablepart = f"""<tr>
-                    <th><b>OSM ID (link)</b></th>
-                    <th><b>count</b></th>"""
-
-        csv_url_part = ""
-
-    valid_featcount = 0
-
-    # inverting feature type, if needed:
-    if invert_geom:
-        if feat_type == "way":
-            feat_type = "node"
-        elif feat_type == "node":
-            feat_type = "way"
-
-    # the main iteration
-    with open(csvpath, "w+", encoding="utf-8") as file:
-        writer = csv.writer(file, delimiter=",", quotechar='"')
-        writer.writerow(["osm_id", "key", "value", "commentary"])
-
-        for line in tabledata:
-            try:
-                line_as_str = ""
-                if line:
-                    if len(line) > 2:
-                        if not pd.isna(line[2]):
-
-                            writer.writerow(line)
-
-                            line[0] = return_weblink_V2(str(line[0]), feat_type)
-
-                            line_as_str += "<tr>"
-
-                            for element in line:
-                                line_as_str += f"<td>{str(element)}</td>"
-
-                            line_as_str += "</tr>\n"
-
-                            tablepart += line_as_str
-
-                            valid_featcount += 1
-            except:
-                if line:
-                    print("skipped", line)
-
-    with open(outpath, "w+", encoding="utf-8") as writer:
-
-        page = f"""
-
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-
-        {get_font_style(2)}
-
-        <title>OSWM DQT {category[0]} {quality_category}</title>
-
-        {get_tables_styles(2)}
-
-        </head>
-        <body>
-        
-        <h1><a href="{node_homepage_url}">OSWM</a> Data Quality Tool: {category} {quality_category}</h1>
-
-        <h2>About: {text}</h2>
-        <h2>Type: {occ_type}</h2>
-        {csv_url_part}
-
-
-
-
-        <table>
-
-        {tablepart}
-
-        </table>
-
-        
-
-
-        </table>
-
-
-
-        </body>
-        </html>   
-
-        """
-
-        writer.write(page)
-
-    return valid_featcount
-
-
 def find_map_ref(input_htmlpath):
     with open(input_htmlpath) as inf:
         txt = inf.read()
@@ -509,6 +386,10 @@ def return_weblink_node(string_id):
 
 def return_weblink_V2(string_id, featuretype):
     return f"<a href=https://www.openstreetmap.org/{featuretype}/{string_id}>{string_id}</a>"
+
+
+def osm_feature_url(id, featuretype):
+    return f"https://www.openstreetmap.org/{featuretype}/{id}"
 
 
 def return_weblink_V3(type_id_string):
@@ -917,12 +798,10 @@ def join_list_for_req(input_list, character=","):
     return character.join(map(str, input_list))
 
 
-basic_html = """
-<!DOCTYPE html>
-<html>
-<head>
-</head>
-<body>
-</body>
-</html>
-"""
+def osm_feat_type_inverter(feat_type):
+    if feat_type == "node":
+        return "way"
+    elif feat_type == "way":
+        return "node"
+    elif feat_type == "relation":
+        return "relation"
