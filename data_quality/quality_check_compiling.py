@@ -195,9 +195,9 @@ for category in gdf_dict:
     table_category_headers.append(f"<th><b>{category}</b></th>")
 
     for quality_category in categories_dict_keys:
-        csvpath = f"quality_check/tables/{quality_category}_{category}.csv"
+        csvpath = f"quality_check/tables/{category}/{quality_category}.csv"
 
-        pagepath = f"quality_check/pages/{quality_category}_{category}.html"
+        pagepath = f"quality_check/pages/{category}/{quality_category}.html"
 
         curr = categories_dict_keys[quality_category]
 
@@ -252,7 +252,7 @@ for quality_category in categories_dict_keys:
 
     for category in gdf_dict:
 
-        tablepart += f'<td>  <a href="{node_homepage_url}quality_check/pages/{quality_category}_{category}.html"> {categories_dict_keys[quality_category]["occ_count"][category]} </a> </td>'
+        tablepart += f'<td>  <a href="{node_homepage_url}quality_check/pages/{category}/{quality_category}.html"> {categories_dict_keys[quality_category]["occ_count"][category]} </a> </td>'
 
     tablepart += "</tr>\n"
 

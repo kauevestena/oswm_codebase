@@ -74,6 +74,9 @@ layer_tags_dict = {
     "other_footways": OTHER_FOOTWAY_RULES,
 }
 
+# TODO: employ this variable across the codebase
+data_categories = list(layer_tags_dict.keys())
+
 # columns to keep in the parquet files
 # TODO: complete and apply it
 in_all = [

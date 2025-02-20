@@ -43,7 +43,11 @@ subfoldernames = ["pages", "tables", "maps", "json"]  # TODO: "data"
 subfolderpaths = {name: os.path.join(dq_rootfolder, name) for name in subfoldernames}
 
 for name in subfoldernames:
-    create_folder_if_not_exists(subfolderpaths[name])
+    for data_category in data_categories:
+        type_data_category_folderpath = os.path.join(
+            subfolderpaths[name], data_category
+        )
+        create_folder_if_not_exists(type_data_category_folderpath)
 
 
 # # # functions:
@@ -505,12 +509,12 @@ def gen_quality_report_page_and_files(
     invert_geom=False,
 ):
 
-    pagename_base = f"{quality_category}_{category}"
+    # pagename_base = f"{quality_category}_{category}"
 
     files_url_part = f"""<h2>  
         
-            <a href="{node_homepage_url}quality_check/tables/{pagename_base}.csv"> You can also download the raw .csv table </a>
-            <a href="{node_homepage_url}quality_check/json/{pagename_base}.json"> You can also access the raw .json </a>
+            <a href="{node_homepage_url}quality_check/tables/{category}/{quality_category}.csv"> You can also download the raw .csv table </a>
+            <a href="{node_homepage_url}quality_check/json/{category}/{quality_category}.json"> You can also access the raw .json </a>
 
         </h2>"""
 
@@ -564,7 +568,9 @@ def gen_quality_report_page_and_files(
 
     # read just to export as a json:
     csv_as_df = pd.read_csv(csvpath)
-    json_outpath = os.path.join(subfolderpaths["json"], f"{pagename_base}.json")
+    json_outpath = os.path.join(
+        subfolderpaths["json"], category, f"{quality_category}.json"
+    )
     csv_as_df.to_json(json_outpath, orient="records")
 
     # the webmap, generate only once per quality category
