@@ -8,6 +8,8 @@ import csv
 
 # # # constants and setup:
 boundaries_infos = get_boundaries_infos()
+reversed_centerpoint = list(reversed(boundaries_infos["center"]))  # it expects lat,lon
+dq_maps_z_default = 13
 
 bbox_str = join_list_for_req(boundaries_infos["bbox"])
 
@@ -34,6 +36,7 @@ styles_dq = f"""
 dq_rootfolder = os.path.join("quality_check")
 
 qc_categories_index_path = os.path.join(dq_rootfolder, "categories.json")
+qc_main_webmap_path = os.path.join(dq_rootfolder, "map.html")
 
 subfoldernames = ["pages", "tables", "maps", "json"]  # TODO: "data"
 
@@ -52,7 +55,8 @@ def add_to_map_data(row_tuple, quality_category):
         if not id in map_view_data:
             map_view_data[id] = {
                 "id": row_tuple.id,
-                "point": (rep_point.x, rep_point.y),
+                # Leaflet uses lat, lon instead of lon, lat
+                "point": (rep_point.y, rep_point.x),
                 # as a set:
                 "quality_category": {quality_category},
                 "feat_type": row_tuple.element,
@@ -432,7 +436,9 @@ def write_dq_topbar(active_index=1):
     return topbar
 
 
-def create_marker_cluster_html(outpath, centerpoint, z_level, tiles="Cartodb Positron"):
+def create_marker_cluster_html(
+    outpath, centerpoint, z_level, tiles="Cartodb Positron", specific_q_category=None
+):
     import folium
 
     from folium.plugins import MarkerCluster
@@ -440,7 +446,18 @@ def create_marker_cluster_html(outpath, centerpoint, z_level, tiles="Cartodb Pos
     m = folium.Map(location=centerpoint, zoom_start=z_level, tiles=tiles)
 
     # "map_view_data" is the source of the data:
-    locations = [item["point"] for item in map_view_data.values()]
+    map_view_data_to_use = map_view_data
+
+    if specific_q_category:
+        special_map_view_data = {
+            k: v
+            for k, v in map_view_data.items()
+            if specific_q_category in v["quality_category"]
+        }.copy()
+
+        map_view_data_to_use = special_map_view_data
+
+    locations = [item["point"] for item in map_view_data_to_use.values()]
 
     icon_create_function = """\
     function(cluster) {
@@ -459,17 +476,19 @@ def create_marker_cluster_html(outpath, centerpoint, z_level, tiles="Cartodb Pos
             osm_feature_url(item["id"], item["feat_type"]),
             item["id"],
         )
-        for item in map_view_data.values()
+        for item in map_view_data_to_use.values()
     ]
 
-    marker_cluster = MarkerCluster(
-        locations=locations,
-        popups=popups,
-        name="OSWM DQ Markers (clustered)",
-        icon_create_function=icon_create_function,
-    )
+    if map_view_data_to_use:
 
-    marker_cluster.add_to(m)
+        marker_cluster = MarkerCluster(
+            locations=locations,
+            popups=popups,
+            name="OSWM DQ Markers (clustered)",
+            icon_create_function=icon_create_function,
+        )
+
+        marker_cluster.add_to(m)
 
     m.save(outpath)
 
@@ -547,6 +566,18 @@ def gen_quality_report_page_and_files(
     csv_as_df = pd.read_csv(csvpath)
     json_outpath = os.path.join(subfolderpaths["json"], f"{pagename_base}.json")
     csv_as_df.to_json(json_outpath, orient="records")
+
+    # the webmap, generate only once per quality category
+    if category == "sidewalks":
+        webmap_outpath = os.path.join(
+            subfolderpaths["maps"], f"{quality_category}.html"
+        )
+        create_marker_cluster_html(
+            webmap_outpath,
+            reversed_centerpoint,
+            dq_maps_z_default,
+            specific_q_category=quality_category,
+        )
 
     with open(outpath, "w+", encoding="utf-8") as writer:
 

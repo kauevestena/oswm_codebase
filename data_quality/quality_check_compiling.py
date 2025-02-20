@@ -241,6 +241,9 @@ about_part = """
 
 topbar = write_dq_topbar(1)
 
+# the webmap!!
+create_marker_cluster_html(qc_main_webmap_path, reversed_centerpoint, dq_maps_z_default)
+
 for quality_category in categories_dict_keys:
 
     tablepart += "<tr>"
