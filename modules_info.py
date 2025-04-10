@@ -17,7 +17,7 @@ modules_metadata = {
     "routing": {
         "url": f"{node_homepage_url}oswm_codebase/routing/routing_demo.html",
         "img_src": f"{assets_homepage_path}oswm_route_img.png",
-        "text": "Optimized Routing",
+        "text": "Routing Demo",
     },
     "dashboard": {
         "url": f"{node_homepage_url}statistics/index.html",
