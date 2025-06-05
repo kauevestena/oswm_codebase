@@ -99,6 +99,6 @@ other_footways_subcatecories = {
         "footway": ["alley", "path", "yes"],
     },
     "potential_footways": {"highway": ["path", "track"]},
-    "informal_footways_layername": {"foot": ["yes", "permissive"]},
+    "informal_footways": {"foot": ["yes", "permissive"]},
     "pedestrian_areas": {},  # defined only by geometry type (Polygon,Multipolygon)
 }
