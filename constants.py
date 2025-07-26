@@ -9,10 +9,10 @@ from config import *
 ###############
 
 # global min zoom level
-min_zoom = 10
+min_zoom = MIN_ZOOM
 
 # global max zoom level
-max_zoom = 22
+max_zoom = MAX_ZOOM
 
 data_format = ".parquet"
 
@@ -188,10 +188,10 @@ for subcategory in other_footways_subcatecories:
 versioning_dict = paths_dict["versioning"]
 
 # max radius to cut off unconnected crossings and kerbs
-max_radius_cutoff = 50
+max_radius_cutoff = MAX_RADIUS_CUTOFF
 
 # default note for features without values (in order to be different from zero)
-default_score = 0.5
+default_score = DEFAULT_SCORE
 
 fields_values_properties = {
     "sidewalks": {
@@ -629,19 +629,7 @@ req_fields = {
 }
 
 # a case of "smoothness=concrete:pĺates" demanded this
-wrong_misspelled_values = {
-    "sidewalks": {
-        "smoothness": {"concrete:plates": "?"},
-        "surface": {
-            "betão": "?",
-            "Petit_Pavê": "sett",
-            "porcelain tiles": "ceramic:tiles",
-        },
-    },
-    "kerbs": {},
-    "crossings": {},
-    "other_footways": {},
-}
+wrong_misspelled_values = WRONG_MISSPELLED_VALUES
 
 geom_type_dict = {
     "sidewalks": ["LineString"],
@@ -676,9 +664,9 @@ def get_url(relative_url, base_url=node_homepage_url):
 
 
 # to fill in default values for dates:
-default_missing_day = 9
-default_missing_month = 8
-default_missing_year = 2004
+default_missing_day = DEFAULT_MISSING_DAY
+default_missing_month = DEFAULT_MISSING_MONTH
+default_missing_year = DEFAULT_MISSING_YEAR
 # OSM's foundation date :-)
 
 # Footway types fieldname
