@@ -1,69 +1,59 @@
 name: data_daily_updating
 
-# Controls when the workflow will run
 on:
-  # # Triggers the workflow on push or pull request events but only for the "main" branch
-  # push:
-  #   branches: ["main"]
-  # pull_request:
-  #   branches: ["main"]
-
   schedule:
-    # run 4h30min every day
+    # Runs every day at 07:30 UTC (04:30 in America/Sao_Paulo during BRT; 03:30 during BRST)
     - cron: "30 7 * * *"
-
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 permissions:
   contents: write
-  pages: write
-  id-token: write
+
+concurrency:
+  # Prevent overlapping daily runs from stepping on each other
+  group: data_daily_updating
+  cancel-in-progress: false
+
+env:
+  TZ: America/Sao_Paulo
 
 jobs:
   data_daily_updating:
     runs-on: ubuntu-latest
-    # continue-on-error: true
     steps:
-      #### actions/checkout ____________________________________________________
-      # @see https://github.com/actions/checkout
-      - uses: actions/checkout@v3
+      # Checkout the latest commit on main and let it pull submodules properly
+      - uses: actions/checkout@v4
+        with:
+          ref: main               # ensure the run uses HEAD of main
+          fetch-depth: 0          # full history avoids submodule/rewritten history issues
+          submodules: recursive   # fetch submodules correctly
 
+      # (Optional but harmless) mark workspace safe for any git ops later
+      - name: Mark repo as safe for Git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
-      #### setup submodules __________________________________________________
-      - run: |
-          git submodule sync --recursive
-          git submodule update --init --recursive     
-          cd oswm_codebase
-          git fetch origin
-          git reset --hard origin/main
-          cd ..
-
-
-      #### setup-python ________________________________________________________
-      # @see https://github.com/actions/setup-python
+      # Set up Python with built-in pip cache (fast installs on repeats)
       - uses: actions/setup-python@v4
         with:
           python-version: "3.x"
-          cache: 'pip' # caching pip dependencies
+          cache: pip
+          cache-dependency-path: oswm_codebase/requirements.txt
 
+      - name: Install dependencies
+        run: pip install -r oswm_codebase/requirements.txt
 
-      #### setup dependencies __________________________________________________
-      - run: pip install -r oswm_codebase/requirements.txt
+      - name: Run daily job
+        run: sh oswm_codebase/runners/daily.sh
 
-
-      #### main ________________________________________________________________
-
-      - run: sh oswm_codebase/runners/daily.sh
-  
-      #### upload ______________________________________________________________
-      # @see https://github.com/actions/checkout#push-a-commit-using-the-built-in-token
-      - run: |
-          DATETIME="$(TZ=":America/Sao_Paulo" date +"%Y-%m-%d")"
-          COMMIT_MESSAGE="data updating at $DATETIME"
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git pull
-          git add .
-          git commit -m "$COMMIT_MESSAGE"
-          git push
+      - name: Commit and push changes (if any)
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          DATETIME="$(date +'%Y-%m-%d')"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "data updating at $DATETIME"
+            git push
+          else
+            echo "No changes to commit."
+          fi
