@@ -173,6 +173,17 @@ class StandaloneLegendHTML:
     def export_elements(self):
         return self._generate_css(), self._generate_html_body()
 
+    def export(self, filename="legend.html", **kwargs):
+        """
+        Export method for compatibility with the original StandaloneLegend.
+        Exports to HTML instead of PNG.
+        """
+        # Check if filename has .png extension and change it to .html
+        if filename.endswith(".png"):
+            filename = filename.replace(".png", ".html")
+
+        self.export_full_page(filename, **kwargs)
+
 
 if __name__ == "__main__":
     # Example usage:

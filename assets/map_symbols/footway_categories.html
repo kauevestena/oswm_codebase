@@ -1,0 +1,66 @@
+
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Legend</title>
+            <style>
+        :root {
+            --text-size: 1em;
+            --symbol-size: 18px;
+            --symbol-width: 30px;
+            --line-height: 1.5;
+            --symbol-container-height: 20px;
+        }
+        body {
+            font-family: sans-serif;
+        }
+        .legend-title {
+            font-size: calc(var(--text-size) * 1.2);
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: var(--text-size);
+            line-height: var(--line-height);
+        }
+        .legend-symbol-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: var(--symbol-width);
+            height: var(--symbol-container-height);
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+        .legend-symbol {
+            display: block;
+        }
+        .line {
+            height: 3px;
+            width: var(--symbol-width);
+        }
+        .marker {
+            height: var(--symbol-size);
+            width: var(--symbol-size);
+        }
+        .patch {
+            height: var(--symbol-size);
+            width: var(--symbol-width);
+            border: 2px solid;
+        }
+        .circle {
+            border-radius: 50%;
+        }
+        .legend-text {
+            line-height: var(--symbol-container-height);
+        }
+        </style>
+        </head>
+        <body>
+            <div class="legend-title">Legend</div><div class="legend-item"><div class="legend-symbol-container"><span class="legend-symbol patch" style="background-color: orange; border-color: w;"></span></div><span class="legend-text">pedestrian_areas</span></div><div class="legend-item"><div class="legend-symbol-container"><span class="legend-symbol line" style="background-color: steelblue;"></span></div><span class="legend-text">sidewalks</span></div><div class="legend-item"><div class="legend-symbol-container"><span class="legend-symbol line" style=" border-style: dashed; border-width: 2px 0; background-color: transparent; border-color: steelblue;"></span></div><span class="legend-text">crossings</span></div><div class="legend-item"><div class="legend-symbol-container"><span class="legend-symbol line" style="background-color: #8a7e2f;"></span></div><span class="legend-text">stairways</span></div><div class="legend-item"><div class="legend-symbol-container"><span class="legend-symbol line" style="background-color: #299077;"></span></div><span class="legend-text">main_footways</span></div><div class="legend-item"><div class="legend-symbol-container"><span class="legend-symbol line" style="background-color: #9569a4;"></span></div><span class="legend-text">potential_footways</span></div><div class="legend-item"><div class="legend-symbol-container"><span class="legend-symbol line" style="background-color: #b0645a;"></span></div><span class="legend-text">informal_footways</span></div><div class="legend-item"><div class="legend-symbol-container"><span class="legend-symbol marker circle" style="background-color: black; height: 18px; width: 18px;"></span></div><span class="legend-text">kerbs</span></div>
+        </body>
+        </html>
+        

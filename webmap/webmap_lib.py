@@ -2,7 +2,7 @@ import sys
 
 sys.path.append("oswm_codebase")
 from copy import deepcopy
-from standalone_legend import *
+from webmap.standalone_legend_html import *
 
 
 MAP_DATA_LAYERS = [l for l in paths_dict["map_layers"]]
@@ -239,7 +239,7 @@ def create_base_style(sources=MAP_SOURCES, name="Footway Categories"):
     style_dict = intialize_style_dict(name, sources)
 
     # declaring the legend:
-    style_legend = StandaloneLegend()
+    style_legend = StandaloneLegendHTML()
 
     for layername in ordered_map_layers:
         layer_dict, layer_type = initialize_layer_dict(layername)
@@ -309,7 +309,7 @@ def create_simple_map_style(
 
     # now generating the map symbols
     # TODO: check the hashing, otherwise no need to re-run
-    style_legend = StandaloneLegend()
+    style_legend = StandaloneLegendHTML()
 
     custom_line_args = {
         "linewidth": 4,
@@ -379,7 +379,7 @@ def create_crossings_kerbs_style(
     }
 
     # instantiating the legend:
-    style_legend = StandaloneLegend()
+    style_legend = StandaloneLegendHTML()
 
     for layername in ordered_map_layers:
         layer_type = layertypes_dict[layername]
@@ -501,7 +501,7 @@ def create_simple_numeric_style(
         style_dict["layers"].append(layer_dict)
 
     # instantiating the legend:
-    style_legend = StandaloneLegend()
+    style_legend = StandaloneLegendHTML()
 
     custom_line_args = {
         "linewidth": 4,
