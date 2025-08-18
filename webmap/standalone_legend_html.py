@@ -63,7 +63,7 @@ class StandaloneLegendHTML:
         }
         .legend-item {
             display: flex;
-            align-items: baseline;
+            align-items: center;
             margin-bottom: 8px;
             font-size: var(--text-size);
             line-height: var(--line-height);
