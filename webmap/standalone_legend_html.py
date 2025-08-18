@@ -2,7 +2,8 @@
 
 import os
 import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from functions import *
 
 
@@ -32,23 +33,25 @@ class StandaloneLegendHTML:
             )
 
     def add_line(self, label="Line", **kwargs):
-        self.elements.append({'type': 'line', 'label': label, 'properties': kwargs})
+        self.elements.append({"type": "line", "label": label, "properties": kwargs})
 
     def add_marker(self, marker="o", label="Marker", **kwargs):
-        kwargs['marker'] = marker
-        self.elements.append({'type': 'marker', 'label': label, 'properties': kwargs})
+        kwargs["marker"] = marker
+        self.elements.append({"type": "marker", "label": label, "properties": kwargs})
 
     def add_patch(self, facecolor="orange", edgecolor="w", label="Patch", **kwargs):
-        kwargs['facecolor'] = facecolor
-        kwargs['edgecolor'] = edgecolor
-        self.elements.append({'type': 'patch', 'label': label, 'properties': kwargs})
+        kwargs["facecolor"] = facecolor
+        kwargs["edgecolor"] = edgecolor
+        self.elements.append({"type": "patch", "label": label, "properties": kwargs})
 
     def _generate_css(self):
         return """
         :root {
             --text-size: 1em;
-            --symbol-size: 1em;
-            --line-height: 2;
+            --symbol-size: 18px;
+            --symbol-width: 30px;
+            --line-height: 1.5;
+            --symbol-container-height: 20px;
         }
         body {
             font-family: sans-serif;
@@ -60,19 +63,26 @@ class StandaloneLegendHTML:
         }
         .legend-item {
             display: flex;
-            align-items: center;
-            margin-bottom: 5px;
+            align-items: baseline;
+            margin-bottom: 8px;
             font-size: var(--text-size);
             line-height: var(--line-height);
         }
-        .legend-symbol {
-            display: inline-block;
+        .legend-symbol-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: var(--symbol-width);
+            height: var(--symbol-container-height);
             margin-right: 10px;
             flex-shrink: 0;
         }
+        .legend-symbol {
+            display: block;
+        }
         .line {
-            height: calc(var(--symbol-size) * 0.2);
-            width: calc(var(--symbol-size) * 2);
+            height: 3px;
+            width: var(--symbol-width);
         }
         .marker {
             height: var(--symbol-size);
@@ -80,41 +90,68 @@ class StandaloneLegendHTML:
         }
         .patch {
             height: var(--symbol-size);
-            width: calc(var(--symbol-size) * 2);
-            border: 1px solid;
+            width: var(--symbol-width);
+            border: 2px solid;
         }
         .circle {
             border-radius: 50%;
+        }
+        .legend-text {
+            line-height: var(--symbol-container-height);
         }
         """
 
     def _generate_html_body(self):
         body = f'<div class="legend-title">{self.title}</div>'
         for element in self.elements:
-            label = element['label']
-            props = element['properties']
-            symbol_html = ''
-            style = ''
-            if element['type'] == 'line':
-                style += f"background-color: {props.get('color', 'black')};"
-                if props.get('linewidth'):
-                    style += f" height: {props.get('linewidth')}px;"
-                if props.get('dashes'):
-                    style += " border-style: dashed; border-width: 1px 0; background-color: transparent;"
-                symbol_html = f'<span class="legend-symbol line" style="{style}"></span>'
-            elif element['type'] == 'marker':
-                style += f"background-color: {props.get('markerfacecolor', 'black')};"
-                if props.get('markersize'):
-                    style += f" height: {props.get('markersize')}px; width: {props.get('markersize')}px;"
-                marker_type = 'marker'
-                if props.get('marker') == 'o':
-                    marker_type += ' circle'
-                symbol_html = f'<span class="legend-symbol {marker_type}" style="{style}"></span>'
-            elif element['type'] == 'patch':
-                style += f"background-color: {props.get('facecolor', 'orange')}; border-color: {props.get('edgecolor', 'black')};"
-                symbol_html = f'<span class="legend-symbol patch" style="{style}"></span>'
+            label = element["label"]
+            props = element["properties"]
+            symbol_html = ""
+            style = ""
 
-            body += f'<div class="legend-item">{symbol_html}<span>{label}</span></div>'
+            if element["type"] == "line":
+                style += f"background-color: {props.get('color', 'black')};"
+                # Override height if linewidth is specified, but keep it reasonable
+                if props.get("linewidth"):
+                    height = max(
+                        1, min(6, props.get("linewidth"))
+                    )  # Clamp between 1-6px
+                    style += f" height: {height}px;"
+                if props.get("dashes"):
+                    style += (
+                        " border-style: dashed; border-width: 2px 0; background-color: transparent; border-color: "
+                        + props.get("color", "black")
+                        + ";"
+                    )
+                    style = style.replace(
+                        "background-color: " + props.get("color", "black") + ";", ""
+                    )
+                symbol_html = (
+                    f'<span class="legend-symbol line" style="{style}"></span>'
+                )
+
+            elif element["type"] == "marker":
+                style += f"background-color: {props.get('markerfacecolor', 'black')};"
+                # Use consistent size for all markers, but allow some customization
+                marker_size = props.get("markersize", 18)
+                if marker_size:
+                    # Scale down large marker sizes to fit within our standard
+                    size = min(18, max(8, marker_size))
+                    style += f" height: {size}px; width: {size}px;"
+                marker_type = "marker"
+                if props.get("marker") == "o":
+                    marker_type += " circle"
+                symbol_html = (
+                    f'<span class="legend-symbol {marker_type}" style="{style}"></span>'
+                )
+
+            elif element["type"] == "patch":
+                style += f"background-color: {props.get('facecolor', 'orange')}; border-color: {props.get('edgecolor', 'black')};"
+                symbol_html = (
+                    f'<span class="legend-symbol patch" style="{style}"></span>'
+                )
+
+            body += f'<div class="legend-item"><div class="legend-symbol-container">{symbol_html}</div><span class="legend-text">{label}</span></div>'
         return body
 
     def export_full_page(self, filename="legend.html", **kwargs):
@@ -136,30 +173,44 @@ class StandaloneLegendHTML:
     def export_elements(self):
         return self._generate_css(), self._generate_html_body()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     # Example usage:
     legend = StandaloneLegendHTML(title="My Dynamic Legend")
     legend.add_line(label="Road", color="black", linewidth=4)
     legend.add_line(label="Path", color="brown", dashes=[2, 2])
-    legend.add_marker(label="Point of Interest", marker="o", markerfacecolor="blue", markersize=10)
+    legend.add_marker(
+        label="Point of Interest", marker="o", markerfacecolor="blue", markersize=10
+    )
     legend.add_patch(label="Park Area", facecolor="green", edgecolor="darkgreen")
 
     # Using add_element iteratively
     elements = [
-        ('line', {'color': 'red', 'linewidth': 2, 'label': 'Red Line'}),
-        ('marker', {'marker': 's', 'markerfacecolor': 'purple', 'markersize': 10, 'label': 'Square Marker'}),
-        ('patch', {'facecolor': 'yellow', 'edgecolor': 'black', 'label': 'Yellow Patch'})
+        ("line", {"color": "red", "linewidth": 2, "label": "Red Line"}),
+        (
+            "marker",
+            {
+                "marker": "s",
+                "markerfacecolor": "purple",
+                "markersize": 10,
+                "label": "Square Marker",
+            },
+        ),
+        (
+            "patch",
+            {"facecolor": "yellow", "edgecolor": "black", "label": "Yellow Patch"},
+        ),
     ]
 
     for elem_type, kwargs in elements:
-        legend.add_element(elem_type, label=kwargs.pop('label'), **kwargs)
+        legend.add_element(elem_type, label=kwargs.pop("label"), **kwargs)
 
     # create a test folder if it does not exist
-    if not os.path.exists('tests'):
-        os.makedirs('tests')
+    if not os.path.exists("tests"):
+        os.makedirs("tests")
 
     # Demonstrate export_full_page
-    legend.export_full_page('tests/legend_full_page.html')
+    legend.export_full_page("tests/legend_full_page.html")
     print("Generated full HTML legend in tests/legend_full_page.html")
 
     # Demonstrate export_elements
@@ -194,6 +245,6 @@ if __name__ == '__main__':
     </html>
     """
 
-    with open('tests/example.html', 'w') as f:
+    with open("tests/example.html", "w") as f:
         f.write(example_html)
     print("Generated example HTML with embedded legend in tests/example.html")
