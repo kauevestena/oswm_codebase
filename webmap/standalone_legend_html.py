@@ -8,6 +8,8 @@ from functions import *
 
 
 class StandaloneLegendHTML:
+    default_line_height = 8
+
     def __init__(self, title="Legend"):
         self.elements = []
         self.title = title
@@ -97,9 +99,9 @@ class StandaloneLegendHTML:
             display: block;
         }}
         .line {{
-            height: 3px;
+            height: {self.default_line_height}px; /* a little thicker */
             width: var(--symbol-width);
-            border: 1px solid rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(0, 0, 0, 0.85); /* keep a dark margin */
             box-sizing: border-box;
         }}
         .marker {{
@@ -134,16 +136,22 @@ class StandaloneLegendHTML:
 
             if element["type"] == "line":
                 style += f"background-color: {props.get('color', 'black')};"
+                # default visible height (keeps parity with .line CSS)
+                height = self.default_line_height
                 # Override height if linewidth is specified, but keep it reasonable
-                if props.get("linewidth"):
-                    height = max(
-                        1, min(6, props.get("linewidth"))
-                    )  # Clamp between 1-6px
-                    style += f" height: {height}px;"
+                # if props.get("linewidth") is not None:
+                #     height = max(
+                #         2, min(10, props.get("linewidth"))
+                #     )  # Clamp between 2-10px
+                style += f" height: {height}px;"
                 if props.get("dashes"):
                     # For dashed lines, use border instead of background
                     color = props.get("color", "black")
-                    style = f"background-color: transparent; border-style: dashed; border-width: 2px 0; border-color: {color}; box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.2);"
+                    # keep a thick dark margin and dashed interior
+                    style = (
+                        f"background-color: transparent; border-style: dashed; border-width: {max(2, height-1)}px 0; "
+                        f"border-color: {color}; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.85);"
+                    )
                 symbol_html = (
                     f'<span class="legend-symbol line" style="{style}"></span>'
                 )
