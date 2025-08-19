@@ -18,11 +18,11 @@
             margin: 0;
             width: 100%;
             min-width: 150px;
-            max-height: 70vh;
-            overflow-y: auto;
+            /* Let parent iframe control height and scrolling to avoid feedback loops */
+            overflow-y: visible;
             overflow-x: hidden;
             box-sizing: border-box;
-            height: fit-content;
+            height: auto;
         }
         .legend-title {
             font-size: calc(var(--text-size) * 1.2);

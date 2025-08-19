@@ -48,22 +48,6 @@ class StandaloneLegendHTML:
         if num_items is None:
             num_items = len(self.elements)
 
-        # Calculate dynamic height based on content
-        # Each item is approximately 28px (20px container + 8px margin)
-        # Plus title (approximately 35px) and padding (20px total)
-        estimated_height = (num_items * 28) + 35 + 20
-
-        # Set max-height more intelligently
-        if num_items <= 3:
-            max_height = "fit-content"
-            overflow_y = "visible"
-        elif num_items <= 8:
-            max_height = "50vh"
-            overflow_y = "auto"
-        else:
-            max_height = "70vh"
-            overflow_y = "auto"
-
         return f"""
         :root {{
             --text-size: 1em;
@@ -79,11 +63,11 @@ class StandaloneLegendHTML:
             margin: 0;
             width: 100%;
             min-width: 150px;
-            max-height: {max_height};
-            overflow-y: {overflow_y};
+            /* Let parent iframe control height and scrolling to avoid feedback loops */
+            overflow-y: visible;
             overflow-x: hidden;
             box-sizing: border-box;
-            height: fit-content;
+            height: auto;
         }}
         .legend-title {{
             font-size: calc(var(--text-size) * 1.2);
