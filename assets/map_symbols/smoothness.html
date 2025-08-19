@@ -13,11 +13,24 @@
         }
         body {
             font-family: sans-serif;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            margin: 0;
+            width: 100%;
+            min-width: 150px;
+            max-height: 70vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+            box-sizing: border-box;
+            height: fit-content;
         }
         .legend-title {
             font-size: calc(var(--text-size) * 1.2);
             font-weight: bold;
             margin-bottom: 10px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .legend-item {
             display: flex;
@@ -41,6 +54,8 @@
         .line {
             height: 3px;
             width: var(--symbol-width);
+            border: 1px solid rgba(0, 0, 0, 0.3);
+            box-sizing: border-box;
         }
         .marker {
             height: var(--symbol-size);
@@ -56,6 +71,11 @@
         }
         .legend-text {
             line-height: var(--symbol-container-height);
+            flex: 1;
+            min-width: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         </style>
         </head>

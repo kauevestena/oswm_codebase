@@ -44,31 +44,63 @@ class StandaloneLegendHTML:
         kwargs["edgecolor"] = edgecolor
         self.elements.append({"type": "patch", "label": label, "properties": kwargs})
 
-    def _generate_css(self):
-        return """
-        :root {
+    def _generate_css(self, num_items=None):
+        if num_items is None:
+            num_items = len(self.elements)
+
+        # Calculate dynamic height based on content
+        # Each item is approximately 28px (20px container + 8px margin)
+        # Plus title (approximately 35px) and padding (20px total)
+        estimated_height = (num_items * 28) + 35 + 20
+
+        # Set max-height more intelligently
+        if num_items <= 3:
+            max_height = "fit-content"
+            overflow_y = "visible"
+        elif num_items <= 8:
+            max_height = "50vh"
+            overflow_y = "auto"
+        else:
+            max_height = "70vh"
+            overflow_y = "auto"
+
+        return f"""
+        :root {{
             --text-size: 1em;
             --symbol-size: 18px;
             --symbol-width: 30px;
             --line-height: 1.5;
             --symbol-container-height: 20px;
-        }
-        body {
+        }}
+        body {{
             font-family: sans-serif;
-        }
-        .legend-title {
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            margin: 0;
+            width: 100%;
+            min-width: 150px;
+            max-height: {max_height};
+            overflow-y: {overflow_y};
+            overflow-x: hidden;
+            box-sizing: border-box;
+            height: fit-content;
+        }}
+        .legend-title {{
             font-size: calc(var(--text-size) * 1.2);
             font-weight: bold;
             margin-bottom: 10px;
-        }
-        .legend-item {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }}
+        .legend-item {{
             display: flex;
             align-items: center;
             margin-bottom: 8px;
             font-size: var(--text-size);
             line-height: var(--line-height);
-        }
-        .legend-symbol-container {
+        }}
+        .legend-symbol-container {{
             display: flex;
             align-items: center;
             justify-content: center;
@@ -76,29 +108,36 @@ class StandaloneLegendHTML:
             height: var(--symbol-container-height);
             margin-right: 10px;
             flex-shrink: 0;
-        }
-        .legend-symbol {
+        }}
+        .legend-symbol {{
             display: block;
-        }
-        .line {
+        }}
+        .line {{
             height: 3px;
             width: var(--symbol-width);
-        }
-        .marker {
+            border: 1px solid rgba(0, 0, 0, 0.3);
+            box-sizing: border-box;
+        }}
+        .marker {{
             height: var(--symbol-size);
             width: var(--symbol-size);
-        }
-        .patch {
+        }}
+        .patch {{
             height: var(--symbol-size);
             width: var(--symbol-width);
             border: 2px solid;
-        }
-        .circle {
+        }}
+        .circle {{
             border-radius: 50%;
-        }
-        .legend-text {
+        }}
+        .legend-text {{
             line-height: var(--symbol-container-height);
-        }
+            flex: 1;
+            min-width: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }}
         """
 
     def _generate_html_body(self):
@@ -118,14 +157,9 @@ class StandaloneLegendHTML:
                     )  # Clamp between 1-6px
                     style += f" height: {height}px;"
                 if props.get("dashes"):
-                    style += (
-                        " border-style: dashed; border-width: 2px 0; background-color: transparent; border-color: "
-                        + props.get("color", "black")
-                        + ";"
-                    )
-                    style = style.replace(
-                        "background-color: " + props.get("color", "black") + ";", ""
-                    )
+                    # For dashed lines, use border instead of background
+                    color = props.get("color", "black")
+                    style = f"background-color: transparent; border-style: dashed; border-width: 2px 0; border-color: {color}; box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.2);"
                 symbol_html = (
                     f'<span class="legend-symbol line" style="{style}"></span>'
                 )
