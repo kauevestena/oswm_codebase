@@ -410,16 +410,17 @@ def create_crossings_kerbs_style(
             color_dict[r"other/none"] = else_color
 
             for key in color_dict:
-                style_legend.add_element(
-                    layer_type,
-                    f"{legend_basenames[layername]} - {key}",
-                    **{
-                        "color": color_dict[key],
-                        "width": legend_widths[layername],
-                    },
-                )
+                elem_kwargs = {"width": legend_widths[layername]}
+                # for point layers, use markerfacecolor so markers are filled
+                if layer_type == "circle":
+                    elem_kwargs["markerfacecolor"] = color_dict[key]
+                    elem_kwargs["edgecolor"] = "black"
+                else:
+                    elem_kwargs["color"] = color_dict[key]
 
-        else:
+                style_legend.add_element(
+                    layer_type, f"{legend_basenames[layername]} - {key}", **elem_kwargs
+                )
             # all other layers will be a very faded gray:
             layer_dict["paint"][color_attribute[layer_type]] = else_color
 
