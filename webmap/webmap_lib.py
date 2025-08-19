@@ -255,16 +255,20 @@ def create_base_style(sources=MAP_SOURCES, name="Footway Categories"):
         # now the custom colors
         style_dict["layers"].append(layer_dict)
 
-        # adding to the legend:
-        style_legend.add_element(
-            layer_type,
-            layername,
-            **{
-                "color": custom_layer_colors.get(layername, default_color),
-                "width": custom_legend_widths.get(layername, 4),
-                "dashes": custom_layer_dash_patterns.get(layername),
-            },
-        )
+        # adding to the legend: use facecolor for fills so patches get correct color
+        element_kwargs = {
+            "width": custom_legend_widths.get(layername, 4),
+            "dashes": custom_layer_dash_patterns.get(layername),
+        }
+        if layer_type == "fill":
+            element_kwargs["facecolor"] = custom_layer_colors.get(
+                layername, default_color
+            )
+            element_kwargs["edgecolor"] = "black"
+        else:
+            element_kwargs["color"] = custom_layer_colors.get(layername, default_color)
+
+        style_legend.add_element(layer_type, layername, **element_kwargs)
 
     style_legend.export(
         os.path.join(map_symbols_assets_path, "footway_categories" + ".png")
