@@ -84,18 +84,20 @@
             align-items: center;
             justify-content: center;
             z-index: 10000;
+            padding: 20px;
+            box-sizing: border-box;
         }
 
         .modal {
             background: #fff;
             width: 300px;
-            max-width: 80%;
+            max-width: 100%;
             padding: 20px;
             border-radius: 8px;
             font-family: Arial, sans-serif;
-            position: relative;
             margin: 0;
-            /* Remove default margin since it's now centered by flex */
+            box-sizing: border-box;
+            /* Remove position: relative as it's not needed with flexbox centering */
         }
 
         .modal h2 {
