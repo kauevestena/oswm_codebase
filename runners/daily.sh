@@ -1,17 +1,46 @@
+#!/bin/bash
 
-python oswm_codebase/getting_data.py || echo "getting_data.py failed"; \
-# this structure assures independence on successful completion of the previous step
+# Track which steps failed
+FAILED_STEPS=""
 
-python oswm_codebase/filtering_adapting_data.py || echo "filtering_adapting_data.py failed"; \
+run_step() {
+    local script="$1"
+    local label="$2"
+    echo "========================================="
+    echo "Running: $label"
+    echo "========================================="
+    if python "$script"; then
+        echo "\u2713 $label succeeded"
+    else
+        echo "\u2717 $label FAILED (exit code: $?)"
+        FAILED_STEPS="${FAILED_STEPS}\n- ${label}"
+    fi
+    echo ""
+}
 
-python oswm_codebase/generation/vec_tiles_gen.py || echo "vec_tiles_gen.py failed"; \
+# Each step runs independently regardless of the others
+run_step oswm_codebase/getting_data.py             "getting_data"
+run_step oswm_codebase/filtering_adapting_data.py  "filtering_adapting_data"
+run_step oswm_codebase/generation/vec_tiles_gen.py "vec_tiles_gen"
+run_step oswm_codebase/webmap/create_webmap_new.py "create_webmap_new"
+run_step oswm_codebase/data_quality/tag_values_checking.py     "tag_values_checking"
+run_step oswm_codebase/data_quality/quality_check_compiling.py "quality_check_compiling"
+run_step oswm_codebase/data_quality/external_qc.py             "external_qc"
+run_step oswm_codebase/dashboard/statistics_generation.py      "statistics_generation"
 
-python oswm_codebase/webmap/create_webmap_new.py || echo "create_webmap_new.py failed"; \
+# Print summary and propagate failure
+echo "========================================="
+echo "PIPELINE SUMMARY"
+echo "========================================="
 
-python oswm_codebase/data_quality/tag_values_checking.py || echo "tag_values_checking.py failed"; \
-
-python oswm_codebase/data_quality/quality_check_compiling.py || echo "quality_check_compiling.py failed"; \
-
-python oswm_codebase/data_quality/external_qc.py || echo "quality_check_compiling.py failed"; \
-
-python oswm_codebase/dashboard/statistics_generation.py || echo "statistics_generation.py failed"
+if [ -n "$FAILED_STEPS" ]; then
+    echo "The following steps FAILED:"
+    printf "%b\n" "$FAILED_STEPS"
+    # Write failure list for the workflow notification step to read
+    printf "%b\n" "$FAILED_STEPS" > data/pipeline_failures.txt
+    exit 1
+else
+    echo "\u2713 All steps completed successfully."
+    rm -f data/pipeline_failures.txt
+    exit 0
+fi
