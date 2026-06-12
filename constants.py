@@ -127,10 +127,12 @@ crossings_path_raw = "data/crossings_raw" + data_format
 kerbs_path_raw = "data/kerbs_raw" + data_format
 other_footways_path_raw = "data/other_footways_raw" + data_format
 
-sidewalks_path_versioning = "data/versioning/sidewalks_versioning.json"
-crossings_path_versioning = "data/versioning/crossings_versioning.json"
-kerbs_path_versioning = "data/versioning/kerbs_versioning.json"
-other_footways_path_versioning = "data/versioning/other_footways_versioning.json"
+sidewalks_path_versioning = f"{versioning_folderpath}/sidewalks_versioning.json"
+crossings_path_versioning = f"{versioning_folderpath}/crossings_versioning.json"
+kerbs_path_versioning = f"{versioning_folderpath}/kerbs_versioning.json"
+other_footways_path_versioning = (
+    f"{versioning_folderpath}/other_footways_versioning.json"
+)
 
 # data quality jsons path
 feat_keys_path = "quality_check/feature_keys.json"
@@ -698,3 +700,11 @@ basic_html = """
 </body>
 </html>
 """
+
+
+# DataHub constants
+datahub_root = "hub"
+
+acquisition_folder = os.path.join(datahub_root, "acquisition")
+api_folder = os.path.join(acquisition_folder, "API")
+watcher_folder = os.path.join(acquisition_folder, "watcher")

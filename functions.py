@@ -524,26 +524,55 @@ def get_territory_polygon(place_name, outpath=None, outpath_metadata=None):
     # Make a request to Nominatim API with the place name
     url = "https://nominatim.openstreetmap.org/search"
     params = {"q": place_name, "format": "json", "polygon_geojson": 1}
-    response = requests.get(url, params=params)
+    headers = {"User-Agent": "city_dems/1.0 (https://github.com/kauevestena/city_dems)"}
+    response = requests.get(url, params=params, headers=headers)
+
+    # Check for HTTP errors
+    response.raise_for_status()
 
     # Parse the response as a JSON object
     data = response.json()
 
+    # Check if data is empty
+    if not data:
+        raise ValueError(f"No results found for place: {place_name}")
+
     # sort data by "importance", that is a key in each dictionary of the list:
     data.sort(key=lambda x: x["importance"], reverse=True)
 
+    # Prefer administrative boundaries (Polygon/MultiPolygon) over point results
+    # Filter for boundary/administrative entries first
+    boundary_results = [
+        r
+        for r in data
+        if r.get("class") == "boundary" and r.get("type") == "administrative"
+    ]
+
+    # If no boundary results, try to find any result with a Polygon geometry
+    if not boundary_results:
+        boundary_results = [
+            r
+            for r in data
+            if r.get("geojson", {}).get("type") in ("Polygon", "MultiPolygon")
+        ]
+
+    # Use boundary result if available, otherwise fall back to top importance result
+    selected_result = boundary_results[0] if boundary_results else data[0]
+
     # Get the polygon of the territory as a GeoJSON object
-    polygon = data[0]["geojson"]
+    polygon = selected_result["geojson"]
 
     if outpath:
         dump_json(polygon, outpath)
 
     if outpath_metadata:
 
-        if "geojson" in data[0]:
-            del data[0]["geojson"]
+        if "geojson" in selected_result:
+            del selected_result["geojson"]
 
-        dump_json(data[0], outpath_metadata)
+        metadata = selected_result
+
+        dump_json(metadata, outpath_metadata)
 
     # Return the polygon
     return polygon
