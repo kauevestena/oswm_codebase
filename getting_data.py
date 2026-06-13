@@ -6,6 +6,7 @@ import osmnx as ox
 # Getting the boundaries:
 # downloading the boundaries if doesn't exist:
 print("checking boundaries...")
+create_folder_if_not_exists(boundaries_folderpath)
 if not os.path.exists(boundaries_geojson_path):
     try:
         get_territory_polygon(CITY_NAME, boundaries_geojson_path, boundaries_md_path)
@@ -31,6 +32,8 @@ if not os.path.exists(boundaries_geojson_path):
 else:
     boundaries_gdf = gpd.read_file(boundaries_geojson_path)
     boundary_polygon = boundaries_gdf["geometry"].iloc[0]
+    if not os.path.exists(boundaries_path):
+        save_geoparquet(boundaries_gdf, boundaries_path)
 
 # now generating some "boundaries infos" json:
 metric_bondary_polygon = boundaries_gdf.to_crs(boundaries_gdf.estimate_utm_crs())[

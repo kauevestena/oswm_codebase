@@ -206,7 +206,7 @@
             style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json'
         });
 
-        fetch('../../data/routing_demo.geojson')
+        fetch('../../data/routing/demo.geojson')
             .then(response => response.json())
             .then(data => {
                 originalData = data;
@@ -260,7 +260,7 @@
                     // add the boundaries geojson:
                     map.addSource('boundaries', {
                         'type': 'geojson',
-                        'data': '../../data/boundaries.geojson'
+                        'data': '../../data/boundaries/polygon.geojson'
                     });
 
                     map.addLayer({

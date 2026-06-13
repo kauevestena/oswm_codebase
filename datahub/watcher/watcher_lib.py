@@ -132,7 +132,7 @@ def needs_update(
         Layer names to check.  Defaults to all entries in ``OHSOME_FILTER_MAP``
         (sidewalks, crossings, kerbs, other_footways).
     since_key :
-        Key in ``data/last_updated.json`` used as the reference timestamp.
+        Key in ``data/updates/registry.json`` used as the reference timestamp.
         Defaults to ``"Data Fetching"``.
 
     Returns
@@ -148,7 +148,7 @@ def needs_update(
     since = _load_last_processed_time(since_key)
     if since is None:
         print(
-            f"[watcher] No '{since_key}' timestamp in last_updated.json"
+            f"[watcher] No '{since_key}' timestamp in updates registry"
             " — assuming update is needed."
         )
         return {layer: True for layer in layers}

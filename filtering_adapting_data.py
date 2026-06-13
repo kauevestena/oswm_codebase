@@ -290,7 +290,7 @@ for category in gdf_dict:
             # optimize, keeping only the remaining rows
             other_footways_gdf = other_footways_gdf[~belonging].copy()
 
-    save_geoparquet(curr_gdf, f"data/{category}" + data_format)
+    save_geoparquet(curr_gdf, paths_dict["data"][category])
 
 # saving the keys in data:
 dump_json(raw_data_keys, feat_keys_path)

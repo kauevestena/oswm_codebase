@@ -133,7 +133,9 @@ def get_sources(terrain_url=None, only_urls=False):
     ret["sources"] = {}
 
     for layername in paths_dict["map_layers"]:
-        ret[f"{layername}_url"] = f"{node_homepage_url}data/tiles/{layername}.pmtiles"
+        ret[f"{layername}_url"] = (
+            f"{node_homepage_url}{tiles_folderpath}/{layername}.pmtiles"
+        )
 
         ret["sources"][f"oswm_pmtiles_{layername}"] = {
             "type": "vector",
@@ -142,7 +144,7 @@ def get_sources(terrain_url=None, only_urls=False):
             "attribution": r'© <a href="https://openstreetmap.org">OpenStreetMap Contributors</a>',
         }
 
-    ret["boundaries_url"] = f"{node_homepage_url}data/boundaries.geojson"
+    ret["boundaries_url"] = f"{node_homepage_url}{boundaries_geojson_path}"
 
     # basemap:
     ret["sources"]["osm"] = {

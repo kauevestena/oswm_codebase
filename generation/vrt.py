@@ -91,6 +91,7 @@ def generate_simple_vrt_xml(
 
 def write_vrt_file(vrt_content: str, output_path: str):
     """Write VRT XML content to a file."""
+    ensure_parent_folder(output_path)
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(vrt_content)
     print(f"VRT file written to: {output_path}")

@@ -23,7 +23,14 @@ def read_json(inputpath):
     return json.loads(data)
 
 
+def ensure_parent_folder(outputpath):
+    parent = os.path.dirname(outputpath)
+    if parent:
+        os.makedirs(parent, exist_ok=True)
+
+
 def dump_json(inputdict, outputpath, indent=4):
+    ensure_parent_folder(outputpath)
     with open(outputpath, "w+", encoding="utf8") as json_handle:
         json.dump(inputdict, json_handle, indent=indent, ensure_ascii=False)
 
@@ -41,6 +48,7 @@ def str_to_file(inputstr: str, outputpath: str, check_path=False):
         if not os.path.exists(outputpath):
             raise (FileNotFoundError)
 
+    ensure_parent_folder(outputpath)
     with open(outputpath, "w+", encoding="utf8") as writer:
         writer.write(inputstr)
         sleep(0.05)
@@ -79,7 +87,7 @@ def formatted_datetime_now():
     return now.strftime("%d/%m/%Y %H:%M:%S")
 
 
-def record_datetime(key, json_path="data/last_updated.json"):
+def record_datetime(key, json_path=updating_infos_path):
 
     datadict = read_json(json_path)
 
@@ -133,7 +141,7 @@ def get_tables_styles(levels_backward=1):
 
 
 def gen_updating_infotable_page(
-    outpath="data/data_updating.html", json_path=updating_infos_path
+    outpath=data_updating_path, json_path=updating_infos_path
 ):
 
     tablepart = ""
@@ -177,23 +185,30 @@ if the data is too outdated you may <a href="{node_homepage_url}issues">post an 
 
 <tr>
   <th>Sidewalks</th>
-  <th><a href="{node_homepage_url}data/sidewalks_raw{data_format}">Raw</a></th>
-  <th><a href="{node_homepage_url}data/sidewalks{data_format}">Filtered</a></th>
-  <th><a href="{node_homepage_url}data/sidewalks_versioning.json">Versioning</a></th>
+  <th><a href="{node_homepage_url}{sidewalks_path_raw}">Raw</a></th>
+  <th><a href="{node_homepage_url}{sidewalks_path}">Processed</a></th>
+  <th><a href="{node_homepage_url}{sidewalks_path_versioning}">Versioning</a></th>
 </tr>
 
 <tr>
   <th>Crossings</th>
-  <th><a href="{node_homepage_url}data/crossings_raw{data_format}">Raw</a></th>
-  <th><a href="{node_homepage_url}data/crossings{data_format}">Filtered</a></th>
-  <th><a href="{node_homepage_url}data/crossings_versioning.json">Versioning</a></th>
+  <th><a href="{node_homepage_url}{crossings_path_raw}">Raw</a></th>
+  <th><a href="{node_homepage_url}{crossings_path}">Processed</a></th>
+  <th><a href="{node_homepage_url}{crossings_path_versioning}">Versioning</a></th>
 </tr>
 
 <tr>
   <th>Kerbs</th>
-  <th><a href="{node_homepage_url}data/kerbs_raw{data_format}">Raw</a></th>
-  <th><a href="{node_homepage_url}data/kerbs{data_format}">Filtered</a></th>
-  <th><a href="{node_homepage_url}data/kerbs_versioning.json">Versioning</a></th>
+  <th><a href="{node_homepage_url}{kerbs_path_raw}">Raw</a></th>
+  <th><a href="{node_homepage_url}{kerbs_path}">Processed</a></th>
+  <th><a href="{node_homepage_url}{kerbs_path_versioning}">Versioning</a></th>
+</tr>
+
+<tr>
+  <th>Other footways</th>
+  <th><a href="{node_homepage_url}{other_footways_path_raw}">Raw</a></th>
+  <th><a href="{node_homepage_url}{other_footways_path}">Processed</a></th>
+  <th><a href="{node_homepage_url}{other_footways_path_versioning}">Versioning</a></th>
 </tr>
 
 </table>
@@ -627,6 +642,7 @@ def save_geoparquet(input_gdf, outpath, rem_empty_columns=True, replace_invalid=
 
     Workaround for: https://github.com/geopandas/geopandas/issues/3137
     """
+    ensure_parent_folder(outpath)
     if input_gdf.empty:
         gpd.GeoDataFrame(columns=["geometry"]).to_parquet(outpath)
     else:

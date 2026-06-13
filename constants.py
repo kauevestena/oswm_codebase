@@ -20,20 +20,32 @@ data_format = ".parquet"
 map_page_name = "map.html"
 readme_path = "README.md"
 node_home_path = "index.html"
-boundaries_path = "data/boundaries" + data_format
-boundaries_geojson_path = "data/boundaries.geojson"
-boundaries_infos_path = "data/boundary_infos.json"
-boundaries_md_path = "data/boundaries_md.json"
-updating_infos_path = "data/last_updated.json"
 workflows_path = ".github/workflows"
 
 # data folderpaths:
-improper_geoms_folderpath = "data/improper_geoms"
-disjointed_folderpath = "data/disjointed"
-versioning_folderpath = "data/versioning"
-other_footways_folderpath = "data/other_footways"
-tiles_folderpath = "data/tiles"
-vrts_folderpath = "data/vrts"
+data_folderpath = "data"
+processed_folderpath = os.path.join(data_folderpath, "processed")
+raw_folderpath = os.path.join(data_folderpath, "raw")
+data_quality_folderpath = os.path.join(data_folderpath, "data_quality")
+boundaries_folderpath = os.path.join(data_folderpath, "boundaries")
+updates_folderpath = os.path.join(data_folderpath, "updates")
+routing_folderpath = os.path.join(data_folderpath, "routing")
+
+improper_geoms_folderpath = os.path.join(data_quality_folderpath, "improper_geoms")
+disjointed_folderpath = os.path.join(data_quality_folderpath, "disjointed")
+versioning_folderpath = os.path.join(updates_folderpath, "versioning")
+other_footways_folderpath = os.path.join(processed_folderpath, "other_footways")
+tiles_folderpath = os.path.join(data_folderpath, "tiles")
+vrts_folderpath = os.path.join(data_folderpath, "vrts")
+
+boundaries_path = os.path.join(boundaries_folderpath, "polygon" + data_format)
+boundaries_geojson_path = os.path.join(boundaries_folderpath, "polygon.geojson")
+boundaries_infos_path = os.path.join(boundaries_folderpath, "infos.json")
+boundaries_md_path = os.path.join(boundaries_folderpath, "metadata.json")
+updating_infos_path = os.path.join(updates_folderpath, "registry.json")
+data_updating_path = os.path.join(updates_folderpath, "index.html")
+routing_demo_path = os.path.join(routing_folderpath, "demo.geojson")
+pipeline_failures_path = os.path.join(updates_folderpath, "pipeline_failures.txt")
 
 # declare, so we can reuse
 stairways_layername = "stairways"
@@ -117,15 +129,17 @@ layer_exclusion_tags = {
 bbox_as_list = ()
 
 # data paths
-sidewalks_path = "data/sidewalks" + data_format
-crossings_path = "data/crossings" + data_format
-kerbs_path = "data/kerbs" + data_format
-other_footways_path = "data/other_footways" + data_format
+sidewalks_path = os.path.join(processed_folderpath, "sidewalks" + data_format)
+crossings_path = os.path.join(processed_folderpath, "crossings" + data_format)
+kerbs_path = os.path.join(processed_folderpath, "kerbs" + data_format)
+other_footways_path = os.path.join(
+    processed_folderpath, "other_footways" + data_format
+)
 
-sidewalks_path_raw = "data/sidewalks_raw" + data_format
-crossings_path_raw = "data/crossings_raw" + data_format
-kerbs_path_raw = "data/kerbs_raw" + data_format
-other_footways_path_raw = "data/other_footways_raw" + data_format
+sidewalks_path_raw = os.path.join(raw_folderpath, "sidewalks" + data_format)
+crossings_path_raw = os.path.join(raw_folderpath, "crossings" + data_format)
+kerbs_path_raw = os.path.join(raw_folderpath, "kerbs" + data_format)
+other_footways_path_raw = os.path.join(raw_folderpath, "other_footways" + data_format)
 
 sidewalks_path_versioning = f"{versioning_folderpath}/sidewalks_versioning.json"
 crossings_path_versioning = f"{versioning_folderpath}/crossings_versioning.json"
@@ -144,7 +158,11 @@ valid_values_path = "quality_check/valid_tag_values.json"
 user_basepage_url = f"https://{USERNAME}.github.io/"
 node_homepage_url = f"https://{USERNAME}.github.io/{REPO_NAME}/"
 data_folder_url = f"https://{USERNAME}.github.io/{REPO_NAME}/data/"
-data_updating_url = f"https://{USERNAME}.github.io/{REPO_NAME}/data/data_updating.html"
+processed_folder_url = f"{data_folder_url}processed/"
+raw_folder_url = f"{data_folder_url}raw/"
+boundaries_folder_url = f"{data_folder_url}boundaries/"
+updates_folder_url = f"{data_folder_url}updates/"
+data_updating_url = f"{updates_folder_url}index.html"
 
 # codebase as page:
 codebase_homepage = "https://kauevestena.github.io/oswm_codebase/"

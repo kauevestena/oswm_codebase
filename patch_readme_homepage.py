@@ -24,7 +24,7 @@ fifths_for_replace_between = [
     ],
     [
         ".github.io/",
-        "/data/data_updating.html",
+        "/data/updates/index.html",
         REPO_NAME,
         files_obj_dict["homepage"],
         False,

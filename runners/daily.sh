@@ -2,6 +2,11 @@
 
 # Track which steps failed
 FAILED_STEPS=""
+PYTHON_BIN="${PYTHON:-python}"
+
+if ! command -v "$PYTHON_BIN" >/dev/null 2>&1 && command -v python3 >/dev/null 2>&1; then
+    PYTHON_BIN="python3"
+fi
 
 run_step() {
     local script="$1"
@@ -9,7 +14,7 @@ run_step() {
     echo "========================================="
     echo "Running: $label"
     echo "========================================="
-    if python "$script"; then
+    if "$PYTHON_BIN" "$script"; then
         echo "\u2713 $label succeeded"
     else
         echo "\u2717 $label FAILED (exit code: $?)"
@@ -37,10 +42,11 @@ if [ -n "$FAILED_STEPS" ]; then
     echo "The following steps FAILED:"
     printf "%b\n" "$FAILED_STEPS"
     # Write failure list for the workflow notification step to read
-    printf "%b\n" "$FAILED_STEPS" > data/pipeline_failures.txt
+    mkdir -p data/updates
+    printf "%b\n" "$FAILED_STEPS" > data/updates/pipeline_failures.txt
     exit 1
 else
     echo "\u2713 All steps completed successfully."
-    rm -f data/pipeline_failures.txt
+    rm -f data/updates/pipeline_failures.txt
     exit 0
 fi

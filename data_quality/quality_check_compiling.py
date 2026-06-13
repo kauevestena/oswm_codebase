@@ -338,7 +338,7 @@ currently, there are the categories presented at the table,<br> each one with th
 
 <p>
 The information here can be <b>outdated</b><br>
-<a href="{node_homepage_url}data/data_updating.html">here you can check the last update and read more about this</a>
+<a href="{data_updating_url}">here you can check the last update and read more about this</a>
 <br>
 </p>
 

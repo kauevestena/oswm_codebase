@@ -15,7 +15,7 @@ let body = `# Daily Pipeline Failure Report\n\n**Date:** ${date}\n**Run:** ${run
 if (dailyJobOutcome === 'failure') {
   body += `## Pipeline Step Failures\n`;
   try {
-    const failures = fs.readFileSync('data/pipeline_failures.txt', 'utf8').trim();
+    const failures = fs.readFileSync('data/updates/pipeline_failures.txt', 'utf8').trim();
     body += failures + '\n\n';
   } catch (e) {
     body += `daily.sh exited with errors (no detail file found)\n\n`;

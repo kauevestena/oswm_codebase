@@ -20,11 +20,27 @@ All paths below are relative to this base URL.
 
 | URL path | Format | Description |
 |---|---|---|
-| `data/boundaries.geojson` | GeoJSON | Polygon(s) of the covered study area |
-| `data/boundary_infos.json` | JSON | Metadata about the covered area (name, source, etc.) |
-| `data/last_updated.json` | JSON | Timestamp of the last data refresh |
+| `data/boundaries/polygon.geojson` | GeoJSON | Polygon(s) of the covered study area |
+| `data/boundaries/infos.json` | JSON | Metadata about the covered area (name, source, etc.) |
+| `data/updates/registry.json` | JSON | Timestamp of the last data refresh |
 | `webmap_params.json` | JSON | Full webmap configuration: bounding box, center, zoom, layer URLs, and all MapLibre GL styles |
-| `data/data_updating.html` | HTML | Human-readable page showing update status |
+| `data/updates/index.html` | HTML | Human-readable page showing update status |
+
+---
+
+## Pedestrian Data Parquet
+
+| URL path | Format | Description |
+|---|---|---|
+| `data/processed/sidewalks.parquet` | GeoParquet | Processed sidewalks |
+| `data/processed/crossings.parquet` | GeoParquet | Processed crossings |
+| `data/processed/kerbs.parquet` | GeoParquet | Processed kerbs |
+| `data/processed/other_footways.parquet` | GeoParquet | Processed other footways |
+| `data/processed/other_footways/*.parquet` | GeoParquet | Processed other-footway sublayers |
+| `data/raw/sidewalks.parquet` | GeoParquet | Raw sidewalks |
+| `data/raw/crossings.parquet` | GeoParquet | Raw crossings |
+| `data/raw/kerbs.parquet` | GeoParquet | Raw kerbs |
+| `data/raw/other_footways.parquet` | GeoParquet | Raw other footways |
 
 ---
 
@@ -51,10 +67,10 @@ JSON files tracking the edit history and age of each feature layer.
 
 | URL path | Format | Layer |
 |---|---|---|
-| `data/versioning/sidewalks_versioning.json` | JSON | Sidewalks |
-| `data/versioning/crossings_versioning.json` | JSON | Crossings |
-| `data/versioning/kerbs_versioning.json` | JSON | Kerbs |
-| `data/versioning/other_footways_versioning.json` | JSON | Other footways (stairways, main/potential/informal footways, pedestrian areas) |
+| `data/updates/versioning/sidewalks_versioning.json` | JSON | Sidewalks |
+| `data/updates/versioning/crossings_versioning.json` | JSON | Crossings |
+| `data/updates/versioning/kerbs_versioning.json` | JSON | Kerbs |
+| `data/updates/versioning/other_footways_versioning.json` | JSON | Other footways (stairways, main/potential/informal footways, pedestrian areas) |
 
 ---
 
@@ -116,8 +132,8 @@ import requests, json
 
 BASE = "https://kauevestena.github.io/opensidewalkmap_beta/"
 
-boundary = requests.get(BASE + "data/boundaries.geojson").json()
-infos    = requests.get(BASE + "data/boundary_infos.json").json()
+boundary = requests.get(BASE + "data/boundaries/polygon.geojson").json()
+infos    = requests.get(BASE + "data/boundaries/infos.json").json()
 ```
 
 ### Fetch a tile layer (JavaScript / MapLibre GL)
@@ -146,4 +162,4 @@ ogrinfo /vsicurl/https://kauevestena.github.io/opensidewalkmap_beta/data/vrts/da
 
 - All responses are static files served by GitHub Pages; there is no query-string filtering or server-side logic.
 - PMTiles tiles can be read byte-range–efficiently without downloading the full file.
-- The data is refreshed periodically; check `data/last_updated.json` for the current timestamp.
+- The data is refreshed periodically; check `data/updates/registry.json` for the current timestamp.

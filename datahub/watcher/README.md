@@ -8,8 +8,8 @@ If the answer is no, the entire download-and-process pipeline can be skipped, sa
 
 ## How it works
 
-1. Reads the last-processed timestamp from `data/last_updated.json` (key `"Data Fetching"`).
-2. Reads the study-area boundary from `data/boundaries.geojson` and derives a bounding box.
+1. Reads the last-processed timestamp from `data/updates/registry.json` (key `"Data Fetching"`).
+2. Reads the study-area boundary from `data/boundaries/polygon.geojson` and derives a bounding box.
 3. Queries the [OHSOME API](https://api.ohsome.org/) for the count of OSM **contributions** (additions, modifications, deletions) in that area, for each layer, since that timestamp.
 4. Returns a per-layer verdict: `True` (needs update), `False` (up to date), or `None` (check inconclusive).
 
@@ -69,7 +69,7 @@ The `other_footways` filter is derived from `OTHER_FOOTWAY_RULES` in `config.py`
 
 ## Reference timestamp keys
 
-The watcher reads timestamps from `data/last_updated.json`. Available keys (written by the pipeline):
+The watcher reads timestamps from `data/updates/registry.json`. Available keys (written by the pipeline):
 
 | Key | Written by |
 |---|---|
