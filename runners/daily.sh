@@ -32,6 +32,7 @@ run_step oswm_codebase/data_quality/tag_values_checking.py     "tag_values_check
 run_step oswm_codebase/data_quality/quality_check_compiling.py "quality_check_compiling"
 run_step oswm_codebase/data_quality/external_qc.py             "external_qc"
 run_step oswm_codebase/dashboard/statistics_generation.py      "statistics_generation"
+run_step oswm_codebase/datahub/API/generate_api.py             "generate_api"
 
 # Print summary and propagate failure
 echo "========================================="

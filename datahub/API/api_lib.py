@@ -1,4 +1,5 @@
 import sys
+import os
 
 # Ensure the parent `datahub` directory is on sys.path so `dh_lib` can be imported
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -23,8 +24,6 @@ single_products_index = {
     },
 }
 
-
-# variables that
 
 # product folders whose files are meant to be provided as API responses:
 product_folders_index = {
