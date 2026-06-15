@@ -13,6 +13,10 @@ if dh_dir not in sys.path:
     sys.path.insert(0, dh_dir)
 
 from dh_lib import *
+from config import CITY_NAME, USERNAME, REPO_NAME
+from constants import node_homepage_url, api_folder
+from functions import ensure_parent_folder
+
 
 # Ensure standard libraries are available
 import urllib.parse
