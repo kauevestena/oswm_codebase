@@ -1,381 +1,9 @@
-import os
-import sys
-import json
-
-# Ensure repository root is on sys.path so all imports (config, constants, functions) work from any working directory
-repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
-if repo_root not in sys.path:
-    sys.path.insert(0, repo_root)
-
-# Also ensure parent `datahub` directory is on sys.path so `dh_lib` can be imported
-dh_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-if dh_dir not in sys.path:
-    sys.path.insert(0, dh_dir)
-
-from dh_lib import *
-
-# Ensure standard libraries are available
-import urllib.parse
-
-def get_endpoint_category(path, deliverable):
-    if path.endswith("index.json"):
-        if path in ["data/index.json", "quality_check/index.json", "statistics_specs/index.json"]:
-            return "API Index"
-        return "Folder Indexes"
-        
-    if deliverable == "map_data":
-        if "boundaries" in path:
-            return "Boundaries & Config"
-        elif "processed" in path:
-            return "Pedestrian Data (Parquet)"
-        elif "raw" in path:
-            return "Pedestrian Data (Parquet)"
-        elif "tiles" in path:
-            return "Vector Tiles (PMTiles)"
-        elif "updates" in path:
-            return "Data Aging & Versioning"
-        elif "vrts" in path:
-            return "GDAL VRT Descriptors"
-        elif "routing" in path:
-            return "Routing & Demos"
-        elif path == "webmap_params.json":
-            return "Boundaries & Config"
-        return "Map Data Assets"
-        
-    elif deliverable == "data_quality":
-        if "quality_check/json/" in path:
-            return "JSON Quality Checks"
-        elif "quality_check/tables/" in path:
-            return "Table Quality Checks"
-        return "Global Quality Metrics"
-        
-    elif deliverable == "vega_specs":
-        if "all_data" in path:
-            return "Global Charts"
-        elif "sidewalks" in path:
-            return "Sidewalks Charts"
-        elif "crossings" in path:
-            return "Crossings Charts"
-        elif "kerbs" in path:
-            return "Kerbs Charts"
-        elif "other_footways" in path:
-            return "Other Footways Charts"
-        return "Vega Chart Specs"
-        
-    return "Other"
-
-def get_endpoint_description(path, filename, deliverable):
-    if path.endswith("index.json"):
-        if path == "data/index.json":
-            return "Returns the list of all available directories and files under the Map Data deliverable."
-        elif path == "quality_check/index.json":
-            return "Returns the list of all available directories and files under the Data Quality check report deliverable."
-        elif path == "statistics_specs/index.json":
-            return "Returns the list of all available directories and files under the Vega Chart Specs visualization deliverable."
-        
-        # Subfolder indexes
-        folder_name = os.path.basename(os.path.dirname(path))
-        parent_folder = os.path.basename(os.path.dirname(os.path.dirname(path)))
-        if parent_folder and parent_folder not in ["data", "quality_check", "statistics_specs"]:
-            return f"Folder-level data index describing files and subdirectories available inside the '{parent_folder}/{folder_name}' folder."
-        return f"Folder-level data index describing files and subdirectories available inside the '{folder_name}' folder."
-        
-    if deliverable == "map_data":
-        curated_descs = {
-            "data/boundaries/polygon.geojson": "Polygon geometry of the study/mapping area boundaries (study boundaries).",
-            "data/boundaries/infos.json": "Metadata properties of the study area (name, source, importance, bounds, etc.).",
-            "data/updates/registry.json": "Timestamps recording when different steps of the pipeline last successfully executed.",
-            "webmap_params.json": "Full configuration for the webmap, including center coordinates, initial zoom level, layers, MapLibre GL styles, and configurations.",
-            "data/processed/sidewalks.parquet": "Processed and filtered sidewalks in GeoParquet format. Juxtaposed to roads.",
-            "data/processed/crossings.parquet": "Processed pedestrian road crossings in GeoParquet format.",
-            "data/processed/kerbs.parquet": "Processed kerb access points at crossings in GeoParquet format.",
-            "data/processed/other_footways.parquet": "Processed other footway features in GeoParquet format.",
-            "data/processed/other_footways/stairways.parquet": "Processed stairways sublayer in GeoParquet format.",
-            "data/processed/other_footways/main_footways.parquet": "Processed main footways sublayer in GeoParquet format.",
-            "data/processed/other_footways/potential_footways.parquet": "Processed potential footways sublayer in GeoParquet format.",
-            "data/processed/other_footways/informal_footways.parquet": "Processed informal footways sublayer in GeoParquet format.",
-            "data/processed/other_footways/pedestrian_areas.parquet": "Processed pedestrian areas sublayer in GeoParquet format.",
-            "data/raw/sidewalks.parquet": "Raw sidewalks dataset directly from OSM (unfiltered) in GeoParquet format.",
-            "data/raw/crossings.parquet": "Raw crossings dataset directly from OSM (unfiltered) in GeoParquet format.",
-            "data/raw/kerbs.parquet": "Raw kerbs dataset directly from OSM (unfiltered) in GeoParquet format.",
-            "data/raw/other_footways.parquet": "Raw other footways dataset directly from OSM (unfiltered) in GeoParquet format.",
-            "data/tiles/sidewalks.pmtiles": "Vector tile package containing processed sidewalks for web rendering.",
-            "data/tiles/crossings.pmtiles": "Vector tile package containing processed crossings.",
-            "data/tiles/kerbs.pmtiles": "Vector tile package containing processed kerbs.",
-            "data/tiles/stairways.pmtiles": "Vector tile package containing stairways.",
-            "data/tiles/main_footways.pmtiles": "Vector tile package containing main footways.",
-            "data/tiles/potential_footways.pmtiles": "Vector tile package containing potential footways.",
-            "data/tiles/informal_footways.pmtiles": "Vector tile package containing informal footways.",
-            "data/tiles/pedestrian_areas.pmtiles": "Vector tile package containing pedestrian areas.",
-            "data/updates/versioning/sidewalks_versioning.json": "Detailed modification dates, changeset stats, and age metrics for sidewalks.",
-            "data/updates/versioning/crossings_versioning.json": "Detailed age tracking metrics for crossing features.",
-            "data/updates/versioning/kerbs_versioning.json": "Detailed age tracking metrics for kerb features.",
-            "data/updates/versioning/other_footways_versioning.json": "Detailed age tracking metrics for other footways layers.",
-            "data/vrts/data.vrt": "GDAL Virtual Format file linking all processed parquet files together.",
-            "data/vrts/data_raw.vrt": "GDAL Virtual Format file linking all raw parquet files together.",
-            "data/vrts/tiles.vrt": "GDAL Virtual Format file referencing tile-oriented datasets.",
-            "data/routing/demo.geojson": "GeoJSON routing network sample containing intersections and road segments for demo routing."
-        }
-        if path in curated_descs:
-            return curated_descs[path]
-        return f"Map data asset file: {filename}"
-        
-    elif deliverable == "data_quality":
-        curated_descs = {
-            "quality_check/categories.json": "List of quality check category descriptions and metadata.",
-            "quality_check/feature_keys.json": "Summary of tag keys present in the database.",
-            "quality_check/keys_without_wiki.json": "List of tag keys missing documentation in the OSM Wiki.",
-            "quality_check/unique_tag_values.json": "Unique tag keys and values found across all downloaded features.",
-            "quality_check/valid_tag_values.json": "Predefined list of OSM tag values considered valid by OSWM quality checks."
-        }
-        if path in curated_descs:
-            return curated_descs[path]
-            
-        subfolder = os.path.basename(os.path.dirname(path))
-        check_name = filename.replace(".json", "").replace("_", " ").title()
-        if "quality_check/json/" in path:
-            return f"Validation check results ({check_name}) for {subfolder} in JSON format."
-        elif "quality_check/tables/" in path:
-            return f"Tabular validation report ({check_name}) for {subfolder}."
-        return f"Data quality asset file: {filename}"
-        
-    elif deliverable == "vega_specs":
-        subfolder = os.path.basename(os.path.dirname(path))
-        metric_name = filename.replace(".json", "").replace("_", " ").title()
-        return f"Vega-Lite JSON chart specification visualising {metric_name} metrics for {subfolder} layer."
-        
-    return f"Asset file: {filename}"
-
-def generate_recursive_indices(root_dir, ignore_dirs=None):
-    """Recursively walks directories and writes index.json at every level."""
-    if ignore_dirs is None:
-        ignore_dirs = set()
-        
-    if not os.path.exists(root_dir):
-        os.makedirs(root_dir, exist_ok=True)
-        
-    items = sorted(os.listdir(root_dir))
-    files = []
-    subfolders = []
-    
-    for item in items:
-        if item.startswith('.') or item == 'index.json' or item.endswith('.html'):
-            continue
-        full_path = os.path.join(root_dir, item)
-        if os.path.isdir(full_path):
-            if item in ignore_dirs:
-                continue
-            subfolders.append(item)
-            generate_recursive_indices(full_path, ignore_dirs)
-        else:
-            files.append(item)
-            
-    index_data = {
-        "folder": root_dir.replace("\\", "/"),
-        "files": files,
-        "subfolders": subfolders
-    }
-    
-    index_path = os.path.join(root_dir, "index.json")
-    with open(index_path, "w", encoding="utf-8") as f:
-        json.dump(index_data, f, indent=4, ensure_ascii=False)
-
-def generate_data_index():
-    """Generates the main custom data/index.json file."""
-    print("Generating data/index.json...")
-    
-    data_idx = {
-        "node_name": CITY_NAME,
-        "username": USERNAME,
-        "repository": REPO_NAME,
-        "base_url": node_homepage_url,
-        "description": f"Serverless API data index for OSWM node: {CITY_NAME}",
-        "folders": {}
-    }
-    
-    folder_meta = {
-        "boundaries": {
-            "description": "Polygon boundary and metadata about the study area.",
-            "path": "data/boundaries"
-        },
-        "processed": {
-            "description": "Cleaned, filtered, and structured pedestrian network layers in GeoParquet format.",
-            "path": "data/processed"
-        },
-        "raw": {
-            "description": "Raw, unfiltered pedestrian network datasets downloaded directly from OpenStreetMap.",
-            "path": "data/raw"
-        },
-        "tiles": {
-            "description": "Pedestrian network layers packaged as vector tiles in PMTiles format.",
-            "path": "data/tiles"
-        },
-        "updates": {
-            "description": "Data update logs, registry status, and historical version tracking.",
-            "path": "data/updates"
-        },
-        "vrts": {
-            "description": "GDAL Vector Virtual Dataset (VRT) descriptors for direct GIS integrations.",
-            "path": "data/vrts"
-        },
-        "data_quality": {
-            "description": "Spatial parquet layers highlighting topological and tagging inconsistencies.",
-            "path": "data/data_quality"
-        },
-        "routing": {
-            "description": "Routing files, network properties, and routing demo data.",
-            "path": "data/routing"
-        }
-    }
-    
-    for key, meta in folder_meta.items():
-        folder_path = os.path.join("data", key)
-        files = []
-        if os.path.exists(folder_path):
-            for root, dirs, filenames in os.walk(folder_path):
-                for f in filenames:
-                    rel_f = os.path.relpath(os.path.join(root, f), folder_path)
-                    if not f.startswith('.'):
-                        files.append(rel_f)
-        else:
-            if key == "boundaries":
-                files = ["polygon.geojson", "infos.json", "polygon.parquet"]
-            elif key == "processed":
-                files = ["sidewalks.parquet", "crossings.parquet", "kerbs.parquet", "other_footways.parquet"]
-            elif key == "raw":
-                files = ["sidewalks.parquet", "crossings.parquet", "kerbs.parquet", "other_footways.parquet"]
-            elif key == "tiles":
-                files = ["sidewalks.pmtiles", "crossings.pmtiles", "kerbs.pmtiles", "stairways.pmtiles", "main_footways.pmtiles", "potential_footways.pmtiles", "informal_footways.pmtiles", "pedestrian_areas.pmtiles"]
-            elif key == "updates":
-                files = ["registry.json", "index.html", "versioning/sidewalks_versioning.json", "versioning/crossings_versioning.json", "versioning/kerbs_versioning.json", "versioning/other_footways_versioning.json"]
-            elif key == "vrts":
-                files = ["data.vrt", "data_raw.vrt", "tiles.vrt"]
-            elif key == "data_quality":
-                files = ["improper_geoms/sidewalks_improper_geoms.parquet", "improper_geoms/crossings_improper_geoms.parquet", "improper_geoms/kerbs_improper_geoms.parquet", "disjointed/crossings_disjointed.parquet", "disjointed/kerbs_disjointed.parquet"]
-            elif key == "routing":
-                files = ["demo.geojson"]
-        
-        data_idx["folders"][key] = {
-            "description": meta["description"],
-            "path": meta["path"],
-            "files": sorted(files)
-        }
-        
-    index_json_path = os.path.join("data", "index.json")
-    os.makedirs("data", exist_ok=True)
-    with open(index_json_path, "w", encoding="utf-8") as f:
-        json.dump(data_idx, f, indent=4, ensure_ascii=False)
-    print(f"Main index successfully written to {index_json_path}")
-
-def collect_endpoints():
-    endpoints = []
-    
-    # 1. Map Data
-    if os.path.exists("webmap_params.json"):
-        endpoints.append({
-            "category": "Boundaries & Config",
-            "path": "webmap_params.json",
-            "format": "JSON",
-            "description": "Full configuration for the webmap, including center coordinates, initial zoom level, layers, MapLibre GL styles, and configurations.",
-            "playground": True,
-            "deliverable": "map_data"
-        })
-        
-    for root, dirs, files in os.walk("data"):
-        for f in files:
-            if f.startswith('.'):
-                continue
-            file_path = os.path.join(root, f)
-            rel_path = os.path.relpath(file_path, ".").replace("\\", "/")
-            
-            ext = os.path.splitext(f)[1].lower()
-            fmt = "JSON"
-            if ext == ".geojson":
-                fmt = "GeoJSON"
-            elif ext == ".parquet":
-                fmt = "GeoParquet"
-            elif ext == ".pmtiles":
-                fmt = "PMTiles"
-            elif ext == ".vrt":
-                fmt = "XML/VRT"
-            elif ext == ".html":
-                continue # Skip HTML files like updating status page
-                
-            category = get_endpoint_category(rel_path, "map_data")
-            description = get_endpoint_description(rel_path, f, "map_data")
-            playground = fmt in ["JSON", "GeoJSON", "XML/VRT"]
-            
-            endpoints.append({
-                "category": category,
-                "path": rel_path,
-                "format": fmt,
-                "description": description,
-                "playground": playground,
-                "deliverable": "map_data"
-            })
-            
-    # 2. Data Quality
-    for root, dirs, files in os.walk("quality_check"):
-        dirs[:] = [d for d in dirs if d not in ["maps", "pages"]]
-        for f in files:
-            if f.startswith('.') or f.endswith('.html'):
-                continue
-            file_path = os.path.join(root, f)
-            rel_path = os.path.relpath(file_path, ".").replace("\\", "/")
-            
-            category = get_endpoint_category(rel_path, "data_quality")
-            description = get_endpoint_description(rel_path, f, "data_quality")
-            
-            endpoints.append({
-                "category": category,
-                "path": rel_path,
-                "format": "JSON",
-                "description": description,
-                "playground": True,
-                "deliverable": "data_quality"
-            })
-            
-    # 3. Vega Specs
-    for root, dirs, files in os.walk("statistics_specs"):
-        for f in files:
-            if f.startswith('.'):
-                continue
-            file_path = os.path.join(root, f)
-            rel_path = os.path.relpath(file_path, ".").replace("\\", "/")
-            
-            category = get_endpoint_category(rel_path, "vega_specs")
-            description = get_endpoint_description(rel_path, f, "vega_specs")
-            
-            endpoints.append({
-                "category": category,
-                "path": rel_path,
-                "format": "JSON",
-                "description": description,
-                "playground": True,
-                "deliverable": "vega_specs"
-            })
-            
-    # Sort
-    endpoints.sort(key=lambda x: (
-        x["category"] != "API Index", 
-        x["category"] == "Folder Indexes",
-        x["category"], 
-        x["path"]
-    ))
-    return endpoints
-
-def generate_api_html(endpoints):
-    """Generates the interactive API page at hub/acquisition/API/index.html."""
-    print("Generating hub/acquisition/API/index.html...")
-    
-    endpoints_js = json.dumps(endpoints, indent=2)
-    
-    html_template = """<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OSWM Serverless API | [CITY_NAME]</title>
+    <title>OSWM Serverless API | Curitiba</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
@@ -1000,7 +628,7 @@ def generate_api_html(endpoints):
         <div class="header-container">
             <div class="logo-section">
                 <img src="https://kauevestena.github.io/oswm_codebase/assets/homepage/project_logo_100px.png" alt="OSWM Logo">
-                <h1>OpenSidewalkMap API <span style="font-weight: 300; opacity: 0.8; color: var(--text-main)">| [CITY_NAME]</span></h1>
+                <h1>OpenSidewalkMap API <span style="font-weight: 300; opacity: 0.8; color: var(--text-main)">| Curitiba</span></h1>
             </div>
             <div class="nav-buttons">
                 <a href="../../../index.html" class="btn btn-secondary">Node Home</a>
@@ -1129,20 +757,45 @@ print(data)</pre>
     </div>
 
     <footer>
-        <p>OpenSidewalkMap Node [CITY_NAME]. Developed by <a href="https://github.com/kauevestena" target="_blank">Kauê Vestena</a>.</p>
+        <p>OpenSidewalkMap Node Curitiba. Developed by <a href="https://github.com/kauevestena" target="_blank">Kauê Vestena</a>.</p>
         <p style="margin-top: 0.5rem; font-size: 0.75rem; opacity: 0.7;">Powered by static serverless architectures.</p>
     </footer>
 
     <script>
         // API Base configuration
-        const USERNAME = "[USERNAME]";
-        const REPO_NAME = "[REPO_NAME]";
-        const baseUrl = "[node_homepage_url]";
+        const USERNAME = "kauevestena";
+        const REPO_NAME = "opensidewalkmap_beta";
+        const baseUrl = "https://kauevestena.github.io/opensidewalkmap_beta/";
         
         document.getElementById('base-url-display').textContent = baseUrl;
 
         // Endpoints configuration parsed from Python
-        const endpoints = [endpoints_js];
+        const endpoints = [
+  {
+    "category": "API Index",
+    "path": "data/index.json",
+    "format": "JSON",
+    "description": "Returns the list of all available directories and files under the Map Data deliverable.",
+    "playground": true,
+    "deliverable": "map_data"
+  },
+  {
+    "category": "API Index",
+    "path": "quality_check/index.json",
+    "format": "JSON",
+    "description": "Returns the list of all available directories and files under the Data Quality check report deliverable.",
+    "playground": true,
+    "deliverable": "data_quality"
+  },
+  {
+    "category": "API Index",
+    "path": "statistics_specs/index.json",
+    "format": "JSON",
+    "description": "Returns the list of all available directories and files under the Vega Chart Specs visualization deliverable.",
+    "playground": true,
+    "deliverable": "vega_specs"
+  }
+];
 
         let selectedEndpoint = null;
         let currentDeliverable = 'map_data';
@@ -1333,7 +986,7 @@ print(data)</pre>
                     
                     const pre = document.getElementById('response-pre');
                     pre.style.display = 'block';
-                    pre.textContent = 'Error details: Request returned a non-200 status code.\\n\\nURL Attempted: ' + fetchUrl + '\\nHTTP Status: ' + response.status + ' - ' + response.statusText;
+                    pre.textContent = 'Error details: Request returned a non-200 status code.\n\nURL Attempted: ' + fetchUrl + '\nHTTP Status: ' + response.status + ' - ' + response.statusText;
                 }
             } catch (err) {
                 document.getElementById('spinner').style.display = 'none';
@@ -1342,7 +995,7 @@ print(data)</pre>
                 
                 const pre = document.getElementById('response-pre');
                 pre.style.display = 'block';
-                pre.textContent = 'Fetch Failed: ' + err.message + '\\n\\nThis could be due to a CORS policy restriction or because the file does not exist locally yet. If running locally, make sure to generate the data folder contents.';
+                pre.textContent = 'Fetch Failed: ' + err.message + '\n\nThis could be due to a CORS policy restriction or because the file does not exist locally yet. If running locally, make sure to generate the data folder contents.';
             }
         }
 
@@ -1362,29 +1015,29 @@ print(data)</pre>
 
         function updateSnippets(url, format) {
             // JS
-            let jsCode = 'fetch(\\'' + url + '\\')\\n  .then(response => response.json())\\n  .then(data => console.log(data));';
+            let jsCode = 'fetch(\'' + url + '\')\n  .then(response => response.json())\n  .then(data => console.log(data));';
             if (format === 'PMTiles') {
-                jsCode = '// Read vector tiles efficiently in JS\\nimport { PMTiles } from \\'pmtiles\\';\\n\\nconst tilesUrl = \\'' + url + '\\';\\nconst p = new PMTiles(tilesUrl);\\n// Add to maplibre or leaflet...';
+                jsCode = '// Read vector tiles efficiently in JS\nimport { PMTiles } from \'pmtiles\';\n\nconst tilesUrl = \'' + url + '\';\nconst p = new PMTiles(tilesUrl);\n// Add to maplibre or leaflet...';
             } else if (format === 'GeoParquet') {
-                jsCode = '// Reading GeoParquet in JS requires specialized libraries like @loaders.gl/parquet\\n// See: https://loaders.gl/docs/specifications/category-gis';
+                jsCode = '// Reading GeoParquet in JS requires specialized libraries like @loaders.gl/parquet\n// See: https://loaders.gl/docs/specifications/category-gis';
             }
             document.getElementById('code-js').textContent = jsCode;
 
             // Python
-            let pyCode = 'import requests\\n\\nurl = "' + url + '"\\nresponse = requests.get(url)\\ndata = response.json()\\nprint(data)';
+            let pyCode = 'import requests\n\nurl = "' + url + '"\nresponse = requests.get(url)\ndata = response.json()\nprint(data)';
             if (format === 'GeoParquet') {
-                pyCode = 'import geopandas as gpd\\n\\n# Open GeoParquet directly via HTTP/s URL\\nurl = "' + url + '"\\ngdf = gpd.read_parquet(url)\\nprint(gdf.head())';
+                pyCode = 'import geopandas as gpd\n\n# Open GeoParquet directly via HTTP/s URL\nurl = "' + url + '"\ngdf = gpd.read_parquet(url)\nprint(gdf.head())';
             } else if (format === 'GeoJSON') {
-                pyCode = 'import geopandas as gpd\\n\\n# Open GeoJSON directly via HTTP/s URL\\nurl = "' + url + '"\\ngdf = gpd.read_file(url)\\nprint(gdf.head())';
+                pyCode = 'import geopandas as gpd\n\n# Open GeoJSON directly via HTTP/s URL\nurl = "' + url + '"\ngdf = gpd.read_file(url)\nprint(gdf.head())';
             } else if (format === 'PMTiles') {
-                pyCode = 'from pmtiles.reader import Reader\\nimport urllib.request\\n\\n# Read pmtiles headers\\nurl = "' + url + '"\\n# Open stream and read...';
+                pyCode = 'from pmtiles.reader import Reader\nimport urllib.request\n\n# Read pmtiles headers\nurl = "' + url + '"\n# Open stream and read...';
             }
             document.getElementById('code-py').textContent = pyCode;
 
             // GDAL
             let gdalCode = 'ogrinfo -ro -al "/vsicurl/' + url + '"';
             if (format === 'PMTiles') {
-                gdalCode = '# GDAL support for PMTiles starting from version 3.8.0\\nogrinfo -ro -al "/vsipmtiles/vsicurl/' + url + '"';
+                gdalCode = '# GDAL support for PMTiles starting from version 3.8.0\nogrinfo -ro -al "/vsipmtiles/vsicurl/' + url + '"';
             }
             document.getElementById('code-gdal').textContent = gdalCode;
 
@@ -1415,45 +1068,3 @@ print(data)</pre>
     </script>
 </body>
 </html>
-"""
-    
-    # Process the replacements
-    processed_html = (html_template
-                      .replace("[CITY_NAME]", CITY_NAME)
-                      .replace("[USERNAME]", USERNAME)
-                      .replace("[REPO_NAME]", REPO_NAME)
-                      .replace("[node_homepage_url]", node_homepage_url)
-                      .replace("[endpoints_js]", endpoints_js))
-
-    # Save the output file
-    api_html_path = os.path.join(api_folder, "index.html")
-    ensure_parent_folder(api_html_path)
-    
-    with open(api_html_path, "w", encoding="utf-8") as f:
-        f.write(processed_html)
-        
-    print(f"API documentation page written to {api_html_path}")
-
-if __name__ == "__main__":
-    # 1. Generate standard recursive index.json files for all folders and subfolders
-    # First, the root data index with custom fields
-    generate_data_index()
-    
-    # Then recurse for subdirs of data/
-    for subdir in sorted(os.listdir("data")):
-        full_path = os.path.join("data", subdir)
-        if os.path.isdir(full_path):
-            generate_recursive_indices(full_path)
-            
-    # Then for quality_check/ ignoring maps/ and pages/
-    generate_recursive_indices("quality_check", ignore_dirs={"maps", "pages"})
-    
-    # Then for statistics_specs/
-    generate_recursive_indices("statistics_specs")
-    
-    # 2. Collect all endpoints dynamically
-    endpoints = collect_endpoints()
-    
-    # 3. Compile the interactive API documentation page
-    generate_api_html(endpoints)
-    print("API resources generation completed successfully.")
