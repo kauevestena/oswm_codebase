@@ -1,12 +1,11 @@
 import os
 import sys
 import requests
-import json
 
 # Ensure the parent `datahub` directory is on sys.path so `dh_lib` can be imported
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from dh_lib import *
+from dh_lib import boundaries_geojson_path
 
 
 # keywords that are going to be used to search for projects in the supported platforms:

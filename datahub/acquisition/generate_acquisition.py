@@ -25,7 +25,13 @@ from datetime import datetime, timezone
 # Ensure the parent `datahub` directory is on sys.path so `dh_lib` can be imported
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from dh_lib import *
+from dh_lib import (
+    DEFAULT_ACQ_KEYWORDS_COUNT,
+    CITY_NAME,
+    ensure_parent_folder,
+    acquisition_results_path,
+    acquisition_page_path,
+)
 from acq_lib import (
     SEARCH_KEYWORDS,
     SUPPORTED_SERVICES,
