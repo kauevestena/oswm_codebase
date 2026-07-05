@@ -1,9 +1,8 @@
 import sys, shutil
-
-sys.path.append("oswm_codebase")
-from functions import *
 import os
 
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from functions import *
 
 # remove old top-level geojson leftovers; nested geojson files can be products
 for filename in os.listdir(data_folderpath):

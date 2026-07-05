@@ -1,7 +1,8 @@
 import sys
+import os
 from urllib.parse import urlencode
 
-sys.path.append("oswm_codebase")
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from functions import *
 import csv
