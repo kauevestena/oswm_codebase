@@ -3,106 +3,112 @@ from oswm_codebase.functions import *
 from time import sleep, time
 import osmnx as ox
 
-# Getting the boundaries:
-# downloading the boundaries if doesn't exist:
-print("checking boundaries...")
-create_folder_if_not_exists(boundaries_folderpath)
-if not os.path.exists(boundaries_geojson_path):
-    try:
-        get_territory_polygon(CITY_NAME, boundaries_geojson_path, boundaries_md_path)
+
+
+def main():
+    # Getting the boundaries:
+    # downloading the boundaries if doesn't exist:
+    print("checking boundaries...")
+    create_folder_if_not_exists(boundaries_folderpath)
+    if not os.path.exists(boundaries_geojson_path):
+        try:
+            get_territory_polygon(CITY_NAME, boundaries_geojson_path, boundaries_md_path)
+            boundaries_gdf = gpd.read_file(boundaries_geojson_path)
+            boundary_polygon = boundaries_gdf["geometry"].iloc[0]
+
+            # test if it's a polygon:
+            if (boundary_polygon.geom_type != "Polygon") and (
+                boundary_polygon.geom_type != "MultiPolygon"
+            ):
+                raise ValueError("not a polygon")
+
+            # if it's a polygon, save it as geoparquet:
+            save_geoparquet(boundaries_gdf, boundaries_path)
+        except:
+            # if there's no polygon, use the bounding box as input polygon:
+            boundaries_gdf = bbox_geodataframe(BOUNDING_BOX)
+            boundaries_gdf.to_file(boundaries_geojson_path)
+            save_geoparquet(boundaries_gdf, boundaries_path)
+            metadata = {"class": "bounding_box"}
+            dump_json(metadata, boundaries_md_path)
+            boundary_polygon = boundaries_gdf["geometry"].iloc[0]
+    else:
         boundaries_gdf = gpd.read_file(boundaries_geojson_path)
         boundary_polygon = boundaries_gdf["geometry"].iloc[0]
+        if not os.path.exists(boundaries_path):
+            save_geoparquet(boundaries_gdf, boundaries_path)
 
-        # test if it's a polygon:
-        if (boundary_polygon.geom_type != "Polygon") and (
-            boundary_polygon.geom_type != "MultiPolygon"
-        ):
-            raise ValueError("not a polygon")
+    # now generating some "boundaries infos" json:
+    metric_bondary_polygon = boundaries_gdf.to_crs(boundaries_gdf.estimate_utm_crs())[
+        "geometry"
+    ].iloc[0]
 
-        # if it's a polygon, save it as geoparquet:
-        save_geoparquet(boundaries_gdf, boundaries_path)
-    except:
-        # if there's no polygon, use the bounding box as input polygon:
-        boundaries_gdf = bbox_geodataframe(BOUNDING_BOX)
-        boundaries_gdf.to_file(boundaries_geojson_path)
-        save_geoparquet(boundaries_gdf, boundaries_path)
-        metadata = {"class": "bounding_box"}
-        dump_json(metadata, boundaries_md_path)
-        boundary_polygon = boundaries_gdf["geometry"].iloc[0]
-else:
-    boundaries_gdf = gpd.read_file(boundaries_geojson_path)
-    boundary_polygon = boundaries_gdf["geometry"].iloc[0]
-    if not os.path.exists(boundaries_path):
-        save_geoparquet(boundaries_gdf, boundaries_path)
+    boundaries_infos = {
+        "name": CITY_NAME,
+        "area": round(
+            metric_bondary_polygon.area,
+            3,
+        ),
+        "perimeter": round(metric_bondary_polygon.length, 3),
+        "bbox": list(boundaries_gdf["geometry"].iloc[0].bounds),
+        "center": list(boundaries_gdf["geometry"].iloc[0].centroid.coords[0]),
+    }
 
-# now generating some "boundaries infos" json:
-metric_bondary_polygon = boundaries_gdf.to_crs(boundaries_gdf.estimate_utm_crs())[
-    "geometry"
-].iloc[0]
+    dump_json(boundaries_infos, boundaries_infos_path)
 
-boundaries_infos = {
-    "name": CITY_NAME,
-    "area": round(
-        metric_bondary_polygon.area,
-        3,
-    ),
-    "perimeter": round(metric_bondary_polygon.length, 3),
-    "bbox": list(boundaries_gdf["geometry"].iloc[0].bounds),
-    "center": list(boundaries_gdf["geometry"].iloc[0].centroid.coords[0]),
-}
+    # New approach: download all categories at once and then split in different layers:
+    print("downloading all data")
 
-dump_json(boundaries_infos, boundaries_infos_path)
+    t1 = time()
+    as_gdf = ox.features_from_polygon(
+        boundary_polygon, merge_list_of_dictionaries(layer_tags_dict.values())
+    )
+    print(f"    took {time()-t1:.2f} seconds, with {len(as_gdf)} features")
 
-# New approach: download all categories at once and then split in different layers:
-print("downloading all data")
+    # removing all with globally invalid values:
+    as_gdf = as_gdf[~as_gdf.isin(OTHER_FOOTWAY_EXCLUSION_RULES).any(axis=1)]
+    print(f"    now with {len(as_gdf)} features after filtering out with exclusion rules")
 
-t1 = time()
-as_gdf = ox.features_from_polygon(
-    boundary_polygon, merge_list_of_dictionaries(layer_tags_dict.values())
-)
-print(f"    took {time()-t1:.2f} seconds, with {len(as_gdf)} features")
+    # working around with Fiona not supporting columns parsed as lists
+    for column in as_gdf.columns:
+        if as_gdf[column].dtype == object:
+            as_gdf[column] = as_gdf[column].astype(str)
 
-# removing all with globally invalid values:
-as_gdf = as_gdf[~as_gdf.isin(OTHER_FOOTWAY_EXCLUSION_RULES).any(axis=1)]
-print(f"    now with {len(as_gdf)} features after filtering out with exclusion rules")
+    # to get rid of fragmentation warning:
+    as_gdf = as_gdf.copy()
 
-# working around with Fiona not supporting columns parsed as lists
-for column in as_gdf.columns:
-    if as_gdf[column].dtype == object:
-        as_gdf[column] = as_gdf[column].astype(str)
+    # adapting osmnx output:
+    as_gdf.reset_index(inplace=True)
+    as_gdf.replace("nan", None, inplace=True)
+    as_gdf.rename(columns={"osmid": "id"}, inplace=True)
 
-# to get rid of fragmentation warning:
-as_gdf = as_gdf.copy()
+    print("splitting layers:")
+    # small adaptations as OSMNX works differentlydownloaded in
+    for category in layer_tags_dict:
+        # outpath = f'data/{category}_raw.geojson'
+        outpath = paths_dict["data_raw"][category]
 
-# adapting osmnx output:
-as_gdf.reset_index(inplace=True)
-as_gdf.replace("nan", None, inplace=True)
-as_gdf.rename(columns={"osmid": "id"}, inplace=True)
+        belonging = as_gdf.isin(layer_tags_dict[category]).any(axis=1)
 
-print("splitting layers:")
-# small adaptations as OSMNX works differentlydownloaded in
-for category in layer_tags_dict:
-    # outpath = f'data/{category}_raw.geojson'
-    outpath = paths_dict["data_raw"][category]
+        to_save = as_gdf[belonging].copy()
 
-    belonging = as_gdf.isin(layer_tags_dict[category]).any(axis=1)
+        # as_gdf[belonging].to_file(outpath)
+        save_geoparquet(to_save, outpath)
 
-    to_save = as_gdf[belonging].copy()
+        as_gdf = as_gdf[~belonging]
 
-    # as_gdf[belonging].to_file(outpath)
-    save_geoparquet(to_save, outpath)
+        print("    picking", category, "from data, with", len(as_gdf), "remaining")
 
-    as_gdf = as_gdf[~belonging]
+        # as_gdf = ox.features_from_bbox(
+        # BOUNDING_BOX[2], BOUNDING_BOX[0], BOUNDING_BOX[3], BOUNDING_BOX[1], layer_tags_dict[category])
 
-    print("    picking", category, "from data, with", len(as_gdf), "remaining")
+    print("finishing...")
+    # to record data aging:
+    record_datetime("Data Fetching")
+    sleep(0.1)
 
-    # as_gdf = ox.features_from_bbox(
-    # BOUNDING_BOX[2], BOUNDING_BOX[0], BOUNDING_BOX[3], BOUNDING_BOX[1], layer_tags_dict[category])
+    # generate the "report" of the updating info
+    gen_updating_infotable_page()
 
-print("finishing...")
-# to record data aging:
-record_datetime("Data Fetching")
-sleep(0.1)
-
-# generate the "report" of the updating info
-gen_updating_infotable_page()
+if __name__ == '__main__':
+    main()
