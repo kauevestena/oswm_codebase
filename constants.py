@@ -725,4 +725,9 @@ datahub_root = "hub"
 
 acquisition_folder = os.path.join(datahub_root, "acquisition")
 api_folder = os.path.join(acquisition_folder, "API")
-watcher_folder = os.path.join(acquisition_folder, "watcher")
+acquisition_results_path = os.path.join(acquisition_folder, "results.json")
+acquisition_page_path = os.path.join(acquisition_folder, "index.html")
+
+# Number of keywords (from the top of the SEARCH_KEYWORDS list) used when
+# querying external project-management platforms for pedestrian-data projects.
+DEFAULT_ACQ_KEYWORDS_COUNT = 4

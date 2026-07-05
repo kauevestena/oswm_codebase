@@ -7,7 +7,11 @@ from datetime import datetime, timezone
 # Ensure the parent `datahub` directory is on sys.path so `dh_lib` can be imported
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from dh_lib import *  # provides: requests, gpd, read_json, updating_infos_path, boundaries_geojson_path, ...
+from dh_lib import *  # noqa: F403 – sets up sys.path and folder structure
+from functions import read_json  # noqa: F811
+from constants import updating_infos_path, boundaries_geojson_path  # noqa: F811
+import requests  # noqa: F811
+import geopandas as gpd  # noqa: F811
 
 # ---------------------------------------------------------------------------
 # OHSOME API
@@ -62,6 +66,34 @@ def _boundary_bboxes() -> str | None:
         return None
 
 
+def _parse_iso_timestamp(ts_str: str) -> datetime | None:
+    """Parse an ISO-8601 timestamp with varying precision (e.g. ``2026-06-19T10:00Z``)."""
+    try:
+        val = ts_str.replace("Z", "+00:00")
+        if "+" in val:
+            dt_part, tz_part = val.split("+")
+            if dt_part.count(":") == 1:
+                dt_part += ":00"
+            val = f"{dt_part}+{tz_part}"
+        return datetime.fromisoformat(val)
+    except Exception:
+        return None
+
+
+def _ohsome_max_timestamp() -> datetime | None:
+    """Fetch the maximum timestamp available in the OHSOME database."""
+    try:
+        resp = requests.get(f"{OHSOME_API_BASE}/metadata", timeout=10)
+        resp.raise_for_status()
+        meta = resp.json()
+        to_ts = meta.get("extractRegion", {}).get("temporalExtent", {}).get("toTimestamp")
+        if to_ts:
+            return _parse_iso_timestamp(to_ts)
+    except Exception as e:
+        print(f"[watcher] Failed to fetch OHSOME metadata: {e}")
+    return None
+
+
 def _ohsome_contributions_count(
     bboxes: str, filter_str: str, since: datetime
 ) -> int | None:
@@ -72,8 +104,22 @@ def _ohsome_contributions_count(
 
     Returns the count (≥ 0) or *None* on error.
     """
-    now_iso = datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    max_ts = _ohsome_max_timestamp()
+    now_dt = datetime.now(tz=timezone.utc)
+
+    if max_ts:
+        # If the reference timestamp is newer than OHSOME's latest data,
+        # OHSOME does not have any newer changes to report.
+        if since >= max_ts:
+            print(f"[watcher] Last update ({since.isoformat()}) is newer than OHSOME's temporal extent ({max_ts.isoformat()}) — assuming up to date.")
+            return 0
+        # Restrict the upper bound to the maximum timestamp supported by OHSOME
+        end_dt = min(now_dt, max_ts)
+    else:
+        end_dt = now_dt
+
     since_iso = since.strftime("%Y-%m-%dT%H:%M:%SZ")
+    end_iso = end_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
     url = f"{OHSOME_API_BASE}/contributions/count"
     try:
         resp = requests.post(
@@ -81,7 +127,7 @@ def _ohsome_contributions_count(
             data={
                 "bboxes": bboxes,
                 "filter": filter_str,
-                "time": f"{since_iso}/{now_iso}",
+                "time": f"{since_iso}/{end_iso}",
             },
             timeout=60,
         )
