@@ -653,20 +653,62 @@ def generate_api_html(endpoints):
             background: rgba(255, 255, 255, 0.25);
         }
 
+        .category-block {
+            margin-bottom: 0.5rem;
+        }
+
+        .category-block summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .category-block summary {
+            cursor: pointer;
+            user-select: none;
+            outline: none;
+            margin-bottom: 0.6rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-muted);
+            list-style: none;
+        }
+
+        .category-block summary::before {
+            content: '';
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234facfe' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='9 18 15 12 9 6'%3E%3C/polyline%3E%3C/svg%3E");
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            transition: transform 0.2s ease;
+        }
+
+        .category-block[open] summary::before {
+            transform: rotate(90deg);
+        }
+
+        .category-block summary:hover h3 {
+            color: var(--text-main);
+        }
+
         .category-block h3 {
             font-size: 0.85rem;
             text-transform: uppercase;
             letter-spacing: 1px;
             color: var(--text-muted);
-            margin-bottom: 0.6rem;
+            margin-bottom: 0;
             border-left: 2px solid var(--secondary);
             padding-left: 0.5rem;
+            transition: color 0.2s ease;
         }
 
         .endpoint-list {
             display: flex;
             flex-direction: column;
             gap: 0.4rem;
+            margin-bottom: 1rem;
         }
 
         .endpoint-item {
@@ -1174,6 +1216,8 @@ print(data)</pre>
                 setTimeout(() => {
                     const firstItem = document.querySelector('.endpoint-item');
                     if (firstItem) {
+                        const parentDetails = firstItem.closest('details');
+                        if (parentDetails) parentDetails.open = true;
                         firstItem.click();
                     }
                 }, 50);
@@ -1200,12 +1244,14 @@ print(data)</pre>
 
             // Create DOM elements
             for (const catName in categories) {
-                const catBlock = document.createElement('div');
+                const catBlock = document.createElement('details');
                 catBlock.className = 'category-block';
                 
+                const summary = document.createElement('summary');
                 const h3 = document.createElement('h3');
                 h3.textContent = catName;
-                catBlock.appendChild(h3);
+                summary.appendChild(h3);
+                catBlock.appendChild(summary);
 
                 const listDiv = document.createElement('div');
                 listDiv.className = 'endpoint-list';
