@@ -371,8 +371,8 @@ def collect_endpoints():
     return endpoints
 
 def generate_api_html(endpoints):
-    """Generates the interactive API page at hub/acquisition/API/index.html."""
-    print("Generating hub/acquisition/API/index.html...")
+    """Generates the interactive API page at hub/API/index.html."""
+    print("Generating hub/API/index.html...")
     
     endpoints_js = json.dumps(endpoints, indent=2)
     
@@ -1349,9 +1349,9 @@ print(data)</pre>
                             window.location.hostname === '127.0.0.1';
 
             if (isLocal && requestUrl.startsWith(baseUrl)) {
-                // API page is located inside hub/acquisition/API/index.html
-                // So relative paths to data files are three directories up
-                fetchUrl = '../../../' + selectedEndpoint.path;
+                // API page is located inside hub/API/index.html
+                // So relative paths to data files are two directories up
+                fetchUrl = '../../' + selectedEndpoint.path;
             }
 
             // Update states

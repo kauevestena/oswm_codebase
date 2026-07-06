@@ -726,7 +726,7 @@ basic_html = """
 datahub_root = "hub"
 
 acquisition_folder = os.path.join(datahub_root, "acquisition")
-api_folder = os.path.join(acquisition_folder, "API")
+api_folder = os.path.join(datahub_root, "API")
 acquisition_results_path = os.path.join(acquisition_folder, "results.json")
 acquisition_page_path = os.path.join(acquisition_folder, "index.html")
 
