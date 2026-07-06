@@ -1,0 +1,666 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Ontology xmlns="http://www.w3.org/2002/07/owl#" host="www.onto4alleditor.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.w3.org/2002/07/owl# http://www.w3.org/2009/09/owl2-xml.xsd" xml:base="http://example.com/" xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#" xmlns:xsd="http://www.w3.org/2001/XMLSchema#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:xml="http://www.w3.org/XML/1998/namespace" ontologyIRI="http://example.com/myOntology">
+  <Prefix name="rdf" IRI="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/>
+  <Prefix name="rdfs" IRI="http://www.w3.org/2000/01/rdf-schema#"/>
+  <Prefix name="xsd" IRI="http://www.w3.org/2001/XMLSchema#"/>
+  <Prefix name="owl" IRI="http://www.w3.org/2002/07/owl#"/>
+  <Declaration>
+    <Class IRI="Pathway"/>
+  </Declaration>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="IRI"/>
+    <IRI>Pathway</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">https://onto4alleditor.com/en/ontologies/1600#[object Element]</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="functional"/>
+    <IRI>Pathway</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">false</Literal>
+  </AnnotationAssertion>
+  <Declaration>
+    <Class IRI="Footway"/>
+  </Declaration>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="SubClass_Of"/>
+    <IRI>Footway</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">Pathway</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="IRI"/>
+    <IRI>Footway</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">https://onto4alleditor.com/en/ontologies/1600#[object Element]</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="functional"/>
+    <IRI>Footway</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">false</Literal>
+  </AnnotationAssertion>
+  <Declaration>
+    <Class IRI="Road"/>
+  </Declaration>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="SubClass_Of"/>
+    <IRI>Road</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">Pathway</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="IRI"/>
+    <IRI>Road</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">https://onto4alleditor.com/en/ontologies/1600#[object Element]</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="functional"/>
+    <IRI>Road</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">false</Literal>
+  </AnnotationAssertion>
+  <Declaration>
+    <ObjectProperty IRI="is_a"/>
+  </Declaration>
+  <SubClassOf>
+    <Class IRI="Footway"/>
+    <Class IRI="Pathway"/>
+  </SubClassOf>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="domain"/>
+    <IRI>is_a</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">Footway</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="range"/>
+    <IRI>is_a</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">Pathway</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="functional"/>
+    <IRI>is_a</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">false</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="IRI"/>
+    <IRI>is_a</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">https://onto4alleditor.com/en/ontologies/1600#[object Element]</Literal>
+  </AnnotationAssertion>
+  <Declaration>
+    <ObjectProperty IRI="is_a"/>
+  </Declaration>
+  <SubClassOf>
+    <Class IRI="Road"/>
+    <Class IRI="Pathway"/>
+  </SubClassOf>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="domain"/>
+    <IRI>is_a</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">Road</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="range"/>
+    <IRI>is_a</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">Pathway</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="functional"/>
+    <IRI>is_a</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">false</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="IRI"/>
+    <IRI>is_a</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">https://onto4alleditor.com/en/ontologies/1600#[object Element]</Literal>
+  </AnnotationAssertion>
+  <Declaration>
+    <Class IRI="Sidewalk"/>
+  </Declaration>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="SubClass_Of"/>
+    <IRI>Sidewalk</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">Footway</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="IRI"/>
+    <IRI>Sidewalk</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">https://onto4alleditor.com/en/ontologies/1600#[object Element]</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="functional"/>
+    <IRI>Sidewalk</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">false</Literal>
+  </AnnotationAssertion>
+  <Declaration>
+    <ObjectProperty IRI="is_a"/>
+  </Declaration>
+  <SubClassOf>
+    <Class IRI="Sidewalk"/>
+    <Class IRI="Footway"/>
+  </SubClassOf>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="domain"/>
+    <IRI>is_a</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">Sidewalk</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="range"/>
+    <IRI>is_a</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">Footway</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="functional"/>
+    <IRI>is_a</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">false</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="IRI"/>
+    <IRI>is_a</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">https://onto4alleditor.com/en/ontologies/1600#[object Element]</Literal>
+  </AnnotationAssertion>
+  <Declaration>
+    <Class IRI="Crossing"/>
+  </Declaration>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="IRI"/>
+    <IRI>Crossing</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">https://onto4alleditor.com/en/ontologies/1600#[object Element]</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="functional"/>
+    <IRI>Crossing</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">false</Literal>
+  </AnnotationAssertion>
+  <Declaration>
+    <ObjectProperty IRI="connects"/>
+  </Declaration>
+  <ObjectPropertyDomain>
+    <ObjectProperty IRI="connects&lt;br&gt;"/>
+    <Class IRI="Crossing"/>
+  </ObjectPropertyDomain>
+  <ObjectPropertyRange>
+    <ObjectProperty IRI="connects&lt;br&gt;"/>
+    <Class IRI="Footway"/>
+  </ObjectPropertyRange>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="domain"/>
+    <IRI>connects</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">Crossing</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="range"/>
+    <IRI>connects</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">Footway</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="functional"/>
+    <IRI>connects</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">false</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="IRI"/>
+    <IRI>connects</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">https://onto4alleditor.com/en/ontologies/1600#[object Element]</Literal>
+  </AnnotationAssertion>
+  <Declaration>
+    <ObjectProperty IRI="connects"/>
+  </Declaration>
+  <ObjectPropertyDomain>
+    <ObjectProperty IRI="connects&lt;br&gt;"/>
+    <Class IRI="Crossing"/>
+  </ObjectPropertyDomain>
+  <ObjectPropertyRange>
+    <ObjectProperty IRI="connects&lt;br&gt;"/>
+    <Class IRI="Pathway"/>
+  </ObjectPropertyRange>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="domain"/>
+    <IRI>connects</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">Crossing</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="range"/>
+    <IRI>connects</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">Pathway</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="functional"/>
+    <IRI>connects</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">false</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="IRI"/>
+    <IRI>connects</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">https://onto4alleditor.com/en/ontologies/1600#[object Element]</Literal>
+  </AnnotationAssertion>
+  <Declaration>
+    <ObjectProperty IRI="is_justaposed"/>
+  </Declaration>
+  <ObjectPropertyDomain>
+    <ObjectProperty IRI="is_justaposed"/>
+    <Class IRI="Sidewalk"/>
+  </ObjectPropertyDomain>
+  <ObjectPropertyRange>
+    <ObjectProperty IRI="is_justaposed"/>
+    <Class IRI="Road"/>
+  </ObjectPropertyRange>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="domain"/>
+    <IRI>is_justaposed</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">Sidewalk</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="range"/>
+    <IRI>is_justaposed</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">Road</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="functional"/>
+    <IRI>is_justaposed</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">false</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="IRI"/>
+    <IRI>is_justaposed</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">https://onto4alleditor.com/en/ontologies/1600#[object Element]</Literal>
+  </AnnotationAssertion>
+  <Declaration>
+    <Class IRI="KerbAcessPoint"/>
+  </Declaration>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="IRI"/>
+    <IRI>KerbAcessPoint</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">https://onto4alleditor.com/en/ontologies/1600#[object Element]</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="functional"/>
+    <IRI>KerbAcessPoint</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">false</Literal>
+  </AnnotationAssertion>
+  <Declaration>
+    <Class IRI="Informal_Footway"/>
+  </Declaration>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="SubClass_Of"/>
+    <IRI>Informal_Footway</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">Road</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="IRI"/>
+    <IRI>Informal_Footway</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">https://onto4alleditor.com/en/ontologies/1600#[object Element]</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="functional"/>
+    <IRI>Informal_Footway</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">false</Literal>
+  </AnnotationAssertion>
+  <Declaration>
+    <Class IRI="Potential_Footways"/>
+  </Declaration>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="SubClass_Of"/>
+    <IRI>Potential_Footways</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">Pathway</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="IRI"/>
+    <IRI>Potential_Footways</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">https://onto4alleditor.com/en/ontologies/1600#[object Element]</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="functional"/>
+    <IRI>Potential_Footways</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">false</Literal>
+  </AnnotationAssertion>
+  <Declaration>
+    <Class IRI="PedestrianAreas"/>
+  </Declaration>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="IRI"/>
+    <IRI>PedestrianAreas</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">https://onto4alleditor.com/en/ontologies/1600#[object Element]</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="functional"/>
+    <IRI>PedestrianAreas</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">false</Literal>
+  </AnnotationAssertion>
+  <Declaration>
+    <ObjectProperty IRI="contains"/>
+  </Declaration>
+  <ObjectPropertyDomain>
+    <ObjectProperty IRI="contains"/>
+    <Class IRI="PedestrianAreas"/>
+  </ObjectPropertyDomain>
+  <ObjectPropertyRange>
+    <ObjectProperty IRI="contains"/>
+    <Class IRI="Footway"/>
+  </ObjectPropertyRange>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="domain"/>
+    <IRI>contains</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">PedestrianAreas</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="range"/>
+    <IRI>contains</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">Footway</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="functional"/>
+    <IRI>contains</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">false</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="IRI"/>
+    <IRI>contains</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">https://onto4alleditor.com/en/ontologies/1600#[object Element]</Literal>
+  </AnnotationAssertion>
+  <Declaration>
+    <Class IRI="Other_Pathways"/>
+  </Declaration>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="SubClass_Of"/>
+    <IRI>Other_Pathways</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">Pathway</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="IRI"/>
+    <IRI>Other_Pathways</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">https://onto4alleditor.com/en/ontologies/1600#[object Element]</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="functional"/>
+    <IRI>Other_Pathways</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">false</Literal>
+  </AnnotationAssertion>
+  <Declaration>
+    <ObjectProperty IRI="is_a"/>
+  </Declaration>
+  <SubClassOf>
+    <Class IRI="Other_Pathways"/>
+    <Class IRI="Pathway"/>
+  </SubClassOf>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="domain"/>
+    <IRI>is_a</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">Other_Pathways</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="range"/>
+    <IRI>is_a</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">Pathway</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="functional"/>
+    <IRI>is_a</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">false</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="IRI"/>
+    <IRI>is_a</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">https://onto4alleditor.com/en/ontologies/1600#[object Element]</Literal>
+  </AnnotationAssertion>
+  <Declaration>
+    <ObjectProperty IRI="is_a"/>
+  </Declaration>
+  <SubClassOf>
+    <Class IRI="Potential_Footways"/>
+    <Class IRI="Pathway"/>
+  </SubClassOf>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="domain"/>
+    <IRI>is_a</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">Potential_Footways</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="range"/>
+    <IRI>is_a</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">Pathway</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="functional"/>
+    <IRI>is_a</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">false</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="IRI"/>
+    <IRI>is_a</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">https://onto4alleditor.com/en/ontologies/1600#[object Element]</Literal>
+  </AnnotationAssertion>
+  <Declaration>
+    <ObjectProperty IRI="probably_is_a"/>
+  </Declaration>
+  <ObjectPropertyDomain>
+    <ObjectProperty IRI="probably_is_a"/>
+    <Class IRI="Potential_Footways"/>
+  </ObjectPropertyDomain>
+  <ObjectPropertyRange>
+    <ObjectProperty IRI="probably_is_a"/>
+    <Class IRI="Footway"/>
+  </ObjectPropertyRange>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="domain"/>
+    <IRI>probably_is_a</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">Potential_Footways</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="range"/>
+    <IRI>probably_is_a</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">Footway</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="functional"/>
+    <IRI>probably_is_a</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">false</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="IRI"/>
+    <IRI>probably_is_a</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">https://onto4alleditor.com/en/ontologies/1600#[object Element]</Literal>
+  </AnnotationAssertion>
+  <Declaration>
+    <ObjectProperty IRI="may_also_be"/>
+  </Declaration>
+  <ObjectPropertyDomain>
+    <ObjectProperty IRI="may_also_be"/>
+    <Class IRI="Potential_Footways"/>
+  </ObjectPropertyDomain>
+  <ObjectPropertyRange>
+    <ObjectProperty IRI="may_also_be"/>
+    <Class IRI="Road"/>
+  </ObjectPropertyRange>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="domain"/>
+    <IRI>may_also_be</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">Potential_Footways</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="range"/>
+    <IRI>may_also_be</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">Road</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="functional"/>
+    <IRI>may_also_be</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">false</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="IRI"/>
+    <IRI>may_also_be</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">https://onto4alleditor.com/en/ontologies/1600#[object Element]</Literal>
+  </AnnotationAssertion>
+  <Declaration>
+    <ObjectProperty IRI="may_also_be"/>
+  </Declaration>
+  <ObjectPropertyDomain>
+    <ObjectProperty IRI="may_also_be"/>
+    <Class IRI="Potential_Footways"/>
+  </ObjectPropertyDomain>
+  <ObjectPropertyRange>
+    <ObjectProperty IRI="may_also_be"/>
+    <Class IRI="Other_Pathways"/>
+  </ObjectPropertyRange>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="domain"/>
+    <IRI>may_also_be</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">Potential_Footways</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="range"/>
+    <IRI>may_also_be</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">Other_Pathways</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="functional"/>
+    <IRI>may_also_be</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">false</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="IRI"/>
+    <IRI>may_also_be</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">https://onto4alleditor.com/en/ontologies/1600#[object Element]</Literal>
+  </AnnotationAssertion>
+  <Declaration>
+    <ObjectProperty IRI="is_used_as"/>
+  </Declaration>
+  <ObjectPropertyDomain>
+    <ObjectProperty IRI="is_used_as"/>
+    <Class IRI="Informal_Footway"/>
+  </ObjectPropertyDomain>
+  <ObjectPropertyRange>
+    <ObjectProperty IRI="is_used_as"/>
+    <Class IRI="Footway"/>
+  </ObjectPropertyRange>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="domain"/>
+    <IRI>is_used_as</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">Informal_Footway</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="range"/>
+    <IRI>is_used_as</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">Footway</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="functional"/>
+    <IRI>is_used_as</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">false</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="IRI"/>
+    <IRI>is_used_as</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">https://onto4alleditor.com/en/ontologies/1600#[object Element]</Literal>
+  </AnnotationAssertion>
+  <Declaration>
+    <ObjectProperty IRI="is_a"/>
+  </Declaration>
+  <SubClassOf>
+    <Class IRI="Informal_Footway"/>
+    <Class IRI="Road"/>
+  </SubClassOf>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="domain"/>
+    <IRI>is_a</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">Informal_Footway</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="range"/>
+    <IRI>is_a</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">Road</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="functional"/>
+    <IRI>is_a</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">false</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="IRI"/>
+    <IRI>is_a</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">https://onto4alleditor.com/en/ontologies/1600#[object Element]</Literal>
+  </AnnotationAssertion>
+  <Declaration>
+    <Class IRI="Stairway"/>
+  </Declaration>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="SubClass_Of"/>
+    <IRI>Stairway</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">Footway</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="IRI"/>
+    <IRI>Stairway</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">https://onto4alleditor.com/en/ontologies/1600#[object Element]</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="functional"/>
+    <IRI>Stairway</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">false</Literal>
+  </AnnotationAssertion>
+  <Declaration>
+    <ObjectProperty IRI="is_a"/>
+  </Declaration>
+  <SubClassOf>
+    <Class IRI="Stairway"/>
+    <Class IRI="Footway"/>
+  </SubClassOf>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="domain"/>
+    <IRI>is_a</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">Stairway</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="range"/>
+    <IRI>is_a</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">Footway</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="functional"/>
+    <IRI>is_a</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">false</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="IRI"/>
+    <IRI>is_a</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">https://onto4alleditor.com/en/ontologies/1600#[object Element]</Literal>
+  </AnnotationAssertion>
+  <Declaration>
+    <ObjectProperty IRI="Is_above"/>
+  </Declaration>
+  <ObjectPropertyDomain>
+    <ObjectProperty IRI="Is_above"/>
+    <Class IRI="KerbAcessPoint"/>
+  </ObjectPropertyDomain>
+  <ObjectPropertyRange>
+    <ObjectProperty IRI="Is_above"/>
+    <Class IRI="Crossing"/>
+  </ObjectPropertyRange>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="domain"/>
+    <IRI>Is_above</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">KerbAcessPoint</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="range"/>
+    <IRI>Is_above</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">Crossing</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="functional"/>
+    <IRI>Is_above</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">false</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="IRI"/>
+    <IRI>Is_above</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">https://onto4alleditor.com/en/ontologies/1600#[object Element]</Literal>
+  </AnnotationAssertion>
+  <Declaration>
+    <Class IRI="Thing"/>
+  </Declaration>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="IRI"/>
+    <IRI>Thing</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">https://onto4alleditor.com/en/ontologies/1600#[object Element]</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="functional"/>
+    <IRI>Thing</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">false</Literal>
+  </AnnotationAssertion>
+</Ontology>
