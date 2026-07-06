@@ -1,6 +1,7 @@
 # import pandas as pd
 from dq_funcs import *
 from quality_dicts import *
+from functions import *
 
 
 
