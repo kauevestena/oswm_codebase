@@ -80,12 +80,16 @@
             right: 0;
             bottom: 0;
             background-color: rgba(0, 0, 0, 0.5);
-            display: flex;
+            display: none;
             align-items: center;
             justify-content: center;
             z-index: 10000;
             padding: 20px;
             box-sizing: border-box;
+        }
+
+        .modal-overlay.visible {
+            display: flex;
         }
 
         .modal {
@@ -97,7 +101,6 @@
             font-family: Arial, sans-serif;
             margin: 0;
             box-sizing: border-box;
-            /* Remove position: relative as it's not needed with flexbox centering */
         }
 
         .modal h2 {
@@ -195,6 +198,7 @@
         let pathFinder = null;
         let bestPath = null;
         let originalData = null;
+        let markers = [];  // Track MapLibre marker instances for proper cleanup
 
         // For the estimation calculation:
         // Assume a speed of ~5 km/h = 12 min/km
@@ -280,13 +284,14 @@
 
         // Add click event to select start and end points
         map.on('click', (e) => {
-            if (!pathFinder) {
+            if (!pathFinder || !originalData) {
                 console.error("PathFinder not initialized yet.");
                 return;
             }
 
             const coords = [e.lngLat.lng, e.lngLat.lat];
-            const snappedPoint = turf.nearestPointOnLine(map.getSource('line')._data, turf.point(coords));
+            // Use originalData instead of private _data API on the map source
+            const snappedPoint = turf.nearestPointOnLine(originalData, turf.point(coords));
             const snappedCoords = snappedPoint.geometry.coordinates;
 
             if (!start) {
@@ -312,10 +317,11 @@
             el.style.width = '10px';
             el.style.height = '10px';
             el.style.borderRadius = '50%';
-            el.color = color;
+            el.style.backgroundColor = color;
             // el.draggable = true; // TODO
 
-            new maplibregl.Marker(el).setLngLat(coords).addTo(map);
+            const marker = new maplibregl.Marker(el).setLngLat(coords).addTo(map);
+            markers.push(marker);
         }
 
         function splitLinesAndFindPath(retry = false) {
@@ -434,10 +440,9 @@
                 map.removeLayer('best-path-layer');
                 map.removeSource('best-path');
             }
-            const markers = document.getElementsByClassName('marker');
-            while (markers.length > 0) {
-                markers[0].parentNode.removeChild(markers[0]);
-            }
+            // Remove markers via MapLibre API (handles the wrapper elements properly)
+            markers.forEach(m => m.remove());
+            markers = [];
             showInfoBox(false);
         }
 
@@ -465,7 +470,7 @@
         function showWelcomeModalIfNeeded() {
             const dontShow = localStorage.getItem('welcomeModalDontShow');
             if (!dontShow) {
-                document.getElementById('welcomeModalOverlay').style.display = 'block';
+                document.getElementById('welcomeModalOverlay').classList.add('visible');
             }
         }
 
@@ -478,7 +483,7 @@
             // }
 
 
-            document.getElementById('welcomeModalOverlay').style.display = 'none';
+            document.getElementById('welcomeModalOverlay').classList.remove('visible');
         });
     </script>
 </body>
