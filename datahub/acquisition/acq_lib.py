@@ -12,16 +12,19 @@ from dh_lib import boundaries_geojson_path
 SEARCH_KEYWORDS = [
     "oswm",
     "OpenSidewalkMap",
-    "sidewalk",
-    "pedestrian",
-    "walk",
     "accessibility",
+    "pedestrian",
+    "sidewalk",
+    "walk",
     "kerb",
     "tactile paving",
     "crossing",
     "footway",
     "footpath",
     "stairway",
+    # Portuguese translations (for localized project metadata)
+    "acessibilidade",
+
 ]
 
 # remeber that projects shall be filtered geographically considering the node bounding box (data/boundaries/polygon.geojson), and if possible the polygon itself, beware of CRS
@@ -35,6 +38,15 @@ SUPPORTED_SERVICES = {
     ],
     "Pic4Review": ["https://pic4review.pavie.info/#/"], # pic4review is almost discontinued these days
     "MapRoulette": ["https://maproulette.org/"],
+}
+
+# Mapping of website instances to their respective backend API base URLs
+SERVICE_API_ENDPOINTS = {
+    "https://tasks.hotosm.org/": "https://tasking-manager-tm4-production-api.hotosm.org/api/v2/",
+    "https://tasks.teachosm.org/": "https://tasks.teachosm.org/backend/api/v2/",
+    "https://tasks.mapwith.ai/": "https://tasks.mapwith.ai/api/v2/",
+    "https://maproulette.org/": "https://maproulette.org/api/v2/",
+    "https://pic4review.pavie.info/#/": "https://pic4review.pavie.info/api/"
 }
 
 
@@ -129,9 +141,10 @@ def query_maproulette_API(instance_url, bbox, queryword):
     # sample successfull API call:
     # https://maproulette.org/api/v2/challenges/extendedFind?bb=2.224122,48.8155755,2.4697602,48.902156&cLocal=0&cStatus=3,4,0,-1&ce=true&cg=false&cs=sidewalk&limit=50&order=DESC&page=0&pe=true&sort=popularity
     # fundamental parameters are bounding box (bb) and search keyword (cs)
+    base_api = SERVICE_API_ENDPOINTS.get(instance_url, instance_url.rstrip("/") + "/api/v2/")
     api_url = (
-        instance_url.rstrip("/")
-        + "/api/v2/challenges/extendedFind?"
+        base_api.rstrip("/")
+        + "/challenges/extendedFind?"
         + f"bb={bbox[1]},{bbox[0]},{bbox[3]},{bbox[2]}"
         + "&cLocal=0&cStatus=3,4,0,-1&ce=true&cg=false"
         + f"&cs={queryword}"
@@ -204,9 +217,10 @@ def query_tasking_manager_API(instance_url, bbox, queryword):
     import urllib.parse
     # bbox parameter format: minlon,minlat,maxlon,maxlat
     bbox_str = f"{bbox[1]},{bbox[0]},{bbox[3]},{bbox[2]}"
+    base_api = SERVICE_API_ENDPOINTS.get(instance_url, instance_url.rstrip("/") + "/api/v2/")
     api_url = (
-        instance_url.rstrip("/")
-        + "/api/v2/projects/"
+        base_api.rstrip("/")
+        + "/projects/"
         + f"?textSearch={urllib.parse.quote(queryword)}"
         + f"&bbox={bbox_str}"
         + "&orderBy=priority&orderByType=ASC"
@@ -237,7 +251,12 @@ def parse_tasking_manager_results(raw_results, instance_url):
             "url": f"{instance_url.rstrip('/')}/projects/{project_id}",
             "status": _tasking_manager_status(item.get("status", "")),
             "description": item.get("shortDescription", item.get("projectInfo", {}).get("shortDescription", "")),
+            "country": item.get("country", []),
         }
+        # If the detail endpoint data is available (aoiBBOX), include it
+        aoi_bbox = item.get("aoiBBOX")
+        if aoi_bbox:
+            project["bbox"] = aoi_bbox
         projects.append(project)
     return projects
 
@@ -378,6 +397,94 @@ def filter_by_polygon(projects, polygon):
     return filtered
 
 
+def fetch_project_bbox_from_detail(instance_url, project_id):
+    """
+    Fetch the aoiBBOX for a single Tasking Manager project from its detail endpoint.
+    Returns [west, south, east, north] or None if unavailable.
+    """
+    base_api = SERVICE_API_ENDPOINTS.get(instance_url, instance_url.rstrip("/") + "/api/v2/")
+    detail_url = base_api.rstrip("/") + f"/projects/{project_id}/"
+    try:
+        response = requests.get(detail_url, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            return data.get("aoiBBOX")
+    except Exception as e:
+        print(f"[acquisition] Could not fetch detail for project {project_id}: {e}")
+    return None
+
+
+def fetch_all_tasking_manager(instance_url, bbox):
+    """
+    Fetch all Tasking Manager projects by paginating through the list endpoint.
+    The list endpoint's bbox param is unreliable (ignored on some instances),
+    so we fetch all projects and rely on downstream spatial filtering.
+    Returns a list of parsed projects.
+    """
+    base_api = SERVICE_API_ENDPOINTS.get(instance_url, instance_url.rstrip("/") + "/api/v2/")
+    
+    all_projects = []
+    page = 1
+    while True:
+        api_url = (
+            base_api.rstrip("/")
+            + "/projects/"
+            + f"?orderBy=priority&orderByType=ASC"
+            + f"&page={page}"
+        )
+        raw = query_to_json(api_url)
+        if not raw:
+            break
+            
+        parsed = parse_tasking_manager_results(raw, instance_url)
+        all_projects.extend(parsed)
+        
+        pagination = raw.get("pagination", {})
+        if not pagination.get("hasNext", False):
+            break
+            
+        page += 1
+        
+    return all_projects
+
+def fetch_all_maproulette(instance_url, bbox):
+    """
+    Fetch all MapRoulette challenges within a bounding box (ignoring keywords)
+    by paginating through the API until exhausted.
+    Returns a list of parsed projects.
+    """
+    base_api = SERVICE_API_ENDPOINTS.get(instance_url, instance_url.rstrip("/") + "/api/v2/")
+    
+    all_projects = []
+    page = 0
+    limit = 50
+    while True:
+        api_url = (
+            base_api.rstrip("/")
+            + "/challenges/extendedFind?"
+            + f"bb={bbox[1]},{bbox[0]},{bbox[3]},{bbox[2]}"
+            + "&cLocal=0&cStatus=3,4,0,-1&ce=true&cg=false"
+            + f"&limit={limit}&order=DESC&page={page}&pe=true&sort=popularity"
+        )
+        raw = query_to_json(api_url)
+        if not raw:
+            break
+            
+        parsed = parse_maproulette_results(raw, instance_url)
+        all_projects.extend(parsed)
+        
+        if len(raw) < limit:
+            break
+            
+        page += 1
+        
+    return all_projects
+
+def fetch_all_pic4review(instance_url, bbox):
+    """Pic4Review stub — returns empty list."""
+    print(f"[acquisition] Pic4Review: service nearly discontinued — skipping fetch")
+    return []
+
 # ---------------------------------------------------------------------------
 # Service dispatcher
 # ---------------------------------------------------------------------------
@@ -388,15 +495,18 @@ SERVICE_DISPATCH = {
         "query_api": query_tasking_manager_API,
         "query_browser": query_tasking_manager,
         "parse": parse_tasking_manager_results,
+        "fetch_all": fetch_all_tasking_manager,
     },
     "MapRoulette": {
         "query_api": query_maproulette_API,
         "query_browser": query_maproulette,
         "parse": parse_maproulette_results,
+        "fetch_all": fetch_all_maproulette,
     },
     "Pic4Review": {
         "query_api": query_pic4review_API,
         "query_browser": query_pic4review,
         "parse": parse_pic4review_results,
+        "fetch_all": fetch_all_pic4review,
     },
 }

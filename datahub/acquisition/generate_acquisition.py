@@ -42,6 +42,7 @@ from acq_lib import (
     deduplicate_results,
     filter_by_polygon,
     check_pic4review_online,
+    fetch_project_bbox_from_detail,
 )
 
 # ---------------------------------------------------------------------------
@@ -51,11 +52,14 @@ from acq_lib import (
 
 def collect_all_projects(bbox, n_keywords=None, dry_run=False):
     """
-    Query every supported service/instance for each keyword.
+    Fetch all projects from every supported service/instance, then filter
+    locally by keyword matching.
     Returns (projects_list, service_status_dict).
     """
+    # Since we now fetch all projects at once and filter locally,
+    # default to using ALL keywords (no extra API cost per keyword)
     if n_keywords is None:
-        n_keywords = DEFAULT_ACQ_KEYWORDS_COUNT
+        n_keywords = len(SEARCH_KEYWORDS)
 
     keywords = SEARCH_KEYWORDS[:n_keywords]
     all_projects = []
@@ -88,23 +92,44 @@ def collect_all_projects(bbox, n_keywords=None, dry_run=False):
                     svc_status["instances"][instance_url] = "dry-run"
                 continue  # Pic4Review has no search API
 
-            for keyword in keywords:
-                api_url = dispatch["query_api"](instance_url, bbox, keyword)
+            fetch_fn = dispatch.get("fetch_all")
+            
+            if dry_run:
+                if service_name != "Pic4Review":
+                    print(f"  [DRY-RUN] {service_name} @ {instance_url} | using fetch_all()")
+                continue
 
-                if dry_run:
-                    print(f"  [DRY-RUN] {service_name} @ {instance_url} | kw='{keyword}'")
-                    print(f"            {api_url}")
-                    continue
-
-                raw = query_to_json(api_url)
-                if raw is None:
+            if fetch_fn:
+                try:
+                    all_raw_projects = fetch_fn(instance_url, bbox)
+                    print(f"[acquisition] Fetched {len(all_raw_projects)} total projects from {instance_url}")
+                    
+                    # Local case-insensitive matching
+                    for p in all_raw_projects:
+                        matched = []
+                        title = p.get("title", "").lower()
+                        desc = p.get("description", "").lower()
+                        for kw in keywords:
+                            if kw.lower() in title or kw.lower() in desc:
+                                matched.append(kw)
+                        if matched:
+                            p["matched_keywords"] = matched
+                            inst_projects.append(p)
+                    
+                    print(f"[acquisition] {len(inst_projects)} projects matched keywords at {instance_url}")
+                    
+                    # For Tasking Manager projects without bbox, fetch from detail endpoint
+                    if service_name == "Tasking Manager":
+                        for p in inst_projects:
+                            if "bbox" not in p:
+                                proj_bbox = fetch_project_bbox_from_detail(instance_url, p["id"])
+                                if proj_bbox:
+                                    p["bbox"] = proj_bbox
+                except Exception as e:
+                    print(f"[acquisition] Error fetching all projects for {instance_url}: {e}")
                     inst_ok = False
-                    continue
-
-                parsed = dispatch["parse"](raw, instance_url)
-                for p in parsed:
-                    p["matched_keywords"] = [keyword]
-                inst_projects.extend(parsed)
+            else:
+                inst_ok = False
 
             svc_status["instances"][instance_url] = "ok" if inst_ok else "partial"
             all_projects.extend(inst_projects)
@@ -297,9 +322,39 @@ def generate_dashboard_html(projects, service_status, bbox, output_path):
         .svc-dot.offline {{ background: var(--accent-error); box-shadow: 0 0 6px var(--accent-error); }}
         .svc-dot.error {{ background: var(--accent-warning); box-shadow: 0 0 6px var(--accent-warning); }}
 
+        /* Tabs */
+        .tabs {{
+            display: flex; gap: 0; margin-bottom: 0;
+            border-bottom: 2px solid var(--card-border);
+        }}
+        .tab-btn {{
+            padding: 0.7rem 1.4rem;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.9rem; font-weight: 500;
+            color: var(--text-muted);
+            background: none; border: none; cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: color 0.2s, border-color 0.2s;
+        }}
+        .tab-btn:hover {{ color: var(--text-main); }}
+        .tab-btn.active {{
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }}
+        .tab-btn .tab-count {{
+            display: inline-block;
+            margin-left: 0.4rem;
+            padding: 0.05rem 0.4rem;
+            border-radius: 10px;
+            font-size: 0.72rem; font-weight: 600;
+            background: rgba(0,242,254,0.12); color: var(--primary);
+        }}
+
         /* Search + filters */
         .controls {{
             display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;
+            margin-top: 1rem;
         }}
         .search-box {{
             flex: 1; min-width: 200px;
@@ -311,13 +366,6 @@ def generate_dashboard_html(projects, service_status, bbox, output_path):
             transition: border-color 0.2s;
         }}
         .search-box:focus {{ border-color: rgba(0,242,254,0.4); }}
-        .filter-select {{
-            background: rgba(15,23,42,0.5);
-            border: 1px solid var(--card-border);
-            border-radius: 8px; padding: 0.6rem 1rem;
-            color: var(--text-main); font-family: 'Outfit', sans-serif;
-            font-size: 0.9rem; outline: none; cursor: pointer;
-        }}
 
         /* Projects table */
         .projects-table {{
@@ -370,12 +418,17 @@ def generate_dashboard_html(projects, service_status, bbox, output_path):
             color: var(--text-muted);
         }}
         .empty-state .icon {{ font-size: 3rem; margin-bottom: 1rem; }}
+        .instance-label {{
+            font-size: 0.75rem; color: var(--text-muted);
+            font-family: 'Fira Code', monospace;
+        }}
 
         @media (max-width: 768px) {{
             .container {{ padding: 0 1rem; }}
             .stats-grid {{ grid-template-columns: repeat(2, 1fr); }}
             .projects-table {{ font-size: 0.82rem; }}
             .projects-table td, .projects-table th {{ padding: 0.5rem; }}
+            .tabs {{ overflow-x: auto; }}
         }}
     </style>
 </head>
@@ -397,11 +450,9 @@ def generate_dashboard_html(projects, service_status, bbox, output_path):
 
         <div class="panel">
             <h2>&#x1F4CB; Discovered Projects</h2>
+            <div class="tabs" id="service-tabs"></div>
             <div class="controls">
                 <input class="search-box" id="search" type="text" placeholder="Filter projects by title or keyword&#x2026;">
-                <select class="filter-select" id="svc-filter">
-                    <option value="all">All Services</option>
-                </select>
             </div>
             <div id="table-container"></div>
         </div>
@@ -411,14 +462,15 @@ def generate_dashboard_html(projects, service_status, bbox, output_path):
 const PROJECTS = {projects_js};
 const SERVICE_STATUS = {status_js};
 
+let activeTab = 'all';
+
 function init() {{
     renderStats();
     renderServiceBadges();
-    populateServiceFilter();
-    renderTable(PROJECTS);
+    renderTabs();
+    applyFilters();
 
     document.getElementById('search').addEventListener('input', applyFilters);
-    document.getElementById('svc-filter').addEventListener('change', applyFilters);
 }}
 
 function renderStats() {{
@@ -454,21 +506,33 @@ function renderServiceBadges() {{
     }}).join('');
 }}
 
-function populateServiceFilter() {{
-    const sel = document.getElementById('svc-filter');
-    const svcs = [...new Set(PROJECTS.map(p => p.service))];
-    svcs.forEach(s => {{
-        const opt = document.createElement('option');
-        opt.value = s; opt.textContent = s;
-        sel.appendChild(opt);
+function renderTabs() {{
+    const tabsEl = document.getElementById('service-tabs');
+    const serviceCounts = {{}};
+    PROJECTS.forEach(p => {{
+        const svc = p.service || 'Unknown';
+        serviceCounts[svc] = (serviceCounts[svc] || 0) + 1;
     }});
+
+    let html = `<button class="tab-btn active" data-svc="all" onclick="switchTab('all')">All <span class="tab-count">${{PROJECTS.length}}</span></button>`;
+    Object.entries(serviceCounts).forEach(([svc, count]) => {{
+        html += `<button class="tab-btn" data-svc="${{svc}}" onclick="switchTab('${{svc}}')">${{svc}} <span class="tab-count">${{count}}</span></button>`;
+    }});
+    tabsEl.innerHTML = html;
+}}
+
+function switchTab(svc) {{
+    activeTab = svc;
+    document.querySelectorAll('.tab-btn').forEach(btn => {{
+        btn.classList.toggle('active', btn.dataset.svc === svc);
+    }});
+    applyFilters();
 }}
 
 function applyFilters() {{
     const q = document.getElementById('search').value.toLowerCase();
-    const svc = document.getElementById('svc-filter').value;
     let filtered = PROJECTS;
-    if (svc !== 'all') filtered = filtered.filter(p => p.service === svc);
+    if (activeTab !== 'all') filtered = filtered.filter(p => p.service === activeTab);
     if (q) filtered = filtered.filter(p =>
         (p.title || '').toLowerCase().includes(q) ||
         (p.matched_keywords || []).some(k => k.toLowerCase().includes(q)) ||
@@ -486,15 +550,16 @@ function renderTable(projects) {{
     const activeStatuses = new Set(['ready', 'published', 'active', 'building', 'partially loaded']);
     let html = `<table class="projects-table">
         <thead><tr>
-            <th>Title</th><th>Service</th><th>Status</th><th>Keywords</th><th>Description</th>
+            <th>Title</th><th>Instance</th><th>Status</th><th>Keywords</th><th>Description</th>
         </tr></thead><tbody>`;
     projects.forEach(p => {{
         const isActive = activeStatuses.has((p.status || '').toLowerCase());
         const statusCls = isActive ? 'active' : 'other';
         const kws = (p.matched_keywords || []).map(k => `<span class="kw-tag">${{k}}</span>`).join('');
+        const instanceHost = (p.instance || '').replace(/^https?:\\/\\//, '').replace(/\\/$/, '');
         html += `<tr>
             <td class="project-title"><a href="${{p.url}}" target="_blank" rel="noopener">${{p.title || 'Untitled'}}</a></td>
-            <td>${{p.service}}</td>
+            <td><span class="instance-label">${{instanceHost}}</span></td>
             <td><span class="status-tag ${{statusCls}}">${{p.status || 'N/A'}}</span></td>
             <td>${{kws}}</td>
             <td class="project-desc" title="${{(p.description || '').replace(/"/g, '&quot;')}}">${{p.description || ''}}</td>
@@ -526,9 +591,13 @@ def main():
     parser.add_argument("--keywords", type=int, default=None, help=f"Number of keywords to use (default: {DEFAULT_ACQ_KEYWORDS_COUNT})")
     args = parser.parse_args()
 
-    n_kw = args.keywords if args.keywords else DEFAULT_ACQ_KEYWORDS_COUNT
+    n_kw = args.keywords  # None means "use all keywords" in collect_all_projects
+    if n_kw is None:
+        n_kw_display = len(SEARCH_KEYWORDS)
+    else:
+        n_kw_display = n_kw
     print(f"[acquisition] Starting acquisition for node: {CITY_NAME}")
-    print(f"[acquisition] Using {n_kw} keywords: {SEARCH_KEYWORDS[:n_kw]}")
+    print(f"[acquisition] Using {n_kw_display} keywords: {SEARCH_KEYWORDS[:n_kw_display]}")
 
     bbox = get_bbox_from_boundary()
     if bbox is None:

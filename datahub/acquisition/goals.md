@@ -1,0 +1,3 @@
+submodule description at oswm_codebase/datahub/acquisition/README.md
+
+considering the supported service, "Tasking Manager", considering the instance https://tasks.teachosm.org , there's at least one positive match that should be found for this (Curitiba) Node: https://tasks.teachosm.org/projects/1330 whose description in english is "Acessibility Mapping: tags" thus it should match with the current 3rd entry of "SEARCH_KEYWORDS" list (we must do stuff in a case insenstive way!)
