@@ -228,47 +228,47 @@
     <Literal datatypeIRI="&amp;rdf;PlainLiteral">https://onto4alleditor.com/en/ontologies/1600#[object Element]</Literal>
   </AnnotationAssertion>
   <Declaration>
-    <ObjectProperty IRI="is_justaposed"/>
+    <ObjectProperty IRI="is_juxtaposed"/>
   </Declaration>
   <ObjectPropertyDomain>
-    <ObjectProperty IRI="is_justaposed"/>
+    <ObjectProperty IRI="is_juxtaposed"/>
     <Class IRI="Sidewalk"/>
   </ObjectPropertyDomain>
   <ObjectPropertyRange>
-    <ObjectProperty IRI="is_justaposed"/>
+    <ObjectProperty IRI="is_juxtaposed"/>
     <Class IRI="Road"/>
   </ObjectPropertyRange>
   <AnnotationAssertion>
     <AnnotationProperty IRI="domain"/>
-    <IRI>is_justaposed</IRI>
+    <IRI>is_juxtaposed</IRI>
     <Literal datatypeIRI="&amp;rdf;PlainLiteral">Sidewalk</Literal>
   </AnnotationAssertion>
   <AnnotationAssertion>
     <AnnotationProperty IRI="range"/>
-    <IRI>is_justaposed</IRI>
+    <IRI>is_juxtaposed</IRI>
     <Literal datatypeIRI="&amp;rdf;PlainLiteral">Road</Literal>
   </AnnotationAssertion>
   <AnnotationAssertion>
     <AnnotationProperty IRI="functional"/>
-    <IRI>is_justaposed</IRI>
+    <IRI>is_juxtaposed</IRI>
     <Literal datatypeIRI="&amp;rdf;PlainLiteral">false</Literal>
   </AnnotationAssertion>
   <AnnotationAssertion>
     <AnnotationProperty IRI="IRI"/>
-    <IRI>is_justaposed</IRI>
+    <IRI>is_juxtaposed</IRI>
     <Literal datatypeIRI="&amp;rdf;PlainLiteral">https://onto4alleditor.com/en/ontologies/1600#[object Element]</Literal>
   </AnnotationAssertion>
   <Declaration>
-    <Class IRI="KerbAcessPoint"/>
+    <Class IRI="KerbAccessPoint"/>
   </Declaration>
   <AnnotationAssertion>
     <AnnotationProperty IRI="IRI"/>
-    <IRI>KerbAcessPoint</IRI>
+    <IRI>KerbAccessPoint</IRI>
     <Literal datatypeIRI="&amp;rdf;PlainLiteral">https://onto4alleditor.com/en/ontologies/1600#[object Element]</Literal>
   </AnnotationAssertion>
   <AnnotationAssertion>
     <AnnotationProperty IRI="functional"/>
-    <IRI>KerbAcessPoint</IRI>
+    <IRI>KerbAccessPoint</IRI>
     <Literal datatypeIRI="&amp;rdf;PlainLiteral">false</Literal>
   </AnnotationAssertion>
   <Declaration>
@@ -624,7 +624,7 @@
   </Declaration>
   <ObjectPropertyDomain>
     <ObjectProperty IRI="Is_above"/>
-    <Class IRI="KerbAcessPoint"/>
+    <Class IRI="KerbAccessPoint"/>
   </ObjectPropertyDomain>
   <ObjectPropertyRange>
     <ObjectProperty IRI="Is_above"/>
@@ -633,7 +633,7 @@
   <AnnotationAssertion>
     <AnnotationProperty IRI="domain"/>
     <IRI>Is_above</IRI>
-    <Literal datatypeIRI="&amp;rdf;PlainLiteral">KerbAcessPoint</Literal>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">KerbAccessPoint</Literal>
   </AnnotationAssertion>
   <AnnotationAssertion>
     <AnnotationProperty IRI="range"/>
@@ -663,4 +663,56 @@
     <IRI>Thing</IRI>
     <Literal datatypeIRI="&amp;rdf;PlainLiteral">false</Literal>
   </AnnotationAssertion>
+
+  <Declaration>
+    <Class IRI="TraversibleAreas"/>
+  </Declaration>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="IRI"/>
+    <IRI>TraversibleAreas</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">https://onto4alleditor.com/en/ontologies/1600#[object Element]</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="functional"/>
+    <IRI>TraversibleAreas</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">false</Literal>
+  </AnnotationAssertion>
+
+  <Declaration>
+    <Class IRI="UtilityPoint"/>
+  </Declaration>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="IRI"/>
+    <IRI>UtilityPoint</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">https://onto4alleditor.com/en/ontologies/1600#[object Element]</Literal>
+  </AnnotationAssertion>
+  <AnnotationAssertion>
+    <AnnotationProperty IRI="functional"/>
+    <IRI>UtilityPoint</IRI>
+    <Literal datatypeIRI="&amp;rdf;PlainLiteral">false</Literal>
+  </AnnotationAssertion>
+
+  <SubClassOf>
+    <Class IRI="Crossing"/>
+    <Class IRI="Footway"/>
+  </SubClassOf>
+
+  <SubClassOf>
+    <Class IRI="PedestrianAreas"/>
+    <Class IRI="TraversibleAreas"/>
+  </SubClassOf>
+
+  <SubClassOf>
+    <Class IRI="KerbAccessPoint"/>
+    <Class IRI="UtilityPoint"/>
+  </SubClassOf>
+
+  <ObjectPropertyDomain>
+    <ObjectProperty IRI="contains"/>
+    <Class IRI="TraversibleAreas"/>
+  </ObjectPropertyDomain>
+  <ObjectPropertyRange>
+    <ObjectProperty IRI="contains"/>
+    <Class IRI="Pathway"/>
+  </ObjectPropertyRange>
 </Ontology>
