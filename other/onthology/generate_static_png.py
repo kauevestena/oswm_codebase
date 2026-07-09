@@ -53,25 +53,116 @@ colors = {
     "Other_Pathways": "#E3E3E3"
 }
 
+# Font sizing configurations for class nodes and arrow labels
+CLASS_FONT_SIZE = 30
+ARROW_LABEL_FONT_SIZE = 22
+
+# Row and column index lookup to enforce top-down hierarchy in Graphviz
+node_rows = {
+    "UtilityPoint": 0,
+    "Pathway": 0,
+    "TraversibleAreas": 0,
+    
+    "Road": 1,
+    "Footway": 1,
+    "Other_Pathways": 1,
+    
+    "KerbAccessPoint": 2,
+    "Informal_Footway": 2,
+    "Sidewalk": 2,
+    "Crossing": 2,
+    "Stairway": 2,
+    "Potential_Footways": 2,
+    "PedestrianAreas": 2
+}
+
 dot_lines = [
     "digraph Ontology {",
     "  dpi=150;",
-    "  rankdir=BT;",
-    "  nodesep=0.7;",
-    "  ranksep=1.2;",
-    "  node [shape=box, style=\"filled,rounded\", fontname=\"Arial\", margin=\"0.3,0.15\", fontsize=32];",
-    "  edge [fontname=\"Arial\", fontsize=24];"
+    "  rankdir=LR;",
+    "  splines=true;",
+    "  nodesep=0.5;",
+    "  ranksep=2.5;",
+    f"  node [shape=box, style=\"filled,rounded\", fontname=\"Arial\", margin=\"0.2,0.1\", fontsize={CLASS_FONT_SIZE}];",
+    f"  edge [fontname=\"Arial\", fontsize={ARROW_LABEL_FONT_SIZE}];",
+    "",
+    "  // Invisible dummy nodes to maintain layout grid",
+    "  dummy1 [style=invis, label=\"\", width=0.1, height=0.1];",
+    "  dummy2 [style=invis, label=\"\", width=0.1, height=0.1];",
+    "",
+    "  // Rank definitions (Rows)",
+    "  { rank=same; UtilityPoint; Pathway; TraversibleAreas; }",
+    "  { rank=same; dummy1; Road; Footway; Other_Pathways; dummy2; }",
+    "  { rank=same; KerbAccessPoint; Informal_Footway; Sidewalk; Crossing; Stairway; Potential_Footways; PedestrianAreas; }",
+    "",
+    "  // Horizontal alignment constraints (left-to-right column order)",
+    "  UtilityPoint -> Pathway -> TraversibleAreas [style=invis];",
+    "  dummy1 -> Road -> Footway -> Other_Pathways -> dummy2 [style=invis];",
+    "  KerbAccessPoint -> Informal_Footway -> Sidewalk -> Crossing -> Stairway -> Potential_Footways -> PedestrianAreas [style=invis];",
+    "",
+    "  // Vertical column constraints",
+    "  UtilityPoint -> dummy1 -> KerbAccessPoint [style=invis];",
+    "  TraversibleAreas -> dummy2 -> PedestrianAreas [style=invis];",
+    "",
+    "  // Pathway column vertical alignments",
+    "  Pathway -> Footway [style=invis];",
+    "  Road -> Informal_Footway [style=invis];",
+    "  Footway -> Crossing [style=invis];",
+    "  Other_Pathways -> Potential_Footways [style=invis];",
+    ""
 ]
+
+def make_html_label(text):
+    return f'<<table border="0" cellborder="0" bgcolor="#ffffffcc"><tr><td><font point-size="{ARROW_LABEL_FONT_SIZE}">{text}</font></td></tr></table>>'
+
+def get_edge_label_attr(dom, prop, rng):
+    label_val = make_html_label(prop)
+    # Distribute labels to tail or head with distance/angle to prevent center-channel and node-box collisions
+    if prop == "is_juxtaposed":
+        return f'headlabel={label_val}, labeldistance=3.5, labelangle=-20'
+    elif prop == "is_used_as":
+        return f'headlabel={label_val}, labeldistance=4.0, labelangle=20'
+    elif prop == "Is_above":
+        return f'taillabel={label_val}, labeldistance=4.0, labelangle=15'
+    elif prop == "probably_is_a":
+        return f'headlabel={label_val}, labeldistance=3.0, labelangle=15'
+    elif prop == "may_also_be" and rng == "Road":
+        return f'taillabel={label_val}, labeldistance=4.5, labelangle=-20'
+    elif prop == "may_also_be" and rng == "Other_Pathways":
+        return f'taillabel={label_val}, labeldistance=3.5, labelangle=-25'
+    elif prop == "contains" and dom == "PedestrianAreas" and rng == "Pathway":
+        return f'headlabel={label_val}, labeldistance=4.0, labelangle=20'
+    elif prop == "contains" and dom == "PedestrianAreas" and rng == "Footway":
+        return f'headlabel={label_val}, labeldistance=3.0, labelangle=-25'
+    elif prop == "contains" and dom == "TraversibleAreas" and rng == "Pathway":
+        return f'headlabel={label_val}, labeldistance=3.0, labelangle=-20'
+    elif prop == "contains" and dom == "TraversibleAreas" and rng == "Footway":
+        return f'taillabel={label_val}, labeldistance=3.5, labelangle=25'
+    
+    return f'label={label_val}'
 
 for cls in classes:
     color = colors.get(cls, "#FFFFFF")
     dot_lines.append(f'  "{cls}" [fillcolor="{color}"];')
 
+# Subclasses (is_a edges)
 for sub, sup in subclasses:
-    dot_lines.append(f'  "{sub}" -> "{sup}" [label="is_a", color="#004C99", fontcolor="#004C99", penwidth=2];')
+    label = make_html_label("is_a")
+    # Determine top-down flow direction to prevent Graphviz inversion
+    if node_rows.get(sub, 2) > node_rows.get(sup, 0):
+        # Draw from parent to child but point arrowhead backward
+        dot_lines.append(f'  "{sup}" -> "{sub}" [label={label}, color="#004C99", fontcolor="#004C99", penwidth=2, dir=back, arrowhead=normal];')
+    else:
+        dot_lines.append(f'  "{sub}" -> "{sup}" [label={label}, color="#004C99", fontcolor="#004C99", penwidth=2];')
 
+# Object properties
 for dom, prop, rng in properties:
-    dot_lines.append(f'  "{dom}" -> "{rng}" [label="{prop}", color="#004C99", fontcolor="#004C99", style="dashed", dir="forward", constraint=false, penwidth=2];')
+    label_attr = get_edge_label_attr(dom, prop, rng)
+    # Determine top-down flow direction
+    if node_rows.get(dom, 2) > node_rows.get(rng, 2):
+        dot_lines.append(f'  "{rng}" -> "{dom}" [{label_attr}, color="#004C99", fontcolor="#004C99", style="dashed", penwidth=2, dir=back, arrowhead=normal, constraint=false];')
+    else:
+        dot_lines.append(f'  "{dom}" -> "{rng}" [{label_attr}, color="#004C99", fontcolor="#004C99", style="dashed", penwidth=2, dir=forward, constraint=false];')
 
 dot_lines.append("}")
 dot_string = "\n".join(dot_lines)
