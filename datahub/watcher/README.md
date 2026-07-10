@@ -1,6 +1,6 @@
 # OSWM Watcher
 
-The watcher is an **update watchdog** for the OSWM data pipeline. Its single responsibility is answering:
+The watcher is an **update watchdog** for the OSWM data pipeline. Its main responsibility is answering:
 
 > *"Has the underlying OSM data changed since the last time we ran the pipeline?"*
 
@@ -12,6 +12,8 @@ If the answer is no, the entire download-and-process pipeline can be skipped, sa
 2. Reads the study-area boundary from `data/boundaries/polygon.geojson` and derives a bounding box.
 3. Queries the [OHSOME API](https://api.ohsome.org/) for the count of OSM **contributions** (additions, modifications, deletions) in that area, for each layer, since that timestamp.
 4. Returns a per-layer verdict: `True` (needs update), `False` (up to date), or `None` (check inconclusive).
+5. publish an rss feed containing the update counts per epoch (day of update)
+6. summarizes and shows it in a webpage, published at hub/watcher/index.html
 
 The check is **conservative**: if any layer returns `True` or `None`, the pipeline should run.
 
