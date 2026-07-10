@@ -734,6 +734,7 @@ watcher_page_path = os.path.join(watcher_folder, "index.html")
 watcher_rss_path = os.path.join(watcher_folder, "feed.xml")
 watcher_changesets_rss_path = os.path.join(watcher_folder, "changesets.xml")
 watcher_history_path = os.path.join(updates_folderpath, "watcher_history.json")
+watcher_yesterday_path = os.path.join(updates_folderpath, "yesterday.json")
 
 # Number of keywords (from the top of the SEARCH_KEYWORDS list) used when
 # querying external project-management platforms for pedestrian-data projects.

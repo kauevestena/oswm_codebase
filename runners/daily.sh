@@ -23,6 +23,29 @@ run_step() {
     echo ""
 }
 
+# Run watcher first to generate/update everything
+echo "========================================="
+echo "Running: watcher watchdog"
+echo "========================================="
+if "$PYTHON_BIN" oswm_codebase/datahub/watcher/watcher_lib.py; then
+    echo "Watcher executed successfully."
+else
+    echo "Watcher executed (updates needed or check inconclusive)."
+fi
+echo ""
+
+# Check if there are no changesets yesterday
+if [ -f data/updates/yesterday.json ]; then
+    NUM_CHANGESETS=$("$PYTHON_BIN" -c "import json; print(len(json.load(open('data/updates/yesterday.json'))))" 2>/dev/null)
+    if [ -n "$NUM_CHANGESETS" ] && [ "$NUM_CHANGESETS" -eq 0 ]; then
+        echo "========================================="
+        echo "No OSM changesets affecting OSWM features yesterday."
+        echo "Skipping the rest of the daily updates pipeline."
+        echo "========================================="
+        exit 0
+    fi
+fi
+
 # Each step runs independently regardless of the others
 run_step oswm_codebase/getting_data.py             "getting_data"
 run_step oswm_codebase/filtering_adapting_data.py  "filtering_adapting_data"

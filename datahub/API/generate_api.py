@@ -117,6 +117,9 @@ def get_endpoint_description(path, filename, deliverable):
             "data/updates/versioning/crossings_versioning.json": "Detailed age tracking metrics for crossing features.",
             "data/updates/versioning/kerbs_versioning.json": "Detailed age tracking metrics for kerb features.",
             "data/updates/versioning/other_footways_versioning.json": "Detailed age tracking metrics for other footways layers.",
+            "data/updates/watcher_history.json": "Historical log of daily OSM contribution counts (additions, modifications, deletions) for each layer over the last 120 days.",
+            "data/updates/changeset_cache.json": "Cached metadata for OSM changesets (user, comment, created_at, closed_at) to avoid redundant OSM API hits.",
+            "data/updates/yesterday.json": "List of OSM changesets touching OSWM interest features that occurred yesterday.",
             "data/vrts/data.vrt": "GDAL Virtual Format file linking all processed parquet files together.",
             "data/vrts/data_raw.vrt": "GDAL Virtual Format file linking all raw parquet files together.",
             "data/vrts/tiles.vrt": "GDAL Virtual Format file referencing tile-oriented datasets.",
@@ -253,7 +256,7 @@ def generate_data_index():
             elif key == "tiles":
                 files = ["sidewalks.pmtiles", "crossings.pmtiles", "kerbs.pmtiles", "stairways.pmtiles", "main_footways.pmtiles", "potential_footways.pmtiles", "informal_footways.pmtiles", "pedestrian_areas.pmtiles"]
             elif key == "updates":
-                files = ["registry.json", "index.html", "versioning/sidewalks_versioning.json", "versioning/crossings_versioning.json", "versioning/kerbs_versioning.json", "versioning/other_footways_versioning.json"]
+                files = ["registry.json", "index.html", "watcher_history.json", "changeset_cache.json", "yesterday.json", "versioning/sidewalks_versioning.json", "versioning/crossings_versioning.json", "versioning/kerbs_versioning.json", "versioning/other_footways_versioning.json"]
             elif key == "vrts":
                 files = ["data.vrt", "data_raw.vrt", "tiles.vrt"]
             elif key == "data_quality":
