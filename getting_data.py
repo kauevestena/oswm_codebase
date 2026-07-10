@@ -6,6 +6,44 @@ import osmnx as ox
 
 
 def main():
+    """
+    NOTE: This script attempts to do an incremental data fetch using OHSOME API.
+    If the data doesn't exist yet, or the OHSOME API fails, it will fallback
+    to a full OSMnx data download.
+    """
+    # 1. Quick lookup to see if existing data is present
+    all_data_exists = True
+    for category in layer_tags_dict:
+        if not os.path.exists(paths_dict["data_raw"][category]):
+            all_data_exists = False
+            break
+
+    # 2. Check for the timestamp
+    import sys
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "datahub/watcher")))
+    try:
+        from watcher_lib import _load_last_processed_time
+        since_dt = _load_last_processed_time("Data Fetching")
+    except Exception:
+        since_dt = None
+        
+    # 3. Attempt incremental if we have data and a timestamp
+    if all_data_exists and since_dt:
+        print("[getting_data] Existing data found. Attempting incremental update...")
+        try:
+            import oswm_codebase.incremental_fetch as incremental_fetch
+            success = incremental_fetch.fetch_incremental_data(since_dt)
+            if success:
+                print("[getting_data] Incremental update successful.")
+                gen_updating_infotable_page()
+                return
+            else:
+                print("[getting_data] Incremental update failed. Falling back to full download.")
+        except Exception as e:
+            print(f"[getting_data] Incremental update exception: {e}. Falling back to full download.")
+    else:
+        print("[getting_data] Missing data or timestamp. Proceeding with full data download...")
+
     # Getting the boundaries:
     # downloading the boundaries if doesn't exist:
     print("checking boundaries...")

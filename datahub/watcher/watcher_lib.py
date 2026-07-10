@@ -16,35 +16,14 @@ import geopandas as gpd  # noqa: F811
 from functions import dump_json, formatted_datetime_now # noqa: F811
 
 # ---------------------------------------------------------------------------
-# OHSOME API
+# OHSOME API Config
 # ---------------------------------------------------------------------------
 
-OHSOME_API_BASE = "https://api.ohsome.org/v1"
-
-# Maps each OSWM data layer to its OHSOME filter expression.
-# Filter syntax: https://docs.ohsome.org/ohsome-api/stable/filter.html
-OHSOME_FILTER_MAP: dict[str, str] = {
-    "sidewalks": "footway=sidewalk and type:way",
-    "crossings": "footway=crossing and type:way",
-    "kerbs": "(barrier=kerb or kerb=*) and type:node",
-    "other_footways": (
-        "(highway=footway or highway=steps or highway=living_street"
-        " or highway=pedestrian or highway=track or highway=path"
-        " or foot=yes or foot=designated or foot=permissive or foot=destination"
-        " or footway=alley or footway=path or footway=yes) and type:way"
-    ),
-}
-
-COMBINED_FILTER = (
-    "(footway=sidewalk and type:way) or "
-    "(footway=crossing and type:way) or "
-    "((barrier=kerb or kerb=*) and type:node) or "
-    "((highway=footway or highway=steps or highway=living_street or "
-    "highway=pedestrian or highway=track or highway=path or "
-    "foot=yes or foot=designated or foot=permissive or foot=destination or "
-    "footway=alley or footway=path or footway=yes) and type:way)"
-)
-
+# Imported from the new incremental_fetch module
+import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+from incremental_fetch import OHSOME_API_BASE, OHSOME_FILTER_MAP, COMBINED_FILTER
 
 # ---------------------------------------------------------------------------
 # Internal helpers
