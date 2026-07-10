@@ -9,7 +9,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from dh_lib import *  # noqa: F403 – sets up sys.path and folder structure
 from functions import read_json  # noqa: F811
-from constants import updating_infos_path, boundaries_geojson_path, watcher_page_path, watcher_rss_path, watcher_history_path, REPO_NAME, USERNAME, node_homepage_url  # noqa: F811
+from constants import updating_infos_path, boundaries_geojson_path, watcher_page_path, watcher_rss_path, watcher_changesets_rss_path, watcher_history_path, REPO_NAME, USERNAME, node_homepage_url  # noqa: F811
+from config import CITY_NAME  # noqa: F811
 import requests  # noqa: F811
 import geopandas as gpd  # noqa: F811
 from functions import dump_json, formatted_datetime_now # noqa: F811
@@ -34,10 +35,69 @@ OHSOME_FILTER_MAP: dict[str, str] = {
     ),
 }
 
+COMBINED_FILTER = (
+    "(footway=sidewalk and type:way) or "
+    "(footway=crossing and type:way) or "
+    "((barrier=kerb or kerb=*) and type:node) or "
+    "((highway=footway or highway=steps or highway=living_street or "
+    "highway=pedestrian or highway=track or highway=path or "
+    "foot=yes or foot=designated or foot=permissive or foot=destination or "
+    "footway=alley or footway=path or footway=yes) and type:way)"
+)
+
 
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
+
+
+_changeset_cache_path = os.path.join(os.path.dirname(watcher_history_path), "changeset_cache.json")
+
+def _load_changeset_cache() -> dict:
+    if os.path.exists(_changeset_cache_path):
+        try:
+            return read_json(_changeset_cache_path)
+        except Exception:
+            pass
+    return {}
+
+def _save_changeset_cache(cache: dict):
+    try:
+        os.makedirs(os.path.dirname(_changeset_cache_path), exist_ok=True)
+        dump_json(cache, _changeset_cache_path)
+    except Exception as e:
+        print(f"[watcher] Failed to write changeset cache: {e}")
+
+def _fetch_changeset_meta(changeset_id: int) -> dict | None:
+    """Fetch changeset metadata from OSM API, using a local JSON cache."""
+    cache = _load_changeset_cache()
+    cid_str = str(changeset_id)
+    if cid_str in cache:
+        return cache[cid_str]
+    
+    url = f"https://api.openstreetmap.org/api/0.6/changeset/{changeset_id}.json"
+    try:
+        resp = requests.get(url, timeout=10)
+        resp.raise_for_status()
+        data = resp.json()
+        cs = data.get("changeset", {})
+        
+        meta = {
+            "id": cs.get("id"),
+            "user": cs.get("user", "Unknown"),
+            "uid": cs.get("uid"),
+            "created_at": cs.get("created_at"),
+            "closed_at": cs.get("closed_at"),
+            "changes_count": cs.get("changes_count", 0),
+            "comment": cs.get("tags", {}).get("comment", ""),
+            "created_by": cs.get("tags", {}).get("created_by", ""),
+        }
+        cache[cid_str] = meta
+        _save_changeset_cache(cache)
+        return meta
+    except Exception as e:
+        print(f"[watcher] Failed to fetch changeset {changeset_id} metadata: {e}")
+        return None
 
 
 def _load_last_processed_time(key: str = "Data Fetching") -> datetime | None:
@@ -222,6 +282,125 @@ def any_layer_needs_update(**kwargs) -> bool:
 # RSS and Dashboard Publishing
 # ---------------------------------------------------------------------------
 
+def get_changeset_activity(bboxes: str, end_dt: datetime) -> dict:
+    """
+    Fetch changeset activity for:
+    - Yesterday: end_dt - 1 day to end_dt (all contribution types)
+    - 120 Days deletions: end_dt - 120 days to end_dt (deletions only)
+    """
+    # 1. Yesterday's changesets
+    yesterday_start = end_dt - timedelta(days=1)
+    time_yesterday = f"{yesterday_start.strftime('%Y-%m-%dT%H:%M:%SZ')},{end_dt.strftime('%Y-%m-%dT%H:%M:%SZ')}"
+    
+    print(f"[watcher] Fetching yesterday's changesets ({yesterday_start.strftime('%Y-%m-%d')} to {end_dt.strftime('%Y-%m-%d')}) ...")
+    yesterday_changesets = []
+    
+    try:
+        resp = requests.post(
+            f"{OHSOME_API_BASE}/contributions/geometry",
+            data={
+                "bboxes": bboxes,
+                "filter": COMBINED_FILTER,
+                "time": time_yesterday,
+                "properties": "metadata",
+            },
+            timeout=90,
+        )
+        resp.raise_for_status()
+        features = resp.json().get("features", [])
+        
+        # Group by changeset ID
+        by_cs = {}
+        for f in features:
+            props = f.get("properties", {})
+            cs_id = props.get("@contributionChangesetId")
+            if not cs_id:
+                continue
+            if cs_id not in by_cs:
+                by_cs[cs_id] = {"additions": 0, "modifications": 0, "deletions": 0, "timestamp": props.get("@timestamp")}
+            
+            if props.get("@creation"):
+                by_cs[cs_id]["additions"] += 1
+            elif props.get("@deletion"):
+                by_cs[cs_id]["deletions"] += 1
+            elif props.get("@tagChange") or props.get("@geometryChange"):
+                by_cs[cs_id]["modifications"] += 1
+                
+        for cs_id, counts in by_cs.items():
+            meta = _fetch_changeset_meta(cs_id)
+            if meta:
+                yesterday_changesets.append({
+                    "id": cs_id,
+                    "user": meta["user"],
+                    "uid": meta["uid"],
+                    "comment": meta["comment"],
+                    "created_at": meta["created_at"],
+                    "changes_count": meta["changes_count"],
+                    "additions": counts["additions"],
+                    "modifications": counts["modifications"],
+                    "deletions": counts["deletions"],
+                })
+        
+        # Sort by total contributions
+        yesterday_changesets.sort(key=lambda x: (x["additions"] + x["modifications"] + x["deletions"]), reverse=True)
+    except Exception as e:
+        print(f"[watcher] Failed to fetch yesterday's changesets: {e}")
+        
+    # 2. 120 Days Deletions Changesets
+    start_120 = end_dt - timedelta(days=120)
+    time_120 = f"{start_120.strftime('%Y-%m-%dT%H:%M:%SZ')},{end_dt.strftime('%Y-%m-%dT%H:%M:%SZ')}"
+    print(f"[watcher] Fetching 120 days deletions changesets ({start_120.strftime('%Y-%m-%d')} to {end_dt.strftime('%Y-%m-%d')}) ...")
+    
+    top_deletions = []
+    try:
+        resp = requests.post(
+            f"{OHSOME_API_BASE}/contributions/geometry",
+            data={
+                "bboxes": bboxes,
+                "filter": COMBINED_FILTER,
+                "time": time_120,
+                "properties": "metadata",
+            },
+            timeout=120,
+        )
+        resp.raise_for_status()
+        features = resp.json().get("features", [])
+        
+        by_cs_del = {}
+        for f in features:
+            props = f.get("properties", {})
+            if not props.get("@deletion"):
+                continue
+            cs_id = props.get("@contributionChangesetId")
+            if not cs_id:
+                continue
+            if cs_id not in by_cs_del:
+                by_cs_del[cs_id] = 0
+            by_cs_del[cs_id] += 1
+            
+        sorted_dels = sorted(by_cs_del.items(), key=lambda x: x[1], reverse=True)[:5]
+        
+        for cs_id, del_count in sorted_dels:
+            meta = _fetch_changeset_meta(cs_id)
+            if meta:
+                top_deletions.append({
+                    "id": cs_id,
+                    "user": meta["user"],
+                    "uid": meta["uid"],
+                    "comment": meta["comment"],
+                    "created_at": meta["created_at"],
+                    "changes_count": meta["changes_count"],
+                    "deletions": del_count,
+                })
+    except Exception as e:
+        print(f"[watcher] Failed to fetch 120 days deletion changesets: {e}")
+        
+    return {
+        "yesterday": yesterday_changesets,
+        "top_deletions": top_deletions
+    }
+
+
 def fetch_daily_contributions(layer: str, bboxes: str, start_dt: datetime, end_dt: datetime) -> list[dict]:
     filter_str = OHSOME_FILTER_MAP.get(layer)
     start_iso = start_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -348,6 +527,9 @@ def generate_rss_feed(history: dict):
             
     for date_str in sorted(list(dates), reverse=True):
         total_for_day = 0
+        tot_adds = 0
+        tot_mods = 0
+        tot_dels = 0
         desc_lines = []
         for layer, items in history.get("layers", {}).items():
             item_for_day = next((i for i in items if i["date"] == date_str), None)
@@ -356,13 +538,18 @@ def generate_rss_feed(history: dict):
                 adds = item_for_day.get("additions", 0)
                 mods = item_for_day.get("modifications", 0)
                 dels = item_for_day.get("deletions", 0)
+                
                 total_for_day += count
+                tot_adds += adds
+                tot_mods += mods
+                tot_dels += dels
+                
                 desc_lines.append(f"&lt;li&gt;{layer}: {count} contributions ({adds} additions, {mods} modifications, {dels} deletions)&lt;/li&gt;")
                 
         if total_for_day > 0:
             item_date = datetime.strptime(date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
             item_pub_date = formatdate(timeval=item_date.timestamp(), localtime=False, usegmt=True)
-            desc_html = f"&lt;p&gt;Contributions found for {date_str}:&lt;/p&gt;&lt;ul&gt;{''.join(desc_lines)}&lt;/ul&gt;"
+            desc_html = f"&lt;p&gt;&lt;strong&gt;Total for {date_str}: {total_for_day} contributions ({tot_adds} additions, {tot_mods} modifications, {tot_dels} deletions)&lt;/strong&gt;&lt;/p&gt;&lt;ul&gt;{''.join(desc_lines)}&lt;/ul&gt;"
             rss += f"""    <item>
         <title>Updates on {date_str}</title>
         <link>{node_homepage_url}hub/watcher/index.html</link>
@@ -378,7 +565,109 @@ def generate_rss_feed(history: dict):
     with open(watcher_rss_path, "w", encoding="utf-8") as f:
         f.write(rss)
 
-def generate_watcher_page(history: dict, results: dict):
+def generate_changeset_rss_feed(activity: dict):
+    from email.utils import formatdate
+    import html
+    
+    pub_date = formatdate(timeval=None, localtime=False, usegmt=True)
+    rss = f"""<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+<channel>
+    <title>OSWM Watcher Changeset Activity - {CITY_NAME}</title>
+    <link>{node_homepage_url}hub/watcher/index.html</link>
+    <description>OSM changeset activity monitoring and deletion watch for OpenSidewalkMap interest features in {CITY_NAME}.</description>
+    <lastBuildDate>{pub_date}</lastBuildDate>
+"""
+
+    # Add yesterday's changesets
+    for cs in activity.get("yesterday", []):
+        cs_id = cs["id"]
+        user = cs["user"]
+        adds = cs["additions"]
+        mods = cs["modifications"]
+        dels = cs["deletions"]
+        comment = html.escape(cs.get("comment", ""))
+        
+        # Link to OSM changeset page
+        link = f"https://www.openstreetmap.org/changeset/{cs_id}"
+        osmcha_link = f"https://osmcha.org/changesets/{cs_id}"
+        user_link = f"https://www.openstreetmap.org/user/{html.escape(user)}"
+        
+        title = f"[Activity] OSM Changeset {cs_id} by {html.escape(user)} ({adds} additions, {mods} modifications, {dels} deletions)"
+        
+        desc_html = f"""<p><strong>OSM Changeset {cs_id}</strong> by <a href="{user_link}">{html.escape(user)}</a></p>
+<p><strong>Comment:</strong> {comment}</p>
+<p><strong>Edits to OSWM features:</strong></p>
+<ul>
+    <li>Additions (creations): {adds}</li>
+    <li>Modifications (tags/geom): {mods}</li>
+    <li>Deletions: {dels}</li>
+</ul>
+<p><strong>Links:</strong> <a href="{link}">OSM</a> | <a href="{osmcha_link}">OSMCha</a></p>
+"""
+        desc_escaped = html.escape(desc_html)
+        
+        item_pub_date = pub_date
+        if cs.get("created_at"):
+            try:
+                dt = datetime.strptime(cs["created_at"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+                item_pub_date = formatdate(timeval=dt.timestamp(), localtime=False, usegmt=True)
+            except Exception:
+                pass
+                
+        rss += f"""    <item>
+        <title>{title}</title>
+        <link>{link}</link>
+        <description>{desc_escaped}</description>
+        <pubDate>{item_pub_date}</pubDate>
+        <guid isPermaLink="false">activity_{cs_id}</guid>
+    </item>
+"""
+
+    # Add top 5 deletion changesets (if they have deletions > 0)
+    for cs in activity.get("top_deletions", []):
+        cs_id = cs["id"]
+        user = cs["user"]
+        dels = cs["deletions"]
+        comment = html.escape(cs.get("comment", ""))
+        
+        link = f"https://www.openstreetmap.org/changeset/{cs_id}"
+        osmcha_link = f"https://osmcha.org/changesets/{cs_id}"
+        user_link = f"https://www.openstreetmap.org/user/{html.escape(user)}"
+        
+        title = f"[Alert] High Deletion OSM Changeset {cs_id} by {html.escape(user)} ({dels} deletions)"
+        
+        desc_html = f"""<p><strong>High Deletion Alert for OSM Changeset {cs_id}</strong> by <a href="{user_link}">{html.escape(user)}</a></p>
+<p><strong>Comment:</strong> {comment}</p>
+<p><strong>Deletions to OSWM features:</strong> {dels}</p>
+<p><strong>Links:</strong> <a href="{link}">OSM</a> | <a href="{osmcha_link}">OSMCha</a></p>
+"""
+        desc_escaped = html.escape(desc_html)
+        
+        item_pub_date = pub_date
+        if cs.get("created_at"):
+            try:
+                dt = datetime.strptime(cs["created_at"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+                item_pub_date = formatdate(timeval=dt.timestamp(), localtime=False, usegmt=True)
+            except Exception:
+                pass
+                
+        rss += f"""    <item>
+        <title>{title}</title>
+        <link>{link}</link>
+        <description>{desc_escaped}</description>
+        <pubDate>{item_pub_date}</pubDate>
+        <guid isPermaLink="false">deletion_alert_{cs_id}</guid>
+    </item>
+"""
+
+    rss += """</channel>
+</rss>"""
+    
+    with open(watcher_changesets_rss_path, "w", encoding="utf-8") as f:
+        f.write(rss)
+
+def generate_watcher_page(history: dict, results: dict, activity: dict):
     # Prepare data for the stacked bar chart
     layers = list(history.get("layers", {}).keys())
     
@@ -389,17 +678,123 @@ def generate_watcher_page(history: dict, results: dict):
             dates.add(item["date"])
     dates = sorted(list(dates))
     
-    chart_data_js = "const chartData = ["
+    # We will build chartData for Total and for each layer
+    chart_data_dict = {"Total": []}
+    for layer in layers:
+        chart_data_dict[layer] = []
+        
     for d in dates:
-        row = f"{{ date: '{d}'"
+        # Total
         add_tot = sum(next((i.get('additions', 0) for i in history["layers"][layer] if i["date"] == d), 0) for layer in layers)
         mod_tot = sum(next((i.get('modifications', 0) for i in history["layers"][layer] if i["date"] == d), 0) for layer in layers)
         del_tot = sum(next((i.get('deletions', 0) for i in history["layers"][layer] if i["date"] == d), 0) for layer in layers)
-        row += f", 'Additions': {add_tot}, 'Modifications': {mod_tot}, 'Deletions': {del_tot} }},"
-        chart_data_js += row
-    chart_data_js += "];"
+        chart_data_dict["Total"].append(f"{{ date: '{d}', 'Additions': {add_tot}, 'Modifications': {mod_tot}, 'Deletions': {del_tot} }}")
+        
+        # Individual Layers
+        for layer in layers:
+            item = next((i for i in history["layers"][layer] if i["date"] == d), {})
+            add_l = item.get('additions', 0)
+            mod_l = item.get('modifications', 0)
+            del_l = item.get('deletions', 0)
+            chart_data_dict[layer].append(f"{{ date: '{d}', 'Additions': {add_l}, 'Modifications': {mod_l}, 'Deletions': {del_l} }}")
+            
+    chart_data_js = "const chartData = {\n"
+    for key, data_list in chart_data_dict.items():
+        chart_data_js += f"  '{key}': [" + ",".join(data_list) + "],\n"
+    chart_data_js += "};"
 
-    html = f"""<!DOCTYPE html>
+    # Yesterday's Changesets HTML
+    yesterday_html = ""
+    yesterday_list = activity.get("yesterday", [])
+    if not yesterday_list:
+        yesterday_html = "<p style='color: var(--text-muted); padding: 0.5rem 0;'>No changesets affecting OSWM features yesterday.</p>"
+    else:
+        yesterday_html = """
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Changeset ID</th>
+                        <th>User</th>
+                        <th>Comment</th>
+                        <th>Changes</th>
+                        <th>Edits (Add/Mod/Del)</th>
+                        <th>Links</th>
+                    </tr>
+                </thead>
+                <tbody>
+        """
+        for cs in yesterday_list:
+            import html as pyhtml
+            comment = pyhtml.escape(cs.get("comment", ""))
+            user = pyhtml.escape(cs["user"])
+            yesterday_html += f"""
+                <tr>
+                    <td><code>{cs["id"]}</code></td>
+                    <td><a href="https://www.openstreetmap.org/user/{user}" target="_blank" style="color: var(--text-main); text-decoration: none; font-weight: 500;">{user}</a></td>
+                    <td><div class="comment-text" title="{comment}">{comment}</div></td>
+                    <td>{cs["changes_count"]}</td>
+                    <td>
+                        <span class="badge badge-add">+{cs["additions"]}</span>
+                        <span class="badge badge-mod">~{cs["modifications"]}</span>
+                        <span class="badge badge-del">-{cs["deletions"]}</span>
+                    </td>
+                    <td>
+                        <div class="link-group">
+                            <a href="https://www.openstreetmap.org/changeset/{cs["id"]}" target="_blank">OSM</a>
+                            <a href="https://osmcha.org/changesets/{cs["id"]}" target="_blank">OSMCha</a>
+                        </div>
+                    </td>
+                </tr>
+            """
+        yesterday_html += "</tbody></table></div>"
+
+    # Top 5 Deletions HTML
+    deletions_html = ""
+    deletions_list = activity.get("top_deletions", [])
+    if not deletions_list:
+        deletions_html = "<p style='color: var(--text-muted); padding: 0.5rem 0;'>No deletion changesets in the last 120 days.</p>"
+    else:
+        deletions_html = """
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Changeset ID</th>
+                        <th>User</th>
+                        <th>Comment</th>
+                        <th>Date</th>
+                        <th>Changes</th>
+                        <th>OSWM Deletions</th>
+                        <th>Links</th>
+                    </tr>
+                </thead>
+                <tbody>
+        """
+        for cs in deletions_list:
+            import html as pyhtml
+            comment = pyhtml.escape(cs.get("comment", ""))
+            user = pyhtml.escape(cs["user"])
+            date_str = cs.get("created_at", "")[:10]
+            deletions_html += f"""
+                <tr>
+                    <td><code>{cs["id"]}</code></td>
+                    <td><a href="https://www.openstreetmap.org/user/{user}" target="_blank" style="color: var(--text-main); text-decoration: none; font-weight: 500;">{user}</a></td>
+                    <td><div class="comment-text" title="{comment}">{comment}</div></td>
+                    <td>{date_str}</td>
+                    <td>{cs["changes_count"]}</td>
+                    <td><span class="badge badge-del" style="font-size: 0.85rem; padding: 0.3rem 0.6rem;">-{cs["deletions"]} deletions</span></td>
+                    <td>
+                        <div class="link-group">
+                            <a href="https://www.openstreetmap.org/changeset/{cs["id"]}" target="_blank">OSM</a>
+                            <a href="https://osmcha.org/changesets/{cs["id"]}" target="_blank">OSMCha</a>
+                        </div>
+                    </td>
+                </tr>
+            """
+        deletions_html += "</tbody></table></div>"
+
+    html_content = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -491,12 +886,128 @@ def generate_watcher_page(history: dict, results: dict):
         .status-false {{ color: #34d399; }} /* Up to date -> Green */
         .status-none {{ color: #fbbf24; }} /* Unknown -> Yellow */
         
+        .tabs {{
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 1rem;
+            overflow-x: auto;
+        }}
+        .tab-btn {{
+            background: transparent;
+            border: 1px solid var(--card-border);
+            color: var(--text-muted);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }}
+        .tab-btn:hover {{
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.05);
+        }}
+        .tab-btn.active {{
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-main);
+            border-color: var(--secondary);
+        }}
+        
         #chart-container {{
             width: 100%;
             height: 400px;
             margin-top: 1rem;
         }}
         .header-actions {{ display: flex; gap: 1rem; }}
+
+        /* Collapsible Changeset Panels & Tables styling */
+        .collapsible-header {{
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+            cursor: pointer;
+            outline: none;
+            user-select: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }}
+        .collapsible-header::-webkit-details-marker {{
+            display: none;
+        }}
+        .collapsible-header::after {{
+            content: '▼';
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            transition: transform 0.2s ease;
+        }}
+        details[open] .collapsible-header::after {{
+            transform: rotate(180deg);
+        }}
+        .collapsible-content {{
+            padding: 1rem;
+            border: 1px solid var(--card-border);
+            border-top: none;
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+            background: rgba(15, 23, 42, 0.2);
+            margin-bottom: 1rem;
+        }}
+        table {{
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            font-size: 0.95rem;
+        }}
+        th, td {{
+            text-align: left;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--card-border);
+        }}
+        th {{
+            font-weight: 500;
+            color: var(--text-muted);
+        }}
+        tr:hover {{
+            background: rgba(255, 255, 255, 0.02);
+        }}
+        .link-group {{
+            display: flex;
+            gap: 0.5rem;
+        }}
+        .link-group a {{
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }}
+        .link-group a:hover {{
+            text-decoration: underline;
+        }}
+        .badge {{
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }}
+        .badge-add {{ background: rgba(16, 185, 129, 0.2); color: #10b981; }}
+        .badge-mod {{ background: rgba(245, 158, 11, 0.2); color: #f59e0b; }}
+        .badge-del {{ background: rgba(239, 68, 68, 0.2); color: #ef4444; }}
+        .comment-text {{
+            max-width: 300px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: var(--text-muted);
+        }}
+        .comment-text:hover {{
+            white-space: normal;
+            word-break: break-all;
+        }}
     </style>
 </head>
 <body>
@@ -504,7 +1015,8 @@ def generate_watcher_page(history: dict, results: dict):
         <h1>OSWM Watcher Dashboard | {CITY_NAME}</h1>
         <div class="header-actions">
             <a href="../../index.html" class="btn">Node Home</a>
-            <a href="feed.xml" class="btn btn-primary">RSS Feed</a>
+            <a href="feed.xml" class="btn btn-primary">Daily RSS</a>
+            <a href="changesets.xml" class="btn btn-primary">Changeset RSS</a>
         </div>
     </header>
     <div class="container">
@@ -512,7 +1024,7 @@ def generate_watcher_page(history: dict, results: dict):
             <h2>Current Status</h2>
             <p style="color: var(--text-muted); margin-top: 0.5rem;">Last Checked: {history.get('last_updated', 'Unknown')}</p>
             <div class="status-grid">
-"""
+    """
     
     for layer, status in results.items():
         if status is True:
@@ -525,18 +1037,46 @@ def generate_watcher_page(history: dict, results: dict):
             label = "UNKNOWN"
             css_class = "status-none"
             
-        html += f"""                <div class="status-card">
+        html_content += f"""                <div class="status-card">
                     <h3>{layer}</h3>
                     <div class="status-value {css_class}">{label}</div>
                 </div>
 """
 
-    html += f"""            </div>
+    html_content += f"""            </div>
         </div>
 
         <div class="glass-panel">
             <h2>Daily Contributions (Last 120 Days)</h2>
+            <div class="tabs" id="chart-tabs">
+                <button class="tab-btn active" onclick="updateChart('Total', this)">Total</button>
+"""
+    for layer in layers:
+        html_content += f"""                <button class="tab-btn" onclick="updateChart('{layer}', this)">{layer}</button>
+"""
+    html_content += f"""            </div>
             <div id="chart-container"></div>
+        </div>
+
+        <div class="glass-panel">
+            <h2>Changeset Activity & Vandalism Watch</h2>
+            <p style="color: var(--text-muted); margin-top: 0.5rem; margin-bottom: 1.5rem;">
+                Monitor individual OSM changesets touching OSWM interest features to identify potential vandalism.
+            </p>
+            
+            <details>
+                <summary class="collapsible-header">
+                    <span style="font-weight: 500; font-size: 1.1rem;">Yesterday's Changesets</span>
+                </summary>
+                <div class="collapsible-content">
+                    {yesterday_html}
+                </div>
+            </details>
+            
+            <div style="margin-top: 2rem;">
+                <h3 style="font-weight: 500; font-size: 1.1rem; margin-bottom: 1rem;">Top 5 Deletions (Last 120 Days)</h3>
+                {deletions_html}
+            </div>
         </div>
     </div>
 
@@ -546,41 +1086,54 @@ def generate_watcher_page(history: dict, results: dict):
         const chartDom = document.getElementById('chart-container');
         const myChart = echarts.init(chartDom, 'dark', {{ renderer: 'svg' }});
         
-        const option = {{
-            backgroundColor: 'transparent',
-            tooltip: {{ trigger: 'axis', axisPointer: {{ type: 'shadow' }} }},
-            legend: {{ data: ['Additions', 'Modifications', 'Deletions'], textStyle: {{ color: '#94a3b8' }} }},
-            grid: {{ left: '3%', right: '4%', bottom: '3%', containLabel: true }},
-            xAxis: [{{ type: 'category', data: chartData.map(item => item.date) }}],
-            yAxis: [{{ type: 'value' }}],
-            series: [
-                {{
-                    name: 'Additions',
-                    type: 'bar',
-                    stack: 'total',
-                    itemStyle: {{ color: '#10b981' }},
-                    emphasis: {{ focus: 'series' }},
-                    data: chartData.map(item => item['Additions'])
-                }},
-                {{
-                    name: 'Modifications',
-                    type: 'bar',
-                    stack: 'total',
-                    itemStyle: {{ color: '#f59e0b' }},
-                    emphasis: {{ focus: 'series' }},
-                    data: chartData.map(item => item['Modifications'])
-                }},
-                {{
-                    name: 'Deletions',
-                    type: 'bar',
-                    stack: 'total',
-                    itemStyle: {{ color: '#ef4444' }},
-                    emphasis: {{ focus: 'series' }},
-                    data: chartData.map(item => item['Deletions'])
-                }}
-            ]
-        }};
-        myChart.setOption(option);
+        function updateChart(tabName, btnElement) {{
+            // Update active class
+            if (btnElement) {{
+                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                btnElement.classList.add('active');
+            }}
+            
+            const data = chartData[tabName];
+            
+            const option = {{
+                backgroundColor: 'transparent',
+                tooltip: {{ trigger: 'axis', axisPointer: {{ type: 'shadow' }} }},
+                legend: {{ data: ['Additions', 'Modifications', 'Deletions'], textStyle: {{ color: '#94a3b8' }} }},
+                grid: {{ left: '3%', right: '4%', bottom: '3%', containLabel: true }},
+                xAxis: [{{ type: 'category', data: data.map(item => item.date) }}],
+                yAxis: [{{ type: 'value' }}],
+                series: [
+                    {{
+                        name: 'Additions',
+                        type: 'bar',
+                        stack: 'total',
+                        itemStyle: {{ color: '#10b981' }},
+                        emphasis: {{ focus: 'series' }},
+                        data: data.map(item => item['Additions'])
+                    }},
+                    {{
+                        name: 'Modifications',
+                        type: 'bar',
+                        stack: 'total',
+                        itemStyle: {{ color: '#f59e0b' }},
+                        emphasis: {{ focus: 'series' }},
+                        data: data.map(item => item['Modifications'])
+                    }},
+                    {{
+                        name: 'Deletions',
+                        type: 'bar',
+                        stack: 'total',
+                        itemStyle: {{ color: '#ef4444' }},
+                        emphasis: {{ focus: 'series' }},
+                        data: data.map(item => item['Deletions'])
+                    }}
+                ]
+            }};
+            myChart.setOption(option);
+        }}
+        
+        // Initial render
+        updateChart('Total', document.querySelector('.tab-btn.active'));
         
         window.addEventListener('resize', function() {{
             myChart.resize();
@@ -590,7 +1143,7 @@ def generate_watcher_page(history: dict, results: dict):
 </html>"""
     
     with open(watcher_page_path, "w", encoding="utf-8") as f:
-        f.write(html)
+        f.write(html_content)
 
 
 
@@ -625,8 +1178,19 @@ if __name__ == "__main__":
     if bboxes:
         print("\n--- Updating History and Generating Dashboard ---")
         history = update_watcher_history(list(results.keys()), bboxes)
+        
+        # Calculate end_dt for changeset queries
+        now_dt = datetime.now(tz=timezone.utc)
+        max_ts = _ohsome_max_timestamp()
+        end_dt = min(now_dt, max_ts) if max_ts else now_dt
+        end_dt = end_dt.replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        # Fetch changeset activity
+        activity = get_changeset_activity(bboxes, end_dt)
+        
         generate_rss_feed(history)
-        generate_watcher_page(history, results)
+        generate_changeset_rss_feed(activity)
+        generate_watcher_page(history, results, activity)
         print("Done! Dashboard generated at:", watcher_page_path)
     
     if any_update:

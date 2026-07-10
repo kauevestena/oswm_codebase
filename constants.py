@@ -732,6 +732,7 @@ acquisition_results_path = os.path.join(acquisition_folder, "results.json")
 acquisition_page_path = os.path.join(acquisition_folder, "index.html")
 watcher_page_path = os.path.join(watcher_folder, "index.html")
 watcher_rss_path = os.path.join(watcher_folder, "feed.xml")
+watcher_changesets_rss_path = os.path.join(watcher_folder, "changesets.xml")
 watcher_history_path = os.path.join(updates_folderpath, "watcher_history.json")
 
 # Number of keywords (from the top of the SEARCH_KEYWORDS list) used when
