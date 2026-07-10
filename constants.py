@@ -724,6 +724,8 @@ basic_html = """
 
 # DataHub constants
 datahub_root = "hub"
+datahub_page_path = os.path.join(datahub_root, "index.html")
+
 
 acquisition_folder = os.path.join(datahub_root, "acquisition")
 api_folder = os.path.join(datahub_root, "API")

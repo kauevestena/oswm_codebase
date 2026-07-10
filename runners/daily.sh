@@ -57,6 +57,7 @@ run_step oswm_codebase/data_quality/external_qc.py             "external_qc"
 run_step oswm_codebase/dashboard/statistics_generation.py      "statistics_generation"
 run_step oswm_codebase/generation/routing_demo_gen.py          "routing_demo_gen"
 run_step oswm_codebase/datahub/API/generate_api.py             "generate_api"
+run_step oswm_codebase/datahub/datahub_index_generator.py      "datahub_index"
 
 
 # Print summary and propagate failure
