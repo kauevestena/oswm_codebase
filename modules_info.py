@@ -4,30 +4,35 @@ css_class_ref = "media_image responsive"
 inner_div_class_ref = "media__body"
 outer_div_class_ref = "media"
 img_css_class_ref = "media_image responsive"
-assets_base_path = f"{codebase_homepage}assets/"
-assets_homepage_path = f"{codebase_homepage}assets/homepage/"
-assets_map_symbols_path = f"{codebase_homepage}assets/map_symbols/"
+assets_base_path = "oswm_codebase/assets/"
+assets_homepage_path = "oswm_codebase/assets/homepage/"
+assets_map_symbols_path = "oswm_codebase/assets/map_symbols/"
 
 modules_metadata = {
     "webmap": {
-        "url": f"{node_homepage_url}map.html",
+        "url": "map.html",
         "img_src": f"{assets_homepage_path}oswm_webmap_img.png",
         "text": "Webmap",
     },
     "routing": {
-        "url": f"{node_homepage_url}oswm_codebase/routing/routing_demo.html",
+        "url": "oswm_codebase/routing/routing_demo.html",
         "img_src": f"{assets_homepage_path}oswm_route_img.png",
         "text": "Routing Demo",
     },
     "dashboard": {
-        "url": f"{node_homepage_url}statistics/index.html",
+        "url": "statistics/index.html",
         "img_src": f"{assets_homepage_path}oswm_statistics_img.png",
         "text": "Dashboard",
     },
     "data_quality": {
-        "url": f"{node_homepage_url}quality_check/oswm_qc_main.html",
+        "url": "quality_check/oswm_qc_main.html",
         "img_src": f"{assets_homepage_path}oswm_quality_check_img.png",
         "text": "Data Quality Tool",
+    },
+    "datahub": {
+        "url": "hub/index.html",
+        "img_src": f"{assets_homepage_path}oswm_datahub_img.png",
+        "text": "Data Hub",
     },
 }
 
