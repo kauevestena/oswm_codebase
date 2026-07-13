@@ -125,7 +125,7 @@ def get_font_style(levels_backward=1):
     return f"""
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500&display=swap" rel="stylesheet"> 
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet"> 
 
     <link rel="stylesheet" href="{relative_levels}oswm_codebase/assets/styles/font_styles.css">
     """

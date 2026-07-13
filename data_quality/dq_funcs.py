@@ -6,6 +6,10 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from functions import *
 import csv
+import pandas as pd
+import requests
+import folium
+from folium.plugins import MarkerCluster
 
 # # # constants and setup:
 boundaries_infos = get_boundaries_infos()
@@ -52,7 +56,7 @@ for name in subfoldernames:
 
 
 # # # functions:
-def add_to_map_data(row_tuple, quality_category):
+def add_to_map_data(row_tuple, quality_category, category):
     if not row_tuple.id in map_view_data:
         rep_point = row_tuple.geometry.representative_point()
         id = row_tuple.id
@@ -64,10 +68,12 @@ def add_to_map_data(row_tuple, quality_category):
                 "point": (rep_point.y, rep_point.x),
                 # as a set:
                 "quality_category": {quality_category},
+                "category": {category},
                 "feat_type": row_tuple.element,
             }
         else:
             map_view_data[id]["quality_category"].add(quality_category)
+            map_view_data[id]["category"].add(category)
 
 
 def add_to_occurrences(curr, category, val_list, feature_id, feature_type):
@@ -414,9 +420,9 @@ def write_dq_topbar(active_index=1):
     active_handler = 'class="active"'
 
     entries_list = [
-        f'<a href="{node_homepage_url}">Go to Node Home</a>',
-        f'<a href="{node_homepage_url}{qc_mainpage_path}">OSWM DQ Main</a>',
-        f'<a href="{node_homepage_url}{qc_externalpage_path}">External Providers</a>',
+        f'<a href="../index.html">Go to Node Home</a>',
+        f'<a href="oswm_qc_main.html">OSWM DQ Main</a>',
+        f'<a href="oswm_qc_external.html">External Providers</a>',
     ]
 
     entries = ""
@@ -442,60 +448,131 @@ def write_dq_topbar(active_index=1):
 
 
 def create_marker_cluster_html(
-    outpath, centerpoint, z_level, tiles="Cartodb Positron", specific_q_category=None
+    outpath, centerpoint, z_level, tiles="Cartodb Positron", specific_q_category=None, specific_category=None, title="OSWM Quality Assurance Map", back_url="oswm_qc_main.html", back_text="← Back to QC Homepage", logo_url="../oswm_codebase/assets/homepage/project_logo.png", favicon_url="../oswm_codebase/assets/favicon_homepage.png"
 ):
-    import folium
-
-    from folium.plugins import MarkerCluster
-
     m = folium.Map(location=centerpoint, zoom_start=z_level, tiles=tiles)
 
     # "map_view_data" is the source of the data:
     map_view_data_to_use = map_view_data
 
-    if specific_q_category:
-        special_map_view_data = {
-            k: v
-            for k, v in map_view_data.items()
-            if specific_q_category in v["quality_category"]
-        }.copy()
-
+    if specific_q_category or specific_category:
+        special_map_view_data = {}
+        for k, v in map_view_data.items():
+            q_match = specific_q_category in v["quality_category"] if specific_q_category else True
+            c_match = specific_category in v["category"] if specific_category else True
+            if q_match and c_match:
+                special_map_view_data[k] = v
         map_view_data_to_use = special_map_view_data
 
     locations = [item["point"] for item in map_view_data_to_use.values()]
 
-    icon_create_function = """\
-    function(cluster) {
-        return L.divIcon({
-        html: '<b>' + cluster.getChildCount() + '</b>',
-        className: 'marker-cluster marker-cluster-large',
-        iconSize: new L.Point(20, 20)
-        });
-    }"""
+    total_markers = max(1, len(locations))
 
-    popup_mold = 'categories: {} <br> </a href="{}">Access on OSM ({})</a>'
+    icon_create_function = f"""\
+    function(cluster) {{
+        var childCount = cluster.getChildCount();
+        var totalMarkers = {total_markers};
+        
+        var bgColor;
+        var shadowColor;
+        var textColor;
+        
+        if (childCount <= totalMarkers * 0.25) {{
+            bgColor = 'rgba(254, 240, 217, 0.9)'; // #fef0d9
+            shadowColor = 'rgba(254, 240, 217, 0.5)';
+            textColor = '#333333';
+        }} else if (childCount <= totalMarkers * 0.50) {{
+            bgColor = 'rgba(253, 204, 138, 0.9)'; // #fdcc8a
+            shadowColor = 'rgba(253, 204, 138, 0.5)';
+            textColor = '#333333';
+        }} else if (childCount <= totalMarkers * 0.75) {{
+            bgColor = 'rgba(252, 141, 89, 0.9)'; // #fc8d59
+            shadowColor = 'rgba(252, 141, 89, 0.5)';
+            textColor = '#ffffff';
+        }} else {{
+            bgColor = 'rgba(215, 48, 31, 0.9)'; // #d7301f
+            shadowColor = 'rgba(215, 48, 31, 0.5)';
+            textColor = '#ffffff';
+        }}
+        
+        var style = 'background-color: ' + bgColor + ';' +
+                    'border-radius: 50%;' +
+                    'width: 44px;' +
+                    'height: 44px;' +
+                    'display: flex;' +
+                    'align-items: center;' +
+                    'justify-content: center;' +
+                    'font-weight: bold;' +
+                    'color: ' + textColor + ';' +
+                    'box-shadow: 0 0 15px ' + shadowColor + ';' +
+                    'border: 2px solid rgba(255, 255, 255, 0.8);' +
+                    'font-family: Outfit, sans-serif;' +
+                    'font-size: 14px;';
+        
+        return L.divIcon({{
+            html: '<div style="' + style + '"><span>' + childCount + '</span></div>',
+            className: 'custom-marker-cluster',
+            iconSize: new L.Point(44, 44)
+        }});
+    }}"""
+
+    popup_mold = """
+    <div style="font-family: 'Outfit', sans-serif; min-width: 180px;">
+        <h4 style="margin: 0 0 5px 0; color: #0088aa; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px;">Feature: {0} {1}</h4>
+        <p style="margin: 0 0 12px 0; font-size: 13px; color: #444; line-height: 1.4;"><b>Categories:</b><br>{2}</p>
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+            <a href="{3}" target="_blank" style="background: #4facfe; color: white; padding: 6px 10px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">↗ Open in OSM</a>
+            <a href="{4}" target="_blank" style="background: #10b981; color: white; padding: 6px 10px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">⚙ Open in JOSM</a>
+            <a href="{5}" target="_blank" style="background: #8b5cf6; color: white; padding: 6px 10px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">✎ Open in iD Editor</a>
+        </div>
+    </div>
+    """
 
     popups = [
         popup_mold.format(
-            item["quality_category"],
-            osm_feature_url(item["id"], item["feat_type"]),
+            item["feat_type"],
             item["id"],
+            ", ".join(list(item["quality_category"])),
+            osm_feature_url(item["id"], item["feat_type"]),
+            f"http://127.0.0.1:8111/load_object?new_layer=false&objects={item['feat_type'][0]}{item['id']}",
+            f"https://www.openstreetmap.org/edit?editor=id&{item['feat_type']}={item['id']}#map=20/{item['point'][0]}/{item['point'][1]}"
         )
         for item in map_view_data_to_use.values()
     ]
 
-    if map_view_data_to_use:
+    overlay_html = f"""
+    <div style="position: absolute; top: 0; left: 0; width: 100%; z-index: 9999; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; font-family: 'Outfit', sans-serif; box-sizing: border-box; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+        <div style="flex: 1;">
+            <a href="{back_url}" style="display: inline-block; background: rgba(255,255,255,0.05); border: 1px solid rgba(0,242,254,0.3); color: #00f2fe; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: background 0.2s;">{back_text}</a>
+        </div>
+        <h3 style="margin: 0; color: #f8fafc; font-size: 1.25rem; font-weight: 600; letter-spacing: 0.5px; flex: 1; text-align: center; text-shadow: 0 2px 4px rgba(0,0,0,0.3);"><img src="{logo_url}" alt="OSWM Logo" style="height: 1.5em; vertical-align: middle; margin-right: 15px;">{title}</h3>
+        <div style="flex: 1;"></div>
+    </div>
+    """
+    m.get_root().html.add_child(folium.Element(overlay_html))
 
+    if map_view_data_to_use:
         marker_cluster = MarkerCluster(
             locations=locations,
             popups=popups,
             name="OSWM DQ Markers (clustered)",
             icon_create_function=icon_create_function,
         )
-
         marker_cluster.add_to(m)
 
     m.save(outpath)
+
+    # Inject the HTML 'generated' comment at the very beginning of the file
+    try:
+        with open(outpath, "r", encoding="utf-8") as f:
+            content = f.read()
+        
+        content = content.replace("<head>", f'<head>\\n    <link rel="icon" type="image/x-icon" href="{favicon_url}">')
+        
+        with open(outpath, "w", encoding="utf-8") as f:
+            f.write("<!--\\n  Generated automatically by oswm_codebase/data_quality/dq_funcs.py\\n  Do not edit this file directly.\\n-->\\n" + content)
+    except Exception as e:
+        print(f"Error appending notice to {{outpath}}: {{e}}")
 
 
 def gen_quality_report_page_and_files(
@@ -512,18 +589,20 @@ def gen_quality_report_page_and_files(
 
     # pagename_base = f"{quality_category}_{category}"
 
-    files_url_part = f"""<h2>  
-        
-            <a href="{node_homepage_url}quality_check/tables/{category}/{quality_category}.csv"> You can also download the raw .csv table </a>
-            <a href="{node_homepage_url}quality_check/json/{category}/{quality_category}.json"> You can also access the raw .json </a>
-
-        </h2>"""
+    files_url_part = f"""
+        <div style="display: flex; gap: 15px; margin-top: 20px; margin-bottom: 20px;">
+            <a href="../../tables/{category}/{quality_category}.csv" style="display: inline-block; background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(0, 242, 254, 0.3); color: #00f2fe; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 0.95rem; font-weight: 500; transition: all 0.2s; backdrop-filter: blur(8px);">↓ Download Raw .CSV</a>
+            <a href="../../json/{category}/{quality_category}.json" style="display: inline-block; background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(0, 242, 254, 0.3); color: #00f2fe; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 0.95rem; font-weight: 500; transition: all 0.2s; backdrop-filter: blur(8px);">&#123;&#125; Access Raw .JSON</a>
+            <a href="../../maps/{category}/{quality_category}.html" style="display: inline-block; background: rgba(30, 41, 59, 0.7); border: 1px solid #10b981; color: #10b981; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 0.95rem; font-weight: 500; transition: all 0.2s; backdrop-filter: blur(8px);">🗺 Open Map View</a>
+        </div>
+    """
 
     tablepart = f"""<tr>
-    <th><b>OSM ID (link)</b></th>
-    <th><b>key</b></th>
-    <th><b>value</b></th>
-    <th><b>commentary</b></th>
+    <th>OSM ID (link)</th>
+    <th>Open in iD editor</th>
+    <th>Key</th>
+    <th>Value</th>
+    <th>Commentary</th>
     </tr>"""
 
     valid_featcount = 0
@@ -531,6 +610,8 @@ def gen_quality_report_page_and_files(
     # inverting feature type, if needed:
     if invert_geom:
         feat_types = {k: osm_feat_type_inverter(v) for k, v in feat_types.items()}
+
+    op_nodes, op_ways, op_rels = [], [], []
 
     # the main iteration
     with open(csvpath, "w+", encoding="utf-8") as file:
@@ -545,27 +626,42 @@ def gen_quality_report_page_and_files(
                         if not pd.isna(line[2]):
 
                             feat_type = feat_types[line[0]]
+                            
+                            if feat_type == "node":
+                                op_nodes.append(str(line[0]))
+                            elif feat_type == "way":
+                                op_ways.append(str(line[0]))
+                            elif feat_type == "relation":
+                                op_rels.append(str(line[0]))
+                            
+                            point = [0, 0]
+                            if line[0] in map_view_data:
+                                point = map_view_data[line[0]]["point"]
+                            
+                            id_editor_link = f"https://www.openstreetmap.org/edit?editor=id&{feat_type}={line[0]}#map=20/{point[0]}/{point[1]}"
+                            id_btn = f'<a href="{id_editor_link}" target="_blank" style="color: #8b5cf6; text-decoration: underline; font-weight: 500;">✎ {line[0]}</a>'
 
                             writer.writerow(
                                 # I know it's kinda ugly:
                                 [line[0], feat_type, line[1], line[2], line[3]]
                             )
 
-                            line[0] = return_weblink_V2(line[0], feat_type)
+                            formatted_id_link = return_weblink_V2(line[0], feat_type)
 
                             line_as_str += "<tr>"
-
-                            for element in line:
-                                line_as_str += f"<td>{str(element)}</td>"
-
+                            line_as_str += f"<td>{str(formatted_id_link)}</td>"
+                            line_as_str += f"<td>{id_btn}</td>"
+                            line_as_str += f"<td>{str(line[1])}</td>"
+                            line_as_str += f"<td>{str(line[2])}</td>"
+                            line_as_str += f"<td>{str(line[3])}</td>"
                             line_as_str += "</tr>\n"
 
                             tablepart += line_as_str
 
                             valid_featcount += 1
-            except:
+            except Exception as e:
                 if line:
-                    print("skipped", line)
+                    print(f"skipped {{line}} : {{e}}")
 
     # read just to export as a json:
     csv_as_df = pd.read_csv(csvpath)
@@ -573,18 +669,22 @@ def gen_quality_report_page_and_files(
         subfolderpaths["json"], category, f"{quality_category}.json"
     )
     csv_as_df.to_json(json_outpath, orient="records")
+    
+    overpass_query = "(\n"
+    if op_nodes:
+        overpass_query += f"  node({','.join(op_nodes)});\n"
+    if op_ways:
+        overpass_query += f"  way({','.join(op_ways)});\n"
+    if op_rels:
+        overpass_query += f"  relation({','.join(op_rels)});\n"
+    overpass_query += ");\nout meta;"
 
-    # the webmap, generate only once per quality category
-    if category == "sidewalks":
-        webmap_outpath = os.path.join(
-            subfolderpaths["maps"], f"{quality_category}.html"
-        )
-        create_marker_cluster_html(
-            webmap_outpath,
-            reversed_centerpoint,
-            dq_maps_z_default,
-            specific_q_category=quality_category,
-        )
+    overpass_html = f"""
+    <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(0, 242, 254, 0.3); border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem;">
+        <h4 style="margin-top: 0; color: #00f2fe; font-size: 1.1rem; display: flex; justify-content: space-between; align-items: center;">Overpass Query <button onclick="navigator.clipboard.writeText(document.getElementById('op-query-text').value); this.innerText='Copied!'; setTimeout(()=>this.innerText='Copy', 2000);" style="background: rgba(0, 242, 254, 0.2); border: 1px solid #00f2fe; color: #00f2fe; border-radius: 4px; padding: 4px 10px; cursor: pointer; font-size: 0.8rem; font-weight: 500; transition: background 0.2s;">Copy</button></h4>
+        <textarea id="op-query-text" readonly style="width: 100%; height: 80px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #cbd5e1; font-family: 'Fira Code', monospace; font-size: 0.85rem; padding: 10px; resize: none; overflow-y: auto;">{overpass_query}</textarea>
+    </div>
+    """
 
     with open(outpath, "w+", encoding="utf-8") as writer:
 
@@ -595,37 +695,37 @@ def gen_quality_report_page_and_files(
         <!DOCTYPE html>
         <html lang="en">
         <head>
-
-        {get_font_style(2)}
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        {get_font_style(3)}
+        {get_tables_styles(3)}
 
         <title>OSWM DQT {category[0]} {quality_category}</title>
-
-        {get_tables_styles(2)}
+        <link rel="icon" type="image/x-icon" href="../../../oswm_codebase/assets/favicon_homepage.png">
 
         </head>
         <body>
         
-        <h1><a href="{node_homepage_url}">OSWM</a> Data Quality Tool: {category} {quality_category}</h1>
+        <main class="dq-container">
+            <div style="text-align: left; margin-bottom: 1rem;">
+                <a href="../../oswm_qc_main.html" style="display: inline-block; background: rgba(255,255,255,0.05); border: 1px solid rgba(0,242,254,0.3); color: #00f2fe; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: background 0.2s;">← Back to DQ Main</a>
+            </div>
+            
+            <h1 style="color: #f8fafc; font-size: 2rem; margin-bottom: 0.5rem;"><img src="../../../oswm_codebase/assets/homepage/project_logo.png" alt="OSWM Logo" style="height: 1.5em; vertical-align: middle; margin-right: 15px;"><a href="../../../index.html" style="color: #00f2fe; text-decoration: none;">OSWM</a> Data Quality Tool</h1>
+            <h2 style="color: #94a3b8; font-size: 1.2rem; font-weight: 400; margin-top: 0; margin-bottom: 2rem;">{category} / <span style="color: #f8fafc; font-weight: 600;">{quality_category}</span></h2>
+            
+            {files_url_part}
+            {overpass_html}
 
-        <h2>About: {text}</h2>
-        <h2>Type: {occ_type}</h2>
-        {files_url_part}
+            <table style="margin-bottom: 2rem;">
+            {tablepart}
+            </table>
 
-
-
-
-        <table>
-
-        {tablepart}
-
-        </table>
-
-        
-
-
-        </table>
-
-
+            <div style="background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <p style="margin: 0 0 10px 0; font-size: 1rem; color: #f8fafc;"><b>About:</b> <span style="color: #cbd5e1;">{text}</span></p>
+                <p style="margin: 0; font-size: 1rem; color: #f8fafc;"><b>Type:</b> <span style="color: #cbd5e1;">{occ_type}</span></p>
+            </div>
+        </main>
 
         </body>
         </html>   

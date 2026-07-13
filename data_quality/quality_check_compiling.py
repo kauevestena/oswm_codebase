@@ -56,7 +56,7 @@ def main():
                                         curr, category, val_list, row.id, row.element
                                     )
 
-                                    add_to_map_data(row, quality_category)
+                                    add_to_map_data(row, quality_category, category)
 
                     if isinstance(curr["dict"], str):
                         curr_ref_dict = read_json(curr["dict"])[category]
@@ -79,7 +79,7 @@ def main():
                                         curr, category, val_list, row.id, row.element
                                     )
 
-                                    add_to_map_data(row, quality_category)
+                                    add_to_map_data(row, quality_category, category)
 
                 if curr["type"] == "values":
                     if isinstance(curr["dict"], dict):
@@ -103,7 +103,7 @@ def main():
                                             row.element,
                                         )
 
-                                        add_to_map_data(row, quality_category)
+                                        add_to_map_data(row, quality_category, category)
 
                     if isinstance(curr["dict"], str):
                         curr_ref_dict = read_json(curr["dict"])[category]
@@ -133,7 +133,7 @@ def main():
                                                 row.element,
                                             )
 
-                                            add_to_map_data(row, quality_category)
+                                            add_to_map_data(row, quality_category, category)
 
                 if curr["type"] == "tags":
 
@@ -154,7 +154,7 @@ def main():
                                         curr, category, val_list, row.id, row.element
                                     )
 
-                                    add_to_map_data(row, quality_category)
+                                    add_to_map_data(row, quality_category, category)
 
                                     break
 
@@ -183,7 +183,7 @@ def main():
                 val_list = [row.id, *curr["dict"][data_category]["insertions"]]
 
                 add_to_occurrences(curr, data_category, val_list, row.id, row.element)
-                add_to_map_data(row, quality_category)
+                add_to_map_data(row, quality_category, data_category)
 
     # add the "geoms_dicts_keys" to "categories_dict_keys":
     for quality_category in geom_dict_keys:
@@ -222,8 +222,19 @@ def main():
                 invert_geom=curr["invert_geomtype"],
             )
 
-            print(curr["occ_count"][category])
-
+            webmap_outpath = f"quality_check/maps/{category}/{quality_category}.html"
+            create_marker_cluster_html(
+                webmap_outpath,
+                reversed_centerpoint,
+                dq_maps_z_default,
+                specific_q_category=quality_category,
+                specific_category=category,
+                title=f"{category} / {quality_category}",
+                back_url=f"../../pages/{category}/{quality_category}.html",
+                back_text=f"← Back to {quality_category}",
+                logo_url="../../../oswm_codebase/assets/homepage/project_logo.png",
+                favicon_url="../../../oswm_codebase/assets/favicon_homepage.png"
+            )
 
     ######### PART 3: Quality Check Main page
 
@@ -259,13 +270,25 @@ def main():
 
         for category in gdf_dict:
 
-            tablepart += f'<td>  <a href="{node_homepage_url}quality_check/pages/{category}/{quality_category}.html"> {categories_dict_keys[quality_category]["occ_count"][category]} </a> </td>'
-
+            tablepart += f'<td>  <a href="pages/{category}/{quality_category}.html"> {categories_dict_keys[quality_category]["occ_count"][category]} </a> </td>'
         tablepart += "</tr>\n"
 
         about_part += (
             f"{quality_category} : {categories_dict_keys[quality_category]['about']}<br>\n"
         )
+
+    print("generating subpages and files")
+
+    tablepart += "<tr>"
+    tablepart += "<td><b>Totals:</b></td>"
+    for category in gdf_dict:
+        tot_cat = 0
+        for quality_category in categories_dict_keys:
+            tot_cat += categories_dict_keys[quality_category]["occ_count"][category]
+        tablepart += f"<td><b>{tot_cat}</b></td>"
+    tablepart += "</tr>\\n"
+
+    print("generating QC main page")
 
     about_part += "</h3>"
 
@@ -282,83 +305,59 @@ def main():
     <html lang="en">
     <head>
 
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     
-
     {get_font_style(1)}
 
     {get_tables_styles(1)}
 
     <link rel="stylesheet" href="../oswm_codebase/assets/styles/topnav_styles.css">
 
-    <style>
-
-    h3 {{
-        font-size :  16px;
-        text-align: left;
-        text-align: left;
-
-
-    }}
-
-    h2 {{
-        font-size :  25px;
-
-    }}
-
-    h1 {{
-        text-align:center;
-        font-size :  30px;
-    }}
-
-
-    </style>
-
-    {topbar}
-
-    {js_functions_dq}
-
-
     <title>OSWM DQ Home</title>
 
-    <link rel="icon" type="image/x-icon" href="https://kauevestena.github.io/oswm_codebase/assets/homepage/favicon_homepage.png">
+    <link rel="icon" type="image/x-icon" href="../oswm_codebase/assets/favicon_homepage.png">
 
     </head>
     <body>
+    {topbar}
+    {js_functions_dq}
 
-    <h1>OpenSidewalkMap Data Quality Tool</h1>
+    <main class="dq-container">
+        <h1><img src="../oswm_codebase/assets/homepage/project_logo.png" alt="OSWM Logo" style="height: 1.5em; vertical-align: middle; margin-right: 15px;">OpenSidewalkMap Data Quality Tool</h1>
 
-    <p>
-    This Section is dedicated to find errors in the Features of interest in the Context of OSWM project.<br>
-    In some cases it's a clear mistake, but it can be just a mispelling or an uncommon value<br><br>
+        <div style="background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(0, 242, 254, 0.3); border-radius: 12px; padding: 1.5rem; margin: 1rem 0; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
+            <h3 style="margin-top: 0; color: #00f2fe;">Interactive QA Webmap</h3>
+            <p style="font-size: 0.9rem; margin-bottom: 1rem;">Explore all generated detections clustered on a map.</p>
+            <a href="map.html" style="display: inline-block; background: linear-gradient(to right, #00f2fe, #4facfe); color: #0f172a; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 1rem; transition: transform 0.2s;">Open Quality Assurance Map</a>
+        </div>
 
-    currently, there are the categories presented at the table,<br> each one with the number of occurrences that are item-wise detailed at each link<br>
-    <a href="{node_homepage_url}issues">you can post suggestions at repo "issues" section</a>
+        <p>
+        This Section is dedicated to find errors in the Features of interest in the Context of OSWM project.<br>
+        In some cases it's a clear mistake, but it can be just a mispelling or an uncommon value<br><br>
 
-    </p>
+        currently, there are the categories presented at the table,<br> each one with the number of occurrences that are item-wise detailed at each link<br>
+        <a href="{codebase_issues_url}">you can post suggestions at repo "issues" section</a>
+        </p>
 
-    <table>
+        <table>
 
-    {tablepart}
+        {tablepart}
 
+        </table>
 
-    </table>
+        <p style="font-size: 0.9em">
+        The information here can be <b>outdated</b><br>
+        <a href="../updating_infos.html">here you can check the last update and read more about this</a>
+        </p>
 
-    <p>
-    The information here can be <b>outdated</b><br>
-    <a href="{data_updating_url}">here you can check the last update and read more about this</a>
-    <br>
-    </p>
+        <h2>Explaining Each category: </h2>
 
-    <h2>Explaining Each category: </h2>
-
-    {about_part}
-
-
+        {about_part}
+    </main>
     </body>
     </html> 
-
     """
 
     # saving the quality check categories, so one can request to retrieve them:

@@ -33,10 +33,11 @@ external_qc_page = f"""<!--
 <html lang="en">
 <head>
 
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
    
-   
+{get_font_style(1)}
 {styles_dq}
 {get_tables_styles(1)}
 
@@ -44,7 +45,7 @@ external_qc_page = f"""<!--
 
 <title>OSWM DQ: Ext. Providers</title>
 
-<link rel="icon" type="image/x-icon" href="https://kauevestena.github.io/oswm_codebase/assets/homepage/favicon_homepage.png">
+<link rel="icon" type="image/x-icon" href="../oswm_codebase/assets/favicon_homepage.png">
 
 </head>
 
@@ -52,17 +53,22 @@ external_qc_page = f"""<!--
 
 {topbar}
 
-<h2 style="text-align: center;">OpenSidewalkMap DQ: External Providers</h2>
+<main class="dq-container">
+    <h2 style="text-align: center;"><img src="../oswm_codebase/assets/homepage/project_logo.png" alt="OSWM Logo" style="height: 1.5em; vertical-align: middle; margin-right: 15px;">OpenSidewalkMap DQ: External Providers</h2>
 
-<p> Page in progress... </p>
+    <div style="background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(0, 242, 254, 0.3); border-radius: 12px; padding: 1.5rem; margin: 1.5rem auto; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.15); max-width: 600px;">
+        <h3 style="margin-top: 0; color: #00f2fe;">Looking for the OSWM Webmap?</h3>
+        <p style="font-size: 0.9rem; margin-bottom: 1rem;">Access our own interactive map with all generated internal detections.</p>
+        <a href="map.html" style="display: inline-block; background: linear-gradient(to right, #00f2fe, #4facfe); color: #0f172a; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 1rem;">Open QA Map</a>
+    </div>
 
-<p style="font-size: smaller"> This page holds DQ detections or visualizations from third-party providers, click to expand!</p>
+    <p style="font-size: smaller; text-align: center;"> This page holds DQ detections or visualizations from third-party providers, click to expand!</p>
 
 
-{main_content}
+    {main_content}
 
-<h6> Do you know/have any DQ tool that can be integrated here? please write and issue at <a href="{codebase_issues_url}">repository "issues" section</h6>
-
+    <p style="margin-top: 2rem;"> Do you know/have any DQ tool that can be integrated here? please write and issue at <a href="{codebase_issues_url}">repository "issues" section</a></p>
+</main>
 </body>
 </html> 
 

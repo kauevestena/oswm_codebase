@@ -1,31 +1,32 @@
-body {
-    font-family: sans-serif;
-    padding: 20px;
-    background-color: #f4f4f4;
-}
-
-h1 {
-    text-align: center;
-}
-
 details {
-    background: #fff;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    margin: 10px 0;
+    background: var(--card-bg, rgba(30, 41, 59, 0.7));
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--card-border, rgba(255, 255, 255, 0.08));
+    border-radius: 12px;
+    margin: 15px 0;
     padding: 0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+details:hover {
+    border-color: rgba(0, 242, 254, 0.3);
+    box-shadow: 0 10px 20px rgba(0, 242, 254, 0.1);
 }
 
 summary {
-    padding: 12px;
+    padding: 1rem 1.5rem;
     cursor: pointer;
-    font-weight: bold;
+    font-weight: 600;
     list-style: none;
-    /* Removes default marker */
-    text-align: center;
-    /* Center align header text */
+    text-align: left;
     position: relative;
-    /* For positioning the plus/minus sign */
+    color: var(--text-main, #f8fafc);
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.02);
 }
 
 /* Hide default marker in WebKit browsers */
@@ -33,23 +34,29 @@ summary::-webkit-details-marker {
     display: none;
 }
 
-/* Insert a plus sign to the left of the header text */
-summary::before {
-    content: '+';
+/* Custom chevron */
+summary::after {
+    content: '▼';
     position: absolute;
-    left: 20px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 20px;
-    font-weight: bold;
+    right: 1.5rem;
+    font-size: 0.8rem;
+    color: var(--text-muted, #94a3b8);
+    transition: transform 0.3s ease;
 }
 
-/* Change plus sign to minus sign when the section is open */
-details[open] summary::before {
-    content: '-';
+/* Rotate chevron when open */
+details[open] summary::after {
+    transform: rotate(180deg);
+}
+
+details[open] summary {
+    border-bottom: 1px solid var(--card-border, rgba(255, 255, 255, 0.08));
+    color: var(--primary, #00f2fe);
 }
 
 .content {
-    padding: 12px;
-    border-top: 1px solid #ccc;
+    padding: 1.5rem;
+    color: var(--text-muted, #94a3b8);
+    background: rgba(0, 0, 0, 0.2);
+    line-height: 1.6;
 }
