@@ -785,10 +785,15 @@ def generate_completeness_map(data, output_dir, silent=False):
     center_lat = (bounds_meta[1] + bounds_meta[3]) / 2
     city_name = data["metadata"].get("city", "City")
 
+    import json
     timestamp_labels_js = json.dumps(timestamps)
+
+    with open(boundaries_geojson_path, "r", encoding="utf-8") as f:
+        boundary_geojson_str = f.read()
 
     html = _build_map_html(
         geojson_str=json.dumps(geojson),
+        boundary_geojson_str=boundary_geojson_str,
         center_lon=center_lon,
         center_lat=center_lat,
         city_name=city_name,
@@ -804,7 +809,7 @@ def generate_completeness_map(data, output_dir, silent=False):
         print(f"[completeness] Map written to {outpath}")
 
 
-def _build_map_html(geojson_str, center_lon, center_lat, city_name, timestamps_js, n_timestamps):
+def _build_map_html(geojson_str, boundary_geojson_str, center_lon, center_lat, city_name, timestamps_js, n_timestamps):
     """Build the standalone MapLibre GL HTML string."""
 
     last_idx = n_timestamps - 1
@@ -970,6 +975,7 @@ def _build_map_html(geojson_str, center_lon, center_lat, city_name, timestamps_j
 <script>
 const TIMESTAMPS = {timestamps_js};
 const GEOJSON = {geojson_str};
+const BOUNDARY_GEOJSON = {boundary_geojson_str};
 
 const map = new maplibregl.Map({{
   container: 'map',
@@ -1163,6 +1169,19 @@ map.on('load', () => {{
   updateTimestampLabel();
 
   map.addSource('tiles', {{ type: 'geojson', data: GEOJSON }});
+  map.addSource('boundary', {{ type: 'geojson', data: BOUNDARY_GEOJSON }});
+
+  map.addLayer({{
+    id: 'city-boundary-line',
+    type: 'line',
+    source: 'boundary',
+    paint: {{
+      'line-color': '#00f2fe',
+      'line-width': 2.5,
+      'line-dasharray': [2, 2],
+      'line-opacity': 0.8
+    }}
+  }});
 
   // One layer per zoom level for zoom-dependent visibility
   for (let z = {MIN_ZOOM}; z <= {MAX_ZOOM}; z++) {{
