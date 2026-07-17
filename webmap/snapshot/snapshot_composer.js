@@ -14,6 +14,63 @@ function escapeHtml(value) {
         .replaceAll("'", "&#039;");
 }
 
+export function normalizeAuthorPanel(title, content) {
+    const normalizedTitle = String(title ?? "").trim();
+    const normalizedContent = String(content ?? "").trim();
+    return {
+        title: normalizedTitle,
+        content: normalizedContent,
+        visible: Boolean(normalizedTitle || normalizedContent),
+    };
+}
+
+function sanitizeAuthorContent(content) {
+    if (!content) return "";
+    if (!/<\/?[a-z][\s\S]*>/i.test(content)) {
+        return `<p>${escapeHtml(content).replaceAll("\n", "<br>")}</p>`;
+    }
+
+    const allowedTags = new Set([
+        "A", "B", "BR", "CODE", "EM", "I", "LI", "OL", "P", "SMALL",
+        "SPAN", "STRONG", "SUB", "SUP", "U", "UL",
+    ]);
+    const removedTags = new Set(["EMBED", "IFRAME", "OBJECT", "SCRIPT", "STYLE"]);
+    const template = document.createElement("template");
+    template.innerHTML = content;
+
+    [...template.content.querySelectorAll("*")].forEach((element) => {
+        if (removedTags.has(element.tagName)) {
+            element.remove();
+            return;
+        }
+        if (!allowedTags.has(element.tagName)) {
+            element.replaceWith(...element.childNodes);
+            return;
+        }
+
+        [...element.attributes].forEach((attribute) => {
+            const keepAttribute = element.tagName === "A"
+                && (attribute.name === "href" || attribute.name === "title");
+            if (!keepAttribute) element.removeAttribute(attribute.name);
+        });
+        if (element.tagName === "A") {
+            const href = element.getAttribute("href") || "";
+            if (!/^(https?:|mailto:|#)/i.test(href)) element.removeAttribute("href");
+            element.setAttribute("rel", "noopener noreferrer");
+        }
+    });
+    return template.innerHTML;
+}
+
+function authorPanelMarkup(title, content) {
+    const panel = normalizeAuthorPanel(title, content);
+    if (!panel.visible) return "";
+    return `<section class="oswm-snapshot-analysis-block oswm-snapshot-author-panel">
+        ${panel.title ? `<h2>${escapeHtml(panel.title)}</h2>` : ""}
+        ${panel.content ? `<div class="oswm-snapshot-author-content">${sanitizeAuthorContent(panel.content)}</div>` : ""}
+    </section>`;
+}
+
 function formatNumber(value, digits = 1) {
     if (value === null || value === undefined || !Number.isFinite(Number(value))) return "—";
     return new Intl.NumberFormat(undefined, { maximumFractionDigits: digits }).format(Number(value));
@@ -205,12 +262,15 @@ function renderFacts(summary) {
 }
 
 function renderCharts(summary, theme) {
+    const chartOptions = { width: 560, rowHeight: 28, showTitle: false };
     if (summary.kind === "multi") {
-        return summary.panels.map((panel, index) => (
-            renderSummaryChart(panel, theme.panels[index] || panel, { width: 560, rowHeight: 28 })
-        )).join("");
+        return summary.panels.map((panel, index) => `
+            <section class="oswm-snapshot-chart-subpanel">
+                <h3>${escapeHtml(panel.label)}</h3>
+                ${renderSummaryChart(panel, theme.panels[index] || panel, chartOptions)}
+            </section>`).join("");
     }
-    return renderSummaryChart(summary, theme, { width: 560, rowHeight: 28 });
+    return renderSummaryChart(summary, theme, chartOptions);
 }
 
 function legendEntries(summary, theme) {
@@ -253,7 +313,18 @@ function boundsText(bounds) {
     return `W ${west.toFixed(5)} · S ${south.toFixed(5)} · E ${east.toFixed(5)} · N ${north.toFixed(5)}`;
 }
 
-function sheetMarkup({ title, nodeName, theme, summary, scope, bounds, capture, generatedAt }) {
+function sheetMarkup({
+    title,
+    nodeName,
+    theme,
+    summary,
+    scope,
+    bounds,
+    capture,
+    generatedAt,
+    authorTitle,
+    authorContent,
+}) {
     const scopeLabel = scope === "node" ? "Whole node" : "Current viewport";
     const timestamp = generatedAt
         ? new Date(generatedAt).toLocaleString()
@@ -292,12 +363,17 @@ function sheetMarkup({ title, nodeName, theme, summary, scope, bounds, capture, 
                     ${renderFacts(summary)}
                 </section>
                 <section class="oswm-snapshot-analysis-block oswm-snapshot-chart-block">
+                    <h2>Theme</h2>
+                    <p class="oswm-snapshot-theme-name">${escapeHtml(theme.label)}</p>
                     ${renderCharts(summary, theme)}
                 </section>
                 <section class="oswm-snapshot-analysis-block oswm-snapshot-legend">
                     <h2>Legend</h2>
                     ${renderLegend(summary, theme)}
                 </section>
+                <div class="oswm-snapshot-author-slot">
+                    ${authorPanelMarkup(authorTitle, authorContent)}
+                </div>
             </aside>
         </div>
         <footer>
@@ -341,6 +417,13 @@ export class SnapshotComposer {
                     <label>Scope<select name="scope"><option value="viewport">Current viewport</option><option value="node">Whole node</option></select></label>
                     <span class="oswm-snapshot-format">A4 · Landscape · North-up</span>
                     <button type="button" data-action="update">Update preview</button>
+                    <details class="oswm-snapshot-extra-options">
+                        <summary>Optional author panel</summary>
+                        <div class="oswm-snapshot-extra-fields">
+                            <label>Panel title<input name="author-title" type="text" maxlength="80" placeholder="e.g. Field notes"></label>
+                            <label>Text or safe HTML<textarea name="author-content" rows="3" maxlength="4000" placeholder="Comments, interpretation or extra facts…"></textarea></label>
+                        </div>
+                    </details>
                 </form>
                 <div class="oswm-snapshot-status" role="status" aria-live="polite"></div>
                 <main class="oswm-snapshot-preview"></main>
@@ -358,6 +441,12 @@ export class SnapshotComposer {
         this.root.querySelector('[name="title"]').addEventListener("input", (event) => {
             const heading = this.root.querySelector(".oswm-snapshot-print-sheet h1");
             if (heading) heading.textContent = event.target.value || this.defaultTitle();
+        });
+        ["author-title", "author-content"].forEach((fieldName) => {
+            this.root.querySelector(`[name="${fieldName}"]`).addEventListener(
+                "input",
+                () => this.updateAuthorPanel(),
+            );
         });
     }
 
@@ -379,6 +468,15 @@ export class SnapshotComposer {
 
     defaultTitle() {
         return `${this.activeTheme().label} — scrutiny map`;
+    }
+
+    updateAuthorPanel() {
+        const slot = this.root?.querySelector(".oswm-snapshot-author-slot");
+        if (!slot) return;
+        slot.innerHTML = authorPanelMarkup(
+            this.root.querySelector('[name="author-title"]').value,
+            this.root.querySelector('[name="author-content"]').value,
+        );
     }
 
     async open() {
@@ -445,6 +543,8 @@ export class SnapshotComposer {
             const capture = await captureMap(this.map, bounds);
             if (token !== this.renderToken) return;
             const title = this.root.querySelector('[name="title"]').value || this.defaultTitle();
+            const authorTitle = this.root.querySelector('[name="author-title"]').value;
+            const authorContent = this.root.querySelector('[name="author-content"]').value;
             preview.innerHTML = sheetMarkup({
                 title,
                 nodeName: this.params.snapshot?.node_name || "OSWM node",
@@ -454,6 +554,8 @@ export class SnapshotComposer {
                 bounds,
                 capture,
                 generatedAt,
+                authorTitle,
+                authorContent,
             });
             status.textContent = capture.warning || "Preview ready. Unknown values are reported separately from diversity.";
             printButton.disabled = false;

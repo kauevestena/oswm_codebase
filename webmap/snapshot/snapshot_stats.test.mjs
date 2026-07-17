@@ -10,7 +10,12 @@ import {
     summarizeCategoricalValues,
     summarizeNumericValues,
 } from "./snapshot_stats.js";
-import { computeScaleBar, normalizeBounds, stripRasterBasemap } from "./snapshot_composer.js";
+import {
+    computeScaleBar,
+    normalizeAuthorPanel,
+    normalizeBounds,
+    stripRasterBasemap,
+} from "./snapshot_composer.js";
 
 
 function feature(sourceLayer, id, value, element = "way") {
@@ -149,4 +154,17 @@ test("composer helpers normalize extents, remove raster sources and make a scale
     const scale = computeScaleBar(-25.4, 15);
     assert.ok(scale.widthPixels > 0);
     assert.match(scale.label, /m|km/);
+});
+
+test("optional author panel is omitted unless title or content is present", () => {
+    assert.deepEqual(normalizeAuthorPanel("  ", "\n"), {
+        title: "",
+        content: "",
+        visible: false,
+    });
+    assert.deepEqual(normalizeAuthorPanel(" Field notes ", " <strong>Check</strong> "), {
+        title: "Field notes",
+        content: "<strong>Check</strong>",
+        visible: true,
+    });
 });

@@ -43,7 +43,8 @@ function renderRows(rows, title, options = {}) {
     const rowHeight = options.rowHeight || 30;
     const left = 160;
     const right = 66;
-    const top = 34;
+    const showTitle = options.showTitle !== false;
+    const top = showTitle ? 34 : 6;
     const height = Math.max(92, top + rows.length * rowHeight + 18);
     const available = width - left - right;
     const maximum = Math.max(1, ...rows.map((row) => row.count));
@@ -67,7 +68,7 @@ function renderRows(rows, title, options = {}) {
             .chart-value { font: 11px system-ui, sans-serif; fill: #26353c; }
             .chart-empty { font: 13px system-ui, sans-serif; fill: #66757c; }
         </style>
-        <text x="0" y="19" class="chart-title">${escapeXml(title)}</text>
+        ${showTitle ? `<text x="0" y="19" class="chart-title">${escapeXml(title)}</text>` : ""}
         ${bars}${emptyMessage}
     </svg>`;
 }

@@ -8,6 +8,8 @@
 - Current scope: functional MVP plus automated tests
 - The printer control, A4 composer, viewport statistics, whole-node summary,
   thematic charts and pipeline integration are implemented in this branch.
+- Authors can optionally add a custom-titled notes panel containing plain text
+  or a sanitized subset of HTML; leaving both fields empty omits the panel.
 - Automated Python and JavaScript tests pass. A final visual pass in current
   Firefox and Chromium remains required on a developer workstation with WebGL.
 - Do not merge this branch unless the repository owner explicitly requests it.

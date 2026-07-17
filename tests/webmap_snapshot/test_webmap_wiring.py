@@ -13,6 +13,13 @@ class WebmapWiringTests(unittest.TestCase):
         self.assertIn("import('./oswm_codebase/webmap/snapshot/snapshot_control.js')", template)
         self.assertIn("installSnapshotControl", template)
 
+        composer = (ROOT / "webmap/snapshot/snapshot_composer.js").read_text(
+            encoding="utf8"
+        )
+        self.assertIn("<h2>Theme</h2>", composer)
+        self.assertIn("Optional author panel", composer)
+        self.assertIn('name="author-content"', composer)
+
     def test_generator_emits_snapshot_contract(self):
         generator = (ROOT / "webmap/create_webmap_new.py").read_text(encoding="utf8")
 
