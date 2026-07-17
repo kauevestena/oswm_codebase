@@ -137,24 +137,37 @@ def load_pedestrian_layers(silent=False):
 # Tile grid utilities
 # ---------------------------------------------------------------------------
 
+_CITY_BOUNDARY_GEOM = None
+def get_city_boundary():
+    global _CITY_BOUNDARY_GEOM
+    if _CITY_BOUNDARY_GEOM is None:
+        gdf = gpd.read_file(boundaries_geojson_path)
+        _CITY_BOUNDARY_GEOM = gdf.geometry.unary_union
+    return _CITY_BOUNDARY_GEOM
+
 def _build_tile_grid(bounds, zoom):
     """Build a GeoDataFrame of tile polygons at the given zoom level."""
+    boundary = get_city_boundary()
     rows = []
     for tile in mercantile.tiles(bounds[0], bounds[1], bounds[2], bounds[3], zooms=zoom):
         tb = mercantile.bounds(tile)
-        rows.append({
-            "tile_id": f"{tile.z}/{tile.x}/{tile.y}",
-            "geometry": box(tb.west, tb.south, tb.east, tb.north),
-        })
+        b_box = box(tb.west, tb.south, tb.east, tb.north)
+        if b_box.intersects(boundary):
+            rows.append({
+                "tile_id": f"{tile.z}/{tile.x}/{tile.y}",
+                "geometry": b_box,
+            })
     return gpd.GeoDataFrame(rows, crs="EPSG:4326")
 
 
 def generate_tile_bboxes(bounds, zoom):
     """Dict mapping tile_id -> 'w,s,e,n' string (for OHSOME compat)."""
+    boundary = get_city_boundary()
     d = {}
     for tile in mercantile.tiles(bounds[0], bounds[1], bounds[2], bounds[3], zooms=zoom):
         tb = mercantile.bounds(tile)
-        d[f"{tile.z}/{tile.x}/{tile.y}"] = f"{tb.west},{tb.south},{tb.east},{tb.north}"
+        if box(tb.west, tb.south, tb.east, tb.north).intersects(boundary):
+            d[f"{tile.z}/{tile.x}/{tile.y}"] = f"{tb.west},{tb.south},{tb.east},{tb.north}"
     return d
 
 
@@ -171,11 +184,15 @@ def _get_children_at_zoom(tile_id, target_zoom):
     if target_zoom <= current_z:
         return [tile_id]
 
+    boundary = get_city_boundary()
     tiles = [tile]
     for _ in range(target_zoom - current_z):
         next_tiles = []
         for t in tiles:
-            next_tiles.extend(mercantile.children(t))
+            for c in mercantile.children(t):
+                cb = mercantile.bounds(c)
+                if box(cb.west, cb.south, cb.east, cb.north).intersects(boundary):
+                    next_tiles.append(c)
         tiles = next_tiles
     return [f"{t.z}/{t.x}/{t.y}" for t in tiles]
 
@@ -742,6 +759,7 @@ def generate_completeness_map(data, output_dir, silent=False):
             props = {
                 "tile_id": tile_id,
                 "zoom": zoom,
+                "bbox": bbox,
             }
 
             for i, entry in enumerate(tile_info.get("data", [])):
@@ -808,6 +826,7 @@ def _build_map_html(geojson_str, center_lon, center_lat, city_name, timestamps_j
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://unpkg.com/@sgratzl/chartjs-chart-boxplot@4.3.1/build/index.umd.min.js"></script>
 <style>
   * {{ margin: 0; padding: 0; box-sizing: border-box; }}
   body {{ font-family: 'Outfit', sans-serif; background: #0f172a; color: #f8fafc; }}
@@ -905,6 +924,27 @@ def _build_map_html(geojson_str, center_lon, center_lat, city_name, timestamps_j
       <span id="ts-label"></span>
     </div>
     <input type="range" id="ts-slider" min="0" max="{last_idx}" value="{last_idx}" step="1">
+  </div>
+</div>
+
+<button id="stats-btn" style="position: absolute; bottom: 240px; left: 12px; z-index: 10; width: 44px; height: 44px; border-radius: 50%; background: rgba(15, 23, 42, 0.92); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 12px rgba(0,0,0,0.3); color: #00f2fe; cursor: pointer; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(14px);">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+</button>
+
+<div id="stats-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; backdrop-filter:blur(4px); align-items:center; justify-content:center;">
+  <div style="background:rgba(15, 23, 42, 0.95); border:1px solid rgba(0, 242, 254, 0.3); border-radius:12px; box-shadow:0 12px 32px rgba(0,0,0,0.5); padding:20px; width:800px; max-width:95vw;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:12px;">
+      <h3 style="color:#00f2fe; margin:0; font-size:1.2rem;">Tile Statistics</h3>
+      <button id="close-stats" style="background:none; border:none; color:#94a3b8; font-size:24px; cursor:pointer; line-height:1;">&times;</button>
+    </div>
+    <div style="display:flex; gap:20px; flex-wrap:wrap;">
+      <div style="flex:1; min-width:300px; height:300px; position:relative;">
+        <canvas id="hist-canvas"></canvas>
+      </div>
+      <div style="flex:1; min-width:300px; height:300px; position:relative;">
+        <canvas id="box-canvas"></canvas>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1025,8 +1065,97 @@ function updateLayerVisibility() {{
   }}
 }}
 
+let histChart = null;
+let boxChart = null;
+
+function renderStatsCharts() {{
+  if (document.getElementById('stats-modal').style.display === 'none') return;
+
+  const activeZ = getActiveZoomLevel();
+  const metricProp = (currentMetric === 'footway' ? 'footway_ratio' : 'sidewalk_ratio') + '_t' + currentTsIdx;
+  
+  const ratios = [];
+  GEOJSON.features.forEach(f => {{
+    if (f.properties.zoom === activeZ) {{
+      const val = f.properties[metricProp];
+      if (val !== null && val !== undefined) {{
+        ratios.push(val);
+      }}
+    }}
+  }});
+
+  const bins = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+  ratios.forEach(r => {{
+    let bin = Math.floor(r * 10);
+    if (bin >= 10) bin = 9;
+    bins[bin]++;
+  }});
+  const histLabels = ['0-0.1', '0.1-0.2', '0.2-0.3', '0.3-0.4', '0.4-0.5', '0.5-0.6', '0.6-0.7', '0.7-0.8', '0.8-0.9', '0.9-1.0+'];
+
+  if (histChart) histChart.destroy();
+  const histCtx = document.getElementById('hist-canvas').getContext('2d');
+  histChart = new Chart(histCtx, {{
+    type: 'bar',
+    data: {{
+      labels: histLabels,
+      datasets: [{{
+        label: 'Tile Count',
+        data: bins,
+        backgroundColor: 'rgba(0, 242, 254, 0.4)',
+        borderColor: '#00f2fe',
+        borderWidth: 1
+      }}]
+    }},
+    options: {{
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {{
+        legend: {{ display: false }},
+        title: {{ display: true, text: 'Ratio Histogram (Z' + activeZ + ')', color: '#f8fafc' }}
+      }},
+      scales: {{
+        y: {{ ticks: {{ color: '#94a3b8' }}, grid: {{ color: 'rgba(255,255,255,0.05)' }} }},
+        x: {{ ticks: {{ color: '#94a3b8', font: {{ size: 10 }} }}, grid: {{ display: false }} }}
+      }}
+    }}
+  }});
+
+  if (boxChart) boxChart.destroy();
+  const boxCtx = document.getElementById('box-canvas').getContext('2d');
+  boxChart = new Chart(boxCtx, {{
+    type: 'boxplot',
+    data: {{
+      labels: ['Ratio Distribution'],
+      datasets: [{{
+        label: 'Dataset',
+        data: [ratios],
+        backgroundColor: 'rgba(0, 242, 254, 0.4)',
+        borderColor: '#00f2fe',
+        borderWidth: 1,
+        outlierBackgroundColor: 'rgba(215, 48, 39, 0.8)',
+        outlierBorderColor: '#d73027'
+      }}]
+    }},
+    options: {{
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {{
+        legend: {{ display: false }},
+        title: {{ display: true, text: 'Ratio Boxplot (Z' + activeZ + ')', color: '#f8fafc' }}
+      }},
+      scales: {{
+        y: {{ min: 0, max: 1.05, ticks: {{ color: '#94a3b8' }}, grid: {{ color: 'rgba(255,255,255,0.05)' }} }},
+        x: {{ ticks: {{ color: '#94a3b8' }}, grid: {{ display: false }} }}
+      }}
+    }}
+  }});
+}}
+
 map.on('zoom', () => {{
-  if (autoScale) updateLayerVisibility();
+  if (autoScale) {{
+    updateLayerVisibility();
+    renderStatsCharts();
+  }}
 }});
 
 map.on('load', () => {{
@@ -1070,16 +1199,30 @@ map.on('load', () => {{
         chartData.push(r !== null && r !== undefined ? (r * 100).toFixed(1) : null);
       }}
 
+      const bStr = `${{p.bbox[0]}},${{p.bbox[1]}},${{p.bbox[2]}},${{p.bbox[3]}}`;
+      const centerLat = (p.bbox[1] + p.bbox[3]) / 2;
+      const centerLon = (p.bbox[0] + p.bbox[2]) / 2;
+      
+      let osmLinks = `<a href="https://www.openstreetmap.org/#map=${{z}}/${{centerLat}}/${{centerLon}}" target="_blank" style="color:#00f2fe;text-decoration:none;font-size:11px;border:1px solid rgba(0,242,254,0.3);padding:2px 6px;border-radius:4px;margin-right:4px;">View on OSM</a>`;
+      if (z >= 16) {{
+        osmLinks += `<a href="https://www.openstreetmap.org/edit#map=17/${{centerLat}}/${{centerLon}}" target="_blank" style="color:#00f2fe;text-decoration:none;font-size:11px;border:1px solid rgba(0,242,254,0.3);padding:2px 6px;border-radius:4px;">Edit on OSM</a>`;
+      }}
+
       const html = `
         <div style="font-family:Outfit,sans-serif;width:100%;">
-          <h4 style="margin:0 0 6px;color:#00f2fe;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:4px">
-            Tile ${{p.tile_id}}</h4>
+          <h4 style="margin:0 0 6px;color:#00f2fe;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:4px;display:flex;justify-content:space-between;align-items:center;">
+            Tile ${{p.tile_id}}
+            <button onclick="navigator.clipboard.writeText('${{bStr}}')" style="background:none;border:none;color:#94a3b8;cursor:pointer;font-size:11px;text-decoration:underline;">Copy BBox</button>
+          </h4>
           <div style="font-size:12px;color:#cbd5e1;line-height:1.6">
             <b>Roads:</b> ${{Number(roadLen).toLocaleString()}} m<br>
             <b>Footways:</b> ${{Number(footLen).toLocaleString()}} m<br>
             <b>Sidewalks:</b> ${{Number(swLen).toLocaleString()}} m<br>
             <b>Footway ratio:</b> ${{fRatio != null ? (fRatio * 100).toFixed(1) + '%' : 'N/A'}}<br>
             <b>Sidewalk ratio:</b> ${{sRatio != null ? (sRatio * 100).toFixed(1) + '%' : 'N/A'}}
+          </div>
+          <div style="margin-top:8px;">
+            ${{osmLinks}}
           </div>
           <div style="margin-top:12px; height:120px; width:100%; position:relative;">
             <canvas></canvas>
@@ -1147,18 +1290,21 @@ document.getElementById('auto-scale-cb').addEventListener('change', (e) => {{
   autoScale = e.target.checked;
   document.getElementById('manual-zoom-group').style.display = autoScale ? 'none' : 'block';
   updateLayerVisibility();
+  renderStatsCharts();
 }});
 
 document.getElementById('manual-zoom-slider').addEventListener('input', (e) => {{
   manualZoom = parseInt(e.target.value);
   document.getElementById('manual-zoom-label').textContent = 'Z' + manualZoom;
   updateLayerVisibility();
+  renderStatsCharts();
 }});
 
 document.querySelectorAll('input[name="metric"]').forEach(radio => {{
   radio.addEventListener('change', (e) => {{
     currentMetric = e.target.value;
     updateFeatureColors();
+    renderStatsCharts();
   }});
 }});
 
@@ -1166,6 +1312,16 @@ document.getElementById('ts-slider').addEventListener('input', (e) => {{
   currentTsIdx = parseInt(e.target.value);
   updateTimestampLabel();
   updateFeatureColors();
+  renderStatsCharts();
+}});
+
+document.getElementById('stats-btn').addEventListener('click', () => {{
+  document.getElementById('stats-modal').style.display = 'flex';
+  renderStatsCharts();
+}});
+
+document.getElementById('close-stats').addEventListener('click', () => {{
+  document.getElementById('stats-modal').style.display = 'none';
 }});
 </script>
 
