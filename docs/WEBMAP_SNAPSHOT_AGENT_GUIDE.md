@@ -5,11 +5,31 @@
 - Repository: `kauevestena/oswm_codebase`
 - Branch: `feat/webmap-scrutiny-snapshots`
 - Base branch: `main`
-- Current scope: planning and handoff documentation only
-- No snapshot implementation has been started in this branch.
+- Current scope: functional MVP plus automated tests
+- The printer control, A4 composer, viewport statistics, whole-node summary,
+  thematic charts and pipeline integration are implemented in this branch.
+- Automated Python and JavaScript tests pass. A final visual pass in current
+  Firefox and Chromium remains required on a developer workstation with WebGL.
 - Do not merge this branch unless the repository owner explicitly requests it.
 
-This document is intended to let another coding agent continue the implementation and validate it against a local checkout of an OSWM node, initially `kauevestena/opensidewalkmap_beta`.
+This document is intended to let another coding agent validate and harden the implementation against a local checkout of an OSWM node, initially `kauevestena/opensidewalkmap_beta`.
+
+## Implemented files
+
+| File | Implementation |
+|---|---|
+| `webmap/snapshot/generate_snapshot_summary.py` | Pure categorical/numeric aggregators plus GeoParquet whole-node summary CLI |
+| `webmap/snapshot/snapshot_stats.js` | Viewport feature deduplication, completeness and diversity metrics |
+| `webmap/snapshot/snapshot_charts.js` | Dependency-free, print-sharp SVG bar charts and histograms |
+| `webmap/snapshot/snapshot_composer.js` | A4 preview, off-screen high-resolution MapLibre export, fallback and printing |
+| `webmap/snapshot/snapshot_control.js` | Accessible MapLibre printer control |
+| `assets/styles/webmap_snapshot.css` | Screen composer and one-page A4 landscape print layout |
+| `tests/webmap_snapshot/` | Python aggregation and source-wiring tests |
+| `webmap/snapshot/snapshot_stats.test.mjs` | JavaScript statistics, SVG and composer-helper tests |
+
+`create_webmap_new.py` now emits a versioned `snapshot` contract in
+`webmap_params.json`, and `runners/daily.sh` generates
+`data/snapshots/node_summary.json` before regenerating the Webmap.
 
 ## Goal
 
@@ -341,7 +361,7 @@ python oswm_codebase/webmap/create_webmap_new.py
 
 Avoid `--development` unless intentionally updating the template parameters inside the submodule; the current flag also writes back to `oswm_codebase/webmap/webmap_params.json`.
 
-After the summary generator exists, run it explicitly before regenerating the map:
+Generate the summary explicitly before regenerating the map:
 
 ```bash
 python oswm_codebase/webmap/snapshot/generate_snapshot_summary.py
@@ -367,6 +387,34 @@ http://localhost:8000/map.html
 The current generated source URLs can point to the deployed GitHub Pages node. This is acceptable for an initial local UI test with real data. If a fully local mode is added, implement it as a documented generator/runtime option rather than manually editing generated JSON.
 
 ## Test plan
+
+### Automated commands
+
+From the `oswm_codebase` checkout, with the repository requirements installed:
+
+```bash
+python -m unittest discover -s tests/webmap_snapshot -p 'test_*.py' -v
+node --test webmap/snapshot/snapshot_stats.test.mjs
+python -m py_compile \
+  webmap/snapshot/generate_snapshot_summary.py \
+  webmap/create_webmap_new.py \
+  webmap/webmap_lib.py
+bash -n runners/daily.sh
+```
+
+The Python suite includes a projected-length test and therefore requires the
+normal repository dependencies (`geopandas`, `shapely`, `pyproj` and
+`pyarrow`). The JavaScript suite uses Node's built-in test runner and adds no
+package dependency.
+
+Also run both generators from the node root and inspect their outputs:
+
+```bash
+python oswm_codebase/webmap/snapshot/generate_snapshot_summary.py
+python oswm_codebase/webmap/create_webmap_new.py
+python -m json.tool data/snapshots/node_summary.json >/dev/null
+python -m json.tool webmap_params.json >/dev/null
+```
 
 ### Pure JavaScript tests
 
@@ -461,4 +509,3 @@ Before every commit:
 - Vega Embed: <https://vega.github.io/vega-embed/>
 - CSS printing: <https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Media_queries/Printing>
 - CSS `@page`: <https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/@page>
-
