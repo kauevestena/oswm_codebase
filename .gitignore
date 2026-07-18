@@ -180,4 +180,8 @@ cache/
 # development stuff
 .vscode
 tests/
+!tests/
+tests/*
+!tests/webmap_snapshot/
+!tests/webmap_snapshot/*.py
 tests.py

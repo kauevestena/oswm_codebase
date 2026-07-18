@@ -23,6 +23,14 @@ params["bounds"] = get_boundaries_bbox()
 # updating the node's url:
 params["node_url"] = node_homepage_url
 
+params["snapshot"] = {
+    "schema_version": 1,
+    "node_name": CITY_NAME,
+    "summary_url": snapshot_summary_path,
+    "default_scope": "viewport",
+    "themes": get_snapshot_themes(),
+}
+
 # # generating the "sources" and layernames:
 params.update(get_sources(only_urls=True))
 
@@ -35,39 +43,22 @@ params["styles"] = {
     "crossings_and_kerbs": create_crossings_kerbs_style(),
 }
 
-interest_attributes = {
-    # key is raw attribute name, value is label (human readable)
-    "surface": "Surface",
-    "smoothness": "Smoothness",
-    "tactile_paving": "Tactile Paving",
-    "lit": "Lighting",
-    "traffic_calming": "Traffic Calming",
-    "wheelchair": "wheelchair=* tag",
-}
-
-attribute_layers = {
-    # default is "sidewalks", only specified if different:
-    "traffic_calming": "crossings",
-}
-
-different_else_color = {
-    # default is "gray", specifyed ony if different:
-    "traffic_calming": "#63636366",
-}
-
 # adding the simple styles:
-for attribute in interest_attributes:
-    color_dict = get_color_dict(attribute, attribute_layers.get(attribute, "sidewalks"))
+for attribute in SNAPSHOT_INTEREST_ATTRIBUTES:
+    color_dict = get_color_dict(
+        attribute,
+        SNAPSHOT_ATTRIBUTE_LAYERS.get(attribute, "sidewalks"),
+    )
     # color_schema = create_maplibre_color_schema(
     #     color_dict, attribute, different_else_color.get(attribute, "gray")
     # )
 
     params["styles"][attribute] = create_simple_map_style(
-        name=interest_attributes[attribute],
+        name=SNAPSHOT_INTEREST_ATTRIBUTES[attribute],
         # color_schema=color_schema,
         color_dict=color_dict,
         attribute_name=attribute,
-        else_color=different_else_color.get(attribute, "gray"),
+        else_color=SNAPSHOT_ELSE_COLORS.get(attribute, "gray"),
     )
 
 # Now the numerical styles:

@@ -8,6 +8,30 @@ from webmap.standalone_legend_html import *
 
 MAP_DATA_LAYERS = [l for l in paths_dict["map_layers"]]
 
+FOOTWAY_CATEGORY_COLORS = {
+    "stairways": "#8a7e2f",
+    "main_footways": "#299077",
+    "informal_footways": "#b0645a",
+    "potential_footways": "#9569a4",
+}
+
+SNAPSHOT_INTEREST_ATTRIBUTES = {
+    "surface": "Surface",
+    "smoothness": "Smoothness",
+    "tactile_paving": "Tactile Paving",
+    "lit": "Lighting",
+    "traffic_calming": "Traffic Calming",
+    "wheelchair": "wheelchair=* tag",
+}
+
+SNAPSHOT_ATTRIBUTE_LAYERS = {
+    "traffic_calming": "crossings",
+}
+
+SNAPSHOT_ELSE_COLORS = {
+    "traffic_calming": "#63636366",
+}
+
 # webmap stuff:
 BASEMAP_URL = "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"
 webmap_params_original_path = "oswm_codebase/webmap/webmap_params.json"
@@ -226,12 +250,7 @@ def create_base_style(sources=MAP_SOURCES, name="Footway Categories"):
 
     default_color = "steelblue"
 
-    custom_layer_colors = {
-        "stairways": "#8a7e2f",
-        "main_footways": "#299077",
-        "informal_footways": "#b0645a",
-        "potential_footways": "#9569a4",
-    }
+    custom_layer_colors = FOOTWAY_CATEGORY_COLORS
 
     custom_layer_dash_patterns = {
         "crossings": [1, 0.5],
@@ -352,6 +371,109 @@ def get_color_dict(columnname, layer="sidewalks", attribute="color"):
     return colordict
 
 
+def get_snapshot_themes():
+    """Return JSON-safe analytical metadata for every printable Webmap theme.
+
+    The same dictionaries used to build MapLibre styles feed this metadata, so
+    the scrutiny chart and legend cannot silently drift away from map colors.
+    """
+
+    default_layer_color = "steelblue"
+    footway_colors = {
+        layer: FOOTWAY_CATEGORY_COLORS.get(layer, default_layer_color)
+        for layer in MAP_DATA_LAYERS
+    }
+
+    def categorical_theme(
+        theme_id,
+        label,
+        attribute,
+        layers,
+        color_layer,
+        other_color="gray",
+    ):
+        colors = get_color_dict(attribute, color_layer)
+        return {
+            "id": theme_id,
+            "kind": "categorical",
+            "label": label,
+            "attribute": attribute,
+            "layers": layers,
+            "colors": colors,
+            "unknown_value": "?",
+            "unknown_color": colors.get("?", other_color),
+            "other_color": other_color,
+        }
+
+    themes = {
+        "footway_categories": {
+            "id": "footway_categories",
+            "kind": "categorical",
+            "label": "Footway Categories",
+            "attribute": "__layer__",
+            "layers": MAP_DATA_LAYERS,
+            "colors": footway_colors,
+            "unknown_value": "?",
+            "unknown_color": "#636363",
+            "other_color": default_layer_color,
+        },
+        "crossings_and_kerbs": {
+            "id": "crossings_and_kerbs",
+            "kind": "multi",
+            "label": "Crossings and Kerbs",
+            "panels": [
+                categorical_theme(
+                    "crossings", "Crossings", "crossing", ["crossings"], "crossings"
+                ),
+                categorical_theme("kerbs", "Kerbs", "kerb", ["kerbs"], "kerbs"),
+            ],
+        },
+    }
+
+    for attribute, label in SNAPSHOT_INTEREST_ATTRIBUTES.items():
+        layer = SNAPSHOT_ATTRIBUTE_LAYERS.get(attribute, "sidewalks")
+        themes[attribute] = categorical_theme(
+            attribute,
+            label,
+            attribute,
+            [layer],
+            layer,
+            SNAPSHOT_ELSE_COLORS.get(attribute, "gray"),
+        )
+
+    for attribute, numeric_theme in numeric_themes.items():
+        sorted_breaks = sorted(
+            (float(value) for value in numeric_theme["color_dict"]),
+        )
+        themes[attribute] = {
+            "id": attribute,
+            "kind": "numeric",
+            "label": numeric_theme["name"],
+            "attribute": attribute,
+            "layers": MAP_DATA_LAYERS,
+            "breaks": [float(numeric_theme["default_value"]), *sorted_breaks],
+            "colors": [
+                numeric_theme["default_color"],
+                *[
+                    numeric_theme["color_dict"][str(int(value))]
+                    if value.is_integer()
+                    and str(int(value)) in numeric_theme["color_dict"]
+                    else numeric_theme["color_dict"][str(value)]
+                    for value in sorted_breaks
+                ],
+            ],
+            "unknown_value": "?",
+            "unknown_color": "#636363",
+            "invalid": {
+                "operator": numeric_theme["invalid_operator"],
+                "threshold": float(numeric_theme["invalid_threshold"]),
+                "color": numeric_theme["invalid_color"],
+            },
+        }
+
+    return themes
+
+
 def create_maplibre_color_schema(attribute_dict, attribute_name, else_color="gray"):
     schema = ["case"]
     for key, value in attribute_dict.items():
@@ -424,6 +546,7 @@ def create_crossings_kerbs_style(
                 style_legend.add_element(
                     layer_type, f"{legend_basenames[layername]} - {key}", **elem_kwargs
                 )
+        else:
             # all other layers will be a very faded gray:
             layer_dict["paint"][color_attribute[layer_type]] = else_color
 

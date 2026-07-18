@@ -50,6 +50,7 @@ fi
 run_step oswm_codebase/getting_data.py             "getting_data"
 run_step oswm_codebase/filtering_adapting_data.py  "filtering_adapting_data"
 run_step oswm_codebase/generation/vec_tiles_gen.py "vec_tiles_gen"
+run_step oswm_codebase/webmap/snapshot/generate_snapshot_summary.py "generate_snapshot_summary"
 run_step oswm_codebase/webmap/create_webmap_new.py "create_webmap_new"
 run_step oswm_codebase/data_quality/tag_values_checking.py     "tag_values_checking"
 run_step oswm_codebase/data_quality/quality_check_compiling.py "quality_check_compiling"

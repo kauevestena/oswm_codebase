@@ -32,6 +32,7 @@ data_quality_folderpath = os.path.join(data_folderpath, "data_quality")
 boundaries_folderpath = os.path.join(data_folderpath, "boundaries")
 updates_folderpath = os.path.join(data_folderpath, "updates")
 routing_folderpath = os.path.join(data_folderpath, "routing")
+snapshots_folderpath = os.path.join(data_folderpath, "snapshots")
 
 improper_geoms_folderpath = os.path.join(data_quality_folderpath, "improper_geoms")
 disjointed_folderpath = os.path.join(data_quality_folderpath, "disjointed")
@@ -48,6 +49,7 @@ updating_infos_path = os.path.join(updates_folderpath, "registry.json")
 data_updating_path = os.path.join(updates_folderpath, "index.html")
 routing_demo_path = os.path.join(routing_folderpath, "demo.geojson")
 pipeline_failures_path = os.path.join(updates_folderpath, "pipeline_failures.txt")
+snapshot_summary_path = os.path.join(snapshots_folderpath, "node_summary.json")
 
 # declare, so we can reuse
 stairways_layername = "stairways"
