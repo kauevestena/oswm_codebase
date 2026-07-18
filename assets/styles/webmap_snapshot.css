@@ -88,6 +88,12 @@ body.oswm-snapshot-modal-open {
     font-weight: 700;
 }
 
+.oswm-snapshot-selector-pair {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
 .oswm-snapshot-options input,
 .oswm-snapshot-options select,
 .oswm-snapshot-options textarea,
@@ -103,6 +109,10 @@ body.oswm-snapshot-modal-open {
 
 .oswm-snapshot-options input {
     width: min(34vw, 390px);
+}
+
+.oswm-snapshot-options select[name="locale"] {
+    min-width: 142px;
 }
 
 .oswm-snapshot-options button,
@@ -390,7 +400,7 @@ body.oswm-snapshot-modal-open {
 
 .oswm-snapshot-facts dd {
     margin: 0;
-    text-align: right;
+    text-align: end;
     font-weight: 700;
 }
 
@@ -459,7 +469,7 @@ body.oswm-snapshot-modal-open {
 .oswm-snapshot-author-content ul,
 .oswm-snapshot-author-content ol {
     margin: 3px 0;
-    padding-left: 16px;
+    padding-inline-start: 16px;
 }
 
 .oswm-snapshot-author-content a {
@@ -495,9 +505,26 @@ body.oswm-snapshot-modal-open {
     flex: 0 0 auto;
     width: 18px;
     height: 7px;
-    margin-right: 5px;
+    margin-inline-end: 5px;
     border: 1px solid rgba(0, 0, 0, .55);
     background: var(--legend-color);
+}
+
+.oswm-snapshot-print-sheet[dir="rtl"] {
+    text-align: right;
+}
+
+.oswm-snapshot-print-sheet[dir="rtl"] .oswm-snapshot-sheet-grid {
+    direction: ltr;
+}
+
+.oswm-snapshot-print-sheet[dir="rtl"] .oswm-snapshot-analysis-column {
+    direction: rtl;
+}
+
+.oswm-snapshot-print-sheet[dir="rtl"] .oswm-snapshot-map-column {
+    direction: ltr;
+    text-align: left;
 }
 
 .oswm-snapshot-print-sheet > footer {

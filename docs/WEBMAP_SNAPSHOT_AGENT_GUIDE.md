@@ -10,6 +10,10 @@
   thematic charts and pipeline integration are implemented in this branch.
 - Authors can optionally add a custom-titled notes panel containing plain text
   or a sanitized subset of HTML; leaving both fields empty omits the panel.
+- The composer and printable sheet support English (default), Brazilian
+  Portuguese, Spanish, Italian, French, German, Simplified Chinese and Arabic.
+  Interface labels are translated, while OSM/data category values remain in
+  their original English technical form in facts, charts and legends.
 - Automated Python and JavaScript tests pass. A final visual pass in current
   Firefox and Chromium remains required on a developer workstation with WebGL.
 - Do not merge this branch unless the repository owner explicitly requests it.
@@ -24,6 +28,7 @@ This document is intended to let another coding agent validate and harden the im
 | `webmap/snapshot/snapshot_stats.js` | Viewport feature deduplication, completeness and diversity metrics |
 | `webmap/snapshot/snapshot_charts.js` | Dependency-free, print-sharp SVG bar charts and histograms |
 | `webmap/snapshot/snapshot_composer.js` | A4 preview, off-screen high-resolution MapLibre export, fallback and printing |
+| `webmap/snapshot/snapshot_i18n.js` | Locale registry, translated UI/report labels, theme names and `Intl` formatting |
 | `webmap/snapshot/snapshot_control.js` | Accessible MapLibre printer control |
 | `assets/styles/webmap_snapshot.css` | Screen composer and one-page A4 landscape print layout |
 | `tests/webmap_snapshot/` | Python aggregation and source-wiring tests |
@@ -60,6 +65,8 @@ The feature must preserve the serverless/static architecture used by GitHub Page
 8. Do not update or merge the node repository or this branch without explicit authorization.
 9. Do not commit secrets, tokens, browser profiles, virtual environments or generated caches.
 10. Preserve current Webmap behavior, including style selection, legend, popups, hover state and PMTiles loading.
+11. Translate interface, analytical and document labels only. Keep mapped data
+    values such as `asphalt`, `paving_stones`, `yes` and `no` in English.
 
 ## Repository topology
 
@@ -118,7 +125,10 @@ Current relevant behavior:
    - active theme;
    - north-up, two-dimensional export;
    - unknown values reported separately;
-   - editable title.
+   - editable title;
+   - English as the default output language, with the language selector beside
+     the scope selector;
+   - an optional author panel for custom comments or safe HTML.
 4. The composer prepares a preview.
 5. The user chooses `Print / Save as PDF`.
 6. Browser print CSS produces one A4 landscape page.
@@ -206,6 +216,7 @@ webmap/
     ├── snapshot_control.js
     ├── snapshot_stats.js
     ├── snapshot_charts.js
+    ├── snapshot_i18n.js
     └── snapshot_composer.js
 
 assets/styles/
@@ -222,6 +233,7 @@ JavaScript modules should have clear boundaries:
 - `snapshot_control.js`: MapLibre control and modal entrypoint;
 - `snapshot_stats.js`: pure deduplication, aggregation and metrics;
 - `snapshot_charts.js`: compact SVG/Vega-Lite chart specifications;
+- `snapshot_i18n.js`: supported locales, translated labels and locale-aware formatting;
 - `snapshot_composer.js`: export-map lifecycle, preview assembly and printing.
 
 Keep statistical functions pure where possible so they can be tested without a browser.
@@ -432,7 +444,12 @@ Required cases:
 - one known category yields entropy zero and effective diversity one;
 - two equally represented categories yield effective diversity two;
 - collapsed chart categories do not alter full-distribution metrics;
-- empty input returns a valid empty result.
+- empty input returns a valid empty result;
+- unsupported locales fall back to English;
+- Arabic selects RTL layout while the map remains on the left and panels remain
+  on the right;
+- localized charts preserve raw data values such as `asphalt` and
+  `paving_stones` without translation.
 
 ### Python summary tests
 
@@ -467,6 +484,12 @@ Check:
 12. Repeating the export several times does not trigger WebGL-context warnings.
 13. An empty viewport produces a useful message.
 14. A deliberately blocked basemap produces a visible error/fallback.
+15. English is initially selected and the language selector appears beside Scope.
+16. Switching among all eight languages updates the existing preview without a
+    second map capture; custom title and author content are preserved.
+17. Arabic text is right-to-left, while the map remains left and the analysis
+    panels remain right in both preview and print.
+18. Data values remain English in facts, chart rows and legends in every locale.
 
 If automated browser testing is added, keep it focused on the print composer and use a small fixture map where possible. Do not make every unit test depend on large remote PMTiles.
 
@@ -479,6 +502,9 @@ If automated browser testing is added, keep it focused on the print composer and
 - Whole-node statistics come from processed GeoParquet summaries.
 - Missing/unknown values are reported separately from real-world diversity.
 - The PDF includes title, node, timestamp, extent, scale, north and attribution.
+- The interface and PDF support all eight documented languages with English as
+  default and a usable Arabic RTL layout.
+- Locale changes never translate the underlying mapped data values.
 - No server-side runtime component is introduced.
 - Existing Webmap interactions continue to work.
 - Repeated exports clean up temporary maps and event listeners.

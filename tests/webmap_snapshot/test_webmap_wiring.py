@@ -16,9 +16,27 @@ class WebmapWiringTests(unittest.TestCase):
         composer = (ROOT / "webmap/snapshot/snapshot_composer.js").read_text(
             encoding="utf8"
         )
-        self.assertIn("<h2>Theme</h2>", composer)
+        self.assertIn('i18n.t("theme")', composer)
         self.assertIn("Optional author panel", composer)
         self.assertIn('name="author-content"', composer)
+        self.assertIn("oswm-snapshot-selector-pair", composer)
+        self.assertIn('name="scope"', composer)
+        self.assertIn('name="locale"', composer)
+        self.assertLess(
+            composer.index('name="scope"'), composer.index('name="locale"')
+        )
+        self.assertIn("SUPPORTED_LOCALES", composer)
+
+        i18n = (ROOT / "webmap/snapshot/snapshot_i18n.js").read_text(
+            encoding="utf8"
+        )
+        locales = (
+            '"en"', '"pt-BR"', '"es"', '"it"',
+            '"fr"', '"de"', '"zh-CN"', '"ar"',
+        )
+        for locale in locales:
+            self.assertIn(locale, i18n)
+        self.assertIn('direction: "rtl"', i18n)
 
     def test_generator_emits_snapshot_contract(self):
         generator = (ROOT / "webmap/create_webmap_new.py").read_text(encoding="utf8")

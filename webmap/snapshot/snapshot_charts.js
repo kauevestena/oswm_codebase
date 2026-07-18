@@ -15,12 +15,18 @@ function truncate(value, length = 24) {
 export function categoricalChartRows(summary, options = {}) {
     const maxKnownRows = options.maxKnownRows || 7;
     const categories = summary.categories || [];
-    const visible = categories.slice(0, maxKnownRows).map((category) => ({ ...category }));
+    const visible = categories.slice(0, maxKnownRows).map((category) => ({
+        ...category,
+        dataValue: true,
+    }));
     const tail = categories.slice(maxKnownRows);
     if (tail.length) {
         const count = tail.reduce((total, category) => total + category.count, 0);
+        const otherKnownLabel = typeof options.otherKnownLabel === "function"
+            ? options.otherKnownLabel(tail.length)
+            : options.otherKnownLabel || `Other known (${tail.length})`;
         visible.push({
-            value: `Other known (${tail.length})`,
+            value: otherKnownLabel,
             count,
             percent: summary.known ? (count / summary.known) * 100 : 0,
             color: "#a0a0a0",
@@ -28,7 +34,7 @@ export function categoricalChartRows(summary, options = {}) {
     }
     if (summary.unknown) {
         visible.push({
-            value: "Unknown / missing",
+            value: options.unknownLabel || "Unknown / missing",
             count: summary.unknown,
             percent: summary.unknownPercent,
             color: options.unknownColor || "#636363",
@@ -51,17 +57,27 @@ function renderRows(rows, title, options = {}) {
     const bars = rows.map((row, index) => {
         const y = top + index * rowHeight;
         const barWidth = Math.max(row.count ? 2 : 0, (row.count / maximum) * available);
-        const suffix = row.unknown ? " of all" : " of known";
+        const suffix = row.unknown
+            ? ` ${options.ofAllLabel || "of all"}`
+            : ` ${options.ofKnownLabel || "of known"}`;
+        const count = options.formatNumber
+            ? options.formatNumber(row.count, 0)
+            : String(row.count);
+        const percent = options.formatPercent
+            ? options.formatPercent(row.percent || 0, 1)
+            : `${Number(row.percent || 0).toFixed(1)}%`;
+        const labelDirection = row.dataValue ? "ltr" : options.direction || "ltr";
+        const labelAnchor = labelDirection === "rtl" ? "start" : "end";
         return `
-            <text x="${left - 8}" y="${y + 15}" text-anchor="end" class="chart-label">${escapeXml(truncate(row.value))}</text>
+            <text x="${left - 8}" y="${y + 15}" text-anchor="${labelAnchor}" direction="${escapeXml(labelDirection)}" unicode-bidi="plaintext" class="chart-label">${escapeXml(truncate(row.value))}</text>
             <rect x="${left}" y="${y}" width="${barWidth}" height="19" rx="2" fill="${escapeXml(row.color)}"></rect>
-            <text x="${left + barWidth + 6}" y="${y + 15}" class="chart-value">${row.count} · ${Number(row.percent || 0).toFixed(1)}%${suffix}</text>`;
+            <text x="${left + barWidth + 6}" y="${y + 15}" class="chart-value">${escapeXml(count)} · ${escapeXml(percent)}${escapeXml(suffix)}</text>`;
     }).join("");
     const emptyMessage = rows.length
         ? ""
-        : `<text x="${width / 2}" y="62" text-anchor="middle" class="chart-empty">No features in this scope</text>`;
+        : `<text x="${width / 2}" y="62" text-anchor="middle" class="chart-empty">${escapeXml(options.noFeaturesLabel || "No features in this scope")}</text>`;
 
-    return `<svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${escapeXml(title)}" viewBox="0 0 ${width} ${height}" class="oswm-snapshot-chart">
+    return `<svg xmlns="http://www.w3.org/2000/svg" role="img" lang="${escapeXml(options.locale || "en")}" dir="${escapeXml(options.direction || "ltr")}" aria-label="${escapeXml(title)}" viewBox="0 0 ${width} ${height}" class="oswm-snapshot-chart">
         <style>
             .chart-title { font: 700 17px system-ui, sans-serif; fill: #172126; }
             .chart-label { font: 12px system-ui, sans-serif; fill: #26353c; }
@@ -87,10 +103,11 @@ export function renderNumericChart(summary, theme, options = {}) {
         count: bin.count,
         percent: summary.known ? (bin.count / summary.known) * 100 : 0,
         color: bin.color,
+        dataValue: true,
     }));
     if (summary.invalid) {
         rows.push({
-            value: "Invalid / not applicable",
+            value: options.invalidLabel || "Invalid / not applicable",
             count: summary.invalid,
             percent: summary.total ? (summary.invalid / summary.total) * 100 : 0,
             color: theme.invalid?.color || "#808080",
@@ -99,7 +116,7 @@ export function renderNumericChart(summary, theme, options = {}) {
     }
     if (summary.unknown) {
         rows.push({
-            value: "Unknown / missing",
+            value: options.unknownLabel || "Unknown / missing",
             count: summary.unknown,
             percent: summary.unknownPercent,
             color: theme.unknown_color || "#636363",

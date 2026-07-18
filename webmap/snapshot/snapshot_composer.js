@@ -1,5 +1,6 @@
 import { collectViewportStats } from "./snapshot_stats.js";
 import { renderSummaryChart } from "./snapshot_charts.js";
+import { createI18n, DEFAULT_LOCALE, SUPPORTED_LOCALES } from "./snapshot_i18n.js";
 
 const EXPORT_WIDTH = 1500;
 const EXPORT_HEIGHT = 930;
@@ -66,18 +67,14 @@ function authorPanelMarkup(title, content) {
     const panel = normalizeAuthorPanel(title, content);
     if (!panel.visible) return "";
     return `<section class="oswm-snapshot-analysis-block oswm-snapshot-author-panel">
-        ${panel.title ? `<h2>${escapeHtml(panel.title)}</h2>` : ""}
-        ${panel.content ? `<div class="oswm-snapshot-author-content">${sanitizeAuthorContent(panel.content)}</div>` : ""}
+        ${panel.title ? `<h2 dir="auto">${escapeHtml(panel.title)}</h2>` : ""}
+        ${panel.content ? `<div class="oswm-snapshot-author-content" dir="auto">${sanitizeAuthorContent(panel.content)}</div>` : ""}
     </section>`;
 }
 
 function formatNumber(value, digits = 1) {
     if (value === null || value === undefined || !Number.isFinite(Number(value))) return "—";
     return new Intl.NumberFormat(undefined, { maximumFractionDigits: digits }).format(Number(value));
-}
-
-function formatPercent(value) {
-    return `${formatNumber(value, 1)}%`;
 }
 
 export function normalizeBounds(bounds) {
@@ -208,7 +205,7 @@ async function captureMap(map, bounds) {
             );
             return {
                 ...fallback,
-                warning: "The external basemap could not be captured; this print uses OSWM vector data only.",
+                warningCode: "basemapFallback",
             };
         } catch (fallbackError) {
             throw new Error(
@@ -218,102 +215,156 @@ async function captureMap(map, bounds) {
     }
 }
 
-function categoricalFacts(summary) {
+function localizedThemeLabel(theme, i18n) {
+    return i18n.themeLabel(theme.id, theme.label);
+}
+
+export function formatScaleLabel(scale, i18n = createI18n()) {
+    return scale.meters >= 1000
+        ? `${i18n.formatNumber(scale.meters / 1000, 2)} ${i18n.t("unitKm")}`
+        : `${i18n.formatNumber(scale.meters, 0)} ${i18n.t("unitM")}`;
+}
+
+function categoricalFacts(summary, i18n) {
     const dominant = summary.dominant
-        ? `${escapeHtml(summary.dominant.value)} (${formatPercent(summary.dominant.percent)} of known)`
+        ? `<bdi dir="ltr">${escapeHtml(summary.dominant.value)}</bdi> (${i18n.formatPercent(summary.dominant.percent)} ${escapeHtml(i18n.t("ofKnown"))})`
         : "—";
     const lengthFacts = summary.totalLengthKm === undefined ? "" : `
-            <div><dt>Mapped line length</dt><dd>${formatNumber(summary.totalLengthKm, 2)} km</dd></div>
-            <div><dt>Length without value</dt><dd>${formatNumber(summary.unknownLengthKm, 2)} km</dd></div>`;
+            <div><dt>${escapeHtml(i18n.t("mappedLineLength"))}</dt><dd>${i18n.formatNumber(summary.totalLengthKm, 2)} ${escapeHtml(i18n.t("unitKm"))}</dd></div>
+            <div><dt>${escapeHtml(i18n.t("lengthWithoutValue"))}</dt><dd>${i18n.formatNumber(summary.unknownLengthKm, 2)} ${escapeHtml(i18n.t("unitKm"))}</dd></div>`;
     return `
         <dl class="oswm-snapshot-facts">
-            <div><dt>Unique elements</dt><dd>${formatNumber(summary.total, 0)}</dd></div>
-            <div><dt>Known values</dt><dd>${formatNumber(summary.known, 0)}</dd></div>
-            <div><dt>Unknown / missing</dt><dd>${formatNumber(summary.unknown, 0)} (${formatPercent(summary.unknownPercent)})</dd></div>
-            <div><dt>Known categories</dt><dd>${formatNumber(summary.knownCategoryCount, 0)}</dd></div>
-            <div><dt>Dominant category</dt><dd>${dominant}</dd></div>
-            <div><dt>Shannon entropy</dt><dd>${formatNumber(summary.shannonEntropy, 3)}</dd></div>
-            <div><dt>Effective diversity</dt><dd>${formatNumber(summary.effectiveDiversity, 2)}</dd></div>
+            <div><dt>${escapeHtml(i18n.t("uniqueElements"))}</dt><dd>${i18n.formatNumber(summary.total, 0)}</dd></div>
+            <div><dt>${escapeHtml(i18n.t("knownValues"))}</dt><dd>${i18n.formatNumber(summary.known, 0)}</dd></div>
+            <div><dt>${escapeHtml(i18n.t("unknownMissing"))}</dt><dd>${i18n.formatNumber(summary.unknown, 0)} (${i18n.formatPercent(summary.unknownPercent)})</dd></div>
+            <div><dt>${escapeHtml(i18n.t("knownCategories"))}</dt><dd>${i18n.formatNumber(summary.knownCategoryCount, 0)}</dd></div>
+            <div><dt>${escapeHtml(i18n.t("dominantCategory"))}</dt><dd>${dominant}</dd></div>
+            <div><dt>${escapeHtml(i18n.t("shannonEntropy"))}</dt><dd>${i18n.formatNumber(summary.shannonEntropy, 3)}</dd></div>
+            <div><dt>${escapeHtml(i18n.t("effectiveDiversity"))}</dt><dd>${i18n.formatNumber(summary.effectiveDiversity, 2)}</dd></div>
             ${lengthFacts}
         </dl>`;
 }
 
-function numericFacts(summary) {
+function numericFacts(summary, i18n) {
     return `
         <dl class="oswm-snapshot-facts">
-            <div><dt>Unique elements</dt><dd>${formatNumber(summary.total, 0)}</dd></div>
-            <div><dt>Valid values</dt><dd>${formatNumber(summary.known, 0)}</dd></div>
-            <div><dt>Unknown / missing</dt><dd>${formatNumber(summary.unknown, 0)} (${formatPercent(summary.unknownPercent)})</dd></div>
-            <div><dt>Invalid / n.a.</dt><dd>${formatNumber(summary.invalid, 0)}</dd></div>
-            <div><dt>Median</dt><dd>${formatNumber(summary.median, 2)}</dd></div>
-            <div><dt>Range</dt><dd>${formatNumber(summary.min, 2)} – ${formatNumber(summary.max, 2)}</dd></div>
+            <div><dt>${escapeHtml(i18n.t("uniqueElements"))}</dt><dd>${i18n.formatNumber(summary.total, 0)}</dd></div>
+            <div><dt>${escapeHtml(i18n.t("validValues"))}</dt><dd>${i18n.formatNumber(summary.known, 0)}</dd></div>
+            <div><dt>${escapeHtml(i18n.t("unknownMissing"))}</dt><dd>${i18n.formatNumber(summary.unknown, 0)} (${i18n.formatPercent(summary.unknownPercent)})</dd></div>
+            <div><dt>${escapeHtml(i18n.t("invalidNa"))}</dt><dd>${i18n.formatNumber(summary.invalid, 0)}</dd></div>
+            <div><dt>${escapeHtml(i18n.t("median"))}</dt><dd>${i18n.formatNumber(summary.median, 2)}</dd></div>
+            <div><dt>${escapeHtml(i18n.t("range"))}</dt><dd>${i18n.formatNumber(summary.min, 2)} – ${i18n.formatNumber(summary.max, 2)}</dd></div>
         </dl>`;
 }
 
-function renderFacts(summary) {
+function renderFacts(summary, i18n) {
     if (summary.kind === "multi") {
         return summary.panels.map((panel) => `
             <section class="oswm-snapshot-fact-panel">
-                <h3>${escapeHtml(panel.label)}</h3>
-                ${panel.kind === "numeric" ? numericFacts(panel) : categoricalFacts(panel)}
+                <h3>${escapeHtml(localizedThemeLabel(panel, i18n))}</h3>
+                ${panel.kind === "numeric" ? numericFacts(panel, i18n) : categoricalFacts(panel, i18n)}
             </section>`).join("");
     }
-    return summary.kind === "numeric" ? numericFacts(summary) : categoricalFacts(summary);
+    return summary.kind === "numeric"
+        ? numericFacts(summary, i18n)
+        : categoricalFacts(summary, i18n);
 }
 
-function renderCharts(summary, theme) {
-    const chartOptions = { width: 560, rowHeight: 28, showTitle: false };
+function chartOptions(i18n) {
+    return {
+        width: 560,
+        rowHeight: 28,
+        showTitle: false,
+        locale: i18n.locale,
+        direction: i18n.direction,
+        otherKnownLabel: (count) => i18n.t("otherKnown", {
+            count: i18n.formatNumber(count, 0),
+        }),
+        unknownLabel: i18n.t("unknownMissing"),
+        invalidLabel: i18n.t("invalidNa"),
+        ofKnownLabel: i18n.t("ofKnown"),
+        ofAllLabel: i18n.t("ofAll"),
+        noFeaturesLabel: i18n.t("noFeatures"),
+        formatNumber: (value, digits) => i18n.formatNumber(value, digits),
+        formatPercent: (value, digits) => i18n.formatPercent(value, digits),
+    };
+}
+
+function renderCharts(summary, theme, i18n) {
+    const options = chartOptions(i18n);
     if (summary.kind === "multi") {
-        return summary.panels.map((panel, index) => `
-            <section class="oswm-snapshot-chart-subpanel">
-                <h3>${escapeHtml(panel.label)}</h3>
-                ${renderSummaryChart(panel, theme.panels[index] || panel, chartOptions)}
-            </section>`).join("");
+        return summary.panels.map((panel, index) => {
+            const panelTheme = theme.panels[index] || panel;
+            const label = localizedThemeLabel(panelTheme, i18n);
+            return `
+                <section class="oswm-snapshot-chart-subpanel">
+                    <h3>${escapeHtml(label)}</h3>
+                    ${renderSummaryChart(panel, { ...panelTheme, label }, options)}
+                </section>`;
+        }).join("");
     }
-    return renderSummaryChart(summary, theme, chartOptions);
+    return renderSummaryChart(
+        summary,
+        { ...theme, label: localizedThemeLabel(theme, i18n) },
+        options,
+    );
 }
 
-function legendEntries(summary, theme) {
+function legendEntries(summary, theme, i18n) {
     if (summary.kind === "numeric") {
-        const entries = (summary.bins || []).map((bin) => ({ label: bin.label, color: bin.color }));
-        if (summary.invalid) entries.push({ label: "Invalid / n.a.", color: theme.invalid?.color || "#808080" });
-        if (summary.unknown) entries.push({ label: "Unknown / missing", color: theme.unknown_color || "#636363" });
+        const entries = (summary.bins || []).map((bin) => ({
+            label: bin.label,
+            color: bin.color,
+            dataValue: true,
+        }));
+        if (summary.invalid) entries.push({
+            label: i18n.t("invalidNa"),
+            color: theme.invalid?.color || "#808080",
+        });
+        if (summary.unknown) entries.push({
+            label: i18n.t("unknownMissing"),
+            color: theme.unknown_color || "#636363",
+        });
         return entries;
     }
     const entries = (summary.categories || []).slice(0, 12).map((category) => ({
         label: category.value,
         color: category.color,
+        dataValue: true,
     }));
-    if (summary.unknown) entries.push({ label: "Unknown / missing", color: theme.unknown_color || "#636363" });
+    if (summary.unknown) entries.push({
+        label: i18n.t("unknownMissing"),
+        color: theme.unknown_color || "#636363",
+    });
     return entries;
 }
 
-function renderLegendBlock(summary, theme) {
-    const entries = legendEntries(summary, theme);
+function renderLegendBlock(summary, theme, i18n) {
+    const entries = legendEntries(summary, theme, i18n);
     return `<section class="oswm-snapshot-legend-block">
-        <h3>${escapeHtml(theme.label)}</h3>
+        <h3>${escapeHtml(localizedThemeLabel(theme, i18n))}</h3>
         <div class="oswm-snapshot-legend-items">
-            ${entries.map((entry) => `<span><i style="--legend-color:${escapeHtml(entry.color)}"></i>${escapeHtml(entry.label)}</span>`).join("")}
-            ${entries.length ? "" : "<em>No classified features in this scope.</em>"}
+            ${entries.map((entry) => `<span><i style="--legend-color:${escapeHtml(entry.color)}"></i>${entry.dataValue ? `<bdi dir="ltr">${escapeHtml(entry.label)}</bdi>` : escapeHtml(entry.label)}</span>`).join("")}
+            ${entries.length ? "" : `<em>${escapeHtml(i18n.t("noClassified"))}</em>`}
         </div>
     </section>`;
 }
 
-function renderLegend(summary, theme) {
+function renderLegend(summary, theme, i18n) {
     if (summary.kind === "multi") {
         return summary.panels.map((panel, index) => (
-            renderLegendBlock(panel, theme.panels[index] || panel)
+            renderLegendBlock(panel, theme.panels[index] || panel, i18n)
         )).join("");
     }
-    return renderLegendBlock(summary, theme);
+    return renderLegendBlock(summary, theme, i18n);
 }
 
-function boundsText(bounds) {
+function boundsText(bounds, i18n) {
     const [[west, south], [east, north]] = bounds;
-    return `W ${west.toFixed(5)} · S ${south.toFixed(5)} · E ${east.toFixed(5)} · N ${north.toFixed(5)}`;
+    return `${i18n.t("westShort")} ${west.toFixed(5)} · ${i18n.t("southShort")} ${south.toFixed(5)} · ${i18n.t("eastShort")} ${east.toFixed(5)} · ${i18n.t("northShort")} ${north.toFixed(5)}`;
 }
 
-function sheetMarkup({
+export function renderSnapshotSheet({
     title,
     nodeName,
     theme,
@@ -324,52 +375,51 @@ function sheetMarkup({
     generatedAt,
     authorTitle,
     authorContent,
+    i18n,
 }) {
-    const scopeLabel = scope === "node" ? "Whole node" : "Current viewport";
-    const timestamp = generatedAt
-        ? new Date(generatedAt).toLocaleString()
-        : new Date().toLocaleString();
-    const sourceNote = scope === "node"
-        ? "Exact node aggregation from processed GeoParquet."
-        : "Counts are deduplicated visible OSM elements; tiled geometry lengths are not estimated.";
-    return `<article class="oswm-snapshot-print-sheet">
+    const scopeLabel = i18n.t(scope === "node" ? "wholeNode" : "currentViewport");
+    const timestamp = i18n.formatDate(generatedAt || new Date());
+    const sourceNote = i18n.t(scope === "node" ? "exactNodeSource" : "viewportSource");
+    const themeLabel = localizedThemeLabel(theme, i18n);
+    const warning = capture.warningCode ? i18n.t(capture.warningCode) : "";
+    return `<article class="oswm-snapshot-print-sheet" lang="${escapeHtml(i18n.locale)}" dir="${escapeHtml(i18n.direction)}">
         <header class="oswm-snapshot-sheet-header">
             <div>
-                <p class="oswm-snapshot-kicker">OSWM scrutiny map</p>
-                <h1>${escapeHtml(title)}</h1>
+                <p class="oswm-snapshot-kicker">${escapeHtml(i18n.t("scrutinyMapKicker"))}</p>
+                <h1 dir="auto">${escapeHtml(title)}</h1>
             </div>
             <dl>
-                <div><dt>Node</dt><dd>${escapeHtml(nodeName)}</dd></div>
-                <div><dt>Theme</dt><dd>${escapeHtml(theme.label)}</dd></div>
-                <div><dt>Scope</dt><dd>${scopeLabel}</dd></div>
-                <div><dt>Generated</dt><dd>${escapeHtml(timestamp)}</dd></div>
+                <div><dt>${escapeHtml(i18n.t("node"))}</dt><dd dir="auto">${escapeHtml(nodeName)}</dd></div>
+                <div><dt>${escapeHtml(i18n.t("theme"))}</dt><dd>${escapeHtml(themeLabel)}</dd></div>
+                <div><dt>${escapeHtml(i18n.t("scope"))}</dt><dd>${escapeHtml(scopeLabel)}</dd></div>
+                <div><dt>${escapeHtml(i18n.t("generated"))}</dt><dd>${escapeHtml(timestamp)}</dd></div>
             </dl>
         </header>
         <div class="oswm-snapshot-sheet-grid">
             <section class="oswm-snapshot-map-column">
                 <div class="oswm-snapshot-map-frame">
-                    <img src="${capture.imageUrl}" alt="Map for the selected scrutiny extent" class="oswm-snapshot-map-image">
-                    <div class="oswm-snapshot-north" aria-label="North"><span>▲</span>N</div>
+                    <img src="${capture.imageUrl}" alt="${escapeHtml(i18n.t("mapAlt"))}" class="oswm-snapshot-map-image">
+                    <div class="oswm-snapshot-north" aria-label="${escapeHtml(i18n.t("northLabel"))}"><span>▲</span>${escapeHtml(i18n.t("north"))}</div>
                     <div class="oswm-snapshot-scale" style="--scale-width:${capture.scale.widthPixels}px">
-                        <span></span><b>${escapeHtml(capture.scale.label)}</b>
+                        <span></span><b>${escapeHtml(formatScaleLabel(capture.scale, i18n))}</b>
                     </div>
                 </div>
-                <p class="oswm-snapshot-extent">${escapeHtml(boundsText(bounds))}</p>
-                ${capture.warning ? `<p class="oswm-snapshot-warning">${escapeHtml(capture.warning)}</p>` : ""}
+                <p class="oswm-snapshot-extent">${escapeHtml(boundsText(bounds, i18n))}</p>
+                ${warning ? `<p class="oswm-snapshot-warning">${escapeHtml(warning)}</p>` : ""}
             </section>
             <aside class="oswm-snapshot-analysis-column">
                 <section class="oswm-snapshot-analysis-block">
-                    <h2>Scrutiny facts</h2>
-                    ${renderFacts(summary)}
+                    <h2>${escapeHtml(i18n.t("scrutinyFacts"))}</h2>
+                    ${renderFacts(summary, i18n)}
                 </section>
                 <section class="oswm-snapshot-analysis-block oswm-snapshot-chart-block">
-                    <h2>Theme</h2>
-                    <p class="oswm-snapshot-theme-name">${escapeHtml(theme.label)}</p>
-                    ${renderCharts(summary, theme)}
+                    <h2>${escapeHtml(i18n.t("theme"))}</h2>
+                    <p class="oswm-snapshot-theme-name">${escapeHtml(themeLabel)}</p>
+                    ${renderCharts(summary, theme, i18n)}
                 </section>
                 <section class="oswm-snapshot-analysis-block oswm-snapshot-legend">
-                    <h2>Legend</h2>
-                    ${renderLegend(summary, theme)}
+                    <h2>${escapeHtml(i18n.t("legend"))}</h2>
+                    ${renderLegend(summary, theme, i18n)}
                 </section>
                 <div class="oswm-snapshot-author-slot">
                     ${authorPanelMarkup(authorTitle, authorContent)}
@@ -378,7 +428,7 @@ function sheetMarkup({
         </div>
         <footer>
             <span>${escapeHtml(sourceNote)}</span>
-            <span>Data © OpenStreetMap contributors · Basemap © CARTO · OpenSidewalkMap</span>
+            <span>${escapeHtml(i18n.t("attribution"))}</span>
         </footer>
     </article>`;
 }
@@ -390,6 +440,9 @@ export class SnapshotComposer {
         this.getActiveStyleKey = options.getActiveStyleKey || (() => "footway_categories");
         this.root = null;
         this.summaryCache = null;
+        this.i18n = createI18n(DEFAULT_LOCALE);
+        this.lastRenderContext = null;
+        this.statusKey = null;
         this.renderToken = 0;
         this.keyHandler = (event) => {
             if (event.key === "Escape") this.close();
@@ -398,6 +451,9 @@ export class SnapshotComposer {
 
     build() {
         if (this.root) return;
+        const localeOptions = SUPPORTED_LOCALES.map((locale) => (
+            `<option value="${escapeHtml(locale.code)}" lang="${escapeHtml(locale.code)}" dir="${escapeHtml(locale.direction)}">${escapeHtml(locale.label)}</option>`
+        )).join("");
         this.root = document.createElement("div");
         this.root.className = "oswm-snapshot-backdrop is-hidden";
         this.root.setAttribute("role", "dialog");
@@ -407,37 +463,45 @@ export class SnapshotComposer {
             <section class="oswm-snapshot-modal">
                 <header class="oswm-snapshot-modal-header">
                     <div>
-                        <p>Printable Webmap snapshot</p>
-                        <h2 id="oswm-snapshot-dialog-title">Create scrutiny map</h2>
+                        <p data-i18n="printableSnapshot">Printable Webmap snapshot</p>
+                        <h2 id="oswm-snapshot-dialog-title" data-i18n="createScrutinyMap">Create scrutiny map</h2>
                     </div>
-                    <button type="button" class="oswm-snapshot-close" aria-label="Close snapshot composer">×</button>
+                    <button type="button" class="oswm-snapshot-close" aria-label="Close snapshot composer" data-i18n-aria-label="closeComposer">×</button>
                 </header>
                 <form class="oswm-snapshot-options" onsubmit="return false">
-                    <label>Title<input name="title" type="text" maxlength="100"></label>
-                    <label>Scope<select name="scope"><option value="viewport">Current viewport</option><option value="node">Whole node</option></select></label>
-                    <span class="oswm-snapshot-format">A4 · Landscape · North-up</span>
-                    <button type="button" data-action="update">Update preview</button>
+                    <label><span data-i18n="title">Title</span><input name="title" type="text" maxlength="100"></label>
+                    <div class="oswm-snapshot-selector-pair">
+                        <label><span data-i18n="scope">Scope</span><select name="scope"><option value="viewport" data-i18n="currentViewport">Current viewport</option><option value="node" data-i18n="wholeNode">Whole node</option></select></label>
+                        <label><span data-i18n="language">Language</span><select name="locale">${localeOptions}</select></label>
+                    </div>
+                    <span class="oswm-snapshot-format" data-i18n="formatA4">A4 · Landscape · North-up</span>
+                    <button type="button" data-action="update" data-i18n="updatePreview">Update preview</button>
                     <details class="oswm-snapshot-extra-options">
-                        <summary>Optional author panel</summary>
+                        <summary data-i18n="optionalAuthorPanel">Optional author panel</summary>
                         <div class="oswm-snapshot-extra-fields">
-                            <label>Panel title<input name="author-title" type="text" maxlength="80" placeholder="e.g. Field notes"></label>
-                            <label>Text or safe HTML<textarea name="author-content" rows="3" maxlength="4000" placeholder="Comments, interpretation or extra facts…"></textarea></label>
+                            <label><span data-i18n="panelTitle">Panel title</span><input name="author-title" type="text" maxlength="80" placeholder="e.g. Field notes" data-i18n-placeholder="panelTitlePlaceholder"></label>
+                            <label><span data-i18n="textOrSafeHtml">Text or safe HTML</span><textarea name="author-content" rows="3" maxlength="4000" placeholder="Comments, interpretation or extra facts…" data-i18n-placeholder="authorContentPlaceholder"></textarea></label>
                         </div>
                     </details>
                 </form>
                 <div class="oswm-snapshot-status" role="status" aria-live="polite"></div>
                 <main class="oswm-snapshot-preview"></main>
                 <footer class="oswm-snapshot-actions">
-                    <button type="button" data-action="cancel" class="secondary">Cancel</button>
-                    <button type="button" data-action="print" disabled>Print / Save as PDF</button>
+                    <button type="button" data-action="cancel" class="secondary" data-i18n="cancel">Cancel</button>
+                    <button type="button" data-action="print" data-i18n="printSavePdf" disabled>Print / Save as PDF</button>
                 </footer>
             </section>`;
         document.body.appendChild(this.root);
+        this.root.querySelector('[name="locale"]').value = this.i18n.locale;
+        this.applyTranslations();
         this.root.querySelector(".oswm-snapshot-close").addEventListener("click", () => this.close());
         this.root.querySelector('[data-action="cancel"]').addEventListener("click", () => this.close());
         this.root.querySelector('[data-action="update"]').addEventListener("click", () => this.updatePreview());
         this.root.querySelector('[data-action="print"]').addEventListener("click", () => this.print());
         this.root.querySelector('[name="scope"]').addEventListener("change", () => this.updatePreview());
+        this.root.querySelector('[name="locale"]').addEventListener("change", (event) => {
+            this.changeLocale(event.target.value);
+        });
         this.root.querySelector('[name="title"]').addEventListener("input", (event) => {
             const heading = this.root.querySelector(".oswm-snapshot-print-sheet h1");
             if (heading) heading.textContent = event.target.value || this.defaultTitle();
@@ -448,6 +512,42 @@ export class SnapshotComposer {
                 () => this.updateAuthorPanel(),
             );
         });
+    }
+
+    applyTranslations() {
+        if (!this.root) return;
+        this.root.lang = this.i18n.locale;
+        this.root.dir = this.i18n.direction;
+        this.root.querySelectorAll("[data-i18n]").forEach((element) => {
+            element.textContent = this.i18n.t(element.dataset.i18n);
+        });
+        this.root.querySelectorAll("[data-i18n-placeholder]").forEach((element) => {
+            element.placeholder = this.i18n.t(element.dataset.i18nPlaceholder);
+        });
+        this.root.querySelectorAll("[data-i18n-aria-label]").forEach((element) => {
+            element.setAttribute("aria-label", this.i18n.t(element.dataset.i18nAriaLabel));
+        });
+        if (this.statusKey) {
+            this.root.querySelector(".oswm-snapshot-status").textContent = this.i18n.t(this.statusKey);
+        }
+    }
+
+    setStatus(key) {
+        this.statusKey = key;
+        const status = this.root?.querySelector(".oswm-snapshot-status");
+        if (status) status.textContent = this.i18n.t(key);
+    }
+
+    changeLocale(locale) {
+        const previousDefaultTitle = this.defaultTitle();
+        const titleInput = this.root.querySelector('[name="title"]');
+        const shouldLocalizeTitle = !titleInput.value.trim()
+            || titleInput.value === previousDefaultTitle;
+        this.i18n = createI18n(locale);
+        this.root.querySelector('[name="locale"]').value = this.i18n.locale;
+        if (shouldLocalizeTitle) titleInput.value = this.defaultTitle();
+        this.applyTranslations();
+        this.renderLastSheet();
     }
 
     activeTheme() {
@@ -467,7 +567,23 @@ export class SnapshotComposer {
     }
 
     defaultTitle() {
-        return `${this.activeTheme().label} — scrutiny map`;
+        const theme = this.activeTheme();
+        return this.i18n.t("defaultTitle", {
+            theme: localizedThemeLabel(theme, this.i18n),
+        });
+    }
+
+    renderLastSheet() {
+        if (!this.lastRenderContext) return false;
+        const preview = this.root.querySelector(".oswm-snapshot-preview");
+        preview.innerHTML = renderSnapshotSheet({
+            ...this.lastRenderContext,
+            title: this.root.querySelector('[name="title"]').value || this.defaultTitle(),
+            authorTitle: this.root.querySelector('[name="author-title"]').value,
+            authorContent: this.root.querySelector('[name="author-content"]').value,
+            i18n: this.i18n,
+        });
+        return true;
     }
 
     updateAuthorPanel() {
@@ -519,14 +635,14 @@ export class SnapshotComposer {
     async updatePreview() {
         if (!this.root || this.root.classList.contains("is-hidden")) return;
         const token = ++this.renderToken;
-        const status = this.root.querySelector(".oswm-snapshot-status");
         const preview = this.root.querySelector(".oswm-snapshot-preview");
         const printButton = this.root.querySelector('[data-action="print"]');
         const updateButton = this.root.querySelector('[data-action="update"]');
+        this.lastRenderContext = null;
         printButton.disabled = true;
         updateButton.disabled = true;
-        status.textContent = "Preparing statistics and high-resolution map…";
-        preview.innerHTML = '<div class="oswm-snapshot-loading">Rendering preview…</div>';
+        this.setStatus("preparing");
+        preview.innerHTML = `<div class="oswm-snapshot-loading" data-i18n="renderingPreview">${escapeHtml(this.i18n.t("renderingPreview"))}</div>`;
 
         try {
             await waitForIdle(this.map, 15000);
@@ -542,27 +658,22 @@ export class SnapshotComposer {
             }
             const capture = await captureMap(this.map, bounds);
             if (token !== this.renderToken) return;
-            const title = this.root.querySelector('[name="title"]').value || this.defaultTitle();
-            const authorTitle = this.root.querySelector('[name="author-title"]').value;
-            const authorContent = this.root.querySelector('[name="author-content"]').value;
-            preview.innerHTML = sheetMarkup({
-                title,
+            this.lastRenderContext = {
                 nodeName: this.params.snapshot?.node_name || "OSWM node",
                 theme,
                 summary,
                 scope,
                 bounds,
                 capture,
-                generatedAt,
-                authorTitle,
-                authorContent,
-            });
-            status.textContent = capture.warning || "Preview ready. Unknown values are reported separately from diversity.";
+                generatedAt: generatedAt || new Date().toISOString(),
+            };
+            this.renderLastSheet();
+            this.setStatus(capture.warningCode || "ready");
             printButton.disabled = false;
         } catch (error) {
             if (token !== this.renderToken) return;
-            preview.innerHTML = `<div class="oswm-snapshot-error"><strong>Snapshot could not be prepared.</strong><p>${escapeHtml(error.message)}</p></div>`;
-            status.textContent = "Rendering failed; no blank document will be printed.";
+            preview.innerHTML = `<div class="oswm-snapshot-error"><strong data-i18n="snapshotCouldNotBePrepared">${escapeHtml(this.i18n.t("snapshotCouldNotBePrepared"))}</strong><p>${escapeHtml(error.message)}</p></div>`;
+            this.setStatus("renderingFailed");
         } finally {
             if (token === this.renderToken) updateButton.disabled = false;
         }

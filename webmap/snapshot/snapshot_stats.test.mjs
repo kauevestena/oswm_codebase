@@ -12,10 +12,19 @@ import {
 } from "./snapshot_stats.js";
 import {
     computeScaleBar,
+    formatScaleLabel,
     normalizeAuthorPanel,
     normalizeBounds,
+    renderSnapshotSheet,
+    SnapshotComposer,
     stripRasterBasemap,
 } from "./snapshot_composer.js";
+import {
+    createI18n,
+    DEFAULT_LOCALE,
+    resolveLocale,
+    SUPPORTED_LOCALES,
+} from "./snapshot_i18n.js";
 
 
 function feature(sourceLayer, id, value, element = "way") {
@@ -167,4 +176,145 @@ test("optional author panel is omitted unless title or content is present", () =
         content: "<strong>Check</strong>",
         visible: true,
     });
+});
+
+test("snapshot locales are explicit, English-first and safely fall back to English", () => {
+    assert.equal(DEFAULT_LOCALE, "en");
+    assert.deepEqual(
+        SUPPORTED_LOCALES.map((locale) => locale.code),
+        ["en", "pt-BR", "es", "it", "fr", "de", "zh-CN", "ar"],
+    );
+    assert.equal(resolveLocale("unsupported"), "en");
+    assert.equal(createI18n("unsupported").t("language"), "Language");
+});
+
+test("translations include localized theme labels and Arabic RTL metadata", () => {
+    const portuguese = createI18n("pt-BR");
+    assert.equal(portuguese.t("scrutinyFacts"), "Fatos para escrutínio");
+    assert.equal(portuguese.themeLabel("surface", "Surface"), "Revestimento");
+
+    const arabic = createI18n("ar");
+    assert.equal(arabic.locale, "ar");
+    assert.equal(arabic.direction, "rtl");
+    assert.notEqual(arabic.t("legend"), "Legend");
+});
+
+test("every non-English locale translates the core composer and report labels", () => {
+    const english = createI18n("en");
+    const coreKeys = [
+        "createScrutinyMap",
+        "scope",
+        "printSavePdf",
+        "scrutinyFacts",
+        "legend",
+    ];
+    for (const { code } of SUPPORTED_LOCALES.slice(1)) {
+        const locale = createI18n(code);
+        for (const key of coreKeys) {
+            assert.notEqual(locale.t(key), english.t(key), `${code} must translate ${key}`);
+        }
+    }
+});
+
+test("localizing chart labels never translates source data values", () => {
+    const summary = summarizeCategoricalValues([
+        "asphalt",
+        "asphalt",
+        "paving_stones",
+        "?",
+    ]);
+    const portuguese = createI18n("pt-BR");
+    const rows = categoricalChartRows(summary, {
+        unknownLabel: portuguese.t("unknownMissing"),
+    });
+
+    assert.ok(rows.some((row) => row.value === "asphalt"));
+    assert.ok(rows.some((row) => row.value === "paving_stones"));
+    assert.ok(rows.some((row) => row.value === "Desconhecido / ausente"));
+    assert.ok(rows.filter((row) => row.dataValue).every((row) => (
+        row.value === "asphalt" || row.value === "paving_stones"
+    )));
+});
+
+test("scale units and numbers follow the selected output locale", () => {
+    const arabic = createI18n("ar");
+    assert.match(formatScaleLabel({ meters: 2000 }, arabic), /كم/);
+    assert.equal(formatScaleLabel({ meters: 2000 }, createI18n("en")), "2 km");
+});
+
+test("the localized printable sheet preserves English category values", () => {
+    const summary = summarizeCategoricalValues(["asphalt", "paving_stones", "?"]);
+    const theme = {
+        id: "surface",
+        label: "Surface",
+        unknown_color: "#636363",
+    };
+    const base = {
+        title: "Field audit",
+        nodeName: "Example node",
+        theme,
+        summary,
+        scope: "viewport",
+        bounds: [[-46.7, -23.6], [-46.6, -23.5]],
+        capture: {
+            imageUrl: "data:image/png;base64,example",
+            scale: { meters: 200, widthPixels: 120 },
+        },
+        generatedAt: "2026-07-17T12:00:00Z",
+        authorTitle: "",
+        authorContent: "",
+    };
+
+    const portuguese = renderSnapshotSheet({ ...base, i18n: createI18n("pt-BR") });
+    assert.match(portuguese, /lang="pt-BR" dir="ltr"/);
+    assert.match(portuguese, /Fatos para escrutínio/);
+    assert.match(portuguese, /<h2>Tema<\/h2>/);
+    assert.match(portuguese, /asphalt/);
+    assert.match(portuguese, /paving_stones/);
+    assert.doesNotMatch(portuguese, /asfalto/);
+
+    const arabic = renderSnapshotSheet({ ...base, i18n: createI18n("ar") });
+    assert.match(arabic, /lang="ar" dir="rtl"/);
+    assert.match(arabic, /asphalt/);
+});
+
+test("changing locale reuses the preview and preserves a custom title", () => {
+    const titleInput = { value: "" };
+    const localeSelect = { value: "en" };
+    const status = { textContent: "" };
+    const fields = new Map([
+        ['[name="title"]', titleInput],
+        ['[name="locale"]', localeSelect],
+        [".oswm-snapshot-status", status],
+    ]);
+    const composer = new SnapshotComposer({}, {
+        snapshot: {
+            themes: {
+                surface: { id: "surface", kind: "categorical", label: "Surface" },
+            },
+        },
+    }, { getActiveStyleKey: () => "surface" });
+    composer.root = {
+        lang: "",
+        dir: "",
+        querySelector: (selector) => fields.get(selector),
+        querySelectorAll: () => [],
+    };
+    let reusedPreview = 0;
+    composer.renderLastSheet = () => {
+        reusedPreview += 1;
+        return true;
+    };
+
+    titleInput.value = composer.defaultTitle();
+    composer.changeLocale("pt-BR");
+    assert.equal(localeSelect.value, "pt-BR");
+    assert.equal(titleInput.value, "Revestimento — mapa de escrutínio");
+    assert.equal(reusedPreview, 1);
+
+    titleInput.value = "Author-defined title";
+    composer.changeLocale("ar");
+    assert.equal(titleInput.value, "Author-defined title");
+    assert.equal(composer.root.dir, "rtl");
+    assert.equal(reusedPreview, 2);
 });
