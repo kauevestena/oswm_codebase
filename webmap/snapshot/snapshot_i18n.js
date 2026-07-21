@@ -72,6 +72,7 @@ const ENGLISH = {
     northShort: "N",
     unitKm: "km",
     unitM: "m",
+    qrCodeAlt: "Scan to open this webmap",
 };
 
 const MESSAGES = {
@@ -137,6 +138,7 @@ const MESSAGES = {
         northShort: "N",
         unitKm: "km",
         unitM: "m",
+        qrCodeAlt: "Escaneie para abrir este webmapa",
     },
     es: {
         printableSnapshot: "Instantánea imprimible del mapa web",
@@ -199,6 +201,7 @@ const MESSAGES = {
         northShort: "N",
         unitKm: "km",
         unitM: "m",
+        qrCodeAlt: "Escanee para abrir este mapa web",
     },
     it: {
         printableSnapshot: "Istantanea stampabile della mappa web",
@@ -261,6 +264,7 @@ const MESSAGES = {
         northShort: "N",
         unitKm: "km",
         unitM: "m",
+        qrCodeAlt: "Scansiona per aprire questa mappa web",
     },
     fr: {
         printableSnapshot: "Capture imprimable de la carte web",
@@ -323,6 +327,7 @@ const MESSAGES = {
         northShort: "N",
         unitKm: "km",
         unitM: "m",
+        qrCodeAlt: "Scannez pour ouvrir cette carte web",
     },
     de: {
         printableSnapshot: "Druckansicht der Webkarte",
@@ -385,6 +390,7 @@ const MESSAGES = {
         northShort: "N",
         unitKm: "km",
         unitM: "m",
+        qrCodeAlt: "Scannen, um diese Webkarte zu öffnen",
     },
     "zh-CN": {
         printableSnapshot: "可打印的网络地图快照",
@@ -447,6 +453,7 @@ const MESSAGES = {
         northShort: "北",
         unitKm: "千米",
         unitM: "米",
+        qrCodeAlt: "扫码打开此网络地图",
     },
     ar: {
         printableSnapshot: "لقطة خريطة ويب قابلة للطباعة",
@@ -509,6 +516,7 @@ const MESSAGES = {
         northShort: "شمال",
         unitKm: "كم",
         unitM: "م",
+        qrCodeAlt: "امسح ضوئيًّا لفتح هذه الخريطة",
     },
 };
 

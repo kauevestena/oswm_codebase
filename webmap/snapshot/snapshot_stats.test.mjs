@@ -207,6 +207,7 @@ test("every non-English locale translates the core composer and report labels", 
         "printSavePdf",
         "scrutinyFacts",
         "legend",
+        "qrCodeAlt",
     ];
     for (const { code } of SUPPORTED_LOCALES.slice(1)) {
         const locale = createI18n(code);

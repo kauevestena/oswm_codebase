@@ -49,7 +49,7 @@ body.oswm-snapshot-modal-open {
 .oswm-snapshot-modal-header {
     justify-content: space-between;
     color: #fff;
-    background: #172d35;
+    background: #3a4f2e;
 }
 
 .oswm-snapshot-modal-header p,
@@ -58,7 +58,7 @@ body.oswm-snapshot-modal-open {
 }
 
 .oswm-snapshot-modal-header p {
-    color: #b8d4dd;
+    color: #c5d4b3;
     font-size: 12px;
     text-transform: uppercase;
     letter-spacing: .08em;
@@ -223,17 +223,27 @@ body.oswm-snapshot-modal-open {
 
 .oswm-snapshot-sheet-header {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 20px;
-    align-items: end;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 14px;
+    align-items: center;
     min-height: 67px;
-    padding-bottom: 11px;
-    border-bottom: 3px solid #176d83;
+    padding: 6px 14px;
+    border-bottom: 3px solid #4a6b38;
+    background: #3a4f2e;
+    border-radius: 5px 5px 0 0;
+}
+
+.oswm-snapshot-header-logo {
+    display: block;
+    height: 100%;
+    max-height: 55px;
+    width: auto;
+    object-fit: contain;
 }
 
 .oswm-snapshot-kicker {
     margin: 0 0 3px;
-    color: #176d83;
+    color: #c5d4b3;
     font-size: 11px;
     font-weight: 800;
     text-transform: uppercase;
@@ -242,6 +252,7 @@ body.oswm-snapshot-modal-open {
 
 .oswm-snapshot-sheet-header h1 {
     margin: 0;
+    color: #f5f5ef;
     font-size: clamp(22px, 2.2vw, 32px);
     line-height: 1.05;
 }
@@ -251,6 +262,7 @@ body.oswm-snapshot-modal-open {
     grid-template-columns: repeat(2, auto);
     gap: 3px 18px;
     margin: 0;
+    color: #e8e8de;
     font-size: 10px;
 }
 
@@ -260,7 +272,7 @@ body.oswm-snapshot-modal-open {
 }
 
 .oswm-snapshot-sheet-header dt {
-    color: #60747c;
+    color: #c5d4b3;
     font-weight: 700;
 }
 
@@ -288,6 +300,17 @@ body.oswm-snapshot-modal-open {
     overflow: hidden;
     border: 1px solid #73858c;
     background: #e9eef0;
+}
+
+.oswm-snapshot-qr {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    padding: 5px;
+    background: rgba(255, 255, 255, .92);
+    border-radius: 4px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, .25);
+    line-height: 0;
 }
 
 .oswm-snapshot-map-image {

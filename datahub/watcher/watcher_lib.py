@@ -261,71 +261,117 @@ def any_layer_needs_update(**kwargs) -> bool:
 # RSS and Dashboard Publishing
 # ---------------------------------------------------------------------------
 
+def is_oswm_feature(elem_type: str, tags: dict) -> str | None:
+    # 1. Sidewalks
+    if elem_type == "way" and tags.get("footway") == "sidewalk":
+        return "sidewalks"
+    
+    # 2. Crossings
+    if elem_type == "way" and tags.get("footway") == "crossing":
+        return "crossings"
+    
+    # 3. Kerbs
+    if elem_type == "node" and (tags.get("barrier") == "kerb" or "kerb" in tags):
+        return "kerbs"
+    
+    # 4. Other Footways
+    if elem_type == "way":
+        highway = tags.get("highway")
+        foot = tags.get("foot")
+        footway = tags.get("footway")
+        
+        is_highway = highway in {"footway", "steps", "living_street", "pedestrian", "track", "path"}
+        is_foot = foot in {"yes", "designated", "permissive", "destination"}
+        is_footway = footway in {"alley", "path", "yes"}
+        
+        if is_highway or is_foot or is_footway:
+            return "other_footways"
+            
+    return None
+
+
 def get_changeset_activity(bboxes: str, end_dt: datetime) -> dict:
     """
     Fetch changeset activity for:
     - Yesterday: end_dt - 1 day to end_dt (all contribution types)
     - 120 Days deletions: end_dt - 120 days to end_dt (deletions only)
     """
-    # 1. Yesterday's changesets
-    yesterday_start = end_dt - timedelta(days=1)
-    time_yesterday = f"{yesterday_start.strftime('%Y-%m-%dT%H:%M:%SZ')},{end_dt.strftime('%Y-%m-%dT%H:%M:%SZ')}"
+    import xml.etree.ElementTree as ET
+
+    # 1. Yesterday's changesets via real-time OSM API
+    now_dt = datetime.now(timezone.utc)
+    real_end_dt = now_dt.replace(hour=0, minute=0, second=0, microsecond=0)
+    real_yesterday_start = real_end_dt - timedelta(days=1)
+    time_yesterday = f"{real_yesterday_start.strftime('%Y-%m-%dT%H:%M:%SZ')},{real_end_dt.strftime('%Y-%m-%dT%H:%M:%SZ')}"
     
-    print(f"[watcher] Fetching yesterday's changesets ({yesterday_start.strftime('%Y-%m-%d')} to {end_dt.strftime('%Y-%m-%d')}) ...")
+    print(f"[watcher] Fetching yesterday's changesets via OSM API ({real_yesterday_start.strftime('%Y-%m-%d')} to {real_end_dt.strftime('%Y-%m-%d')}) ...")
     yesterday_changesets = []
     
     try:
-        resp = requests.post(
-            f"{OHSOME_API_BASE}/contributions/geometry",
-            data={
-                "bboxes": bboxes,
-                "filter": COMBINED_FILTER,
-                "time": time_yesterday,
-                "properties": "metadata",
-            },
-            timeout=90,
-        )
+        url = f"https://api.openstreetmap.org/api/0.6/changesets?bbox={bboxes}&time={time_yesterday}"
+        resp = requests.get(url, timeout=30)
         resp.raise_for_status()
-        features = resp.json().get("features", [])
         
-        # Group by changeset ID
-        by_cs = {}
-        for f in features:
-            props = f.get("properties", {})
-            cs_id = props.get("@contributionChangesetId")
-            if not cs_id:
-                continue
-            if cs_id not in by_cs:
-                by_cs[cs_id] = {"additions": 0, "modifications": 0, "deletions": 0, "timestamp": props.get("@timestamp")}
+        root = ET.fromstring(resp.content)
+        for cs in root.findall("changeset"):
+            cs_id = int(cs.get("id"))
+            user = cs.get("user", "Unknown")
+            uid = cs.get("uid")
+            uid = int(uid) if uid else None
+            created_at = cs.get("created_at")
+            changes_count = int(cs.get("changes_count", 0))
             
-            if props.get("@creation"):
-                by_cs[cs_id]["additions"] += 1
-            elif props.get("@deletion"):
-                by_cs[cs_id]["deletions"] += 1
-            elif props.get("@tagChange") or props.get("@geometryChange"):
-                by_cs[cs_id]["modifications"] += 1
+            if changes_count == 0:
+                continue
                 
-        for cs_id, counts in by_cs.items():
-            meta = _fetch_changeset_meta(cs_id)
-            if meta:
-                yesterday_changesets.append({
-                    "id": cs_id,
-                    "user": meta["user"],
-                    "uid": meta["uid"],
-                    "comment": meta["comment"],
-                    "created_at": meta["created_at"],
-                    "changes_count": meta["changes_count"],
-                    "additions": counts["additions"],
-                    "modifications": counts["modifications"],
-                    "deletions": counts["deletions"],
-                })
-        
-        # Sort by total contributions
+            tags = {tag.get("k"): tag.get("v") for tag in cs.findall("tag")}
+            comment = tags.get("comment", "")
+            
+            # Download osmChange diff to count OSWM edits
+            osc_url = f"https://api.openstreetmap.org/api/0.6/changeset/{cs_id}/download"
+            try:
+                osc_resp = requests.get(osc_url, timeout=30)
+                osc_resp.raise_for_status()
+                osc_root = ET.fromstring(osc_resp.content)
+                
+                counts = {"additions": 0, "modifications": 0, "deletions": 0}
+                for action_block in osc_root:
+                    action = action_block.tag # create, modify, delete
+                    for elem in action_block:
+                        elem_type = elem.tag # node, way, relation
+                        elem_tags = {tag.get("k"): tag.get("v") for tag in elem.findall("tag")}
+                        
+                        match = is_oswm_feature(elem_type, elem_tags)
+                        if match:
+                            if action == "create":
+                                counts["additions"] += 1
+                            elif action == "modify":
+                                counts["modifications"] += 1
+                            elif action == "delete":
+                                counts["deletions"] += 1
+                
+                # Only include changesets that actually affected OSWM features
+                if counts["additions"] > 0 or counts["modifications"] > 0 or counts["deletions"] > 0:
+                    yesterday_changesets.append({
+                        "id": cs_id,
+                        "user": user,
+                        "uid": uid,
+                        "comment": comment,
+                        "created_at": created_at,
+                        "changes_count": changes_count,
+                        "additions": counts["additions"],
+                        "modifications": counts["modifications"],
+                        "deletions": counts["deletions"]
+                    })
+            except Exception as e:
+                print(f"[watcher] Error processing osmChange for changeset {cs_id}: {e}")
+                
+        # Sort by total OSWM contributions
         yesterday_changesets.sort(key=lambda x: (x["additions"] + x["modifications"] + x["deletions"]), reverse=True)
     except Exception as e:
-        print(f"[watcher] Failed to fetch yesterday's changesets: {e}")
+        print(f"[watcher] Failed to fetch yesterday's changesets from OSM API: {e}")
         
-    # 2. 120 Days Deletions Changesets
+    # 2. 120 Days Deletions Changesets (using OHSOME)
     start_120 = end_dt - timedelta(days=120)
     time_120 = f"{start_120.strftime('%Y-%m-%dT%H:%M:%SZ')},{end_dt.strftime('%Y-%m-%dT%H:%M:%SZ')}"
     print(f"[watcher] Fetching 120 days deletions changesets ({start_120.strftime('%Y-%m-%d')} to {end_dt.strftime('%Y-%m-%d')}) ...")

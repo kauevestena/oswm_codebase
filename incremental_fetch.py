@@ -60,10 +60,36 @@ def _parse_iso_timestamp(ts_str: str) -> datetime | None:
     except Exception:
         return None
 
+def _ohsome_max_timestamp() -> datetime | None:
+    """Fetch the maximum timestamp available in the OHSOME database."""
+    try:
+        resp = requests.get(f"{OHSOME_API_BASE}/metadata", timeout=10)
+        resp.raise_for_status()
+        meta = resp.json()
+        to_ts = meta.get("extractRegion", {}).get("temporalExtent", {}).get("toTimestamp")
+        if to_ts:
+            return _parse_iso_timestamp(to_ts)
+    except Exception as e:
+        print(f"[incremental] Failed to fetch OHSOME metadata: {e}")
+    return None
+
+
 def fetch_incremental_data(start_dt: datetime, end_dt: datetime = None, is_simulation: bool = False):
     """
     Fetches the incremental updates from OHSOME and updates the local parquet files.
     """
+    from datetime import timedelta
+    
+    # Check if OHSOME is lagging behind yesterday
+    max_ts = _ohsome_max_timestamp()
+    now_dt = datetime.now(tz=timezone.utc)
+    yesterday_start = now_dt.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=1)
+    
+    if max_ts:
+        if max_ts < yesterday_start:
+            print(f"[incremental] OHSOME is lagging (temporal extent: {max_ts.isoformat()}, yesterday: {yesterday_start.isoformat()}). Aborting incremental fetch to trigger full download fallback.")
+            return False
+
     if end_dt is None:
         end_dt = datetime.now(tz=timezone.utc)
         

@@ -1,6 +1,9 @@
 import { collectViewportStats } from "./snapshot_stats.js";
 import { renderSummaryChart } from "./snapshot_charts.js";
 import { createI18n, DEFAULT_LOCALE, SUPPORTED_LOCALES } from "./snapshot_i18n.js";
+import { qrcodeSvg } from "./snapshot_qrcode.js";
+
+const LOGO_PATH = "oswm_codebase/assets/page_logo_clean.png";
 
 const EXPORT_WIDTH = 1500;
 const EXPORT_HEIGHT = 930;
@@ -376,14 +379,23 @@ export function renderSnapshotSheet({
     authorTitle,
     authorContent,
     i18n,
+    logoDataUrl,
+    webmapUrl,
 }) {
     const scopeLabel = i18n.t(scope === "node" ? "wholeNode" : "currentViewport");
     const timestamp = i18n.formatDate(generatedAt || new Date());
     const sourceNote = i18n.t(scope === "node" ? "exactNodeSource" : "viewportSource");
     const themeLabel = localizedThemeLabel(theme, i18n);
     const warning = capture.warningCode ? i18n.t(capture.warningCode) : "";
+    const logoMarkup = logoDataUrl
+        ? `<img src="${logoDataUrl}" alt="OpenSidewalkMap" class="oswm-snapshot-header-logo">`
+        : "";
+    const qrMarkup = webmapUrl
+        ? `<div class="oswm-snapshot-qr" title="${escapeHtml(i18n.t("qrCodeAlt"))}">${qrcodeSvg(webmapUrl, { size: 72 })}</div>`
+        : "";
     return `<article class="oswm-snapshot-print-sheet" lang="${escapeHtml(i18n.locale)}" dir="${escapeHtml(i18n.direction)}">
         <header class="oswm-snapshot-sheet-header">
+            ${logoMarkup}
             <div>
                 <p class="oswm-snapshot-kicker">${escapeHtml(i18n.t("scrutinyMapKicker"))}</p>
                 <h1 dir="auto">${escapeHtml(title)}</h1>
@@ -399,6 +411,7 @@ export function renderSnapshotSheet({
             <section class="oswm-snapshot-map-column">
                 <div class="oswm-snapshot-map-frame">
                     <img src="${capture.imageUrl}" alt="${escapeHtml(i18n.t("mapAlt"))}" class="oswm-snapshot-map-image">
+                    ${qrMarkup}
                     <div class="oswm-snapshot-north" aria-label="${escapeHtml(i18n.t("northLabel"))}"><span>▲</span>${escapeHtml(i18n.t("north"))}</div>
                     <div class="oswm-snapshot-scale" style="--scale-width:${capture.scale.widthPixels}px">
                         <span></span><b>${escapeHtml(formatScaleLabel(capture.scale, i18n))}</b>
@@ -440,6 +453,7 @@ export class SnapshotComposer {
         this.getActiveStyleKey = options.getActiveStyleKey || (() => "footway_categories");
         this.root = null;
         this.summaryCache = null;
+        this.logoDataUrl = null;
         this.i18n = createI18n(DEFAULT_LOCALE);
         this.lastRenderContext = null;
         this.statusKey = null;
@@ -447,6 +461,42 @@ export class SnapshotComposer {
         this.keyHandler = (event) => {
             if (event.key === "Escape") this.close();
         };
+    }
+
+    /** Preload the project banner as a data-URL so it renders in print/PDF. */
+    async preloadLogo() {
+        if (this.logoDataUrl) return;
+        try {
+            const response = await fetch(LOGO_PATH);
+            if (!response.ok) return;
+            const blob = await response.blob();
+            this.logoDataUrl = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.readAsDataURL(blob);
+            });
+        } catch (_error) {
+            // Logo is optional — silently degrade if fetch fails.
+        }
+    }
+
+    /** Build the full webmap URL including the current MapLibre hash. */
+    webmapUrl() {
+        const base = this.params.node_url || "";
+        // The webmap is always at map.html relative to the node root.
+        const mapPage = base.endsWith("/") ? `${base}map.html` : `${base}/map.html`;
+        // Capture the current hash from the live browser URL if it has the
+        // MapLibre pattern (#map=zoom/lat/lng), otherwise just use the page URL.
+        const hash = window.location.hash;
+        if (/^#map=/.test(hash)) return mapPage + hash;
+        // Fallback: construct from current map state.
+        try {
+            const center = this.map.getCenter();
+            const zoom = Math.round(this.map.getZoom() * 10) / 10;
+            return `${mapPage}#map=${zoom}/${center.lat.toFixed(5)}/${center.lng.toFixed(5)}`;
+        } catch (_error) {
+            return mapPage;
+        }
     }
 
     build() {
@@ -582,6 +632,8 @@ export class SnapshotComposer {
             authorTitle: this.root.querySelector('[name="author-title"]').value,
             authorContent: this.root.querySelector('[name="author-content"]').value,
             i18n: this.i18n,
+            logoDataUrl: this.logoDataUrl,
+            webmapUrl: this.webmapUrl(),
         });
         return true;
     }
@@ -597,6 +649,7 @@ export class SnapshotComposer {
 
     async open() {
         this.build();
+        this.preloadLogo(); // fire-and-forget; logo arrives before print.
         this.root.classList.remove("is-hidden");
         document.body.classList.add("oswm-snapshot-modal-open");
         document.addEventListener("keydown", this.keyHandler);
@@ -666,6 +719,8 @@ export class SnapshotComposer {
                 bounds,
                 capture,
                 generatedAt: generatedAt || new Date().toISOString(),
+                logoDataUrl: this.logoDataUrl,
+                webmapUrl: this.webmapUrl(),
             };
             this.renderLastSheet();
             this.setStatus(capture.warningCode || "ready");
