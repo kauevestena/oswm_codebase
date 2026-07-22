@@ -2,8 +2,7 @@ import { collectViewportStats } from "./snapshot_stats.js";
 import { renderSummaryChart } from "./snapshot_charts.js";
 import { createI18n, DEFAULT_LOCALE, SUPPORTED_LOCALES } from "./snapshot_i18n.js";
 import { qrcodeSvg } from "./snapshot_qrcode.js";
-
-const LOGO_PATH = "oswm_codebase/assets/page_logo_clean.png";
+import { brandingAssetUrl } from "../../assets/branding/branding.js";
 
 const EXPORT_WIDTH = 1500;
 const EXPORT_HEIGHT = 930;
@@ -518,7 +517,7 @@ export class SnapshotComposer {
     async preloadLogo() {
         if (this.logoDataUrl) return;
         try {
-            const response = await fetch(LOGO_PATH);
+            const response = await fetch(await brandingAssetUrl("logos.page_clean"));
             if (!response.ok) return;
             const blob = await response.blob();
             this.logoDataUrl = await new Promise((resolve) => {

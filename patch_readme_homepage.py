@@ -1,5 +1,6 @@
 from functions import *
 from modules_info import *
+from branding import branding_asset_url
 import re
 
 
@@ -70,6 +71,22 @@ triads_for_simple_replacements = [
 
 for triad in triads_for_simple_replacements:
     triad[2].simple_replace(triad[0], triad[1])
+
+# Compatibility migration for node homepages generated before the branding
+# manifest was introduced. New sources must resolve semantic keys directly.
+legacy_homepage_branding = {
+    "favicon_homepage.png": "favicon",
+    "project_logo.png": "logos.project",
+    "project_logo_100px.png": "logos.project_100px",
+}
+for legacy_filename, semantic_key in legacy_homepage_branding.items():
+    legacy_pattern = re.compile(
+        rf'(?:https?://[^"\']+/)?(?:oswm_codebase/)?assets/(?:homepage/)?{re.escape(legacy_filename)}'
+    )
+    files_obj_dict["homepage"].content = legacy_pattern.sub(
+        branding_asset_url(semantic_key),
+        files_obj_dict["homepage"].content,
+    )
 
 # print(readme_as_str)
 
