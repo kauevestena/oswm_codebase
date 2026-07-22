@@ -8,6 +8,7 @@ import osmnx as ox
 from shapely.geometry import LineString
 import requests
 from oswm_codebase.constants import *
+from oswm_codebase.branding import branding_asset_url
 
 graph_geojson_path = 'osmnx_routing/sample_routing.geojson'
 graph_path = 'osmnx_routing/routing_graph.graphml'
@@ -35,7 +36,12 @@ print('begin')
 
 # STREAMLIT SETUP
 
-st.set_page_config('OSWM Routing','https://kauevestena.github.io/oswm_codebase/assets/homepage/favicon_homepage.png','wide','expanded')
+st.set_page_config(
+    "OSWM Routing",
+    branding_asset_url("favicon", "https://kauevestena.github.io/oswm_codebase"),
+    "wide",
+    "expanded",
+)
 
 
 
