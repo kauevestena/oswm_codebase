@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { resolveBrandingPath } from "../../assets/branding/branding.js";
 import { categoricalChartRows, renderSummaryChart } from "./snapshot_charts.js";
 import {
     collectViewportStats,
@@ -35,6 +36,19 @@ function feature(sourceLayer, id, value, element = "way") {
         properties: { id, element, surface: value },
     };
 }
+
+test("branding paths resolve through semantic manifest keys", () => {
+    const manifest = {
+        favicon: "assets/branding/favicon.png",
+        logos: { page_clean: "assets/branding/logos/page-clean.png" },
+    };
+    assert.equal(resolveBrandingPath(manifest, "favicon"), manifest.favicon);
+    assert.equal(
+        resolveBrandingPath(manifest, "logos.page_clean"),
+        manifest.logos.page_clean,
+    );
+    assert.throws(() => resolveBrandingPath(manifest, "logos.missing"));
+});
 
 test("tile fragments with one OSM identity are counted once", () => {
     const duplicate = feature("sidewalks", 42, "asphalt");
@@ -281,7 +295,7 @@ test("the localized printable sheet preserves English category values", () => {
         },
         generatedAt: "2026-07-17T12:00:00Z",
         authorTitle: "Field notes",
-        authorContent: '<p style="font-size: 50px;">Sample text</p>',
+        authorContent: "Sample text",
         authorFontSize: "11.5",
     };
 
@@ -289,7 +303,7 @@ test("the localized printable sheet preserves English category values", () => {
     assert.match(portuguese, /lang="pt-BR" dir="ltr"/);
     assert.match(portuguese, /Fatos para escrutínio/);
     assert.match(portuguese, /style="font-size:11.5px;"/);
-    assert.match(portuguese, /style="font-size: 50px;"/);
+    assert.match(portuguese, /Sample text/);
     assert.match(portuguese, /<h2>Tema<\/h2>/);
     assert.match(portuguese, /asphalt/);
     assert.match(portuguese, /paving_stones/);

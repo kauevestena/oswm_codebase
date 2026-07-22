@@ -1,6 +1,7 @@
 from dq_funcs import *
 from quality_dicts import *
 from functions import *
+from branding import branding_asset_url
 
 # register providers and the functions:
 PROVIDERS = {
@@ -20,6 +21,8 @@ for provider in PROVIDERS:
     """
 
 topbar = write_dq_topbar(2)
+favicon_url = branding_asset_url("favicon", "../oswm_codebase")
+project_logo_url = branding_asset_url("logos.project", "../oswm_codebase")
 
 
 external_qc_page = f"""<!--
@@ -45,7 +48,7 @@ external_qc_page = f"""<!--
 
 <title>OSWM DQ: Ext. Providers</title>
 
-<link rel="icon" type="image/x-icon" href="../oswm_codebase/assets/favicon_homepage.png">
+<link rel="icon" type="image/x-icon" href="{favicon_url}">
 
 </head>
 
@@ -54,7 +57,7 @@ external_qc_page = f"""<!--
 {topbar}
 
 <main class="dq-container">
-    <h2 style="text-align: center;"><img src="../oswm_codebase/assets/homepage/project_logo.png" alt="OSWM Logo" style="height: 1.5em; vertical-align: middle; margin-right: 15px;">OpenSidewalkMap DQ: External Providers</h2>
+    <h2 style="text-align: center;"><img src="{project_logo_url}" alt="OSWM Logo" style="height: 1.5em; vertical-align: middle; margin-right: 15px;">OpenSidewalkMap DQ: External Providers</h2>
 
     <div style="background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(0, 242, 254, 0.3); border-radius: 12px; padding: 1.5rem; margin: 1.5rem auto; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.15); max-width: 600px;">
         <h3 style="margin-top: 0; color: #00f2fe;">Looking for the OSWM Webmap?</h3>

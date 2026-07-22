@@ -10,6 +10,9 @@ class WebmapWiringTests(unittest.TestCase):
         template = (ROOT / "webmap/webmap_base.html").read_text(encoding="utf8")
 
         self.assertIn("webmap_snapshot.css", template)
+        self.assertIn("assets/branding/branding.js", template)
+        self.assertIn('data-oswm-branding="favicon"', template)
+        self.assertIn('data-oswm-branding="logos.page_dark_clean"', template)
         self.assertIn("import('./oswm_codebase/webmap/snapshot/snapshot_control.js')", template)
         self.assertIn("installSnapshotControl", template)
 
@@ -26,6 +29,7 @@ class WebmapWiringTests(unittest.TestCase):
             composer.index('name="scope"'), composer.index('name="locale"')
         )
         self.assertIn("SUPPORTED_LOCALES", composer)
+        self.assertIn('brandingAssetUrl("logos.page_clean")', composer)
 
         i18n = (ROOT / "webmap/snapshot/snapshot_i18n.js").read_text(
             encoding="utf8"

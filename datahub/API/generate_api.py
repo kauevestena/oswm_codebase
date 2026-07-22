@@ -19,6 +19,7 @@ if dh_dir not in sys.path:
 from config import CITY_NAME, USERNAME, REPO_NAME  # noqa: E402
 from constants import node_homepage_url, api_folder  # noqa: E402
 from functions import ensure_parent_folder  # noqa: E402
+from branding import branding_asset_url  # noqa: E402
 
 
 # Ensure standard libraries are available
@@ -1055,7 +1056,7 @@ def generate_api_html(endpoints):
     <header>
         <div class="header-container">
             <div class="logo-section">
-                <img src="https://kauevestena.github.io/oswm_codebase/assets/homepage/project_logo_100px.png" alt="OSWM Logo">
+                <img src="[PROJECT_LOGO_URL]" alt="OSWM Logo">
                 <h1>OpenSidewalkMap API <span style="font-weight: 300; opacity: 0.8; color: var(--text-main)">| [CITY_NAME]</span></h1>
             </div>
             <div class="nav-buttons">
@@ -1483,6 +1484,7 @@ print(data)</pre>
                       .replace("[USERNAME]", USERNAME)
                       .replace("[REPO_NAME]", REPO_NAME)
                       .replace("[node_homepage_url]", node_homepage_url)
+                      .replace("[PROJECT_LOGO_URL]", branding_asset_url("logos.project_100px", "../../oswm_codebase"))
                       .replace("[endpoints_js]", endpoints_js))
 
     # Save the output file

@@ -9,6 +9,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Turf.js/6.5.0/turf.min.js"></script>
     <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css' />
     <script src='https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js'></script>
+    <script type="module" src="../assets/branding/branding.js"></script>
     <style>
         body {
             margin: 0;
@@ -147,16 +148,15 @@
         }
     </style>
 
-    <link rel="icon" type="image/x-icon"
-        href="https://kauevestena.github.io/opensidewalkmap/assets/favicon_homepage.png">
+    <link rel="icon" type="image/x-icon" data-oswm-branding="favicon">
 </head>
 
 <body>
     <div id="map">
 
         <a href="https://kauevestena.github.io/opensidewalkmap_beta/" id="node_link">
-            <img src="https://kauevestena.github.io/opensidewalkmap_beta/oswm_codebase/assets/page_logo.png"
-                alt="OSWM Page Logo" title="Click for more OSWM Node's Resources!!" class="logo_img responsive"></img>
+            <img data-oswm-branding="logos.page_dark_clean"
+                alt="OSWM Page Logo" title="Click for more OSWM Node's Resources!!" class="logo_img responsive">
         </a>
 
     </div>
