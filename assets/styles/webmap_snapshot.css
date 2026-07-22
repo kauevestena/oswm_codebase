@@ -152,9 +152,14 @@ body.oswm-snapshot-modal-open {
 
 .oswm-snapshot-extra-fields {
     display: grid;
-    grid-template-columns: minmax(180px, .65fr) minmax(300px, 1.35fr);
+    grid-template-columns: minmax(180px, 1fr) auto;
     gap: 12px;
+    align-items: start;
     padding-top: 9px;
+}
+
+.oswm-snapshot-extra-fields .oswm-snapshot-full-width {
+    grid-column: 1 / -1;
 }
 
 .oswm-snapshot-extra-fields label {
@@ -164,10 +169,65 @@ body.oswm-snapshot-modal-open {
 }
 
 .oswm-snapshot-extra-fields input,
+.oswm-snapshot-extra-fields select,
 .oswm-snapshot-extra-fields textarea {
     width: 100%;
     min-height: 34px;
     resize: vertical;
+}
+
+.oswm-snapshot-fontsize-stepper {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.oswm-snapshot-fontsize-stepper input[type="number"] {
+    width: 62px;
+    text-align: center;
+    padding: 4px 6px;
+    font-weight: 700;
+    -moz-appearance: textfield;
+}
+
+.oswm-snapshot-fontsize-stepper input[type="number"]::-webkit-inner-spin-button,
+.oswm-snapshot-fontsize-stepper input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.oswm-fontsize-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 34px;
+    min-height: 34px !important;
+    border: 1px solid #176d83;
+    border-radius: 4px;
+    background: #176d83;
+    color: #fff;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    user-select: none;
+    padding: 0;
+}
+
+.oswm-fontsize-btn:hover {
+    background: #125567;
+    border-color: #125567;
+}
+
+.oswm-fontsize-btn:active {
+    background: #0d3e4b;
+}
+
+.oswm-fontsize-unit {
+    color: #53656d;
+    font-size: 12px;
+    font-weight: 600;
 }
 
 .oswm-snapshot-status {

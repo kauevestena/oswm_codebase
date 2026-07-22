@@ -18,14 +18,51 @@ function escapeHtml(value) {
         .replaceAll("'", "&#039;");
 }
 
-export function normalizeAuthorPanel(title, content) {
+export function normalizeAuthorPanel(title, content, fontSize = "9px") {
     const normalizedTitle = String(title ?? "").trim();
     const normalizedContent = String(content ?? "").trim();
+    let normalizedSize = "9px";
+    if (typeof fontSize === "number" || (typeof fontSize === "string" && !isNaN(parseFloat(fontSize)))) {
+        const parsed = parseFloat(fontSize);
+        const clamped = Math.min(Math.max(parsed, 4), 60);
+        normalizedSize = `${Number(clamped.toFixed(1))}px`;
+    } else {
+        const keywordMap = {
+            small: "8px",
+            normal: "9px",
+            medium: "10.5px",
+            large: "12px",
+            xlarge: "14px",
+        };
+        if (keywordMap[fontSize]) {
+            normalizedSize = keywordMap[fontSize];
+        } else if (typeof fontSize === "string" && /^\d+(\.\d+)?(px|pt|em|rem|%)?$/i.test(fontSize.trim())) {
+            normalizedSize = fontSize.trim();
+        }
+    }
+
+    const contentPx = parseFloat(normalizedSize);
+    let titleSize = "14px";
+    if (!isNaN(contentPx)) {
+        const requiredTitlePx = Math.max(14, contentPx / 0.9);
+        titleSize = `${Number(requiredTitlePx.toFixed(1))}px`;
+    }
+
     return {
         title: normalizedTitle,
         content: normalizedContent,
+        fontSize: normalizedSize,
+        titleFontSize: titleSize,
         visible: Boolean(normalizedTitle || normalizedContent),
     };
+}
+
+function sanitizeStyleAttribute(styleValue) {
+    if (!styleValue) return "";
+    if (/url\s*\(|expression\s*\(|javascript\s*:|-moz-binding/i.test(styleValue)) {
+        return "";
+    }
+    return styleValue;
 }
 
 function sanitizeAuthorContent(content) {
@@ -53,9 +90,21 @@ function sanitizeAuthorContent(content) {
         }
 
         [...element.attributes].forEach((attribute) => {
-            const keepAttribute = element.tagName === "A"
+            const isAllowedAnchorAttr = element.tagName === "A"
                 && (attribute.name === "href" || attribute.name === "title");
-            if (!keepAttribute) element.removeAttribute(attribute.name);
+            const isStyleAttr = attribute.name === "style";
+            const isSafeAttr = attribute.name === "dir" || attribute.name === "class";
+
+            if (isStyleAttr) {
+                const cleanStyle = sanitizeStyleAttribute(attribute.value);
+                if (cleanStyle) {
+                    element.setAttribute("style", cleanStyle);
+                } else {
+                    element.removeAttribute("style");
+                }
+            } else if (!isAllowedAnchorAttr && !isSafeAttr) {
+                element.removeAttribute(attribute.name);
+            }
         });
         if (element.tagName === "A") {
             const href = element.getAttribute("href") || "";
@@ -66,12 +115,13 @@ function sanitizeAuthorContent(content) {
     return template.innerHTML;
 }
 
-function authorPanelMarkup(title, content) {
-    const panel = normalizeAuthorPanel(title, content);
+function authorPanelMarkup(title, content, fontSize = "9px") {
+    const panel = normalizeAuthorPanel(title, content, fontSize);
     if (!panel.visible) return "";
+    const titleStyle = panel.titleFontSize ? ` style="font-size:${escapeHtml(panel.titleFontSize)};"` : "";
     return `<section class="oswm-snapshot-analysis-block oswm-snapshot-author-panel">
-        ${panel.title ? `<h2 dir="auto">${escapeHtml(panel.title)}</h2>` : ""}
-        ${panel.content ? `<div class="oswm-snapshot-author-content" dir="auto">${sanitizeAuthorContent(panel.content)}</div>` : ""}
+        ${panel.title ? `<h2 dir="auto"${titleStyle}>${escapeHtml(panel.title)}</h2>` : ""}
+        ${panel.content ? `<div class="oswm-snapshot-author-content" dir="auto" style="font-size:${escapeHtml(panel.fontSize)};">${sanitizeAuthorContent(panel.content)}</div>` : ""}
     </section>`;
 }
 
@@ -378,6 +428,7 @@ export function renderSnapshotSheet({
     generatedAt,
     authorTitle,
     authorContent,
+    authorFontSize,
     i18n,
     logoDataUrl,
     webmapUrl,
@@ -435,7 +486,7 @@ export function renderSnapshotSheet({
                     ${renderLegend(summary, theme, i18n)}
                 </section>
                 <div class="oswm-snapshot-author-slot">
-                    ${authorPanelMarkup(authorTitle, authorContent)}
+                    ${authorPanelMarkup(authorTitle, authorContent, authorFontSize)}
                 </div>
             </aside>
         </div>
@@ -530,7 +581,15 @@ export class SnapshotComposer {
                         <summary data-i18n="optionalAuthorPanel">Optional author panel</summary>
                         <div class="oswm-snapshot-extra-fields">
                             <label><span data-i18n="panelTitle">Panel title</span><input name="author-title" type="text" maxlength="80" placeholder="e.g. Field notes" data-i18n-placeholder="panelTitlePlaceholder"></label>
-                            <label><span data-i18n="textOrSafeHtml">Text or safe HTML</span><textarea name="author-content" rows="3" maxlength="4000" placeholder="Comments, interpretation or extra facts…" data-i18n-placeholder="authorContentPlaceholder"></textarea></label>
+                            <label><span data-i18n="fontSize">Font size</span>
+                                <div class="oswm-snapshot-fontsize-stepper">
+                                    <button type="button" class="oswm-fontsize-btn" data-step="-0.5" aria-label="Decrease font size" data-i18n-aria-label="decreaseFontSize">−</button>
+                                    <input name="author-font-size" type="number" min="5" max="40" step="0.5" value="9">
+                                    <span class="oswm-fontsize-unit">px</span>
+                                    <button type="button" class="oswm-fontsize-btn" data-step="+0.5" aria-label="Increase font size" data-i18n-aria-label="increaseFontSize">+</button>
+                                </div>
+                            </label>
+                            <label class="oswm-snapshot-full-width"><span data-i18n="textOrSafeHtml">Text or safe HTML</span><textarea name="author-content" rows="3" maxlength="4000" placeholder="Comments, interpretation or extra facts…" data-i18n-placeholder="authorContentPlaceholder"></textarea></label>
                         </div>
                     </details>
                 </form>
@@ -556,11 +615,22 @@ export class SnapshotComposer {
             const heading = this.root.querySelector(".oswm-snapshot-print-sheet h1");
             if (heading) heading.textContent = event.target.value || this.defaultTitle();
         });
-        ["author-title", "author-content"].forEach((fieldName) => {
-            this.root.querySelector(`[name="${fieldName}"]`).addEventListener(
-                "input",
-                () => this.updateAuthorPanel(),
-            );
+        const fontSizeInput = this.root.querySelector('[name="author-font-size"]');
+        this.root.querySelectorAll(".oswm-fontsize-btn").forEach((btn) => {
+            btn.addEventListener("click", () => {
+                const delta = parseFloat(btn.dataset.step) || 0;
+                const current = parseFloat(fontSizeInput.value) || 9;
+                const updated = Math.min(Math.max(current + delta, 5), 40);
+                fontSizeInput.value = Number(updated.toFixed(1));
+                this.updateAuthorPanel();
+            });
+        });
+        ["author-title", "author-content", "author-font-size"].forEach((fieldName) => {
+            const field = this.root.querySelector(`[name="${fieldName}"]`);
+            if (field) {
+                field.addEventListener("input", () => this.updateAuthorPanel());
+                field.addEventListener("change", () => this.updateAuthorPanel());
+            }
         });
     }
 
@@ -631,6 +701,7 @@ export class SnapshotComposer {
             title: this.root.querySelector('[name="title"]').value || this.defaultTitle(),
             authorTitle: this.root.querySelector('[name="author-title"]').value,
             authorContent: this.root.querySelector('[name="author-content"]').value,
+            authorFontSize: this.root.querySelector('[name="author-font-size"]')?.value || "9",
             i18n: this.i18n,
             logoDataUrl: this.logoDataUrl,
             webmapUrl: this.webmapUrl(),
@@ -644,6 +715,7 @@ export class SnapshotComposer {
         slot.innerHTML = authorPanelMarkup(
             this.root.querySelector('[name="author-title"]').value,
             this.root.querySelector('[name="author-content"]').value,
+            this.root.querySelector('[name="author-font-size"]')?.value || "9",
         );
     }
 

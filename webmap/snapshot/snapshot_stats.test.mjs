@@ -165,15 +165,33 @@ test("composer helpers normalize extents, remove raster sources and make a scale
     assert.match(scale.label, /m|km/);
 });
 
-test("optional author panel is omitted unless title or content is present", () => {
+test("optional author panel is omitted unless title or content is present and normalizes font size", () => {
     assert.deepEqual(normalizeAuthorPanel("  ", "\n"), {
         title: "",
         content: "",
+        fontSize: "9px",
+        titleFontSize: "14px",
         visible: false,
     });
-    assert.deepEqual(normalizeAuthorPanel(" Field notes ", " <strong>Check</strong> "), {
+    assert.deepEqual(normalizeAuthorPanel(" Field notes ", " <strong>Check</strong> ", "10.5"), {
         title: "Field notes",
         content: "<strong>Check</strong>",
+        fontSize: "10.5px",
+        titleFontSize: "14px",
+        visible: true,
+    });
+    assert.deepEqual(normalizeAuthorPanel("Title", "Content", "18"), {
+        title: "Title",
+        content: "Content",
+        fontSize: "18px",
+        titleFontSize: "20px",
+        visible: true,
+    });
+    assert.deepEqual(normalizeAuthorPanel("Title", "Content", "13.5"), {
+        title: "Title",
+        content: "Content",
+        fontSize: "13.5px",
+        titleFontSize: "15px",
         visible: true,
     });
 });
@@ -262,13 +280,16 @@ test("the localized printable sheet preserves English category values", () => {
             scale: { meters: 200, widthPixels: 120 },
         },
         generatedAt: "2026-07-17T12:00:00Z",
-        authorTitle: "",
-        authorContent: "",
+        authorTitle: "Field notes",
+        authorContent: '<p style="font-size: 50px;">Sample text</p>',
+        authorFontSize: "11.5",
     };
 
     const portuguese = renderSnapshotSheet({ ...base, i18n: createI18n("pt-BR") });
     assert.match(portuguese, /lang="pt-BR" dir="ltr"/);
     assert.match(portuguese, /Fatos para escrutínio/);
+    assert.match(portuguese, /style="font-size:11.5px;"/);
+    assert.match(portuguese, /style="font-size: 50px;"/);
     assert.match(portuguese, /<h2>Tema<\/h2>/);
     assert.match(portuguese, /asphalt/);
     assert.match(portuguese, /paving_stones/);
