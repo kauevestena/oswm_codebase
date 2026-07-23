@@ -2,6 +2,7 @@ import { collectViewportStats } from "./snapshot_stats.js";
 import { renderSummaryChart } from "./snapshot_charts.js";
 import { createI18n, DEFAULT_LOCALE, SUPPORTED_LOCALES } from "./snapshot_i18n.js";
 import { qrcodeSvg } from "./snapshot_qrcode.js";
+import * as maplibregl from "https://unpkg.com/maplibre-gl@6/dist/maplibre-gl.mjs";
 
 const LOGO_PATH = "oswm_codebase/assets/page_logo_clean.png";
 
@@ -248,11 +249,11 @@ async function renderExportMap(maplibregl, style, bounds) {
 async function captureMap(map, bounds) {
     const style = JSON.parse(JSON.stringify(map.getStyle()));
     try {
-        return await renderExportMap(window.maplibregl, style, bounds);
+        return await renderExportMap(maplibregl, style, bounds);
     } catch (primaryError) {
         try {
             const fallback = await renderExportMap(
-                window.maplibregl,
+                maplibregl,
                 stripRasterBasemap(style),
                 bounds,
             );

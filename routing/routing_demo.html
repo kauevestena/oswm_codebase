@@ -5,10 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OSWM Node Routing Demo</title>
-    <script src="https://bundle.run/geojson-path-finder@1.5.3"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Turf.js/6.5.0/turf.min.js"></script>
-    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css' />
-    <script src='https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js'></script>
+    <!-- maplibre-gl v6 -->
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6/dist/maplibre-gl.css" />
     <style>
         body {
             margin: 0;
@@ -192,7 +190,11 @@
         </div>
     </div>
 
-    <script>
+    <script type="module">
+        import * as maplibregl from 'https://unpkg.com/maplibre-gl@6/dist/maplibre-gl.mjs';
+        import * as turf from 'https://esm.sh/@turf/turf@7';
+        import geojsonPathFinder from 'https://esm.sh/geojson-path-finder@1.5.3';
+
         let start = null;
         let end = null;
         let pathFinder = null;

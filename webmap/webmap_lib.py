@@ -296,6 +296,10 @@ def create_base_style(sources=MAP_SOURCES, name="Footway Categories"):
         os.path.join(map_symbols_assets_path, "footway_categories" + ".png")
     )
 
+    # Embed legend HTML for the native webmap legend control
+    _, legend_html = style_legend.export_elements()
+    style_dict["__legend_html__"] = legend_html
+
     return style_dict
 
 
@@ -347,6 +351,10 @@ def create_simple_map_style(
     style_legend.add_line(label="other", color=color_schema[-1], **custom_line_args)
 
     style_legend.export(os.path.join(map_symbols_assets_path, f"{attribute_name}.png"))
+
+    # Embed legend HTML for the native webmap legend control
+    _, legend_html = style_legend.export_elements()
+    style_dict["__legend_html__"] = legend_html
 
     return style_dict
 
@@ -559,6 +567,10 @@ def create_crossings_kerbs_style(
 
     style_legend.export(os.path.join(map_symbols_assets_path, f"{filename}.png"))
 
+    # Embed legend HTML for the native webmap legend control
+    _, legend_html = style_legend.export_elements()
+    style_dict["__legend_html__"] = legend_html
+
     return style_dict
 
 
@@ -672,6 +684,10 @@ def create_simple_numeric_style(
 
     # exporting
     style_legend.export(os.path.join(map_symbols_assets_path, f"{attribute_name}.png"))
+
+    # Embed legend HTML for the native webmap legend control
+    _, legend_html = style_legend.export_elements()
+    style_dict["__legend_html__"] = legend_html
 
     return style_dict
 

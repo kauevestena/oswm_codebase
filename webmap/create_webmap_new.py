@@ -72,6 +72,16 @@ webmap_html = file_as_string(webmap_base_path)
 
 # doing other stuff like insertions and nasty things (TODO):
 
+# Extract legend HTML fragments for the native webmap legend control.
+# Each style-creation function stores a __legend_html__ key in the style dict;
+# we pull them out into their own top-level dict and remove the temporary key
+# so the style JSON stays valid for MapLibre.
+params["legend_fragments"] = {}
+for key in list(params["styles"].keys()):
+    legend_html = params["styles"][key].pop("__legend_html__", None)
+    if legend_html:
+        params["legend_fragments"][key] = legend_html
+
 # finally generate the files:
 warning_comment = """<!--
   Generated automatically by oswm_codebase/webmap/create_webmap_new.py
