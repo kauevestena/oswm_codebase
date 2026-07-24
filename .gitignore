@@ -184,4 +184,5 @@ tests/
 tests/*
 !tests/webmap_snapshot/
 !tests/webmap_snapshot/*.py
+!tests/test_routing_*.py
 tests.py

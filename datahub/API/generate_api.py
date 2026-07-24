@@ -123,7 +123,10 @@ def get_endpoint_description(path, filename, deliverable):
             "data/vrts/data.vrt": "GDAL Virtual Format file linking all processed parquet files together.",
             "data/vrts/data_raw.vrt": "GDAL Virtual Format file linking all raw parquet files together.",
             "data/vrts/tiles.vrt": "GDAL Virtual Format file referencing tile-oriented datasets.",
-            "data/routing/demo.geojson": "GeoJSON routing network sample containing intersections and road segments for demo routing."
+            "data/routing/demo.geojson": "Transitional GeoJSON routing network with compact, directional accessibility grades.",
+            "data/routing/profiles.json": "Browser-safe routing profile labels, speeds, grade-to-cost multipliers, and event penalties.",
+            "data/routing/metadata.json": "Routing ruleset provenance, slope-source counts, warnings, and generated grade distributions.",
+            "data/routing/slope_cache.json": "Reusable derived longitudinal slope estimates keyed by edge geometry and provider configuration."
         }
         if path in curated_descs:
             return curated_descs[path]
@@ -262,7 +265,12 @@ def generate_data_index():
             elif key == "data_quality":
                 files = ["improper_geoms/sidewalks_improper_geoms.parquet", "improper_geoms/crossings_improper_geoms.parquet", "improper_geoms/kerbs_improper_geoms.parquet", "disjointed/crossings_disjointed.parquet", "disjointed/kerbs_disjointed.parquet"]
             elif key == "routing":
-                files = ["demo.geojson"]
+                files = [
+                    "demo.geojson",
+                    "profiles.json",
+                    "metadata.json",
+                    "slope_cache.json",
+                ]
         
         data_idx["folders"][key] = {
             "description": meta["description"],

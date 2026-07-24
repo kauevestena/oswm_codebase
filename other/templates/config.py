@@ -49,6 +49,41 @@ INITIAL_Z_LEVEL = 19
 TILES_MIN_ZOOM = 9
 TILES_MAX_ZOOM = 20
 
+# ROUTING ELEVATION SOURCES
+#
+# OSM incline=* values always have priority. The providers below are tried in
+# descending priority order only when a numeric mapped incline is unavailable.
+# A node can insert a local LiDAR/DTM COG before the global fallback:
+#
+# {
+#     "type": "local_cog",
+#     "path": "path/or/https-url/to/dtm.tif",
+#     "source_name": "municipal_lidar_dtm",
+#     "priority": 100,
+#     "confidence": 90,
+#     "resolution_m": 1,
+#     "minimum_baseline_m": 8,
+#     "sample_count": 7,
+# }
+#
+# Only compact derived slopes are committed. Downloaded raster tiles live in
+# the ignored .cache directory.
+ELEVATION_CONFIG = {
+    "enabled": True,
+    "providers": [
+        {
+            "type": "copernicus_glo30",
+            "role": "global_fallback",
+            "priority": 10,
+            "cache_dir": ".cache/oswm/elevation/copernicus_glo30",
+            "minimum_baseline_m": 45,
+            "sample_count": 7,
+            "max_abs_slope_percent": 40,
+        },
+    ],
+    "request_timeout_seconds": 120,
+}
+
 
 ###  THE MORE DELICATE ONES: (leave them unchanged by default, unless you know what you are doing!)
 

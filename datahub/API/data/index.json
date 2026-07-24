@@ -84,7 +84,10 @@
             "description": "Routing files, network properties, and routing demo data.",
             "path": "data/routing",
             "files": [
-                "demo.geojson"
+                "demo.geojson",
+                "metadata.json",
+                "profiles.json",
+                "slope_cache.json"
             ]
         }
     }
