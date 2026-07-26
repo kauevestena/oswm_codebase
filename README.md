@@ -14,8 +14,9 @@ use local_setup.sh
 
 ## Accessibility-aware routing
 
-The static routing module supports shortest-distance, wheelchair,
-blind/low-vision and elderly profiles. Profile judgments are maintained as
-plain Python dictionaries and precomputed during node generation. See
+The static routing module supports a first-class shortest-distance baseline
+plus wheelchair, blind/low-vision and elderly profiles, with optional
+side-by-side route comparison. Profile judgments are maintained as plain
+Python dictionaries and precomputed during node generation. See
 [`routing/README.md`](routing/README.md) for the architecture, slope-source
 hierarchy and calibration workflow.

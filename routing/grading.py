@@ -402,6 +402,8 @@ def grade_feature(
         "profiles": {},
     }
     for profile_id, profile in profiles.items():
+        if profile["routing_mode"] == "distance":
+            continue
         result["profiles"][profile_id] = {
             "forward": _grade_direction(
                 prepared, profile, direction="forward"

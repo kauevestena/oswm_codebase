@@ -124,7 +124,7 @@ def get_endpoint_description(path, filename, deliverable):
             "data/vrts/data_raw.vrt": "GDAL Virtual Format file linking all raw parquet files together.",
             "data/vrts/tiles.vrt": "GDAL Virtual Format file referencing tile-oriented datasets.",
             "data/routing/demo.geojson": "Transitional GeoJSON routing network with compact, directional accessibility grades.",
-            "data/routing/profiles.json": "Browser-safe routing profile labels, speeds, grade-to-cost multipliers, and event penalties.",
+            "data/routing/profiles.json": "Browser-safe distance/accessibility routing modes, labels, speeds, grade-to-cost multipliers, and event penalties.",
             "data/routing/metadata.json": "Routing ruleset provenance, slope-source counts, warnings, and generated grade distributions.",
             "data/routing/slope_cache.json": "Reusable derived longitudinal slope estimates keyed by edge geometry and provider configuration."
         }

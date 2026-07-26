@@ -75,6 +75,30 @@
             line-height: 1.35;
         }
 
+        #compareOption {
+            margin-top: 10px;
+        }
+
+        #compareOption[hidden] {
+            display: none;
+        }
+
+        #routingPanel .compare-label {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            margin: 0;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: none;
+            letter-spacing: 0;
+            cursor: pointer;
+        }
+
+        .compare-label input {
+            margin: 0;
+        }
+
         #routeInfo {
             margin-top: 12px;
             padding-top: 10px;
@@ -96,6 +120,37 @@
             margin-top: 7px;
             color: #745100;
             font-size: 11px;
+        }
+
+        #comparisonInfo {
+            margin-top: 9px;
+            padding: 7px 9px;
+            border-left: 4px solid #d55e00;
+            background: #fff4eb;
+            font-size: 12px;
+        }
+
+        #comparisonInfo[hidden] {
+            display: none;
+        }
+
+        #comparisonInfo .comparison-title {
+            font-weight: 700;
+        }
+
+        .route-swatch {
+            display: inline-block;
+            width: 20px;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+
+        .route-swatch.selected {
+            border-top: 4px solid #123bd1;
+        }
+
+        .route-swatch.distance {
+            border-top: 3px dashed #d55e00;
         }
 
         .marker {
@@ -174,19 +229,39 @@
     <section id="routingPanel" aria-label="Routing options">
         <h2>Route profile</h2>
         <label for="profileSelect">Optimization</label>
-        <select id="profileSelect">
-            <option value="distance">Shortest distance</option>
-        </select>
-        <p id="profileDescription">Minimizes geometric walking distance.</p>
+        <select id="profileSelect"></select>
+        <p id="profileDescription">Loading routing profiles…</p>
+
+        <div id="compareOption" hidden>
+            <label class="compare-label" for="compareDistance">
+                <input type="checkbox" id="compareDistance">
+                Compare with distance-only
+            </label>
+        </div>
 
         <div id="routeInfo" class="hidden" aria-live="polite">
             <div class="route-result">
                 <div>Distance: <strong><span id="distanceVal">-</span> km</strong></div>
                 <div>Estimated time: <strong><span id="timeVal">-</span> min</strong></div>
-                <div>Profile: <strong><span id="profileVal">-</span></strong></div>
+                <div>
+                    <span class="route-swatch selected"></span>
+                    Profile: <strong><span id="profileVal">-</span></strong>
+                </div>
                 <div class="experimental" id="experimentalNote"></div>
             </div>
             <div class="no-route" hidden>No route was found for this profile.</div>
+            <div id="comparisonInfo" hidden>
+                <div class="comparison-title">
+                    <span class="route-swatch distance"></span>
+                    Distance-only comparison
+                </div>
+                <div>
+                    Shortest route:
+                    <strong><span id="comparisonDistanceVal">-</span> km</strong>,
+                    <span id="comparisonTimeVal">-</span> min
+                </div>
+                <div id="comparisonDelta"></div>
+            </div>
         </div>
     </section>
 
@@ -196,6 +271,7 @@
             <p>This experimental router uses mapped OpenStreetMap accessibility information and estimated terrain slope.</p>
             <ol>
                 <li>Select a routing profile.</li>
+                <li>Optionally compare an accessibility profile with the distance-only route.</li>
                 <li>Click a route origin.</li>
                 <li>Click a destination.</li>
                 <li>A third click starts a new route.</li>
@@ -210,16 +286,20 @@
         import * as turf from 'https://esm.sh/@turf/turf@7.3.5';
         import PathFinder from 'https://esm.sh/geojson-path-finder@2.1.0';
 
-        const DISTANCE_SPEED_KMH = 5;
         const profileSelect = document.getElementById('profileSelect');
         const profileDescription = document.getElementById('profileDescription');
+        const compareOption = document.getElementById('compareOption');
+        const compareDistance = document.getElementById('compareDistance');
+        const comparisonInfo = document.getElementById('comparisonInfo');
         const routeInfo = document.getElementById('routeInfo');
 
         let originalData = null;
         let profilePayload = null;
+        let distanceProfileId = null;
         let start = null;
         let end = null;
         let bestPath = null;
+        let comparisonPath = null;
         let markers = [];
 
         const map = new maplibregl.Map({
@@ -233,7 +313,15 @@
         ]).then(([data, profiles]) => {
             originalData = data;
             profilePayload = profiles;
+            distanceProfileId = profilePayload.distance_profile_id;
+            if (
+                !distanceProfileId
+                || profilePayload.profiles[distanceProfileId]?.routing_mode !== 'distance'
+            ) {
+                throw new Error('No distance-only routing profile was provided.');
+            }
             populateProfiles();
+            updateProfileControls();
 
             map.on('load', () => {
                 map.addSource('line', { type: 'geojson', data });
@@ -288,30 +376,58 @@
         }
 
         function populateProfiles() {
-            for (const [profileId, profile] of Object.entries(profilePayload.profiles)) {
+            profileSelect.replaceChildren();
+            const profiles = Object.entries(profilePayload.profiles).sort(
+                ([leftId, left], [rightId, right]) => {
+                    if (leftId === rightId) return 0;
+                    if (leftId === distanceProfileId) return -1;
+                    if (rightId === distanceProfileId) return 1;
+                    return left.label.localeCompare(right.label);
+                }
+            );
+            for (const [profileId, profile] of profiles) {
                 const option = document.createElement('option');
                 option.value = profileId;
                 option.textContent = profile.label;
                 profileSelect.appendChild(option);
             }
+            profileSelect.value = distanceProfileId;
         }
 
         function selectedProfile() {
-            const profileId = profileSelect.value;
-            return profileId === 'distance' ? null : profilePayload.profiles[profileId];
+            return profilePayload.profiles[profileSelect.value];
         }
 
         function selectedProfileLabel() {
-            return profileSelect.options[profileSelect.selectedIndex].textContent;
+            return selectedProfile().label;
+        }
+
+        function updateProfileControls() {
+            const profile = selectedProfile();
+            const isDistanceOnly = profile.routing_mode === 'distance';
+            profileDescription.textContent = profile.description;
+            compareOption.hidden = isDistanceOnly;
+            compareDistance.disabled = isDistanceOnly;
+            if (isDistanceOnly) {
+                compareDistance.checked = false;
+                if (comparisonPath) removeComparisonPath();
+                comparisonInfo.hidden = true;
+            }
         }
 
         profileSelect.addEventListener('change', () => {
-            const profile = selectedProfile();
-            profileDescription.textContent = profile
-                ? profile.description
-                : 'Minimizes geometric walking distance.';
+            updateProfileControls();
             if (start && end) {
                 calculateRoute();
+            }
+        });
+
+        compareDistance.addEventListener('change', () => {
+            if (start && end) {
+                calculateRoute();
+            } else if (!compareDistance.checked) {
+                removeComparisonPath();
+                comparisonInfo.hidden = true;
             }
         });
 
@@ -400,78 +516,187 @@
             return null;
         }
 
-        function profileWeight(a, b, properties) {
-            const segmentM = turf.distance(turf.point(a), turf.point(b), { units: 'meters' });
-            const profileId = profileSelect.value;
-            if (profileId === 'distance') return segmentM;
-
+        function profileWeight(profileId) {
             const profile = profilePayload.profiles[profileId];
-            const edgeKind = properties.edge_kind || 'footway';
-            const eventPenalty = profile.cost.event_penalties_m[edgeKind];
-            if (eventPenalty === null || eventPenalty === undefined) return 0;
+            return (a, b, properties) => {
+                const segmentM = turf.distance(
+                    turf.point(a),
+                    turf.point(b),
+                    { units: 'meters' }
+                );
+                if (profile.routing_mode === 'distance') return segmentM;
 
-            const featureLength = Math.max(Number(properties.length_m) || segmentM, segmentM);
-            const proportionalPenalty = eventPenalty * segmentM / featureLength;
+                const edgeKind = properties.edge_kind || 'footway';
+                const eventPenalty = profile.cost.event_penalties_m[edgeKind];
+                if (eventPenalty === null || eventPenalty === undefined) return 0;
 
-            const directionalCost = direction => {
-                const suffix = direction === 'forward' ? 'fwd' : 'bwd';
-                if (properties[`${profileId}_allow_${suffix}`] === false) return 0;
-                const grade = Number(properties[`${profileId}_grade_${suffix}`]);
-                const multiplier = gradeMultiplier(profile, grade);
-                if (!Number.isFinite(grade) || grade <= 0 || multiplier === null) return 0;
-                return segmentM * multiplier + proportionalPenalty;
+                const featureLength = Math.max(
+                    Number(properties.length_m) || segmentM,
+                    segmentM
+                );
+                const proportionalPenalty = eventPenalty * segmentM / featureLength;
+
+                const directionalCost = direction => {
+                    const suffix = direction === 'forward' ? 'fwd' : 'bwd';
+                    if (properties[`${profileId}_allow_${suffix}`] === false) return 0;
+                    const grade = Number(properties[`${profileId}_grade_${suffix}`]);
+                    const multiplier = gradeMultiplier(profile, grade);
+                    if (!Number.isFinite(grade) || grade <= 0 || multiplier === null) {
+                        return 0;
+                    }
+                    return segmentM * multiplier + proportionalPenalty;
+                };
+
+                return {
+                    forward: directionalCost('forward'),
+                    backward: directionalCost('backward')
+                };
             };
+        }
 
-            return {
-                forward: directionalCost('forward'),
-                backward: directionalCost('backward')
-            };
+        function findPath(network, profileId) {
+            const pathFinder = new PathFinder(network, {
+                tolerance: 1e-5,
+                weight: profileWeight(profileId)
+            });
+            return pathFinder.findPath(
+                turf.point(start.coordinates),
+                turf.point(end.coordinates)
+            );
+        }
+
+        function hasUsablePath(pathResult) {
+            return Boolean(pathResult?.path && pathResult.path.length >= 2);
+        }
+
+        function setRouteLayer(pathResult, sourceId, layerId, paint) {
+            const data = turf.featureCollection([
+                turf.lineString(pathResult.path)
+            ]);
+            if (map.getSource(sourceId)) {
+                map.getSource(sourceId).setData(data);
+                return;
+            }
+            map.addSource(sourceId, { type: 'geojson', data });
+            map.addLayer({
+                id: layerId,
+                type: 'line',
+                source: sourceId,
+                layout: { 'line-join': 'round', 'line-cap': 'round' },
+                paint
+            });
         }
 
         function calculateRoute() {
             const network = queryNetwork();
-            const pathFinder = new PathFinder(network, {
-                tolerance: 1e-5,
-                weight: profileWeight
-            });
-            const startPoint = turf.point(start.coordinates);
-            const endPoint = turf.point(end.coordinates);
-            bestPath = pathFinder.findPath(startPoint, endPoint);
+            const profileId = profileSelect.value;
+            const profile = selectedProfile();
+            const shouldCompare = (
+                compareDistance.checked
+                && profile.routing_mode !== 'distance'
+            );
 
-            if (!bestPath || !bestPath.path || bestPath.path.length < 2) {
+            bestPath = findPath(network, profileId);
+            if (shouldCompare && !hasUsablePath(comparisonPath)) {
+                comparisonPath = findPath(network, distanceProfileId);
+            } else if (!shouldCompare) {
+                comparisonPath = null;
+            }
+
+            if (hasUsablePath(comparisonPath)) {
+                setRouteLayer(
+                    comparisonPath,
+                    'distance-comparison-path',
+                    'distance-comparison-path-layer',
+                    {
+                        'line-color': '#d55e00',
+                        'line-width': 5,
+                        'line-dasharray': [2, 1.5],
+                        'line-offset': 5
+                    }
+                );
+            } else {
+                removeComparisonPath();
+            }
+
+            if (!hasUsablePath(bestPath)) {
                 showNoRoute();
-                removeDisplayedPath();
+                removePrimaryPath();
+                updateComparisonInfo(null, comparisonPath);
                 return;
             }
 
             const pathLine = turf.lineString(bestPath.path);
-            const pathGeoJson = turf.featureCollection([pathLine]);
-            if (map.getSource('best-path')) {
-                map.getSource('best-path').setData(pathGeoJson);
-            } else {
-                map.addSource('best-path', { type: 'geojson', data: pathGeoJson });
-                map.addLayer({
-                    id: 'best-path-layer',
-                    type: 'line',
-                    source: 'best-path',
-                    layout: { 'line-join': 'round', 'line-cap': 'round' },
-                    paint: { 'line-color': '#123bd1', 'line-width': 8 }
-                });
+            setRouteLayer(
+                bestPath,
+                'best-path',
+                'best-path-layer',
+                { 'line-color': '#123bd1', 'line-width': 8 }
+            );
+            if (map.getLayer('distance-comparison-path-layer')) {
+                map.moveLayer('best-path-layer');
             }
 
             const distanceKm = turf.length(pathLine, { units: 'kilometers' });
-            const profile = selectedProfile();
-            const speedKmh = profile ? profile.speed_kmh : DISTANCE_SPEED_KMH;
-            const timeMinutes = Math.max(1, Math.round(distanceKm / speedKmh * 60));
+            const timeMinutes = Math.max(
+                1,
+                Math.round(distanceKm / profile.speed_kmh * 60)
+            );
             document.getElementById('distanceVal').textContent = distanceKm.toFixed(2);
             document.getElementById('timeVal').textContent = timeMinutes;
             document.getElementById('profileVal').textContent = selectedProfileLabel();
-            document.getElementById('experimentalNote').textContent = profile?.provisional
+            document.getElementById('experimentalNote').textContent = profile.provisional
                 ? 'This accessibility profile is provisional and requires calibration.'
                 : '';
             routeInfo.querySelector('.route-result').hidden = false;
             routeInfo.querySelector('.no-route').hidden = true;
             routeInfo.classList.remove('hidden');
+            updateComparisonInfo(bestPath, comparisonPath);
+        }
+
+        function updateComparisonInfo(selectedPath, distancePath) {
+            if (!compareDistance.checked || !hasUsablePath(distancePath)) {
+                comparisonInfo.hidden = true;
+                return;
+            }
+
+            const distanceKm = turf.length(
+                turf.lineString(distancePath.path),
+                { units: 'kilometers' }
+            );
+            const distanceProfile = profilePayload.profiles[distanceProfileId];
+            const timeMinutes = Math.max(
+                1,
+                Math.round(distanceKm / distanceProfile.speed_kmh * 60)
+            );
+            document.getElementById('comparisonDistanceVal').textContent =
+                distanceKm.toFixed(2);
+            document.getElementById('comparisonTimeVal').textContent = timeMinutes;
+
+            const deltaElement = document.getElementById('comparisonDelta');
+            if (!hasUsablePath(selectedPath)) {
+                deltaElement.textContent =
+                    'A shortest-distance route exists, but the selected profile found no usable route.';
+            } else {
+                const selectedKm = turf.length(
+                    turf.lineString(selectedPath.path),
+                    { units: 'kilometers' }
+                );
+                const deltaKm = selectedKm - distanceKm;
+                if (Math.abs(deltaKm) < 0.005) {
+                    deltaElement.textContent =
+                        'The selected and distance-only routes have the same length.';
+                } else {
+                    const percentage = distanceKm > 0
+                        ? Math.abs(deltaKm) / distanceKm * 100
+                        : 0;
+                    const relation = deltaKm > 0 ? 'longer' : 'shorter';
+                    deltaElement.textContent =
+                        `Selected route: ${Math.abs(deltaKm).toFixed(2)} km ` +
+                        `${relation} (${percentage.toFixed(1)}%).`;
+                }
+            }
+            comparisonInfo.hidden = false;
         }
 
         function showNoRoute(customMessage = null) {
@@ -486,18 +711,37 @@
             routeInfo.classList.add('hidden');
         }
 
-        function removeDisplayedPath() {
-            if (map.getLayer('best-path-layer')) map.removeLayer('best-path-layer');
-            if (map.getSource('best-path')) map.removeSource('best-path');
+        function removePath(sourceId, layerId) {
+            if (map.getLayer(layerId)) map.removeLayer(layerId);
+            if (map.getSource(sourceId)) map.removeSource(sourceId);
+        }
+
+        function removePrimaryPath() {
+            removePath('best-path', 'best-path-layer');
+        }
+
+        function removeComparisonPath() {
+            removePath(
+                'distance-comparison-path',
+                'distance-comparison-path-layer'
+            );
+            comparisonPath = null;
+        }
+
+        function removeDisplayedPaths() {
+            removePrimaryPath();
+            removeComparisonPath();
         }
 
         function resetPath() {
             start = null;
             end = null;
             bestPath = null;
+            comparisonPath = null;
             markers.forEach(marker => marker.remove());
             markers = [];
-            removeDisplayedPath();
+            removeDisplayedPaths();
+            comparisonInfo.hidden = true;
             hideRouteInfo();
         }
 

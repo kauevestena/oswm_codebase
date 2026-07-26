@@ -48,9 +48,27 @@ class ProfileValidationTests(unittest.TestCase):
 
     def test_public_metadata_contains_no_factor_tables(self):
         metadata = public_profile_metadata(ROUTING_PROFILES)
+        self.assertEqual(metadata["distance"]["routing_mode"], "distance")
+        self.assertNotIn("cost", metadata["distance"])
+        self.assertNotIn("property_prefix", metadata["distance"])
         self.assertIn("wheelchair", metadata)
+        self.assertEqual(
+            metadata["wheelchair"]["routing_mode"],
+            "accessibility_grade",
+        )
         self.assertIn("cost", metadata["wheelchair"])
         self.assertNotIn("factors", metadata["wheelchair"])
+
+    def test_exactly_one_distance_profile_is_required(self):
+        profiles = copy.deepcopy(ROUTING_PROFILES)
+        profiles.pop("distance")
+        with self.assertRaises(ProfileValidationError):
+            validate_profiles(profiles)
+
+        profiles = copy.deepcopy(ROUTING_PROFILES)
+        profiles["another_distance"] = copy.deepcopy(profiles["distance"])
+        with self.assertRaises(ProfileValidationError):
+            validate_profiles(profiles)
 
 
 class NormalizationTests(unittest.TestCase):
@@ -164,6 +182,10 @@ class GradingTests(unittest.TestCase):
     def test_compact_properties_include_both_directions(self):
         result = grade_feature({}, edge_kind="footway")
         properties = compact_grade_properties(result)
+        self.assertNotIn("distance", result["profiles"])
+        self.assertFalse(
+            any(key.startswith("distance_") for key in properties)
+        )
         self.assertIn("wheelchair_grade_fwd", properties)
         self.assertIn("wheelchair_grade_bwd", properties)
         self.assertIn("blind_confidence", properties)

@@ -6,10 +6,11 @@ human-editable policy layer and a generic implementation layer.
 
 ## Status
 
-The wheelchair, blind/low-vision and elderly profiles are **provisional**.
-They recover useful ideas from OSWM's historical Streamlit experiment but are
-not a claim that a route is guaranteed accessible. The values require
-participatory calibration with users and accessibility specialists.
+The distance-only profile is a neutral baseline. The wheelchair,
+blind/low-vision and elderly profiles are **provisional**: they recover useful
+ideas from OSWM's historical Streamlit experiment but are not a claim that a
+route is guaranteed accessible. Their values require participatory calibration
+with users and accessibility specialists.
 
 ## Files
 
@@ -25,6 +26,11 @@ participatory calibration with users and accessibility specialists.
 Policy changes should normally touch only `profile_rules.py`. The remaining
 modules should not contain profile-specific accessibility judgments.
 
+Every profile declares a `routing_mode`. The `distance` mode minimizes segment
+length directly. The `accessibility_grade` mode consumes directional,
+precomputed edge grades. Exactly one distance profile is required so every
+accessibility route has an unambiguous comparison baseline.
+
 ## Grade terminology
 
 - **Grade:** accessibility from 0 (unusable) to 100 (excellent).
@@ -39,7 +45,7 @@ Negative route costs are never allowed.
 
 ## Composition
 
-Applicable factors are composed with a weighted harmonic mean:
+Accessibility-profile factors are composed with a weighted harmonic mean:
 
 ```text
 grade = sum(weights) / sum(weight / factor_grade)
@@ -51,6 +57,16 @@ universally impassable conditions.
 
 The generator calculates separate forward and backward grades. Terrain rising
 in feature-coordinate order is an ascent forward and a descent backward.
+The distance profile needs no grades, so no redundant `distance_grade_*`
+properties are written to every edge.
+
+## Route comparison
+
+When an accessibility profile is selected, the browser offers **Compare with
+distance-only**. It calculates a second shortest-distance route between the
+same snapped points, draws it as an offset orange dashed line, and reports its
+distance plus the selected route's absolute and percentage difference. The
+option is hidden when distance-only is already selected.
 
 ## Slope source hierarchy
 

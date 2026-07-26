@@ -33,11 +33,21 @@ class RoutingClientWiringTests(unittest.TestCase):
         self.assertIn("forward:", self.html)
         self.assertIn("backward:", self.html)
 
+    def test_distance_profile_and_optional_comparison_are_wired(self):
+        self.assertIn('id="compareDistance"', self.html)
+        self.assertIn("profilePayload.distance_profile_id", self.html)
+        self.assertIn("profile.routing_mode === 'distance'", self.html)
+        self.assertIn("findPath(network, distanceProfileId)", self.html)
+        self.assertIn("distance-comparison-path-layer", self.html)
+        self.assertIn('id="comparisonDelta"', self.html)
+        self.assertNotIn('<option value="distance">', self.html)
+
     def test_generator_emits_profile_metadata_and_slope_cache(self):
         self.assertIn("routing_profiles_path", self.generator)
         self.assertIn("routing_metadata_path", self.generator)
         self.assertIn("routing_slope_cache_path", self.generator)
         self.assertIn("profile_ruleset_hash", self.generator)
+        self.assertIn('"distance_profile_id": distance_profile_id', self.generator)
 
     def test_daily_workflow_caches_elevation_tiles(self):
         self.assertIn("actions/cache@v4", self.daily_workflow)

@@ -14,6 +14,7 @@ SUPPORTED_FACTOR_TYPES = {
     "directional_numeric_bands",
 }
 SUPPORTED_OPERATORS = {"equals", "in", "contains", "lt", "lte", "gt", "gte"}
+SUPPORTED_ROUTING_MODES = {"accessibility_grade", "distance"}
 KNOWN_EDGE_KINDS = {"sidewalk", "footway", "crossing", "stairs"}
 
 
@@ -205,18 +206,25 @@ def validate_profiles(profiles: Mapping[str, Any]) -> None:
     if not isinstance(profiles, Mapping) or not profiles:
         raise ProfileValidationError("profiles must be a non-empty dictionary")
 
+    distance_profile_ids = []
     for profile_id, profile in profiles.items():
         if not isinstance(profile_id, str) or not profile_id:
             raise ProfileValidationError("profile identifiers must be strings")
         if not isinstance(profile, Mapping):
             raise ProfileValidationError(f"{profile_id} must be a dictionary")
-        for required in ("label", "description", "speed_kmh", "factors", "cost"):
+        for required in ("label", "description", "routing_mode", "speed_kmh"):
             if required not in profile:
                 raise ProfileValidationError(f"{profile_id}.{required} is required")
         if not isinstance(profile["label"], str) or not profile["label"]:
             raise ProfileValidationError(f"{profile_id}.label must not be empty")
         if not isinstance(profile["description"], str):
             raise ProfileValidationError(f"{profile_id}.description must be text")
+        routing_mode = profile["routing_mode"]
+        if routing_mode not in SUPPORTED_ROUTING_MODES:
+            raise ProfileValidationError(
+                f"{profile_id}.routing_mode must be one of "
+                f"{sorted(SUPPORTED_ROUTING_MODES)}"
+            )
         if (
             isinstance(profile["speed_kmh"], bool)
             or not isinstance(profile["speed_kmh"], (int, float))
@@ -224,6 +232,23 @@ def validate_profiles(profiles: Mapping[str, Any]) -> None:
         ):
             raise ProfileValidationError(f"{profile_id}.speed_kmh must be positive")
 
+        if routing_mode == "distance":
+            distance_profile_ids.append(profile_id)
+            redundant = {
+                key
+                for key in ("factors", "barriers", "grade_caps", "cost")
+                if key in profile
+            }
+            if redundant:
+                raise ProfileValidationError(
+                    f"{profile_id} distance profile must not define "
+                    f"{sorted(redundant)}"
+                )
+            continue
+
+        for required in ("factors", "cost"):
+            if required not in profile:
+                raise ProfileValidationError(f"{profile_id}.{required} is required")
         factors = profile["factors"]
         if not isinstance(factors, Mapping) or not factors:
             raise ProfileValidationError(f"{profile_id}.factors must not be empty")
@@ -238,6 +263,11 @@ def validate_profiles(profiles: Mapping[str, Any]) -> None:
                 _validate_condition(profile_id, group, index, rule)
 
         _validate_cost(profile_id, profile["cost"])
+
+    if len(distance_profile_ids) != 1:
+        raise ProfileValidationError(
+            "profiles must contain exactly one distance routing profile"
+        )
 
     # This also verifies that the dictionaries contain no Python-only values.
     json.dumps(profiles, sort_keys=True, allow_nan=False)
@@ -257,14 +287,17 @@ def public_profile_metadata(profiles: Mapping[str, Any]) -> dict[str, Any]:
     """Return the subset needed by the static JavaScript routing client."""
 
     validate_profiles(profiles)
-    return {
-        profile_id: {
+    result = {}
+    for profile_id, profile in profiles.items():
+        metadata = {
             "label": profile["label"],
             "description": profile["description"],
+            "routing_mode": profile["routing_mode"],
             "provisional": bool(profile.get("provisional", False)),
             "speed_kmh": profile["speed_kmh"],
-            "property_prefix": profile_id,
-            "cost": profile["cost"],
         }
-        for profile_id, profile in profiles.items()
-    }
+        if profile["routing_mode"] == "accessibility_grade":
+            metadata["property_prefix"] = profile_id
+            metadata["cost"] = profile["cost"]
+        result[profile_id] = metadata
+    return result

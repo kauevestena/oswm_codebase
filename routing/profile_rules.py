@@ -9,22 +9,34 @@ expresses the relative importance of a factor inside a profile; it is not a
 routing edge cost.  Hard barriers and grade caps are declared separately so a
 very good value cannot accidentally compensate for an impassable condition.
 
-The initial values are deliberately marked provisional.  They recover useful
-ordering from OSWM's historical accessibility experiment, correct obvious old
-errors, and provide a testable starting point for calibration with users and
-accessibility specialists.
+The accessibility values are deliberately marked provisional. They recover
+useful ordering from OSWM's historical accessibility experiment, correct
+obvious old errors, and provide a testable starting point for calibration with
+users and accessibility specialists. The distance-only profile is a neutral
+baseline and does not generate redundant per-edge grades.
 """
 
-PROFILE_RULESET_VERSION = "1.0.0"
+PROFILE_RULESET_VERSION = "1.1.0"
 
 
 ROUTING_PROFILES = {
+    "distance": {
+        "label": "Shortest distance",
+        "description": (
+            "Minimizes geometric walking distance without applying "
+            "accessibility grades, barriers or event penalties."
+        ),
+        "routing_mode": "distance",
+        "provisional": False,
+        "speed_kmh": 5.0,
+    },
     "wheelchair": {
         "label": "Wheelchair",
         "description": (
             "Prioritizes continuous, smooth, sufficiently wide routes with "
             "manageable longitudinal and cross slopes."
         ),
+        "routing_mode": "accessibility_grade",
         "provisional": True,
         "speed_kmh": 3.5,
         "factors": {
@@ -241,6 +253,7 @@ ROUTING_PROFILES = {
             "Prioritizes detectable transitions, tactile information, "
             "controlled crossings and predictable walking surfaces."
         ),
+        "routing_mode": "accessibility_grade",
         "provisional": True,
         "speed_kmh": 4.0,
         "factors": {
@@ -435,6 +448,7 @@ ROUTING_PROFILES = {
             "Prioritizes stable, smooth routes with gentle slopes, adequate "
             "width and safer road crossings."
         ),
+        "routing_mode": "accessibility_grade",
         "provisional": True,
         "speed_kmh": 3.2,
         "factors": {

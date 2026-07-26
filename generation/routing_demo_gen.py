@@ -168,7 +168,9 @@ def _profile_audit(
     properties: list[dict[str, Any]],
 ) -> dict[str, dict[str, Any]]:
     audit: dict[str, dict[str, Any]] = {}
-    for profile_id in ROUTING_PROFILES:
+    for profile_id, profile in ROUTING_PROFILES.items():
+        if profile["routing_mode"] == "distance":
+            continue
         grades = [
             min(
                 int(item[f"{profile_id}_grade_fwd"]),
@@ -317,10 +319,16 @@ def main() -> None:
     output.to_file(constants.routing_demo_path, driver="GeoJSON")
 
     rules_hash = profile_ruleset_hash(ROUTING_PROFILES)
+    distance_profile_id = next(
+        profile_id
+        for profile_id, profile in ROUTING_PROFILES.items()
+        if profile["routing_mode"] == "distance"
+    )
     profile_payload = {
-        "schema_version": 1,
+        "schema_version": 2,
         "ruleset_version": PROFILE_RULESET_VERSION,
         "ruleset_hash": rules_hash,
+        "distance_profile_id": distance_profile_id,
         "profiles": public_profile_metadata(ROUTING_PROFILES),
     }
     _json_dump(profile_payload, constants.routing_profiles_path)
