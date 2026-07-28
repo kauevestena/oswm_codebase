@@ -46,7 +46,7 @@ SERVICE_API_ENDPOINTS = {
     "https://tasks.teachosm.org/": "https://tasks.teachosm.org/backend/api/v2/",
     "https://tasks.mapwith.ai/": "https://tasks.mapwith.ai/api/v2/",
     "https://maproulette.org/": "https://maproulette.org/api/v2/",
-    "https://pic4review.pavie.info/#/": "https://pic4review.pavie.info/api/"
+    "https://pic4review.pavie.info/#/": "https://api.pic4review.pavie.info/"
 }
 
 
@@ -163,15 +163,30 @@ def parse_maproulette_results(raw_results, instance_url):
         return projects
 
     for item in raw_results:
+        parent_info = item.get("parent")
+        parent_id = None
+        if isinstance(parent_info, dict):
+            parent_id = parent_info.get("id")
+        elif parent_info is not None:
+            parent_id = parent_info
+
+        if parent_id:
+            url = f"{instance_url.rstrip('/')}/admin/project/{parent_id}/challenge/{item.get('id', '')}"
+        else:
+            url = f"{instance_url.rstrip('/')}/browse/challenges/{item.get('id', '')}"
+
         project = {
             "id": item.get("id", ""),
             "title": item.get("name", "Untitled"),
             "service": "MapRoulette",
             "instance": instance_url,
-            "url": f"{instance_url.rstrip('/')}/browse/challenges/{item.get('id', '')}",
+            "url": url,
             "status": _maproulette_status(item.get("status", -1)),
             "description": item.get("description", ""),
         }
+        if "bounding" in item and item["bounding"]:
+            project["geometry"] = item["bounding"]
+
         projects.append(project)
     return projects
 
@@ -299,22 +314,52 @@ def query_pic4review_API(instance_url, bbox, queryword):
 def check_pic4review_online(instance_url, timeout=10):
     """
     Check whether a Pic4Review instance is reachable.
-    Returns True/False/'error'.
+    Returns True/False.
     """
+    base_api = SERVICE_API_ENDPOINTS.get(instance_url, "https://api.pic4review.pavie.info/")
     try:
-        response = requests.get(instance_url.rstrip("/").replace("/#/", "/"), timeout=timeout)
+        response = requests.get(base_api.rstrip("/") + "/missions", timeout=timeout)
         return response.status_code == 200
-    except requests.exceptions.ConnectionError:
-        return False
-    except requests.exceptions.Timeout:
-        return False
     except Exception:
         return False
 
 
 def parse_pic4review_results(raw_results, instance_url):
-    """Pic4Review stub — always returns empty list."""
-    return []
+    """
+    Normalize Pic4Review API results into the standard project format.
+    """
+    projects = []
+    if not raw_results:
+        return projects
+
+    missions = raw_results if isinstance(raw_results, list) else raw_results.get("missions", [])
+    if not isinstance(missions, list):
+        return projects
+
+    for item in missions:
+        m_id = str(item.get("id", ""))
+        theme = item.get("theme", "")
+        shortdesc = item.get("shortdesc", "")
+        areaname = item.get("areaname", "")
+
+        title_parts = [p for p in [theme, shortdesc] if p]
+        title = " - ".join(title_parts) if title_parts else (areaname or "Untitled")
+
+        url_base = instance_url.rstrip("/")
+        if url_base.endswith("/#"):
+            url_base = url_base[:-2]
+
+        project = {
+            "id": m_id,
+            "title": title,
+            "service": "Pic4Review",
+            "instance": instance_url,
+            "url": f"{url_base}/#/mission/{m_id}",
+            "status": item.get("status", "online"),
+            "description": item.get("fulldesc") or item.get("shortdesc", ""),
+        }
+        projects.append(project)
+    return projects
 
 
 # ---------------------------------------------------------------------------
@@ -341,14 +386,18 @@ def deduplicate_results(projects):
     return list(seen.values())
 
 
-def filter_by_polygon(projects, polygon):
+def filter_by_polygon(projects, polygon, max_area_ratio=2.0):
     """
-    Post-filter projects whose geometry intersects with the study-area polygon.
-    
-    For services that return project geometry (bounding box or centroid),
-    we check intersection with the node polygon. Projects without geometry
-    information are kept (benefit of the doubt).
-    
+    Post-filter projects whose geometry intersects with the study-area polygon
+    AND whose footprint is not excessively larger than the node polygon.
+
+    A challenge whose bounding box covers an entire country (e.g. all of Brazil)
+    will intersect any city inside it, but it is not a *local* project for that
+    city.  We therefore reject projects whose geometry area exceeds
+    ``max_area_ratio`` times the node polygon area.
+
+    Projects without geometry information are kept (benefit of the doubt).
+
     Parameters
     ----------
     projects : list of dict
@@ -356,7 +405,11 @@ def filter_by_polygon(projects, polygon):
         or 'bbox' key with [west, south, east, north].
     polygon : shapely.geometry
         The study-area polygon.
-    
+    max_area_ratio : float
+        Maximum allowed ratio of project-geometry area to node-polygon area.
+        Projects exceeding this ratio are dropped even if they intersect.
+        Default is 10.0 (project can be at most ~10× the node area).
+
     Returns
     -------
     list of dict
@@ -370,6 +423,9 @@ def filter_by_polygon(projects, polygon):
     except ImportError:
         print("[acquisition] shapely not available — skipping polygon filter")
         return projects
+
+    node_area = polygon.area          # degree² — fine for ratio comparison
+    area_threshold = node_area * max_area_ratio if node_area > 0 else None
 
     filtered = []
     for project in projects:
@@ -388,8 +444,17 @@ def filter_by_polygon(projects, polygon):
                 pass
 
         if geom is not None:
-            if geom.intersects(polygon):
-                filtered.append(project)
+            if not geom.intersects(polygon):
+                continue
+            # Reject projects whose footprint is excessively larger than the node
+            if area_threshold is not None and geom.area > area_threshold:
+                print(
+                    f"[acquisition] Dropping '{project.get('title', '?')}' — "
+                    f"geometry area {geom.area:.4f} exceeds "
+                    f"{max_area_ratio}× node area ({node_area:.4f})"
+                )
+                continue
+            filtered.append(project)
         else:
             # No geometry info — keep the project
             filtered.append(project)
@@ -481,9 +546,34 @@ def fetch_all_maproulette(instance_url, bbox):
     return all_projects
 
 def fetch_all_pic4review(instance_url, bbox):
-    """Pic4Review stub — returns empty list."""
-    print(f"[acquisition] Pic4Review: service nearly discontinued — skipping fetch")
-    return []
+    """
+    Fetch all Pic4Review missions by querying the missions list API and fetching mission details.
+    """
+    base_api = SERVICE_API_ENDPOINTS.get(instance_url, "https://api.pic4review.pavie.info/")
+    missions_url = base_api.rstrip("/") + "/missions"
+
+    raw = query_to_json(missions_url)
+    if not raw or not isinstance(raw, dict):
+        return []
+
+    missions_list = raw.get("missions", [])
+    if not isinstance(missions_list, list):
+        return []
+
+    detailed_missions = []
+    for m in missions_list:
+        m_id = m.get("id")
+        if m_id:
+            detail_url = base_api.rstrip("/") + f"/missions/{m_id}"
+            detail_raw = query_to_json(detail_url)
+            if detail_raw and isinstance(detail_raw, dict) and "mission" in detail_raw:
+                detailed_missions.append(detail_raw["mission"])
+            else:
+                detailed_missions.append(m)
+        else:
+            detailed_missions.append(m)
+
+    return parse_pic4review_results(detailed_missions, instance_url)
 
 # ---------------------------------------------------------------------------
 # Service dispatcher

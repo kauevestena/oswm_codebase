@@ -77,7 +77,7 @@ def collect_all_projects(bbox, n_keywords=None, dry_run=False):
             inst_projects = []
             inst_ok = True
 
-            # Special handling for Pic4Review
+            # Check online status for Pic4Review before fetching
             if service_name == "Pic4Review":
                 if not dry_run:
                     online = check_pic4review_online(instance_url)
@@ -87,16 +87,14 @@ def collect_all_projects(bbox, n_keywords=None, dry_run=False):
                         print(f"[acquisition] Pic4Review instance {instance_url} is OFFLINE")
                         continue
                     else:
-                        svc_status["instances"][instance_url] = "online (no search API)"
+                        svc_status["instances"][instance_url] = "online"
                 else:
                     svc_status["instances"][instance_url] = "dry-run"
-                continue  # Pic4Review has no search API
 
             fetch_fn = dispatch.get("fetch_all")
             
             if dry_run:
-                if service_name != "Pic4Review":
-                    print(f"  [DRY-RUN] {service_name} @ {instance_url} | using fetch_all()")
+                print(f"  [DRY-RUN] {service_name} @ {instance_url} | using fetch_all()")
                 continue
 
             if fetch_fn:
