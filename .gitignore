@@ -182,6 +182,7 @@ cache/
 tests/
 !tests/
 tests/*
+!tests/test_branding_manifest.py
 !tests/webmap_snapshot/
 !tests/webmap_snapshot/*.py
 tests.py

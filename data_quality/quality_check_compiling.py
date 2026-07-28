@@ -2,11 +2,14 @@
 from dq_funcs import *
 from quality_dicts import *
 from functions import *
+from branding import branding_asset_url
 
 
 
 
 def main():
+    qc_logo_url = branding_asset_url("logos.project", "../oswm_codebase")
+    qc_favicon_url = branding_asset_url("favicon", "../oswm_codebase")
     gdf_dict = get_gdfs_dict(raw_data=True)
 
     type_dict = geom_type_dict.copy()
@@ -232,8 +235,8 @@ def main():
                 title=f"{category} / {quality_category}",
                 back_url=f"../../pages/{category}/{quality_category}.html",
                 back_text=f"← Back to {quality_category}",
-                logo_url="../../../oswm_codebase/assets/homepage/project_logo.png",
-                favicon_url="../../../oswm_codebase/assets/favicon_homepage.png"
+                logo_url=branding_asset_url("logos.project", "../../../oswm_codebase"),
+                favicon_url=branding_asset_url("favicon", "../../../oswm_codebase")
             )
 
     ######### PART 3: Quality Check Main page
@@ -317,7 +320,7 @@ def main():
 
     <title>OSWM DQ Home</title>
 
-    <link rel="icon" type="image/x-icon" href="../oswm_codebase/assets/favicon_homepage.png">
+    <link rel="icon" type="image/x-icon" href="{qc_favicon_url}">
 
     </head>
     <body>
@@ -325,7 +328,7 @@ def main():
     {js_functions_dq}
 
     <main class="dq-container">
-        <h1><img src="../oswm_codebase/assets/homepage/project_logo.png" alt="OSWM Logo" style="height: 1.5em; vertical-align: middle; margin-right: 15px;">OpenSidewalkMap Data Quality Tool</h1>
+        <h1><img src="{qc_logo_url}" alt="OSWM Logo" style="height: 1.5em; vertical-align: middle; margin-right: 15px;">OpenSidewalkMap Data Quality Tool</h1>
 
         <div style="display: flex; gap: 1rem; margin: 1rem 0; flex-wrap: wrap;">
             <div style="flex: 1; min-width: 300px; background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(0, 242, 254, 0.3); border-radius: 12px; padding: 1.5rem; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">

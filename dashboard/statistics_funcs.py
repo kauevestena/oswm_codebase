@@ -5,6 +5,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from datetime import datetime
 from functions import *
+from branding import branding_asset_url
 
 # from constants import *
 
@@ -418,32 +419,37 @@ def create_rev_date(row):
         )
 
 
-global_insertions = {
-    "<head>": """
+def get_dashboard_global_insertions(levels_backward=2):
+    codebase_prefix = f"{'../' * levels_backward}oswm_codebase"
+    favicon_url = branding_asset_url("favicon", codebase_prefix)
+    return {
+        "<head>": f"""
 
     <head>
 
-    <link rel="stylesheet" href="https://kauevestena.github.io/oswm_codebase/assets/styles/stats_styles.css">
-    <script src="https://kauevestena.github.io/oswm_codebase/assets/webscripts/stats_funcs.js"></script>
+    <link rel="stylesheet" href="{codebase_prefix}/assets/styles/stats_styles.css">
+    <script src="{codebase_prefix}/assets/webscripts/stats_funcs.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
 
     <title>OSWM Dashboard</title>
 
-    <link rel="icon" type="image/x-icon" href="https://kauevestena.github.io/oswm_codebase/assets/homepage/favicon_homepage.png">
+    <link rel="icon" type="image/x-icon" href="{favicon_url}">
 
     """,
-}
+    }
 
 global_exclusions = [{"points": ["<style>", "</style>"], "multiline": True}]
 
-dashboard_main_page_insertions = {
-    "<body>": """
+def get_dashboard_main_page_insertions():
+    project_logo_url = branding_asset_url("logos.project", "../oswm_codebase")
+    return {
+        "<body>": f"""
 
     <body>
     <h1 style="text-align: center;font-family: 'Poppins', sans-serif;">Welcome to the OSWM Node Dashboard!</h1>
     <div style="text-align: center; padding: 5px;">
-        <img src="https://kauevestena.github.io/oswm_codebase/assets/homepage/project_logo.png" alt="OSWM Project Logo">
+        <img src="{project_logo_url}" alt="OSWM Project Logo">
     </div>
     <h3 style="text-align: center; font-weight: normal;"><b>Select a category of data</b> or the aggregated on "All Data Charts"<br><br>Or click the blue button to go back to the node homepage!<br><br>Most <b>charts are interactive</b>, so try out some pan and zoom!<br></form></h3>
 
@@ -459,7 +465,7 @@ dashboard_main_page_insertions = {
     </script>
 
     """
-}
+    }
 
 # stuff for the explanation
 explanation_base = '<h4 style="padding-left: 14%;font-weight: normal;font-family: sans-serif;"> - Explanation: {} </h4>'
