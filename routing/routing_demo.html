@@ -4,487 +4,548 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OSWM Node Routing Demo</title>
+    <title>OSWM Accessible Routing</title>
     <!-- maplibre-gl v6 -->
     <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6/dist/maplibre-gl.css" />
     <script type="module" src="../assets/branding/branding.js"></script>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: "Helvetica Neue", Arial, sans-serif;
-        }
-
-        #map {
-            width: 100%;
-            height: 100vh;
-        }
-
-        .marker {
-            display: block;
-        }
-
-        #infoBox {
-            position: absolute;
-            top: 20px;
-            right: 50px;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 8px;
-            padding: 15px 20px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            font-size: 14px;
-            color: #333;
-            min-width: 180px;
-            z-index: 999;
-        }
-
-        #infoBox h3 {
-            margin: 0;
-            margin-bottom: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            color: #000;
-        }
-
-        #infoBox .distance,
-        #infoBox .time {
-            margin-bottom: 6px;
-        }
-
-        #infoBox .no-route {
-            color: #666;
-        }
-
-        #infoBox.hidden {
-            display: none;
-        }
-
-        .logo_img {
-            position: fixed;
-            left: 2px;
-            top: 2px;
-            z-index: 1000;
-        }
-
-        .responsive {
-            max-width: 40%;
-            height: auto;
-        }
-
-        /* Modal Styles */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-
-        .modal-overlay.visible {
-            display: flex;
-        }
-
-        .modal {
-            background: #fff;
-            width: 300px;
-            max-width: 100%;
-            padding: 20px;
-            border-radius: 8px;
-            font-family: Arial, sans-serif;
-            margin: 0;
-            box-sizing: border-box;
-        }
-
-        .modal h2 {
-            margin-top: 0;
-        }
-
-        .modal p {
-            margin: 15px 0;
-        }
-
-        .modal .actions {
-            text-align: right;
-        }
-
-        .modal .actions button {
-            background: steelblue;
-            color: #fff;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .modal .actions button:hover {
-            background: #4682B4;
-        }
-
-        .modal-footer {
-            margin-top: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .modal-footer label {
-            font-size: 14px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-        }
-
-        .modal-footer input {
-            margin-right: 5px;
-        }
-    </style>
-
     <link rel="icon" type="image/x-icon" data-oswm-branding="favicon">
 </head>
 
 <body>
     <div id="map">
-
         <a href="https://kauevestena.github.io/opensidewalkmap_beta/" id="node_link">
             <img data-oswm-branding="logos.page_dark_clean"
                 alt="OSWM Page Logo" title="Click for more OSWM Node's Resources!!" class="logo_img responsive">
         </a>
-
-    </div>
-    <div id="infoBox" class="hidden">
-        <h3>Route Info</h3>
-        <div class="distance">Distance: <span id="distanceVal">-</span> km</div>
-        <div class="time">Est. Time: <span id="timeVal">-</span> min</div>
-        <div class="no-route" style="display:none;">No route found</div>
     </div>
 
-    <!-- Modal Structure -->
-    <div class="modal-overlay" id="welcomeModalOverlay">
-        <div class="modal" id="welcomeModal">
-            <h2>welcome to the OSWM Routing Demo</h2>
-            <h4>still experimental, in the future optimized profiles are coming!</h4>
-            <p>First click: Start Point</p>
-            <p>Second click: End Point</p>
-            <p>(then start over)</p>
-            <h5>Keep in mind that it relies upon existing OSM data, so no-data islands can occur!</h5>
+    <section id="routingPanel" aria-label="Routing options">
+        <h2>Route profile</h2>
+        <label for="profileSelect">Optimization</label>
+        <select id="profileSelect"></select>
+        <p id="profileDescription">Loading routing profiles…</p>
 
-            <!-- TODO: Add checkbox for "Don't show again" -->
-            <!-- <div class="modal-footer">
-                <label>
-                    <input type="checkbox" id="dontShowAgain">
-                    Don't show this again
-                </label>
-            </div> -->
+        <div id="compareOption" hidden>
+            <label class="compare-label" for="compareDistance">
+                <input type="checkbox" id="compareDistance">
+                Compare with distance-only
+            </label>
+        </div>
 
-
-            <div class="actions">
-                <button id="modalOkBtn">OK</button>
+        <div id="routeInfo" class="hidden" aria-live="polite">
+            <div class="route-result">
+                <div>Distance: <strong><span id="distanceVal">-</span> km</strong></div>
+                <div>Estimated time: <strong><span id="timeVal">-</span> min</strong></div>
+                <div>
+                    <span class="route-swatch selected"></span>
+                    Profile: <strong><span id="profileVal">-</span></strong>
+                </div>
+                <div class="experimental" id="experimentalNote"></div>
             </div>
+            <div class="no-route" hidden>No route was found for this profile.</div>
+            <div id="comparisonInfo" hidden>
+                <div class="comparison-title">
+                    <span class="route-swatch distance"></span>
+                    Distance-only comparison
+                </div>
+                <div>
+                    Shortest route:
+                    <strong><span id="comparisonDistanceVal">-</span> km</strong>,
+                    <span id="comparisonTimeVal">-</span> min
+                </div>
+                <div id="comparisonDelta"></div>
+            </div>
+        </div>
+    </section>
+
+    <div class="modal-overlay" id="welcomeModalOverlay">
+        <div class="modal">
+            <h2>OSWM accessible routing</h2>
+            <p>This experimental router uses mapped OpenStreetMap accessibility information and estimated terrain slope.</p>
+            <ol>
+                <li>Select a routing profile.</li>
+                <li>Optionally compare an accessibility profile with the distance-only route.</li>
+                <li>Click a route origin.</li>
+                <li>Click a destination.</li>
+                <li>A third click starts a new route.</li>
+            </ol>
+            <p>Missing data can affect the result. Profile grades are provisional and are not a guarantee that a route is accessible.</p>
+            <button id="modalOkBtn">Continue</button>
         </div>
     </div>
 
     <script type="module">
-        import * as maplibregl from 'https://unpkg.com/maplibre-gl@6/dist/maplibre-gl.mjs';
-        import * as turf from 'https://esm.sh/@turf/turf@7';
-        import geojsonPathFinder from 'https://esm.sh/geojson-path-finder@1.5.3';
+        import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.0.0/dist/maplibre-gl.mjs';
+        import * as turf from 'https://esm.sh/@turf/turf@7.3.5';
+        import PathFinder from 'https://esm.sh/geojson-path-finder@2.1.0';
 
+        const profileSelect = document.getElementById('profileSelect');
+        const profileDescription = document.getElementById('profileDescription');
+        const compareOption = document.getElementById('compareOption');
+        const compareDistance = document.getElementById('compareDistance');
+        const comparisonInfo = document.getElementById('comparisonInfo');
+        const routeInfo = document.getElementById('routeInfo');
+
+        let originalData = null;
+        let profilePayload = null;
+        let distanceProfileId = null;
         let start = null;
         let end = null;
-        let pathFinder = null;
         let bestPath = null;
-        let originalData = null;
-        let markers = [];  // Track MapLibre marker instances for proper cleanup
+        let comparisonPath = null;
+        let markers = [];
 
-        // For the estimation calculation:
-        // Assume a speed of ~5 km/h = 12 min/km
-        const minutesPerKm = 12;
-
-        // Initialize the map without specifying center/zoom
         const map = new maplibregl.Map({
             container: 'map',
             style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json'
         });
 
-        fetch('../../data/routing/demo.geojson')
-            .then(response => response.json())
-            .then(data => {
-                originalData = data;
-
-                // Calculate bounding box of the data
-                const bbox = turf.bbox(data);
-
-                map.on('load', () => {
-                    // Add the GeoJSON data as a source
-                    map.addSource('line', {
-                        'type': 'geojson',
-                        'data': data
-                    });
-
-                    // Add a layer to visualize the network
-                    map.addLayer({
-                        'id': 'line-layer',
-                        'type': 'line',
-                        'source': 'line',
-                        'layout': {
-                            'line-join': 'round',
-                            'line-cap': 'round'
-                        },
-                        'paint': {
-                            'line-color': 'steelblue',
-                            'line-width': 4
-                        }
-                    });
-
-                    // Fit the map to show all features
-                    map.fitBounds(bbox, { padding: 20 });
-
-                    map.addControl(new maplibregl.NavigationControl());
-                    map.addControl(new maplibregl.FullscreenControl());
-                    map.addControl(new maplibregl.ScaleControl());
-
-                    map.addControl(new maplibregl.GeolocateControl({
-                        positionOptions: {
-                            enableHighAccuracy: true
-                        },
-                        trackUserLocation: true
-                    }));
-
-                    // Initialize the path finder
-                    pathFinder = new geojsonPathFinder(data, {
-                        precision: 1e-5,
-                        directed: false,
-                        weightFn: (a, b) => turf.distance(turf.point(a), turf.point(b))
-                    });
-
-                    // add the boundaries geojson:
-                    map.addSource('boundaries', {
-                        'type': 'geojson',
-                        'data': '../../data/boundaries/polygon.geojson'
-                    });
-
-                    map.addLayer({
-                        'id': 'boundary-layer',
-                        'type': 'line',
-                        'source': 'boundaries',
-                        'paint': {
-                            'line-color': '#000000',
-                            'line-width': .3
-                        }
-                    });
-
-                    // Show modal if not disabled
-                    showWelcomeModalIfNeeded();
-                });
-            });
-
-        // Add click event to select start and end points
-        map.on('click', (e) => {
-            if (!pathFinder || !originalData) {
-                console.error("PathFinder not initialized yet.");
-                return;
+        Promise.all([
+            fetch('../../data/routing/demo.geojson').then(requireOk).then(response => response.json()),
+            fetch('../../data/routing/profiles.json').then(requireOk).then(response => response.json())
+        ]).then(([data, profiles]) => {
+            originalData = data;
+            profilePayload = profiles;
+            distanceProfileId = profilePayload.distance_profile_id;
+            if (
+                !distanceProfileId
+                || profilePayload.profiles[distanceProfileId]?.routing_mode !== 'distance'
+            ) {
+                throw new Error('No distance-only routing profile was provided.');
             }
+            populateProfiles();
+            updateProfileControls();
 
-            const coords = [e.lngLat.lng, e.lngLat.lat];
-            // Use originalData instead of private _data API on the map source
-            const snappedPoint = turf.nearestPointOnLine(originalData, turf.point(coords));
-            const snappedCoords = snappedPoint.geometry.coordinates;
+            map.on('load', () => {
+                map.addSource('line', { type: 'geojson', data });
+                map.addLayer({
+                    id: 'line-layer',
+                    type: 'line',
+                    source: 'line',
+                    layout: { 'line-join': 'round', 'line-cap': 'round' },
+                    paint: {
+                        'line-color': [
+                            'match', ['get', 'edge_kind'],
+                            'crossing', '#704ba0',
+                            'stairs', '#bd5b00',
+                            '#4682b4'
+                        ],
+                        'line-width': 4,
+                        'line-opacity': .82
+                    }
+                });
 
-            if (!start) {
-                start = snappedCoords;
-                addMarker(snappedCoords, 'start-marker', '#1fb30d');
-                showInfoBox(false); // Initially hide info if new start is chosen
-            } else if (!end) {
-                end = snappedCoords;
-                addMarker(snappedCoords, 'end-marker', '#ff4749');
-                splitLinesAndFindPath();
-            } else {
-                // Reset if both points are already selected
-                resetPath();
-                start = snappedCoords;
-                addMarker(snappedCoords, 'start-marker', '#1fb30d');
+                map.addSource('boundaries', {
+                    type: 'geojson',
+                    data: '../../data/boundaries/polygon.geojson'
+                });
+                map.addLayer({
+                    id: 'boundary-layer',
+                    type: 'line',
+                    source: 'boundaries',
+                    paint: { 'line-color': '#000', 'line-width': .3 }
+                });
+
+                map.fitBounds(turf.bbox(data), { padding: 35 });
+                map.addControl(new maplibregl.NavigationControl());
+                map.addControl(new maplibregl.FullscreenControl());
+                map.addControl(new maplibregl.ScaleControl());
+                map.addControl(new maplibregl.GeolocateControl({
+                    positionOptions: { enableHighAccuracy: true },
+                    trackUserLocation: true
+                }));
+                showWelcomeModalIfNeeded();
+            });
+        }).catch(error => {
+            console.error(error);
+            showNoRoute(`Routing data could not be loaded: ${error.message}`);
+        });
+
+        function requireOk(response) {
+            if (!response.ok) {
+                throw new Error(`${response.status} ${response.statusText}`);
+            }
+            return response;
+        }
+
+        function populateProfiles() {
+            profileSelect.replaceChildren();
+            const profiles = Object.entries(profilePayload.profiles).sort(
+                ([leftId, left], [rightId, right]) => {
+                    if (leftId === rightId) return 0;
+                    if (leftId === distanceProfileId) return -1;
+                    if (rightId === distanceProfileId) return 1;
+                    return left.label.localeCompare(right.label);
+                }
+            );
+            for (const [profileId, profile] of profiles) {
+                const option = document.createElement('option');
+                option.value = profileId;
+                option.textContent = profile.label;
+                profileSelect.appendChild(option);
+            }
+            profileSelect.value = distanceProfileId;
+        }
+
+        function selectedProfile() {
+            return profilePayload.profiles[profileSelect.value];
+        }
+
+        function selectedProfileLabel() {
+            return selectedProfile().label;
+        }
+
+        function updateProfileControls() {
+            const profile = selectedProfile();
+            const isDistanceOnly = profile.routing_mode === 'distance';
+            profileDescription.textContent = profile.description;
+            compareOption.hidden = isDistanceOnly;
+            compareDistance.disabled = isDistanceOnly;
+            if (isDistanceOnly) {
+                compareDistance.checked = false;
+                if (comparisonPath) removeComparisonPath();
+                comparisonInfo.hidden = true;
+            }
+        }
+
+        profileSelect.addEventListener('change', () => {
+            updateProfileControls();
+            if (start && end) {
+                calculateRoute();
             }
         });
 
-        // Function to add a marker to the map
-        function addMarker(coords, id, color) {
-            const el = document.createElement('div');
-            el.className = 'marker';
-            el.style.width = '10px';
-            el.style.height = '10px';
-            el.style.borderRadius = '50%';
-            el.style.backgroundColor = color;
-            // el.draggable = true; // TODO
+        compareDistance.addEventListener('change', () => {
+            if (start && end) {
+                calculateRoute();
+            } else if (!compareDistance.checked) {
+                removeComparisonPath();
+                comparisonInfo.hidden = true;
+            }
+        });
 
-            const marker = new maplibregl.Marker(el).setLngLat(coords).addTo(map);
-            markers.push(marker);
-        }
+        map.on('click', event => {
+            if (!originalData) return;
+            const snapped = nearestNetworkPoint([event.lngLat.lng, event.lngLat.lat]);
+            if (!snapped) return;
 
-        function splitLinesAndFindPath(retry = false) {
-            const startPoint = turf.point(start);
-            const endPoint = turf.point(end);
-
-            let updatedData = JSON.parse(JSON.stringify(originalData));
-
-            // Densify lines
-            updatedData.features = updatedData.features.flatMap((feature) => {
-                if (feature.geometry.type === 'LineString') {
-                    const line = turf.lineString(feature.geometry.coordinates);
-                    const length = turf.length(line, { units: 'kilometers' });
-                    const numSegments = retry ? Math.ceil(length / 0.02) : Math.ceil(length / 0.05);
-                    const densifiedLine = turf.lineChunk(line, length / numSegments, { units: 'kilometers' });
-                    return densifiedLine.features;
-                }
-                return feature;
-            });
-
-            // Split lines at start/end points
-            updatedData.features = updatedData.features.flatMap((feature) => {
-                if (feature.geometry.type === 'LineString') {
-                    const line = turf.lineString(feature.geometry.coordinates);
-                    let splitStart = turf.lineSplit(line, startPoint);
-                    let splitEnd = turf.lineSplit(line, endPoint);
-
-                    if (splitStart.features.length > 1) {
-                        return splitStart.features;
-                    }
-                    if (splitEnd.features.length > 1) {
-                        return splitEnd.features;
-                    }
-                }
-                return feature;
-            });
-
-            // Update pathfinder
-            pathFinder = new geojsonPathFinder(updatedData, {
-                precision: 1e-5,
-                directed: false,
-                weightFn: (a, b) => turf.distance(turf.point(a), turf.point(b))
-            });
-
-            findAndDisplayPath(retry);
-        }
-
-        function findAndDisplayPath(retry) {
-            const startPoint = { type: 'Feature', geometry: { type: 'Point', coordinates: start } };
-            const endPoint = { type: 'Feature', geometry: { type: 'Point', coordinates: end } };
-            bestPath = pathFinder.findPath(startPoint, endPoint);
-
-            if (bestPath && bestPath.path.length > 0) {
-                const pathGeoJson = {
-                    "type": "FeatureCollection",
-                    "features": [
-                        {
-                            "type": "Feature",
-                            "geometry": {
-                                "type": "LineString",
-                                "coordinates": bestPath.path
-                            },
-                            "properties": {}
-                        }
-                    ]
-                };
-
-                if (map.getSource('best-path')) {
-                    map.getSource('best-path').setData(pathGeoJson);
-                } else {
-                    map.addSource('best-path', {
-                        'type': 'geojson',
-                        'data': pathGeoJson
-                    });
-
-                    map.addLayer({
-                        'id': 'best-path-layer',
-                        'type': 'line',
-                        'source': 'best-path',
-                        'layout': {
-                            'line-join': 'round',
-                            'line-cap': 'round'
-                        },
-                        'paint': {
-                            'line-color': '#0000ff',
-                            'line-width': 8
-                        }
-                    });
-                }
-
-                // Update info box with route details
-                // bestPath.weight is in km (as per turf.distance default)
-                const distance = bestPath.weight.toFixed(2);
-                const timeEst = Math.round(distance * minutesPerKm);
-
-                document.getElementById('distanceVal').textContent = distance;
-                document.getElementById('timeVal').textContent = timeEst;
-                showInfoBox(true, false);
-
+            if (!start) {
+                start = snapped;
+                addMarker(snapped.coordinates, '#1b9e3e');
+                hideRouteInfo();
+            } else if (!end) {
+                end = snapped;
+                addMarker(snapped.coordinates, '#e33d43');
+                calculateRoute();
             } else {
-                console.error("Path not found");
-                if (!retry) {
-                    console.warn("Retrying with increased densification...");
-                    splitLinesAndFindPath(true);
-                } else {
-                    showInfoBox(true, true);
+                resetPath();
+                start = snapped;
+                addMarker(snapped.coordinates, '#1b9e3e');
+            }
+        });
+
+        function nearestNetworkPoint(coordinates) {
+            const target = turf.point(coordinates);
+            let best = null;
+            let bestDistance = Infinity;
+            for (const feature of originalData.features) {
+                if (feature.geometry.type !== 'LineString') continue;
+                const candidate = turf.nearestPointOnLine(feature, target, { units: 'meters' });
+                const distance = turf.distance(target, candidate, { units: 'meters' });
+                if (distance < bestDistance) {
+                    bestDistance = distance;
+                    best = {
+                        coordinates: candidate.geometry.coordinates,
+                        routingId: feature.properties.routing_id
+                    };
                 }
             }
+            return best;
+        }
+
+        function addMarker(coordinates, color) {
+            const element = document.createElement('div');
+            element.className = 'marker';
+            element.style.backgroundColor = color;
+            markers.push(new maplibregl.Marker(element).setLngLat(coordinates).addTo(map));
+        }
+
+        function splitFeatureAtSnaps(feature, snaps) {
+            let parts = [feature];
+            for (const snap of snaps) {
+                parts = parts.flatMap(part => {
+                    const point = turf.point(snap.coordinates);
+                    const split = turf.lineSplit(part, point);
+                    if (split.features.length <= 1) return [part];
+                    return split.features.map(piece => ({
+                        ...piece,
+                        properties: { ...feature.properties }
+                    }));
+                });
+            }
+            return parts;
+        }
+
+        function queryNetwork() {
+            const snapsByFeature = new Map();
+            for (const snap of [start, end]) {
+                const list = snapsByFeature.get(snap.routingId) || [];
+                list.push(snap);
+                snapsByFeature.set(snap.routingId, list);
+            }
+            return {
+                type: 'FeatureCollection',
+                features: originalData.features.flatMap(feature => {
+                    const snaps = snapsByFeature.get(feature.properties.routing_id);
+                    return snaps ? splitFeatureAtSnaps(feature, snaps) : [feature];
+                })
+            };
+        }
+
+        function gradeMultiplier(profile, grade) {
+            for (const band of profile.cost.grade_multipliers) {
+                if (grade >= band.min_grade) return band.multiplier;
+            }
+            return null;
+        }
+
+        function profileWeight(profileId) {
+            const profile = profilePayload.profiles[profileId];
+            return (a, b, properties) => {
+                const segmentM = turf.distance(
+                    turf.point(a),
+                    turf.point(b),
+                    { units: 'meters' }
+                );
+                if (profile.routing_mode === 'distance') return segmentM;
+
+                const edgeKind = properties.edge_kind || 'footway';
+                const eventPenalty = profile.cost.event_penalties_m[edgeKind];
+                if (eventPenalty === null || eventPenalty === undefined) return 0;
+
+                const featureLength = Math.max(
+                    Number(properties.length_m) || segmentM,
+                    segmentM
+                );
+                const proportionalPenalty = eventPenalty * segmentM / featureLength;
+
+                const directionalCost = direction => {
+                    const suffix = direction === 'forward' ? 'fwd' : 'bwd';
+                    if (properties[`${profileId}_allow_${suffix}`] === false) return 0;
+                    const grade = Number(properties[`${profileId}_grade_${suffix}`]);
+                    const multiplier = gradeMultiplier(profile, grade);
+                    if (!Number.isFinite(grade) || grade <= 0 || multiplier === null) {
+                        return 0;
+                    }
+                    return segmentM * multiplier + proportionalPenalty;
+                };
+
+                return {
+                    forward: directionalCost('forward'),
+                    backward: directionalCost('backward')
+                };
+            };
+        }
+
+        function findPath(network, profileId) {
+            const pathFinder = new PathFinder(network, {
+                tolerance: 1e-5,
+                weight: profileWeight(profileId)
+            });
+            return pathFinder.findPath(
+                turf.point(start.coordinates),
+                turf.point(end.coordinates)
+            );
+        }
+
+        function hasUsablePath(pathResult) {
+            return Boolean(pathResult?.path && pathResult.path.length >= 2);
+        }
+
+        function setRouteLayer(pathResult, sourceId, layerId, paint) {
+            const data = turf.featureCollection([
+                turf.lineString(pathResult.path)
+            ]);
+            if (map.getSource(sourceId)) {
+                map.getSource(sourceId).setData(data);
+                return;
+            }
+            map.addSource(sourceId, { type: 'geojson', data });
+            map.addLayer({
+                id: layerId,
+                type: 'line',
+                source: sourceId,
+                layout: { 'line-join': 'round', 'line-cap': 'round' },
+                paint
+            });
+        }
+
+        function calculateRoute() {
+            const network = queryNetwork();
+            const profileId = profileSelect.value;
+            const profile = selectedProfile();
+            const shouldCompare = (
+                compareDistance.checked
+                && profile.routing_mode !== 'distance'
+            );
+
+            bestPath = findPath(network, profileId);
+            if (shouldCompare && !hasUsablePath(comparisonPath)) {
+                comparisonPath = findPath(network, distanceProfileId);
+            } else if (!shouldCompare) {
+                comparisonPath = null;
+            }
+
+            if (hasUsablePath(comparisonPath)) {
+                setRouteLayer(
+                    comparisonPath,
+                    'distance-comparison-path',
+                    'distance-comparison-path-layer',
+                    {
+                        'line-color': '#d55e00',
+                        'line-width': 5,
+                        'line-dasharray': [2, 1.5],
+                        'line-offset': 5
+                    }
+                );
+            } else {
+                removeComparisonPath();
+            }
+
+            if (!hasUsablePath(bestPath)) {
+                showNoRoute();
+                removePrimaryPath();
+                updateComparisonInfo(null, comparisonPath);
+                return;
+            }
+
+            const pathLine = turf.lineString(bestPath.path);
+            setRouteLayer(
+                bestPath,
+                'best-path',
+                'best-path-layer',
+                { 'line-color': '#123bd1', 'line-width': 8 }
+            );
+            if (map.getLayer('distance-comparison-path-layer')) {
+                map.moveLayer('best-path-layer');
+            }
+
+            const distanceKm = turf.length(pathLine, { units: 'kilometers' });
+            const timeMinutes = Math.max(
+                1,
+                Math.round(distanceKm / profile.speed_kmh * 60)
+            );
+            document.getElementById('distanceVal').textContent = distanceKm.toFixed(2);
+            document.getElementById('timeVal').textContent = timeMinutes;
+            document.getElementById('profileVal').textContent = selectedProfileLabel();
+            document.getElementById('experimentalNote').textContent = profile.provisional
+                ? 'This accessibility profile is provisional and requires calibration.'
+                : '';
+            routeInfo.querySelector('.route-result').hidden = false;
+            routeInfo.querySelector('.no-route').hidden = true;
+            routeInfo.classList.remove('hidden');
+            updateComparisonInfo(bestPath, comparisonPath);
+        }
+
+        function updateComparisonInfo(selectedPath, distancePath) {
+            if (!compareDistance.checked || !hasUsablePath(distancePath)) {
+                comparisonInfo.hidden = true;
+                return;
+            }
+
+            const distanceKm = turf.length(
+                turf.lineString(distancePath.path),
+                { units: 'kilometers' }
+            );
+            const distanceProfile = profilePayload.profiles[distanceProfileId];
+            const timeMinutes = Math.max(
+                1,
+                Math.round(distanceKm / distanceProfile.speed_kmh * 60)
+            );
+            document.getElementById('comparisonDistanceVal').textContent =
+                distanceKm.toFixed(2);
+            document.getElementById('comparisonTimeVal').textContent = timeMinutes;
+
+            const deltaElement = document.getElementById('comparisonDelta');
+            if (!hasUsablePath(selectedPath)) {
+                deltaElement.textContent =
+                    'A shortest-distance route exists, but the selected profile found no usable route.';
+            } else {
+                const selectedKm = turf.length(
+                    turf.lineString(selectedPath.path),
+                    { units: 'kilometers' }
+                );
+                const deltaKm = selectedKm - distanceKm;
+                if (Math.abs(deltaKm) < 0.005) {
+                    deltaElement.textContent =
+                        'The selected and distance-only routes have the same length.';
+                } else {
+                    const percentage = distanceKm > 0
+                        ? Math.abs(deltaKm) / distanceKm * 100
+                        : 0;
+                    const relation = deltaKm > 0 ? 'longer' : 'shorter';
+                    deltaElement.textContent =
+                        `Selected route: ${Math.abs(deltaKm).toFixed(2)} km ` +
+                        `${relation} (${percentage.toFixed(1)}%).`;
+                }
+            }
+            comparisonInfo.hidden = false;
+        }
+
+        function showNoRoute(customMessage = null) {
+            const message = routeInfo.querySelector('.no-route');
+            message.textContent = customMessage || 'No route was found for this profile.';
+            routeInfo.querySelector('.route-result').hidden = true;
+            message.hidden = false;
+            routeInfo.classList.remove('hidden');
+        }
+
+        function hideRouteInfo() {
+            routeInfo.classList.add('hidden');
+        }
+
+        function removePath(sourceId, layerId) {
+            if (map.getLayer(layerId)) map.removeLayer(layerId);
+            if (map.getSource(sourceId)) map.removeSource(sourceId);
+        }
+
+        function removePrimaryPath() {
+            removePath('best-path', 'best-path-layer');
+        }
+
+        function removeComparisonPath() {
+            removePath(
+                'distance-comparison-path',
+                'distance-comparison-path-layer'
+            );
+            comparisonPath = null;
+        }
+
+        function removeDisplayedPaths() {
+            removePrimaryPath();
+            removeComparisonPath();
         }
 
         function resetPath() {
             start = null;
             end = null;
             bestPath = null;
-            if (map.getSource('best-path')) {
-                map.removeLayer('best-path-layer');
-                map.removeSource('best-path');
-            }
-            // Remove markers via MapLibre API (handles the wrapper elements properly)
-            markers.forEach(m => m.remove());
+            comparisonPath = null;
+            markers.forEach(marker => marker.remove());
             markers = [];
-            showInfoBox(false);
+            removeDisplayedPaths();
+            comparisonInfo.hidden = true;
+            hideRouteInfo();
         }
 
-        function showInfoBox(show, noRoute = false) {
-            const infoBox = document.getElementById('infoBox');
-            const noRouteEl = infoBox.querySelector('.no-route');
-            if (!show) {
-                infoBox.classList.add('hidden');
-                noRouteEl.style.display = 'none';
-            } else {
-                infoBox.classList.remove('hidden');
-                if (noRoute) {
-                    noRouteEl.style.display = 'block';
-                    infoBox.querySelector('.distance').style.display = 'none';
-                    infoBox.querySelector('.time').style.display = 'none';
-                } else {
-                    noRouteEl.style.display = 'none';
-                    infoBox.querySelector('.distance').style.display = 'block';
-                    infoBox.querySelector('.time').style.display = 'block';
-                }
-            }
-        }
-
-        // Modal Functions
         function showWelcomeModalIfNeeded() {
-            const dontShow = localStorage.getItem('welcomeModalDontShow');
-            if (!dontShow) {
+            if (!localStorage.getItem('oswmRoutingWelcomeSeen')) {
                 document.getElementById('welcomeModalOverlay').classList.add('visible');
             }
         }
 
         document.getElementById('modalOkBtn').addEventListener('click', () => {
-
-            // TODO: Save dontShowAgain
-            // const dontShowChecked = document.getElementById('dontShowAgain').checked;
-            // if (dontShowChecked) {
-            //     localStorage.setItem('welcomeModalDontShow', 'true');
-            // }
-
-
+            localStorage.setItem('oswmRoutingWelcomeSeen', 'true');
             document.getElementById('welcomeModalOverlay').classList.remove('visible');
         });
     </script>

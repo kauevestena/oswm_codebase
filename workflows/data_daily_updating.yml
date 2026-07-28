@@ -45,6 +45,16 @@ jobs:
           cache: pip
           cache-dependency-path: oswm_codebase/requirements.txt
 
+      # Elevation rasters are static and can be tens of MB per tile. Reuse them
+      # when a changed/new routing edge needs slope estimation.
+      - name: Cache routing elevation tiles
+        uses: actions/cache@v4
+        with:
+          path: .cache/oswm/elevation
+          key: oswm-elevation-${{ runner.os }}-${{ hashFiles('config.py') }}
+          restore-keys: |
+            oswm-elevation-${{ runner.os }}-
+
       - name: Free up disk space
         run: |
           sudo apt clean

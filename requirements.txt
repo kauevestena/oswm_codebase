@@ -7,6 +7,8 @@ folium
 pandas
 osm2geojson
 requests
+rasterio
+pyproj
 shapely
 scikit-learn
 pyarrow

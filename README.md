@@ -19,6 +19,15 @@ The responsibilities are intentionally separated:
 
 [`kauevestena/opensidewalkmap_beta`](https://github.com/kauevestena/opensidewalkmap_beta) is the current reference node. It is a working model, not a claim that every future node must be an exact copy.
 
+## Accessibility-aware routing
+
+The static routing module supports a first-class shortest-distance baseline
+plus wheelchair, blind/low-vision and elderly profiles, with optional
+side-by-side route comparison. Profile judgments are maintained as plain
+Python dictionaries and precomputed during node generation. See
+[`routing/README.md`](routing/README.md) for the architecture, slope-source
+hierarchy and calibration workflow.
+
 ## Architecture
 
 ```text
