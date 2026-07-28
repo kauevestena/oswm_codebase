@@ -9,56 +9,296 @@
     <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6/dist/maplibre-gl.css" />
     <script type="module" src="../assets/branding/branding.js"></script>
     <link rel="icon" type="image/x-icon" data-oswm-branding="favicon">
+    <style>
+        :root {
+            font-family: "Helvetica Neue", Arial, sans-serif;
+            color: #202124;
+        }
+
+        body {
+            margin: 0;
+        }
+
+        #map {
+            width: 100%;
+            height: 100vh;
+        }
+
+        .logo_img {
+            position: fixed;
+            left: 4px;
+            top: 4px;
+            z-index: 4;
+            max-width: min(40%, 330px);
+            height: auto;
+        }
+
+        #routingPanel {
+            position: absolute;
+            top: 18px;
+            right: 50px;
+            width: min(300px, calc(100vw - 90px));
+            z-index: 5;
+            padding: 14px 16px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.94);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16);
+            box-sizing: border-box;
+        }
+
+        #routingPanel h2 {
+            margin: 0;
+            font-size: 17px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        #routingPanel:not(.collapsed) h2 {
+            margin-bottom: 10px;
+        }
+
+        #panelToggleBtn {
+            background: none;
+            border: none;
+            font-size: 12px;
+            color: #565c62;
+            cursor: pointer;
+            padding: 2px 4px;
+            transition: transform 0.2s ease;
+        }
+
+        #routingPanel.collapsed #panelToggleBtn {
+            transform: rotate(-90deg);
+        }
+
+        #routingPanel.collapsed #routingPanelContent {
+            display: none;
+        }
+
+        #routingPanel label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
+
+        #profileSelect {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #aeb4ba;
+            border-radius: 6px;
+            background: white;
+            font-size: 14px;
+        }
+
+        #profileDescription {
+            margin: 8px 0 0;
+            color: #565c62;
+            font-size: 12px;
+            line-height: 1.35;
+        }
+
+        #compareOption {
+            margin-top: 10px;
+        }
+
+        #compareOption[hidden] {
+            display: none;
+        }
+
+        #routingPanel .compare-label {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            margin: 0;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: none;
+            letter-spacing: 0;
+            cursor: pointer;
+        }
+
+        .compare-label input {
+            margin: 0;
+        }
+
+        #routeInfo {
+            margin-top: 12px;
+            padding-top: 10px;
+            border-top: 1px solid #d7dadd;
+            font-size: 14px;
+            line-height: 1.55;
+        }
+
+        #routeInfo.hidden {
+            display: none;
+        }
+
+        #routeInfo .no-route {
+            color: #9d1d20;
+            font-weight: 700;
+        }
+
+        #routeInfo .experimental {
+            margin-top: 7px;
+            color: #745100;
+            font-size: 11px;
+        }
+
+        #comparisonInfo {
+            margin-top: 9px;
+            padding: 7px 9px;
+            border-left: 4px solid #d55e00;
+            background: #fff4eb;
+            font-size: 12px;
+        }
+
+        #comparisonInfo[hidden] {
+            display: none;
+        }
+
+        #comparisonInfo .comparison-title {
+            font-weight: 700;
+        }
+
+        .route-swatch {
+            display: inline-block;
+            width: 20px;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+
+        .route-swatch.selected {
+            border-top: 4px solid #123bd1;
+        }
+
+        .route-swatch.distance {
+            border-top: 3px dashed #d55e00;
+        }
+
+        .marker {
+            width: 13px;
+            height: 13px;
+            border: 2px solid white;
+            border-radius: 50%;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, .55);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 10;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, .5);
+            box-sizing: border-box;
+        }
+
+        .modal-overlay.visible {
+            display: flex;
+        }
+
+        .modal {
+            width: min(390px, 100%);
+            padding: 22px;
+            border-radius: 10px;
+            background: white;
+            box-sizing: border-box;
+        }
+
+        .modal h2 {
+            margin-top: 0;
+        }
+
+        .modal li {
+            margin-bottom: 7px;
+        }
+
+        .modal button {
+            float: right;
+            padding: 8px 18px;
+            border: 0;
+            border-radius: 5px;
+            color: white;
+            background: steelblue;
+            cursor: pointer;
+        }
+
+        @media (max-width: 600px) {
+            #routingPanel {
+                top: auto;
+                right: 10px;
+                bottom: 28px;
+                width: calc(100vw - 20px);
+            }
+
+            .logo_img {
+                max-width: 55%;
+            }
+        }
+    </style>
 </head>
 
 <body>
     <div id="map">
         <a href="https://kauevestena.github.io/opensidewalkmap_beta/" id="node_link">
-            <img data-oswm-branding="logos.page_dark_clean"
+            <img data-oswm-branding="logos.page"
                 alt="OSWM Page Logo" title="Click for more OSWM Node's Resources!!" class="logo_img responsive">
         </a>
     </div>
 
     <section id="routingPanel" aria-label="Routing options">
-        <h2>Route profile</h2>
-        <label for="profileSelect">Optimization</label>
-        <select id="profileSelect"></select>
-        <p id="profileDescription">Loading routing profiles…</p>
+        <h2 id="routingPanelHeader" title="Click to collapse/expand panel">
+            <span>Route profile</span>
+            <button id="panelToggleBtn" aria-label="Toggle panel" aria-expanded="true">▼</button>
+        </h2>
+        <div id="routingPanelContent">
+            <label for="profileSelect">Optimization</label>
+            <select id="profileSelect"></select>
+            <p id="profileDescription">Loading routing profiles…</p>
 
-        <div id="compareOption" hidden>
-            <label class="compare-label" for="compareDistance">
-                <input type="checkbox" id="compareDistance">
-                Compare with distance-only
-            </label>
-        </div>
-
-        <div id="routeInfo" class="hidden" aria-live="polite">
-            <div class="route-result">
-                <div>Distance: <strong><span id="distanceVal">-</span> km</strong></div>
-                <div>Estimated time: <strong><span id="timeVal">-</span> min</strong></div>
-                <div>
-                    <span class="route-swatch selected"></span>
-                    Profile: <strong><span id="profileVal">-</span></strong>
-                </div>
-                <div class="experimental" id="experimentalNote"></div>
+            <div id="compareOption" hidden>
+                <label class="compare-label" for="compareDistance">
+                    <input type="checkbox" id="compareDistance">
+                    Compare with distance-only
+                </label>
             </div>
-            <div class="no-route" hidden>No route was found for this profile.</div>
-            <div id="comparisonInfo" hidden>
-                <div class="comparison-title">
-                    <span class="route-swatch distance"></span>
-                    Distance-only comparison
+
+            <div id="routeInfo" class="hidden" aria-live="polite">
+                <div class="route-result">
+                    <div>Distance: <strong><span id="distanceVal">-</span> km</strong></div>
+                    <div>Estimated time: <strong><span id="timeVal">-</span> min</strong></div>
+                    <div>
+                        <span class="route-swatch selected"></span>
+                        Profile: <strong><span id="profileVal">-</span></strong>
+                    </div>
+                    <div class="experimental" id="experimentalNote"></div>
                 </div>
-                <div>
-                    Shortest route:
-                    <strong><span id="comparisonDistanceVal">-</span> km</strong>,
-                    <span id="comparisonTimeVal">-</span> min
+                <div class="no-route" hidden>No route was found for this profile.</div>
+                <div id="comparisonInfo" hidden>
+                    <div class="comparison-title">
+                        <span class="route-swatch distance"></span>
+                        Distance-only comparison
+                    </div>
+                    <div>
+                        Shortest route:
+                        <strong><span id="comparisonDistanceVal">-</span> km</strong>,
+                        <span id="comparisonTimeVal">-</span> min
+                    </div>
+                    <div id="comparisonDelta"></div>
                 </div>
-                <div id="comparisonDelta"></div>
             </div>
         </div>
     </section>
 
-    <div class="modal-overlay" id="welcomeModalOverlay">
+    <div class="modal-overlay visible" id="welcomeModalOverlay">
         <div class="modal">
             <h2>OSWM accessible routing</h2>
             <p>This experimental router uses mapped OpenStreetMap accessibility information and estimated terrain slope.</p>
@@ -85,6 +325,16 @@
         const compareDistance = document.getElementById('compareDistance');
         const comparisonInfo = document.getElementById('comparisonInfo');
         const routeInfo = document.getElementById('routeInfo');
+        const routingPanel = document.getElementById('routingPanel');
+        const routingPanelHeader = document.getElementById('routingPanelHeader');
+        const panelToggleBtn = document.getElementById('panelToggleBtn');
+
+        function toggleRoutingPanel() {
+            const isCollapsed = routingPanel.classList.toggle('collapsed');
+            panelToggleBtn.setAttribute('aria-expanded', !isCollapsed);
+        }
+
+        routingPanelHeader.addEventListener('click', toggleRoutingPanel);
 
         let originalData = null;
         let profilePayload = null;
@@ -115,8 +365,30 @@
             }
             populateProfiles();
             updateProfileControls();
-
             map.on('load', () => {
+                // Add AWS Terrarium 3D terrain source
+                map.addSource('aws-terrain', {
+                    type: 'raster-dem',
+                    tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
+                    encoding: 'terrarium',
+                    tileSize: 256,
+                    maxzoom: 15
+                });
+
+                // Set 3D Terrain mesh elevation
+                map.setTerrain({ source: 'aws-terrain', exaggeration: 1.2 });
+
+                // Add hillshade layer for visual depth
+                map.addLayer({
+                    id: 'hills',
+                    type: 'hillshade',
+                    source: 'aws-terrain',
+                    paint: {
+                        'hillshade-exaggeration': 0.45,
+                        'hillshade-shadow-color': '#473b30'
+                    }
+                });
+
                 map.addSource('line', { type: 'geojson', data });
                 map.addLayer({
                     id: 'line-layer',
@@ -147,14 +419,15 @@
                 });
 
                 map.fitBounds(turf.bbox(data), { padding: 35 });
-                map.addControl(new maplibregl.NavigationControl());
+                map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }));
+                map.addControl(new maplibregl.TerrainControl({ source: 'aws-terrain', exaggeration: 1.2 }));
                 map.addControl(new maplibregl.FullscreenControl());
                 map.addControl(new maplibregl.ScaleControl());
                 map.addControl(new maplibregl.GeolocateControl({
                     positionOptions: { enableHighAccuracy: true },
                     trackUserLocation: true
                 }));
-                showWelcomeModalIfNeeded();
+                showWelcomeModal();
             });
         }).catch(error => {
             console.error(error);
@@ -173,8 +446,10 @@
             const profiles = Object.entries(profilePayload.profiles).sort(
                 ([leftId, left], [rightId, right]) => {
                     if (leftId === rightId) return 0;
-                    if (leftId === distanceProfileId) return -1;
-                    if (rightId === distanceProfileId) return 1;
+                    if (leftId === 'wheelchair') return -1;
+                    if (rightId === 'wheelchair') return 1;
+                    if (leftId === distanceProfileId) return 1;
+                    if (rightId === distanceProfileId) return -1;
                     return left.label.localeCompare(right.label);
                 }
             );
@@ -184,7 +459,7 @@
                 option.textContent = profile.label;
                 profileSelect.appendChild(option);
             }
-            profileSelect.value = distanceProfileId;
+            profileSelect.value = profilePayload.profiles['wheelchair'] ? 'wheelchair' : profiles[0][0];
         }
 
         function selectedProfile() {
@@ -231,16 +506,16 @@
 
             if (!start) {
                 start = snapped;
-                addMarker(snapped.coordinates, '#1b9e3e');
+                addMarker(snapped.coordinates, '#0f5128');
                 hideRouteInfo();
             } else if (!end) {
                 end = snapped;
-                addMarker(snapped.coordinates, '#e33d43');
+                addMarker(snapped.coordinates, '#8b0000');
                 calculateRoute();
             } else {
                 resetPath();
                 start = snapped;
-                addMarker(snapped.coordinates, '#1b9e3e');
+                addMarker(snapped.coordinates, '#0f5128');
             }
         });
 
@@ -267,7 +542,7 @@
             const element = document.createElement('div');
             element.className = 'marker';
             element.style.backgroundColor = color;
-            markers.push(new maplibregl.Marker(element).setLngLat(coordinates).addTo(map));
+            markers.push(new maplibregl.Marker({ element }).setLngLat(coordinates).addTo(map));
         }
 
         function splitFeatureAtSnaps(feature, snaps) {
@@ -390,9 +665,13 @@
             );
 
             bestPath = findPath(network, profileId);
-            if (shouldCompare && !hasUsablePath(comparisonPath)) {
-                comparisonPath = findPath(network, distanceProfileId);
-            } else if (!shouldCompare) {
+            const distancePath = profile.routing_mode === 'distance'
+                ? bestPath
+                : findPath(network, distanceProfileId);
+
+            if (shouldCompare) {
+                comparisonPath = distancePath;
+            } else {
                 comparisonPath = null;
             }
 
@@ -413,7 +692,11 @@
             }
 
             if (!hasUsablePath(bestPath)) {
-                showNoRoute();
+                if (hasUsablePath(distancePath)) {
+                    showNoRoute(`No route found for ${profile.label}: path is blocked by barriers or steep inclines.`);
+                } else {
+                    showNoRoute('No route found: start and destination belong to disconnected sidewalk networks (topological islands).');
+                }
                 removePrimaryPath();
                 updateComparisonInfo(null, comparisonPath);
                 return;
@@ -538,14 +821,11 @@
             hideRouteInfo();
         }
 
-        function showWelcomeModalIfNeeded() {
-            if (!localStorage.getItem('oswmRoutingWelcomeSeen')) {
-                document.getElementById('welcomeModalOverlay').classList.add('visible');
-            }
+        function showWelcomeModal() {
+            document.getElementById('welcomeModalOverlay').classList.add('visible');
         }
 
         document.getElementById('modalOkBtn').addEventListener('click', () => {
-            localStorage.setItem('oswmRoutingWelcomeSeen', 'true');
             document.getElementById('welcomeModalOverlay').classList.remove('visible');
         });
     </script>
