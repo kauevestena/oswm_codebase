@@ -176,10 +176,11 @@ def write_results_json(projects, service_status, bbox, output_path):
 
 
 def generate_dashboard_html(projects, service_status, bbox, output_path):
-    """Generate a premium-styled static HTML dashboard."""
+    """Generate a premium-styled static HTML dashboard with MapLibre v6 map."""
 
     projects_js = json.dumps(projects, indent=2, ensure_ascii=False)
     status_js = json.dumps(service_status, indent=2, ensure_ascii=False)
+    bbox_js = json.dumps(list(bbox) if bbox else [], indent=2, ensure_ascii=False)
     gen_time = datetime.now(tz=timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
     html = f"""<!--
@@ -196,6 +197,7 @@ def generate_dashboard_html(projects, service_status, bbox, output_path):
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6/dist/maplibre-gl.css" />
     <style>
         :root {{
             --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
@@ -365,6 +367,13 @@ def generate_dashboard_html(projects, service_status, bbox, output_path):
         }}
         .search-box:focus {{ border-color: rgba(0,242,254,0.4); }}
 
+        /* View Toggle Group */
+        .view-btn.active {{
+            background: var(--primary) !important;
+            color: #0f172a !important;
+            box-shadow: 0 2px 8px var(--primary-glow);
+        }}
+
         /* Projects table */
         .projects-table {{
             width: 100%; border-collapse: collapse;
@@ -421,6 +430,68 @@ def generate_dashboard_html(projects, service_status, bbox, output_path):
             font-family: 'Fira Code', monospace;
         }}
 
+        /* Map custom markers */
+        .marker-pin {{
+            width: 32px;
+            height: 32px;
+            border-radius: 50% 50% 50% 0;
+            position: absolute;
+            transform: rotate(-45deg);
+            left: 0 !important;
+            top: 0 !important;
+            margin: 0 !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            border: 2px solid #fff;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }}
+        .marker-pin:hover {{
+            transform: rotate(-45deg) scale(1.1);
+        }}
+        .marker-pin::after {{
+            content: '';
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            position: absolute;
+        }}
+        .marker-icon {{
+            transform: rotate(45deg);
+            font-size: 16px;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }}
+        .marker-tm {{ background: #e04c3f; }}
+        .marker-mr {{ background: #10b981; }}
+        .marker-p4r {{ background: #8b5cf6; }}
+
+        /* Popup overrides */
+        .maplibregl-popup-content {{
+            background: #ffffff !important;
+            color: #0f172a !important;
+            border-radius: 12px !important;
+            padding: 12px 16px !important;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2) !important;
+            border: 1px solid rgba(0,0,0,0.1) !important;
+        }}
+        .maplibregl-popup-anchor-top .maplibregl-popup-tip {{ border-bottom-color: #ffffff !important; }}
+        .maplibregl-popup-anchor-bottom .maplibregl-popup-tip {{ border-top-color: #ffffff !important; }}
+        .maplibregl-popup-anchor-left .maplibregl-popup-tip {{ border-right-color: #ffffff !important; }}
+        .maplibregl-popup-anchor-right .maplibregl-popup-tip {{ border-left-color: #ffffff !important; }}
+        .maplibregl-popup-close-button {{
+            color: #94a3b8 !important;
+            font-size: 16px !important;
+            padding: 4px 8px !important;
+            top: 4px !important;
+            right: 4px !important;
+        }}
+
         @media (max-width: 768px) {{
             .container {{ padding: 0 1rem; }}
             .stats-grid {{ grid-template-columns: repeat(2, 1fr); }}
@@ -441,26 +512,47 @@ def generate_dashboard_html(projects, service_status, bbox, output_path):
     <div class="container">
         <div class="stats-grid" id="stats-grid"></div>
 
+        <!-- Discovered Projects Panel (First) -->
+        <div class="panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+                <h2 style="margin-bottom: 0;">&#x1F4CB; Discovered Projects</h2>
+                <div class="view-toggle" style="display: flex; background: rgba(15,23,42,0.4); border: 1px solid var(--card-border); border-radius: 8px; padding: 2px;">
+                    <button class="view-btn active" id="btn-list-view" onclick="switchView('list')" style="background: none; border: none; padding: 0.4rem 1rem; border-radius: 6px; font-family: 'Outfit', sans-serif; font-size: 0.85rem; font-weight: 500; color: var(--text-muted); cursor: pointer; transition: all 0.2s;">📋 List View</button>
+                    <button class="view-btn" id="btn-map-view" onclick="switchView('map')" style="background: none; border: none; padding: 0.4rem 1rem; border-radius: 6px; font-family: 'Outfit', sans-serif; font-size: 0.85rem; font-weight: 500; color: var(--text-muted); cursor: pointer; transition: all 0.2s;">🗺️ Map View</button>
+                </div>
+            </div>
+            
+            <div class="tabs" id="service-tabs"></div>
+            
+            <div class="controls">
+                <input class="search-box" id="search" type="text" placeholder="Filter projects by title or keyword&#x2026;">
+            </div>
+            
+            <div id="table-container"></div>
+            
+            <div id="map-view-container" style="display: none; height: 500px; border-radius: 12px; overflow: hidden; margin-top: 1rem; border: 1px solid var(--card-border); position: relative;">
+                <div id="map" style="width: 100%; height: 100%;"></div>
+            </div>
+        </div>
+
+        <!-- Service Status Panel (Second) -->
         <div class="panel">
             <h2>&#x1F4E1; Service Status</h2>
             <div class="svc-badges" id="svc-badges"></div>
         </div>
-
-        <div class="panel">
-            <h2>&#x1F4CB; Discovered Projects</h2>
-            <div class="tabs" id="service-tabs"></div>
-            <div class="controls">
-                <input class="search-box" id="search" type="text" placeholder="Filter projects by title or keyword&#x2026;">
-            </div>
-            <div id="table-container"></div>
-        </div>
     </div>
 
-<script>
+<script type="module">
+import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.0.0/dist/maplibre-gl.mjs';
+
 const PROJECTS = {projects_js};
 const SERVICE_STATUS = {status_js};
+const BBOX = {bbox_js};
 
 let activeTab = 'all';
+let mapInitialized = false;
+let mapObj = null;
+let mapMarkers = [];
 
 function init() {{
     renderStats();
@@ -537,6 +629,9 @@ function applyFilters() {{
         (p.description || '').toLowerCase().includes(q)
     );
     renderTable(filtered);
+    if (mapInitialized) {{
+        updateMapElements(filtered);
+    }}
 }}
 
 function renderTable(projects) {{
@@ -567,7 +662,219 @@ function renderTable(projects) {{
     c.innerHTML = html;
 }}
 
+function switchView(view) {{
+    const listBtn = document.getElementById('btn-list-view');
+    const mapBtn = document.getElementById('btn-map-view');
+    const tableContainer = document.getElementById('table-container');
+    const mapContainer = document.getElementById('map-view-container');
+    
+    if (view === 'map') {{
+        listBtn.classList.remove('active');
+        mapBtn.classList.add('active');
+        tableContainer.style.display = 'none';
+        mapContainer.style.display = 'block';
+        
+        if (!mapInitialized) {{
+            initMap();
+        }} else {{
+            mapObj.resize();
+            applyFilters();
+        }}
+    }} else {{
+        listBtn.classList.add('active');
+        mapBtn.classList.remove('active');
+        tableContainer.style.display = 'block';
+        mapContainer.style.display = 'none';
+    }}
+}}
+
+function initMap() {{
+    mapInitialized = true;
+    
+    // BBOX format: [south, west, north, east]
+    // MapLibre bounds format: [west, south, east, north]
+    const bounds = [BBOX[1], BBOX[0], BBOX[3], BBOX[2]];
+    
+    mapObj = new maplibregl.Map({{
+        container: 'map',
+        style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
+        bounds: bounds,
+        fitBoundsOptions: {{ padding: 40 }}
+    }});
+    
+    mapObj.on('load', () => {{
+        mapObj.addControl(new maplibregl.NavigationControl());
+        
+        // Add boundary source and layer
+        mapObj.addSource('boundaries', {{
+            type: 'geojson',
+            data: '../../data/boundaries/polygon.geojson'
+        }});
+        
+        mapObj.addLayer({{
+            id: 'boundary-layer',
+            type: 'line',
+            source: 'boundaries',
+            paint: {{
+                'line-color': '#00f2fe',
+                'line-width': 1.5,
+                'line-opacity': 0.6,
+                'line-dasharray': [4, 4]
+            }}
+        }});
+        
+        mapObj.addSource('project-geometries', {{
+            type: 'geojson',
+            data: {{ type: 'FeatureCollection', features: [] }}
+        }});
+        
+        mapObj.addLayer({{
+            id: 'project-fills',
+            type: 'fill',
+            source: 'project-geometries',
+            paint: {{
+                'fill-color': [
+                    'match', ['get', 'service'],
+                    'Tasking Manager', '#e04c3f',
+                    'MapRoulette', '#10b981',
+                    'Pic4Review', '#8b5cf6',
+                    '#4682b4'
+                ],
+                'fill-opacity': 0.15
+            }}
+        }});
+        
+        mapObj.addLayer({{
+            id: 'project-borders',
+            type: 'line',
+            source: 'project-geometries',
+            paint: {{
+                'line-color': [
+                    'match', ['get', 'service'],
+                    'Tasking Manager', '#e04c3f',
+                    'MapRoulette', '#10b981',
+                    'Pic4Review', '#8b5cf6',
+                    '#4682b4'
+                ],
+                'line-width': 2,
+                'line-dasharray': [2, 2]
+            }}
+        }});
+        
+        applyFilters();
+    }});
+}}
+
+function getCentroid(project) {{
+    if (project.geometry) {{
+        const geom = project.geometry;
+        if (geom.type === 'Point') {{
+            return geom.coordinates;
+        }} else if (geom.type === 'Polygon') {{
+            const coords = geom.coordinates[0];
+            let sumX = 0, sumY = 0;
+            coords.forEach(pt => {{
+                sumX += pt[0];
+                sumY += pt[1];
+            }});
+            return [sumX / coords.length, sumY / coords.length];
+        }}
+    }} else if (project.bbox) {{
+        const b = project.bbox;
+        return [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2];
+    }}
+    return null;
+}}
+
+function updateMapElements(filteredProjects) {{
+    if (!mapObj || !mapObj.getSource('project-geometries')) return;
+    
+    // Clear existing markers
+    mapMarkers.forEach(m => m.remove());
+    mapMarkers = [];
+    
+    const features = [];
+    
+    filteredProjects.forEach(p => {{
+        let geom = null;
+        if (p.geometry) {{
+            geom = p.geometry;
+        }} else if (p.bbox) {{
+            // bbox is [west, south, east, north]
+            const b = p.bbox;
+            geom = {{
+                type: 'Polygon',
+                coordinates: [[
+                    [b[0], b[1]],
+                    [b[0], b[3]],
+                    [b[2], b[3]],
+                    [b[2], b[1]],
+                    [b[0], b[1]]
+                ]]
+            }};
+        }}
+        
+        if (geom) {{
+            features.push({{
+                type: 'Feature',
+                properties: {{ service: p.service, id: p.id, title: p.title }},
+                geometry: geom
+            }});
+        }}
+        
+        const centroid = getCentroid(p);
+        if (centroid) {{
+            const el = document.createElement('div');
+            el.className = 'marker-pin';
+            
+            let markerCls = 'marker-tm';
+            let iconText = '🗺️';
+            if (p.service === 'MapRoulette') {{
+                markerCls = 'marker-mr';
+                iconText = '🧩';
+            }} else if (p.service === 'Pic4Review') {{
+                markerCls = 'marker-p4r';
+                iconText = '📷';
+            }}
+            
+            el.classList.add(markerCls);
+            el.innerHTML = `<span class="marker-icon">${{iconText}}</span>`;
+            
+            const popupHtml = `
+                <div style="color: #0f172a; padding: 0.5rem; font-family: 'Outfit', sans-serif; min-width: 200px;">
+                    <h3 style="margin: 0 0 0.25rem 0; font-size: 0.95rem; font-weight: 600; color: #1e293b;">${{p.title || 'Untitled'}}</h3>
+                    <div style="font-size: 0.72rem; text-transform: uppercase; font-weight: 700; color: #64748b; margin-bottom: 0.5rem;">
+                        ${{p.service}} &bull; ${{p.status || 'N/A'}}
+                    </div>
+                    <p style="margin: 0 0 0.75rem 0; font-size: 0.8rem; color: #475569; line-height: 1.4; max-height: 100px; overflow-y: auto;">
+                        ${{p.description || 'No description available.'}}
+                    </p>
+                    <a href="${{p.url}}" target="_blank" rel="noopener" style="display: inline-block; background: #00f2fe; color: #0f172a; padding: 0.35rem 0.75rem; border-radius: 6px; font-size: 0.78rem; font-weight: 600; text-decoration: none; box-shadow: 0 2px 6px rgba(0,242,254,0.3); transition: opacity 0.2s;">
+                        Open Project
+                    </a>
+                </div>
+            `;
+            const popup = new maplibregl.Popup({{ offset: 15 }}).setHTML(popupHtml);
+            
+            const marker = new maplibregl.Marker({{ element: el, anchor: 'bottom' }})
+                .setLngLat(centroid)
+                .setPopup(popup)
+                .addTo(mapObj);
+                
+            mapMarkers.push(marker);
+        }}
+    }});
+    
+    mapObj.getSource('project-geometries').setData({{
+        type: 'FeatureCollection',
+        features: features
+    }});
+}}
+
 init();
+
+window.switchTab = switchTab;
+window.switchView = switchView;
 </script>
 </body>
 </html>"""
@@ -621,12 +928,6 @@ def main():
         pre_count = len(projects)
         projects = filter_by_polygon(projects, polygon)
         print(f"[acquisition] After polygon filter: {len(projects)} (removed {pre_count - len(projects)})")
-
-    # Remove internal geometry keys before serializing
-    for p in projects:
-        p.pop("geometry", None)
-        p.pop("bbox", None)
-
     # Write outputs
     write_results_json(projects, svc_status, bbox, acquisition_results_path)
     generate_dashboard_html(projects, svc_status, bbox, acquisition_page_path)
