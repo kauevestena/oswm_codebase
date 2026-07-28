@@ -15,9 +15,9 @@ run_step() {
     echo "Running: $label"
     echo "========================================="
     if "$PYTHON_BIN" "$script"; then
-        echo "\u2713 $label succeeded"
+        echo "✓ $label succeeded"
     else
-        echo "\u2717 $label FAILED (exit code: $?)"
+        echo "✗ $label FAILED (exit code: $?)"
         FAILED_STEPS="${FAILED_STEPS}\n- ${label}"
     fi
     echo ""
@@ -34,14 +34,24 @@ else
 fi
 echo ""
 
+# Acquisition discovers new external projects independently of OSM changesets,
+# so it must run before the no-changes early exit.
+run_step oswm_codebase/datahub/acquisition/generate_acquisition.py "generate_acquisition"
+
 # Check if there are no changesets yesterday
 if [ -f data/updates/yesterday.json ]; then
     NUM_CHANGESETS=$("$PYTHON_BIN" -c "import json; print(len(json.load(open('data/updates/yesterday.json'))))" 2>/dev/null)
     if [ -n "$NUM_CHANGESETS" ] && [ "$NUM_CHANGESETS" -eq 0 ]; then
         echo "========================================="
         echo "No OSM changesets affecting OSWM features yesterday."
-        echo "Skipping the rest of the daily updates pipeline."
+        echo "Skipping the remaining OSM-dependent daily updates."
         echo "========================================="
+        if [ -n "$FAILED_STEPS" ]; then
+            mkdir -p data/updates
+            printf "%b\n" "$FAILED_STEPS" > data/updates/pipeline_failures.txt
+            exit 1
+        fi
+        rm -f data/updates/pipeline_failures.txt
         exit 0
     fi
 fi
@@ -74,7 +84,7 @@ if [ -n "$FAILED_STEPS" ]; then
     printf "%b\n" "$FAILED_STEPS" > data/updates/pipeline_failures.txt
     exit 1
 else
-    echo "\u2713 All steps completed successfully."
+    echo "✓ All steps completed successfully."
     rm -f data/updates/pipeline_failures.txt
     exit 0
 fi
