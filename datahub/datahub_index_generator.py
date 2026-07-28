@@ -13,9 +13,12 @@ if oswm_dir not in sys.path:
 from config import CITY_NAME, USERNAME, REPO_NAME
 from constants import node_homepage_url, datahub_page_path
 from functions import ensure_parent_folder
+from branding import branding_asset_url
+
 
 def generate_datahub_page():
     ensure_parent_folder(datahub_page_path)
+    project_logo_url = branding_asset_url("logos.project_100px", "../oswm_codebase")
     
     html = f"""<!--
   Generated automatically by oswm_codebase/datahub/datahub_index_generator.py
@@ -394,7 +397,7 @@ def generate_datahub_page():
     <header>
         <div class="header-container">
             <div class="logo-section">
-                <img src="https://kauevestena.github.io/oswm_codebase/assets/homepage/project_logo_100px.png" alt="OSWM Logo">
+                <img src="{project_logo_url}" alt="OSWM Logo">
                 <h1>OSWM Data Hub</h1>
             </div>
             <div class="nav-buttons">

@@ -24,6 +24,7 @@ from tqdm import tqdm
 # Setup path for project imports
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 from functions import get_boundaries_infos, create_folder_if_not_exists, dump_json
+from branding import branding_asset_url
 from constants import (
     CITY_NAME,
     boundaries_geojson_path,
@@ -813,6 +814,8 @@ def _build_map_html(geojson_str, boundary_geojson_str, center_lon, center_lat, c
     """Build the standalone MapLibre GL HTML string."""
 
     last_idx = n_timestamps - 1
+    favicon_url = branding_asset_url("favicon", "../../oswm_codebase")
+    project_logo_url = branding_asset_url("logos.project", "../../oswm_codebase")
 
     return f"""<!--
   Generated automatically by oswm_codebase/data_quality/completeness/completeness_lib.py
@@ -824,7 +827,7 @@ def _build_map_html(geojson_str, boundary_geojson_str, center_lon, center_lat, c
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>OSWM Completeness Analysis — {city_name}</title>
-<link rel="icon" type="image/x-icon" href="../../oswm_codebase/assets/favicon_homepage.png">
+<link rel="icon" type="image/x-icon" href="{favicon_url}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -912,7 +915,7 @@ def _build_map_html(geojson_str, boundary_geojson_str, center_lon, center_lat, c
 <div class="top-bar">
   <a class="back-btn" href="../oswm_qc_main.html">← Back to QC Main</a>
   <h3>
-    <img src="../../oswm_codebase/assets/homepage/project_logo.png" alt="OSWM">
+    <img src="{project_logo_url}" alt="OSWM">
     Pedestrian Network Completeness — {city_name}
   </h3>
   <div style="width:120px"></div>
