@@ -19,6 +19,11 @@ modules_metadata = {
         "img_src": f"{assets_homepage_path}oswm_route_img.png",
         "text": "Routing Demo",
     },
+    "hazard_analysis": {
+        "url": "oswm_codebase/hazard_analysis/hazard_analysis.html",
+        "img_src": f"{assets_homepage_path}oswm_hazard_img.svg",
+        "text": "Hazard Analysis",
+    },
     "dashboard": {
         "url": "statistics/index.html",
         "img_src": f"{assets_homepage_path}oswm_statistics_img.png",
@@ -45,16 +50,15 @@ for modulename in modules_metadata:
     text = modules_metadata[modulename]["text"]
 
     modules_as_str += f"""
-    
+
     <div class="{outer_div_class_ref}">
 
-
     <a href="{url}">
-        
-        <img title="OSWM {modulename}" 
-        src="{img_src}" 
+
+        <img title="OSWM {modulename}"
+        src="{img_src}"
         alt="OSWM {modulename} image" class="{img_css_class_ref}">
-    
+
         <!-- THX: https://jsfiddle.net/Venugopal/e0u4sow1/1/ -->
 
         <div class="{inner_div_class_ref}">
@@ -63,9 +67,8 @@ for modulename in modules_metadata:
 
         </div>
 
-    </a> 
+    </a>
 
     </div>
     <p></p>
-        
-    """
+    """.rstrip() + "\n"

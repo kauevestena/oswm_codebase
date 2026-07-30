@@ -17,3 +17,4 @@ matplotlib
 tqdm
 osmapi
 mercantile
+Pillow

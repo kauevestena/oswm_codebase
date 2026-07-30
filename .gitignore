@@ -186,4 +186,5 @@ tests/*
 !tests/webmap_snapshot/
 !tests/webmap_snapshot/*.py
 !tests/test_routing_*.py
+!tests/test_hazard_analysis.py
 tests.py

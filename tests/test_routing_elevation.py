@@ -2,11 +2,12 @@ import tempfile
 import unittest
 from importlib.util import find_spec
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from routing.elevation import (
     COGElevationProvider,
     CopernicusGLO30Provider,
+    CopernicusGLO90Provider,
     ElevationResolver,
     SlopeEstimate,
     copernicus_tile_name,
@@ -36,6 +37,44 @@ class CopernicusNamingTests(unittest.TestCase):
             copernicus_tile_url(-25.46, -49.26),
             f"https://copernicus-dem-30m.s3.amazonaws.com/{tile}/{tile}.tif",
         )
+
+    def test_global_90m_fallback_naming(self):
+        tile = copernicus_tile_name(-25.46, -49.26, 90)
+        self.assertEqual(
+            tile,
+            "Copernicus_DSM_COG_30_S26_00_W050_00_DEM",
+        )
+        self.assertEqual(
+            copernicus_tile_url(-25.46, -49.26, 90),
+            f"https://copernicus-dem-90m.s3.amazonaws.com/{tile}/{tile}.tif",
+        )
+
+    def test_resolver_builds_both_global_providers(self):
+        resolver = ElevationResolver(
+            {
+                "providers": [
+                    {"type": "copernicus_glo30", "priority": 20},
+                    {"type": "copernicus_glo90", "priority": 10},
+                ]
+            }
+        )
+        self.assertIsInstance(resolver.providers[0], CopernicusGLO30Provider)
+        self.assertIsInstance(resolver.providers[1], CopernicusGLO90Provider)
+
+    def test_global_90m_provider_is_used_when_30m_has_no_result(self):
+        resolver = ElevationResolver({"enabled": False, "providers": []})
+        glo30 = Mock()
+        glo30.estimate.return_value = SlopeEstimate(
+            None, "copernicus_glo30", 0
+        )
+        glo90 = Mock()
+        glo90.estimate.return_value = SlopeEstimate(
+            3.5, "copernicus_glo90", 30, 90, 7
+        )
+        resolver.providers = [glo30, glo90]
+        estimate = resolver.estimate(object())
+        self.assertEqual(estimate.source, "copernicus_glo90")
+        self.assertEqual(estimate.percent, 3.5)
 
     def test_failed_tile_is_not_downloaded_repeatedly(self):
         with tempfile.TemporaryDirectory() as directory:

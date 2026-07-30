@@ -21,7 +21,10 @@ from typing import Any
 from .profile_rules import DEFAULT_ELEVATION_CONFIG, SOURCE_CONFIDENCE
 
 
-COPERNICUS_BASE_URL = "https://copernicus-dem-30m.s3.amazonaws.com"
+COPERNICUS_BASE_URLS = {
+    30: "https://copernicus-dem-30m.s3.amazonaws.com",
+    90: "https://copernicus-dem-90m.s3.amazonaws.com",
+}
 
 
 @dataclass(frozen=True)
@@ -45,22 +48,29 @@ def _finite_float(value: Any) -> float | None:
     return number if math.isfinite(number) else None
 
 
-def copernicus_tile_name(latitude: float, longitude: float) -> str:
-    """Return the Copernicus GLO-30 COG tile identifier for a coordinate."""
+def copernicus_tile_name(
+    latitude: float, longitude: float, resolution_m: int = 30
+) -> str:
+    """Return the AWS Copernicus COG tile identifier for a coordinate."""
 
+    if resolution_m not in COPERNICUS_BASE_URLS:
+        raise ValueError("Copernicus resolution must be 30 or 90 metres")
     south = math.floor(latitude)
     west = math.floor(longitude)
     lat_token = f"N{south:02d}" if south >= 0 else f"S{abs(south):02d}"
     lon_token = f"E{west:03d}" if west >= 0 else f"W{abs(west):03d}"
+    arc_seconds = 10 if resolution_m == 30 else 30
     return (
-        f"Copernicus_DSM_COG_10_{lat_token}_00_"
+        f"Copernicus_DSM_COG_{arc_seconds}_{lat_token}_00_"
         f"{lon_token}_00_DEM"
     )
 
 
-def copernicus_tile_url(latitude: float, longitude: float) -> str:
-    tile = copernicus_tile_name(latitude, longitude)
-    return f"{COPERNICUS_BASE_URL}/{tile}/{tile}.tif"
+def copernicus_tile_url(
+    latitude: float, longitude: float, resolution_m: int = 30
+) -> str:
+    tile = copernicus_tile_name(latitude, longitude, resolution_m)
+    return f"{COPERNICUS_BASE_URLS[resolution_m]}/{tile}/{tile}.tif"
 
 
 def robust_slope_percent(
@@ -212,22 +222,31 @@ class RasterElevationProvider:
         )
 
 
-class CopernicusGLO30Provider(RasterElevationProvider):
-    source_name = "copernicus_glo30"
-    default_confidence = SOURCE_CONFIDENCE["copernicus_glo30"]
-    resolution_m = 30
+class CopernicusDEMProvider(RasterElevationProvider):
+    """Cached AWS Open Data provider for a Copernicus global DEM instance."""
 
     def __init__(self, config: dict[str, Any], request_timeout_seconds: int = 120):
         super().__init__(config, request_timeout_seconds)
+        self.resolution_m = int(config.get("resolution_m", 30))
+        if self.resolution_m not in COPERNICUS_BASE_URLS:
+            raise ValueError("Copernicus resolution must be 30 or 90 metres")
+        self.source_name = f"copernicus_glo{self.resolution_m}"
+        self.default_confidence = SOURCE_CONFIDENCE[self.source_name]
         self.cache_dir = Path(
-            config.get("cache_dir", ".cache/oswm/elevation/copernicus_glo30")
+            config.get(
+                "cache_dir",
+                f".cache/oswm/elevation/{self.source_name}",
+            )
         )
         self._failed_tiles: set[str] = set()
+        self._datasets: dict[Path, Any] = {}
 
     def _local_tile(self, latitude: float, longitude: float) -> Path:
         import requests
 
-        tile = copernicus_tile_name(latitude, longitude)
+        tile = copernicus_tile_name(
+            latitude, longitude, int(self.resolution_m)
+        )
         if tile in self._failed_tiles:
             raise RuntimeError(f"Copernicus tile unavailable during this run: {tile}")
         target = self.cache_dir / f"{tile}.tif"
@@ -238,7 +257,9 @@ class CopernicusGLO30Provider(RasterElevationProvider):
         temporary: Path | None = None
         try:
             with requests.get(
-                copernicus_tile_url(latitude, longitude),
+                copernicus_tile_url(
+                    latitude, longitude, int(self.resolution_m)
+                ),
                 stream=True,
                 timeout=self.request_timeout_seconds,
             ) as response:
@@ -271,14 +292,40 @@ class CopernicusGLO30Provider(RasterElevationProvider):
 
         values = [float("nan")] * len(points_lonlat)
         for path, indexed_points in indexed_by_tile.items():
-            with rasterio.open(path) as dataset:
-                samples = dataset.sample([point for _index, point in indexed_points])
-                nodata = dataset.nodata
-                for (index, _point), sample in zip(indexed_points, samples):
-                    value = float(sample[0])
-                    if nodata is None or value != nodata:
-                        values[index] = value
+            dataset = self._datasets.get(path)
+            if dataset is None or dataset.closed:
+                dataset = rasterio.open(path)
+                self._datasets[path] = dataset
+            samples = dataset.sample([point for _index, point in indexed_points])
+            nodata = dataset.nodata
+            for (index, _point), sample in zip(indexed_points, samples):
+                value = float(sample[0])
+                if nodata is None or value != nodata:
+                    values[index] = value
         return values
+
+    def close(self) -> None:
+        for dataset in self._datasets.values():
+            dataset.close()
+        self._datasets.clear()
+
+
+class CopernicusGLO30Provider(CopernicusDEMProvider):
+    source_name = "copernicus_glo30"
+    default_confidence = SOURCE_CONFIDENCE["copernicus_glo30"]
+    resolution_m = 30
+
+    def __init__(self, config: dict[str, Any], request_timeout_seconds: int = 120):
+        super().__init__({**config, "resolution_m": 30}, request_timeout_seconds)
+
+
+class CopernicusGLO90Provider(CopernicusDEMProvider):
+    source_name = "copernicus_glo90"
+    default_confidence = SOURCE_CONFIDENCE["copernicus_glo90"]
+    resolution_m = 90
+
+    def __init__(self, config: dict[str, Any], request_timeout_seconds: int = 120):
+        super().__init__({**config, "resolution_m": 90}, request_timeout_seconds)
 
 
 class COGElevationProvider(RasterElevationProvider):
@@ -335,6 +382,8 @@ class ElevationResolver:
                 provider_type = provider_config.get("type")
                 if provider_type == "copernicus_glo30":
                     providers.append(CopernicusGLO30Provider(provider_config, timeout))
+                elif provider_type == "copernicus_glo90":
+                    providers.append(CopernicusGLO90Provider(provider_config, timeout))
                 elif provider_type in {"cog", "local_cog"}:
                     providers.append(COGElevationProvider(provider_config, timeout))
                 else:
@@ -382,6 +431,12 @@ class ElevationResolver:
             self.config, sort_keys=True, separators=(",", ":"), default=str
         ).encode("utf-8")
         return hashlib.sha256(payload).hexdigest()[:16]
+
+    def close(self) -> None:
+        for provider in self.providers:
+            close = getattr(provider, "close", None)
+            if callable(close):
+                close()
 
 
 def slope_cache_key(

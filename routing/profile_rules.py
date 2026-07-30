@@ -650,6 +650,7 @@ SOURCE_CONFIDENCE = {
     "local_lidar_dtm": 90,
     "regional_dtm": 75,
     "copernicus_glo30": 45,
+    "copernicus_glo90": 30,
     "osm_qualitative": 35,
     "missing": 0,
 }
@@ -660,10 +661,19 @@ DEFAULT_ELEVATION_CONFIG = {
     "providers": [
         {
             "type": "copernicus_glo30",
-            "role": "global_fallback",
-            "priority": 10,
+            "role": "global_primary",
+            "priority": 20,
             "cache_dir": ".cache/oswm/elevation/copernicus_glo30",
             "minimum_baseline_m": 45,
+            "sample_count": 7,
+            "max_abs_slope_percent": 40,
+        },
+        {
+            "type": "copernicus_glo90",
+            "role": "global_coverage_fallback",
+            "priority": 10,
+            "cache_dir": ".cache/oswm/elevation/copernicus_glo90",
+            "minimum_baseline_m": 135,
             "sample_count": 7,
             "max_abs_slope_percent": 40,
         },

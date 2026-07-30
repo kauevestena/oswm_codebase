@@ -45,6 +45,8 @@ def get_endpoint_category(path, deliverable):
             return "GDAL VRT Descriptors"
         elif "routing" in path:
             return "Routing & Demos"
+        elif "hazard_analysis" in path:
+            return "Pedestrian Hazard Analysis"
         elif path == "webmap_params.json":
             return "Boundaries & Config"
         return "Map Data Assets"
@@ -127,7 +129,18 @@ def get_endpoint_description(path, filename, deliverable):
             "data/routing/demo.geojson": "Transitional GeoJSON routing network with compact, directional accessibility grades.",
             "data/routing/profiles.json": "Browser-safe distance/accessibility routing modes, labels, speeds, grade-to-cost multipliers, and event penalties.",
             "data/routing/metadata.json": "Routing ruleset provenance, slope-source counts, warnings, and generated grade distributions.",
-            "data/routing/slope_cache.json": "Reusable derived longitudinal slope estimates keyed by edge geometry and provider configuration."
+            "data/routing/slope_cache.json": "Reusable derived longitudinal slope estimates keyed by edge geometry and provider configuration.",
+            "data/hazard_analysis/profiles.json": "Browser-safe hazard profiles, severity levels, categories, explanations, effects, and ruleset provenance.",
+            "data/hazard_analysis/metadata.json": "Hazard generation audit, evidence caveats, severity counts, and elevation-source provenance.",
+            "data/hazard_analysis/terrain.json": "Terrain overlay bounds, profile thresholds, global AWS DEM attribution, and availability status.",
+            "data/hazard_analysis/features_pedestrian.geojson": "Pedestrian-profile hazard screening with directional evidence and category severities.",
+            "data/hazard_analysis/features_wheelchair.geojson": "Wheelchair-profile hazard screening with directional evidence and category severities.",
+            "data/hazard_analysis/features_blind.geojson": "Blind/low-vision-profile hazard screening with directional evidence and category severities.",
+            "data/hazard_analysis/features_elderly.geojson": "Older/reduced-mobility-profile hazard screening with directional evidence and category severities.",
+            "data/hazard_analysis/terrain_pedestrian.png": "Transparent pedestrian terrain-difficulty overlay derived from the configured global AWS DEM.",
+            "data/hazard_analysis/terrain_wheelchair.png": "Transparent wheelchair terrain-difficulty overlay derived from the configured global AWS DEM.",
+            "data/hazard_analysis/terrain_blind.png": "Transparent blind/low-vision terrain-difficulty overlay derived from the configured global AWS DEM.",
+            "data/hazard_analysis/terrain_elderly.png": "Transparent older/reduced-mobility terrain-difficulty overlay derived from the configured global AWS DEM."
         }
         if path in curated_descs:
             return curated_descs[path]
@@ -238,6 +251,10 @@ def generate_data_index():
         "routing": {
             "description": "Routing files, network properties, and routing demo data.",
             "path": "data/routing"
+        },
+        "hazard_analysis": {
+            "description": "Profile-specific pedestrian hazard evidence and global terrain-difficulty overlays.",
+            "path": "data/hazard_analysis"
         }
     }
     
@@ -271,6 +288,20 @@ def generate_data_index():
                     "profiles.json",
                     "metadata.json",
                     "slope_cache.json",
+                ]
+            elif key == "hazard_analysis":
+                files = [
+                    "profiles.json",
+                    "metadata.json",
+                    "terrain.json",
+                    "features_pedestrian.geojson",
+                    "features_wheelchair.geojson",
+                    "features_blind.geojson",
+                    "features_elderly.geojson",
+                    "terrain_pedestrian.png",
+                    "terrain_wheelchair.png",
+                    "terrain_blind.png",
+                    "terrain_elderly.png",
                 ]
         
         data_idx["folders"][key] = {
@@ -316,6 +347,8 @@ def collect_endpoints():
                 fmt = "PMTiles"
             elif ext == ".vrt":
                 fmt = "XML/VRT"
+            elif ext == ".png":
+                fmt = "PNG"
             elif ext == ".html":
                 continue # Skip HTML files like updating status page
                 
