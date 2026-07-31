@@ -426,7 +426,10 @@ def get_dashboard_global_insertions(levels_backward=2):
         "<head>": f"""
 
     <head>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{codebase_prefix}/assets/styles/stats_styles.css">
     <script src="{codebase_prefix}/assets/webscripts/stats_funcs.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
@@ -447,15 +450,21 @@ def get_dashboard_main_page_insertions():
         "<body>": f"""
 
     <body>
-    <h1 style="text-align: center;font-family: 'Poppins', sans-serif;">Welcome to the OSWM Node Dashboard!</h1>
-    <div style="text-align: center; padding: 5px;">
-        <img src="{project_logo_url}" alt="OSWM Project Logo">
+    <div class="content" style="max-width: 1000px; margin: 0 auto; text-align: center; padding: 2rem;">
+        <h1 style="font-size: 2.5rem; margin-bottom: 1rem;">Welcome to the OSWM Node Dashboard!</h1>
+        <div style="margin-bottom: 2rem;">
+            <img src="{project_logo_url}" alt="OSWM Project Logo" style="height: 60px;">
+        </div>
+        
+        <div style="background: var(--card-bg); padding: 2rem; border-radius: 12px; border: 1px solid var(--card-border); margin-bottom: 2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+            <h3 style="margin-top: 0;"><b>Select a category of data</b> or the aggregated on "All Data Charts"</h3>
+            <p>Or click the top navigation links to explore.<br>Most <b>charts are interactive</b>, so try out some pan and zoom!</p>
+            
+            <h4 style="margin-bottom: 0;">They're made with the amazing Altair library!</h4>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">You can click on the 3 dots on the upper right corner to export to different formats and edit on the Vega Editor.</p>
+        </div>
     </div>
-    <h3 style="text-align: center; font-weight: normal;"><b>Select a category of data</b> or the aggregated on "All Data Charts"<br><br>Or click the blue button to go back to the node homepage!<br><br>Most <b>charts are interactive</b>, so try out some pan and zoom!<br></form></h3>
 
-    <h4 style="text-align: center; font-weight: normal;">They're made with the amazing Altair library!<br> so <b>you can click on the 3 dots on the upper right corner</b>,<br> to export to different formats and edit on the Vega Editor!</h4>
-
-    <br>
     <footer>
         <p style="text-align: center; font-weight: normal;">&copy; <span id="year"></span> OSWM Project</p>
         <p style="text-align: center; font-weight: normal;">want to report an issue? <a href="https://github.com/kauevestena/opensidewalkmap/issues">here</a></p>
@@ -468,7 +477,7 @@ def get_dashboard_main_page_insertions():
     }
 
 # stuff for the explanation
-explanation_base = '<h4 style="padding-left: 14%;font-weight: normal;font-family: sans-serif;"> - Explanation: {} </h4>'
+explanation_base = '<div style="padding: 1.5rem 14%;"><h4 style="font-weight: 500;">Explanation:</h4><p style="color: var(--text-muted);">{}</p></div>'
 
 # the webpage links
 surface_link = "<a href='https://wiki.openstreetmap.org/wiki/Key:surface'>surface</a>"
