@@ -35,8 +35,29 @@
         .inline input { margin: 0; }
         .inline label { margin: 0; text-transform: none; letter-spacing: 0; font-size: 13px; }
         #legend { margin-top: 13px; padding-top: 11px; border-top: 1px solid #d8dde2; }
-        .legend-row { display: flex; align-items: center; gap: 8px; margin: 4px 0; font-size: 12px; }
-        .swatch { width: 28px; height: 5px; border-radius: 3px; }
+        .legend-row { display: flex; align-items: center; margin-bottom: 4px; }
+        .swatch { display: inline-block; width: 14px; height: 14px; margin-right: 6px; border-radius: 50%; border: 1px solid #aeb6bf; }
+
+        .popup-links {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 10px;
+            border-top: 1px solid #d8dde2;
+            padding-top: 8px;
+        }
+
+        .popup-links a {
+            color: #3b82f6;
+            text-decoration: none;
+            font-size: 0.9em;
+        }
+
+        .popup-links a:hover {
+            text-decoration: underline;
+        }
+
         #source { margin-top: 10px; font-size: 10px; color: #65717d; line-height: 1.35; }
         #loading { display: none; margin-top: 9px; font-size: 12px; font-weight: 700; color: #8a4d00; }
         #welcome {
@@ -159,9 +180,8 @@
             });
             $("severitySelect").value = "1";
             $("legend").innerHTML = Object.entries(state.metadata.severity_levels)
-                .filter(([level]) => level !== "0")
                 .map(([_level, item]) => `<div class="legend-row"><span class="swatch" style="background:${item.color}"></span>${escapeHtml(item.label)}</div>`)
-                .join("") + '<div class="legend-row"><span class="swatch" style="background:#6b7280;border-top:2px dashed white"></span>Insufficient data</div>';
+                .join("") + '<div class="legend-row"><span class="swatch" style="background:#6b7280;border:1px solid #4b5563"></span>Insufficient data</div>';
             for (const id of ["profileSelect", "categorySelect", "severitySelect", "confidenceRange", "unknownToggle"]) {
                 $(id).addEventListener("input", id === "profileSelect" ? switchProfile : applyFilters);
             }
@@ -226,8 +246,12 @@
             map.addLayer({ id: "hazard-lines", type: "line", source: "hazards",
                 "source-layer": sourceLayer,
                 paint: {
-                    "line-color": ["match", ["get", "severity"], 1,"#fee08b",2,"#fdae61",3,"#f46d43",4,"#a50026","#4daf4a"],
-                    "line-width": ["interpolate", ["linear"], ["zoom"], 10, 1.5, 17, 6],
+                    "line-color": ["match", ["get", "severity"], 1,"#fee08b",2,"#fdae61",3,"#f46d43",4,"#a50026","#ffffff"],
+                    "line-width": [
+                        "interpolate", ["linear"], ["zoom"],
+                        10, ["case", ["boolean", ["feature-state", "hover"], false], 3, 1.5],
+                        17, ["case", ["boolean", ["feature-state", "hover"], false], 12, 6]
+                    ],
                     "line-opacity": .9
                 }});
             map.addLayer({ id: "hazard-hit", type: "line", source: "hazards",
@@ -266,7 +290,9 @@
             }
         }
 
-        function popupHtml(properties) {
+        function popupHtml(feature, lngLat) {
+            const properties = feature.properties;
+            const element = feature.geometry.type === 'Point' ? 'node' : 'way';
             const severity = Number(properties.severity);
             const level = state.metadata.severity_levels[String(severity)];
             const directionName = Number(properties.severity_fwd) >= Number(properties.severity_bwd) ? "forward" : "backward";
@@ -288,7 +314,12 @@
                 <div>Feature: ${escapeHtml(properties.edge_kind)} · ${escapeHtml(properties.source_id)}</div>
                 <ul class="evidence">${evidence.map(item =>
                     `<li><span class="badge" style="background:${state.metadata.severity_levels[String(item.effects[state.profile].severity)].color}">${escapeHtml(state.metadata.categories[item.category].label)}</span> ${escapeHtml(item.description)}</li>`
-                ).join("") || "<li>No hazard rule matched the available evidence.</li>"}</ul>`;
+                ).join("") || "<li>No hazard rule matched the available evidence.</li>"}</ul>
+                <div class="popup-links">
+                    <a href="https://www.openstreetmap.org/${element}/${properties.source_id}" target="_blank">OSM</a>
+                    <a href="https://www.mapillary.com/app/?lat=${lngLat.lat}&lng=${lngLat.lng}&z=19" target="_blank">Mapillary</a>
+                    <a href="https://geohack.toolforge.org/geohack.php?params=${lngLat.lat}_N_${lngLat.lng}_E" target="_blank">GeoHack</a>
+                </div>`;
         }
 
         async function initialise() {
@@ -302,6 +333,8 @@
             $("source").innerHTML = state.terrain.available
                 ? `${escapeHtml(state.terrain.description)}<br>${escapeHtml(state.terrain.source_attribution)}`
                 : "Terrain overlay unavailable for this generation.";
+
+            let hoveredStateId = null;
 
             const addLayers = () => {
                 if (map.getSource("hazards")) return;
@@ -328,17 +361,47 @@
                 // PMTiles vector source — all profiles as source-layers
                 map.addSource("hazards", {
                     type: "vector",
-                    url: `pmtiles://${PMTILES_URL}`
+                    url: `pmtiles://${PMTILES_URL}`,
+                    promoteId: "source_id"
                 });
 
                 // Click + cursor handlers (registered once, layer is swapped on profile change)
                 map.on("click", "hazard-hit", event => {
                     const feature = event.features[0];
                     new maplibregl.Popup().setLngLat(event.lngLat)
-                        .setHTML(popupHtml(feature.properties)).addTo(map);
+                        .setHTML(popupHtml(feature, event.lngLat)).addTo(map);
                 });
-                map.on("mouseenter", "hazard-hit", () => map.getCanvas().style.cursor = "pointer");
-                map.on("mouseleave", "hazard-hit", () => map.getCanvas().style.cursor = "");
+                
+                map.on("mousemove", "hazard-hit", event => {
+                    map.getCanvas().style.cursor = "pointer";
+                    if (event.features.length > 0) {
+                        const sourceLayer = event.features[0].sourceLayer;
+                        if (hoveredStateId !== null && hoveredStateId !== event.features[0].id) {
+                            map.setFeatureState(
+                                { source: "hazards", sourceLayer: sourceLayer, id: hoveredStateId },
+                                { hover: false }
+                            );
+                        }
+                        hoveredStateId = event.features[0].id;
+                        map.setFeatureState(
+                            { source: "hazards", sourceLayer: sourceLayer, id: hoveredStateId },
+                            { hover: true }
+                        );
+                    }
+                });
+
+                map.on("mouseleave", "hazard-hit", () => {
+                    map.getCanvas().style.cursor = "";
+                    if (hoveredStateId !== null) {
+                        const profile = $("profileSelect").value;
+                        const sourceLayer = `hazard_${profile}`;
+                        map.setFeatureState(
+                            { source: "hazards", sourceLayer: sourceLayer, id: hoveredStateId },
+                            { hover: false }
+                        );
+                    }
+                    hoveredStateId = null;
+                });
 
                 switchProfile();
             };

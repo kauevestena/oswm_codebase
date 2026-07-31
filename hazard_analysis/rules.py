@@ -12,8 +12,8 @@ HAZARD_RULESET_VERSION = "0.1.0"
 SEVERITY_LEVELS = {
     0: {
         "label": "No detected hazard",
-        "color": "#4daf4a",
         "description": "No rule matched the available evidence.",
+        "color": "#ffffff",
     },
     1: {
         "label": "Uncomfortable",

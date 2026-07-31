@@ -38,13 +38,7 @@ OUTPUT_PATH = _this_dir / "classification_guide.html"
 
 _esc = html.escape
 
-# Level 0 should render as gray, not the green from the map palette.
-_SEVERITY_COLOR_OVERRIDES: dict[int, str] = {0: "#9e9e9e"}
-
-
 def _severity_color(level: int) -> str:
-    if level in _SEVERITY_COLOR_OVERRIDES:
-        return _SEVERITY_COLOR_OVERRIDES[level]
     return SEVERITY_LEVELS.get(level, {}).get("color", "#9e9e9e")
 
 
@@ -66,8 +60,9 @@ def _severity_pill(level: int) -> str:
     meta = SEVERITY_LEVELS.get(level, {})
     color = _severity_color(level)
     label = meta.get("label", "Unknown")
+    extra_style = "color:#1a1d20;border:1px solid #d8dde2;" if level == 0 else ""
     return (
-        f'<span class="severity-pill" style="background:{_esc(color)}">'
+        f'<span class="severity-pill" style="background:{_esc(color)};{extra_style}">'
         f"{level} — {_esc(label)}</span>"
     )
 
