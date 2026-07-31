@@ -1,4 +1,4 @@
-"""Generate whole-node statistics for printable Webmap scrutiny snapshots.
+"""Generate whole-node statistics for Webmap themes and scrutiny snapshots.
 
 Pure aggregation helpers intentionally avoid importing the node configuration at
 module import time.  This keeps them easy to unit-test outside a full OSWM node.
@@ -354,19 +354,19 @@ def main() -> None:
     if str(codebase_root) not in sys.path:
         sys.path.insert(0, str(codebase_root))
 
-    from constants import CITY_NAME, paths_dict, snapshot_summary_path
+    from constants import CITY_NAME, paths_dict, webmap_theme_summary_path
     from functions import dump_json, get_gdfs_dict_v2
-    from webmap.webmap_lib import get_snapshot_themes
+    from webmap.webmap_lib import get_webmap_theme_definitions
 
     frames = get_gdfs_dict_v2()
     summary = build_node_summary(
         frames,
-        get_snapshot_themes(),
+        get_webmap_theme_definitions(),
         node_name=CITY_NAME,
         layer_sources=paths_dict["map_layers"],
     )
-    dump_json(summary, snapshot_summary_path)
-    print(f"Snapshot summary written to {os.path.abspath(snapshot_summary_path)}")
+    dump_json(summary, webmap_theme_summary_path)
+    print(f"Webmap theme summary written to {os.path.abspath(webmap_theme_summary_path)}")
 
 
 if __name__ == "__main__":

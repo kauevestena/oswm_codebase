@@ -19,6 +19,15 @@ The responsibilities are intentionally separated:
 
 [`kauevestena/opensidewalkmap_beta`](https://github.com/kauevestena/opensidewalkmap_beta) is the current reference node. It is a working model, not a claim that every future node must be an exact copy.
 
+## Webmap theme charts
+
+The MapLibre Webmap includes a lower-left analysis control for every theme in
+its style selector. Whole-node charts use the exact summary generated alongside
+the PMTiles, while the optional **Visible area** scope estimates the current
+viewport directly from rendered vector-tile features. Apache ECharts renders
+the responsive SVG charts in the browser; no GeoJSON analytical source and no
+Dashboard or Hazard Analysis dependency is introduced.
+
 ## Accessibility-aware routing
 
 The static routing module supports a first-class shortest-distance baseline
@@ -70,7 +79,7 @@ Generators run from the node root. They import shared code through the `oswm_cod
 
 | Module | Current role | Status |
 |---|---|---|
-| Webmap and scrutiny snapshots | MapLibre/PMTiles visualization, thematic styles, legends, popups, and printable A4 analytical snapshots | Active |
+| Webmap and scrutiny snapshots | MapLibre/PMTiles visualization, thematic styles, viewport-aware charts, legends, popups, and printable A4 analytical snapshots | Active |
 | Dashboard/statistics | Altair/Vega charts for individual pedestrian layers and aggregated data | Active |
 | Data quality | Tag-value checks, geometry checks, report tables, QA maps, and external-provider links | Active |
 | Completeness | Multi-scale and temporal footway/sidewalk-to-road completeness analysis | Active; computationally and API intensive |
@@ -119,7 +128,7 @@ The identical `assets/homepage/favicon_homepage.png` and the non-clean `assets/p
 - Python 3 and `venv`/`pip`;
 - the Python packages in `requirements.txt`;
 - GDAL command-line tools, including `ogr2ogr`, for tile/VRT and full pipeline work;
-- Node.js for the dependency-free JavaScript snapshot tests;
+- Node.js for the dependency-free JavaScript snapshot and Webmap-chart tests;
 - a local HTTP server for browser smoke tests (Python's standard library is sufficient).
 
 For integration work, start with a node so relative paths and generated outputs are exercised in their real topology:
@@ -168,7 +177,9 @@ From a standalone `oswm_codebase` checkout:
 ```bash
 python tests/test_branding_manifest.py
 python -m unittest discover -s tests/webmap_snapshot -p 'test_*.py'
+python -m unittest discover -s tests/webmap_theme_charts -p 'test_*.py'
 node --test webmap/snapshot/snapshot_stats.test.mjs
+node --test webmap/theme_charts/theme_charts.test.mjs
 git diff --check
 ```
 

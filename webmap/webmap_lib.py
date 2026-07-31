@@ -15,7 +15,7 @@ FOOTWAY_CATEGORY_COLORS = {
     "potential_footways": "#9569a4",
 }
 
-SNAPSHOT_INTEREST_ATTRIBUTES = {
+WEBMAP_THEME_ATTRIBUTES = {
     "surface": "Surface",
     "smoothness": "Smoothness",
     "tactile_paving": "Tactile Paving",
@@ -24,13 +24,19 @@ SNAPSHOT_INTEREST_ATTRIBUTES = {
     "wheelchair": "wheelchair=* tag",
 }
 
-SNAPSHOT_ATTRIBUTE_LAYERS = {
+WEBMAP_THEME_ATTRIBUTE_LAYERS = {
     "traffic_calming": "crossings",
 }
 
-SNAPSHOT_ELSE_COLORS = {
+WEBMAP_THEME_ELSE_COLORS = {
     "traffic_calming": "#63636366",
 }
+
+# Backwards-compatible aliases for the printable snapshot code.  Theme
+# metadata belongs to the Webmap module and is also consumed by snapshots.
+SNAPSHOT_INTEREST_ATTRIBUTES = WEBMAP_THEME_ATTRIBUTES
+SNAPSHOT_ATTRIBUTE_LAYERS = WEBMAP_THEME_ATTRIBUTE_LAYERS
+SNAPSHOT_ELSE_COLORS = WEBMAP_THEME_ELSE_COLORS
 
 # webmap stuff:
 BASEMAP_URL = "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"
@@ -379,11 +385,12 @@ def get_color_dict(columnname, layer="sidewalks", attribute="color"):
     return colordict
 
 
-def get_snapshot_themes():
-    """Return JSON-safe analytical metadata for every printable Webmap theme.
+def get_webmap_theme_definitions():
+    """Return JSON-safe analytical metadata for every Webmap theme.
 
     The same dictionaries used to build MapLibre styles feed this metadata, so
-    the scrutiny chart and legend cannot silently drift away from map colors.
+    live charts, printable snapshots, and legends cannot silently drift away
+    from map colors.
     """
 
     default_layer_color = "steelblue"
@@ -391,6 +398,16 @@ def get_snapshot_themes():
         layer: FOOTWAY_CATEGORY_COLORS.get(layer, default_layer_color)
         for layer in MAP_DATA_LAYERS
     }
+
+    def measure_for_layers(layers):
+        """Choose a stable chart measure supported by current Webmap themes."""
+
+        geometry_types = {
+            layertypes_dict[layer]
+            for layer in layers
+            if layer in layertypes_dict
+        }
+        return "length" if geometry_types == {"line"} else "count"
 
     def categorical_theme(
         theme_id,
@@ -404,9 +421,11 @@ def get_snapshot_themes():
         return {
             "id": theme_id,
             "kind": "categorical",
+            "chart": "bar",
             "label": label,
             "attribute": attribute,
             "layers": layers,
+            "measure": measure_for_layers(layers),
             "colors": colors,
             "unknown_value": "?",
             "unknown_color": colors.get("?", other_color),
@@ -417,9 +436,11 @@ def get_snapshot_themes():
         "footway_categories": {
             "id": "footway_categories",
             "kind": "categorical",
+            "chart": "bar",
             "label": "Footway Categories",
             "attribute": "__layer__",
             "layers": MAP_DATA_LAYERS,
+            "measure": "count",
             "colors": footway_colors,
             "unknown_value": "?",
             "unknown_color": "#636363",
@@ -428,6 +449,7 @@ def get_snapshot_themes():
         "crossings_and_kerbs": {
             "id": "crossings_and_kerbs",
             "kind": "multi",
+            "chart": "multi",
             "label": "Crossings and Kerbs",
             "panels": [
                 categorical_theme(
@@ -438,15 +460,15 @@ def get_snapshot_themes():
         },
     }
 
-    for attribute, label in SNAPSHOT_INTEREST_ATTRIBUTES.items():
-        layer = SNAPSHOT_ATTRIBUTE_LAYERS.get(attribute, "sidewalks")
+    for attribute, label in WEBMAP_THEME_ATTRIBUTES.items():
+        layer = WEBMAP_THEME_ATTRIBUTE_LAYERS.get(attribute, "sidewalks")
         themes[attribute] = categorical_theme(
             attribute,
             label,
             attribute,
             [layer],
             layer,
-            SNAPSHOT_ELSE_COLORS.get(attribute, "gray"),
+            WEBMAP_THEME_ELSE_COLORS.get(attribute, "gray"),
         )
 
     for attribute, numeric_theme in numeric_themes.items():
@@ -456,9 +478,11 @@ def get_snapshot_themes():
         themes[attribute] = {
             "id": attribute,
             "kind": "numeric",
+            "chart": "histogram",
             "label": numeric_theme["name"],
             "attribute": attribute,
             "layers": MAP_DATA_LAYERS,
+            "measure": "count",
             "breaks": [float(numeric_theme["default_value"]), *sorted_breaks],
             "colors": [
                 numeric_theme["default_color"],
@@ -480,6 +504,12 @@ def get_snapshot_themes():
         }
 
     return themes
+
+
+def get_snapshot_themes():
+    """Compatibility wrapper for existing snapshot consumers."""
+
+    return get_webmap_theme_definitions()
 
 
 def create_maplibre_color_schema(attribute_dict, attribute_name, else_color="gray"):

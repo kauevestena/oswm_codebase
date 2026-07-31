@@ -46,8 +46,8 @@ class WebmapWiringTests(unittest.TestCase):
         generator = (ROOT / "webmap/create_webmap_new.py").read_text(encoding="utf8")
 
         self.assertIn('params["snapshot"]', generator)
-        self.assertIn("get_snapshot_themes()", generator)
-        self.assertIn("snapshot_summary_path", generator)
+        self.assertIn("get_webmap_theme_definitions()", generator)
+        self.assertIn("webmap_theme_summary_path", generator)
 
     def test_daily_pipeline_generates_summary_before_webmap(self):
         runner = (ROOT / "runners/daily.sh").read_text(encoding="utf8")

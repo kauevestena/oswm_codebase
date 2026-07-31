@@ -185,6 +185,8 @@ tests/*
 !tests/test_branding_manifest.py
 !tests/webmap_snapshot/
 !tests/webmap_snapshot/*.py
+!tests/webmap_theme_charts/
+!tests/webmap_theme_charts/*.py
 !tests/test_routing_*.py
 !tests/test_hazard_analysis.py
 tests.py
