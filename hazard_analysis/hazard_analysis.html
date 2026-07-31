@@ -58,7 +58,9 @@
     </style>
 </head>
 <body>
-    <img class="logo" data-oswm-branding="logos.page_dark_clean" alt="OpenSidewalkMap">
+    <a href="../../index.html" id="node_link" title="Click to go back to OSWM Node's Home">
+        <img class="logo" data-oswm-branding="logos.page" src="../assets/branding/logos/page_logo.png" alt="OpenSidewalkMap">
+    </a>
     <div id="map"></div>
     <aside id="panel">
         <h1>Hazard Analysis</h1>
@@ -123,6 +125,7 @@
             center: [0, 0], zoom: 2
         });
         map.addControl(new maplibregl.NavigationControl(), "top-right");
+        map.addControl(new maplibregl.ScaleControl());
 
         const state = { metadata: null, terrain: null, profile: null, fitted: false };
         const $ = id => document.getElementById(id);

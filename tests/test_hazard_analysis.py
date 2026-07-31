@@ -165,7 +165,10 @@ class HazardClientWiringTests(unittest.TestCase):
             'id="confidenceRange"',
         ):
             self.assertIn(identifier, self.html)
-        self.assertIn("features_${profile}.geojson", self.html)
+        self.assertIn("hazard.pmtiles", self.html)
+        self.assertIn('data-oswm-branding="logos.page"', self.html)
+        self.assertIn('id="node_link"', self.html)
+        self.assertIn("ScaleControl", self.html)
 
     def test_client_explains_missing_data_and_critical_context(self):
         self.assertIn("not certified safe", self.html)
