@@ -73,12 +73,14 @@ option is hidden when distance-only is already selected.
 1. Numeric OSM `incline=*`.
 2. A node-configured high-resolution DTM/COG.
 3. A node-configured regional elevation model.
-4. Copernicus DEM GLO-30.
-5. Unknown slope.
+4. Copernicus DEM GLO-30 Public from the AWS Open Data Registry.
+5. Copernicus DEM GLO-90 from AWS where a public 30 m tile is unavailable.
+6. Unknown slope.
 
 `incline:across=*` is independent and is never inferred from a terrain model.
-Copernicus GLO-30 is a 30 m digital surface model: its result is explicitly
-treated as a low-confidence terrain trend, not a measured sidewalk slope.
+Copernicus GLO-30 and GLO-90 are digital surface models: their results are
+explicitly treated as low-confidence terrain trends, not measured sidewalk
+slopes. Together they provide a globally valid default for OSWM nodes.
 
 Nodes can override the provider list through `ELEVATION_CONFIG` in `config.py`.
 The current template contains an example local COG entry.

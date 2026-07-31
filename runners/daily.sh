@@ -42,6 +42,23 @@ run_step oswm_codebase/datahub/acquisition/generate_acquisition.py "generate_acq
 if [ -f data/updates/yesterday.json ]; then
     NUM_CHANGESETS=$("$PYTHON_BIN" -c "import json; print(len(json.load(open('data/updates/yesterday.json'))))" 2>/dev/null)
     if [ -n "$NUM_CHANGESETS" ] && [ "$NUM_CHANGESETS" -eq 0 ]; then
+        HAZARD_OUTPUTS_READY=1
+        for PROFILE in pedestrian wheelchair blind elderly; do
+            if [ ! -s "data/hazard_analysis/features_${PROFILE}.geojson" ] || \
+               [ ! -s "data/hazard_analysis/features_${PROFILE}.parquet" ] || \
+               [ ! -s "data/hazard_analysis/terrain_${PROFILE}.png" ]; then
+                HAZARD_OUTPUTS_READY=0
+            fi
+        done
+        if [ ! -s data/hazard_analysis/profiles.json ] || \
+           [ ! -s data/hazard_analysis/metadata.json ] || \
+           [ ! -s data/hazard_analysis/terrain.json ] || \
+           [ ! -s data/hazard_analysis/hazard.pmtiles ]; then
+            HAZARD_OUTPUTS_READY=0
+        fi
+        if [ "$HAZARD_OUTPUTS_READY" -eq 0 ]; then
+            echo "Hazard deployment artifacts are missing; continuing generation."
+        else
         echo "========================================="
         echo "No OSM changesets affecting OSWM features yesterday."
         echo "Skipping the remaining OSM-dependent daily updates."
@@ -53,6 +70,7 @@ if [ -f data/updates/yesterday.json ]; then
         fi
         rm -f data/updates/pipeline_failures.txt
         exit 0
+        fi
     fi
 fi
 
@@ -67,6 +85,7 @@ run_step oswm_codebase/data_quality/quality_check_compiling.py "quality_check_co
 run_step oswm_codebase/data_quality/external_qc.py             "external_qc"
 run_step oswm_codebase/dashboard/statistics_generation.py      "statistics_generation"
 run_step oswm_codebase/generation/routing_demo_gen.py          "routing_demo_gen"
+run_step oswm_codebase/generation/hazard_tiles_gen.py          "hazard_tiles_gen"
 run_step oswm_codebase/datahub/API/generate_api.py             "generate_api"
 run_step oswm_codebase/datahub/datahub_index_generator.py      "datahub_index"
 

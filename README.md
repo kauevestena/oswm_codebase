@@ -28,6 +28,16 @@ Python dictionaries and precomputed during node generation. See
 [`routing/README.md`](routing/README.md) for the architecture, slope-source
 hierarchy and calibration workflow.
 
+## Pedestrian hazard analysis
+
+The Hazard Analysis webmap evaluates the same normalized pedestrian network
+for general pedestrians, wheelchair users, blind/low-vision pedestrians, and
+older/reduced-mobility pedestrians. It publishes directional, evidence-backed
+severity rather than collapsing missing information into a safety claim.
+Global terrain context comes from the Copernicus GLO-30 and GLO-90 Cloud
+Optimized GeoTIFFs in the AWS Open Data Registry. See
+[`hazard_analysis/README.md`](hazard_analysis/README.md).
+
 ## Architecture
 
 ```text
@@ -38,6 +48,7 @@ OpenSidewalkMap project
 │   ├── data_quality/                validation and completeness analysis
 │   ├── datahub/                     static API, acquisition, and watcher/RSS
 │   ├── generation/                  PMTiles, VRT, and routing-data generators
+│   ├── hazard_analysis/             hazard policy, terrain overlays, and webmap
 │   ├── routing/                     static routing demonstration
 │   ├── runners/                     setup, daily, weekly, and custom pipelines
 │   ├── webmap/                      MapLibre Webmap and scrutiny snapshots
@@ -64,6 +75,7 @@ Generators run from the node root. They import shared code through the `oswm_cod
 | Data quality | Tag-value checks, geometry checks, report tables, QA maps, and external-provider links | Active |
 | Completeness | Multi-scale and temporal footway/sidewalk-to-road completeness analysis | Active; computationally and API intensive |
 | Routing demo | Client-side route exploration over generated pedestrian geometries | Experimental |
+| Hazard Analysis | Profile-specific pedestrian hazard screening and global terrain context | Experimental |
 | Data hub and static API | Human-readable hub plus serverless JSON, GeoParquet, PMTiles, VRT, and chart-spec endpoints | Active |
 | Change watcher and RSS | Detects relevant OSM changes, helps skip unnecessary pipeline runs, and emits HTML/RSS/Atom-style outputs | Active |
 | Acquisition | Discovers relevant mapping projects from supported third-party platforms | Active, dependent on external services |

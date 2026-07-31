@@ -32,6 +32,7 @@ data_quality_folderpath = os.path.join(data_folderpath, "data_quality")
 boundaries_folderpath = os.path.join(data_folderpath, "boundaries")
 updates_folderpath = os.path.join(data_folderpath, "updates")
 routing_folderpath = os.path.join(data_folderpath, "routing")
+hazard_analysis_folderpath = os.path.join(data_folderpath, "hazard_analysis")
 snapshots_folderpath = os.path.join(data_folderpath, "snapshots")
 
 improper_geoms_folderpath = os.path.join(data_quality_folderpath, "improper_geoms")
@@ -51,6 +52,35 @@ routing_demo_path = os.path.join(routing_folderpath, "demo.geojson")
 routing_profiles_path = os.path.join(routing_folderpath, "profiles.json")
 routing_metadata_path = os.path.join(routing_folderpath, "metadata.json")
 routing_slope_cache_path = os.path.join(routing_folderpath, "slope_cache.json")
+hazard_profiles_path = os.path.join(
+    hazard_analysis_folderpath, "profiles.json"
+)
+hazard_rules_path = os.path.join(
+    hazard_analysis_folderpath, "rules.json"
+)
+hazard_metadata_path = os.path.join(
+    hazard_analysis_folderpath, "metadata.json"
+)
+hazard_terrain_metadata_path = os.path.join(
+    hazard_analysis_folderpath, "terrain.json"
+)
+
+
+hazard_tiles_path = os.path.join(hazard_analysis_folderpath, "hazard.pmtiles")
+
+
+def hazard_profile_features_path(profile_id):
+    return os.path.join(
+        hazard_analysis_folderpath, f"features_{profile_id}.geojson"
+    )
+
+
+def hazard_profile_parquet_path(profile_id):
+    return os.path.join(
+        hazard_analysis_folderpath, f"features_{profile_id}.parquet"
+    )
+
+
 pipeline_failures_path = os.path.join(updates_folderpath, "pipeline_failures.txt")
 snapshot_summary_path = os.path.join(snapshots_folderpath, "node_summary.json")
 

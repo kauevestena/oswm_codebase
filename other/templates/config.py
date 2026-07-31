@@ -53,7 +53,9 @@ TILES_MAX_ZOOM = 20
 #
 # OSM incline=* values always have priority. The providers below are tried in
 # descending priority order only when a numeric mapped incline is unavailable.
-# A node can insert a local LiDAR/DTM COG before the global fallback:
+# The default is globally valid: public Copernicus DEM COGs hosted by AWS,
+# with GLO-30 preferred and worldwide GLO-90 used for any unreleased 30 m
+# tile. A node may still insert a better local LiDAR/DTM COG before them:
 #
 # {
 #     "type": "local_cog",
@@ -73,15 +75,30 @@ ELEVATION_CONFIG = {
     "providers": [
         {
             "type": "copernicus_glo30",
-            "role": "global_fallback",
-            "priority": 10,
+            "role": "global_primary",
+            "priority": 20,
             "cache_dir": ".cache/oswm/elevation/copernicus_glo30",
             "minimum_baseline_m": 45,
             "sample_count": 7,
             "max_abs_slope_percent": 40,
         },
+        {
+            "type": "copernicus_glo90",
+            "role": "global_coverage_fallback",
+            "priority": 10,
+            "cache_dir": ".cache/oswm/elevation/copernicus_glo90",
+            "minimum_baseline_m": 135,
+            "sample_count": 7,
+            "max_abs_slope_percent": 40,
+        },
     ],
     "request_timeout_seconds": 120,
+}
+
+HAZARD_TERRAIN_CONFIG = {
+    "enabled": True,
+    "max_dimension": 1600,
+    "smoothing_sigma_pixels": 3.0,
 }
 
 

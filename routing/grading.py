@@ -2,190 +2,21 @@
 
 from __future__ import annotations
 
-import math
-import re
 from collections.abc import Mapping, Sequence
 from statistics import fmean
 from typing import Any
 
+from accessibility.normalization import (
+    is_unknown,
+    normalize_categorical,
+    parse_incline_percent,
+    parse_number,
+    parse_width_m,
+    prepare_feature,
+)
+
 from .profile_rules import ROUTING_PROFILES
 from .profile_validation import validate_profiles
-
-
-UNKNOWN_STRINGS = {"", "?", "unknown", "unset", "none", "null", "nan"}
-_NUMBER_RE = re.compile(r"[-+]?(?:\d+(?:[.,]\d*)?|[.,]\d+)")
-
-
-def is_unknown(value: Any) -> bool:
-    if value is None:
-        return True
-    if isinstance(value, str):
-        return value.strip().lower() in UNKNOWN_STRINGS
-    try:
-        return bool(math.isnan(value))
-    except (TypeError, ValueError):
-        # pandas uses dedicated scalar sentinels that deliberately reject
-        # truth-value conversion. Keep this module usable without importing
-        # pandas just to recognize those values.
-        value_type = type(value)
-        return (
-            value_type.__name__ in {"NAType", "NaTType"}
-            and value_type.__module__.startswith("pandas")
-        )
-
-
-def normalize_categorical(value: Any) -> Any:
-    if isinstance(value, str):
-        return value.strip().lower()
-    return value
-
-
-def parse_number(value: Any) -> float | None:
-    """Parse the first finite number from a permissive OSM-style value."""
-
-    if is_unknown(value) or isinstance(value, bool):
-        return None
-    if isinstance(value, (int, float)):
-        number = float(value)
-        return number if math.isfinite(number) else None
-    match = _NUMBER_RE.search(str(value))
-    if not match:
-        return None
-    try:
-        number = float(match.group(0).replace(",", "."))
-    except ValueError:
-        return None
-    return number if math.isfinite(number) else None
-
-
-def parse_width_m(value: Any) -> float | None:
-    """Parse common OSM width forms into metres.
-
-    Semicolon-separated measurements are treated conservatively by retaining
-    the minimum. Feet/inches notation is supported for values such as 4'6".
-    """
-
-    if is_unknown(value):
-        return None
-    text = str(value).strip().lower()
-    if ";" in text:
-        parsed = [parse_width_m(part) for part in text.split(";")]
-        valid = [item for item in parsed if item is not None]
-        return min(valid) if valid else None
-
-    feet_match = re.fullmatch(
-        r"\s*(\d+(?:\.\d+)?)\s*'\s*(?:(\d+(?:\.\d+)?)\s*(?:\"|in)?)?\s*",
-        text,
-    )
-    if feet_match:
-        feet = float(feet_match.group(1))
-        inches = float(feet_match.group(2) or 0)
-        return feet * 0.3048 + inches * 0.0254
-
-    number = parse_number(value)
-    if number is None:
-        return None
-    if "ft" in text or "feet" in text:
-        return number * 0.3048
-    if "cm" in text:
-        return number / 100
-    if "mm" in text:
-        return number / 1000
-    return number
-
-
-def parse_incline_percent(value: Any) -> tuple[float | None, str]:
-    """Return ``(percent, kind)`` for an OSM incline-like value.
-
-    ``kind`` is one of ``numeric``, ``qualitative``, ``missing`` or ``invalid``.
-    Positive values rise in feature-coordinate order.
-    """
-
-    if is_unknown(value):
-        return None, "missing"
-    if isinstance(value, str):
-        text = value.strip().lower()
-        if text in {"up", "uphill"}:
-            return None, "qualitative"
-        if text in {"down", "downhill"}:
-            return None, "qualitative"
-    else:
-        text = str(value)
-
-    number = parse_number(value)
-    if number is None:
-        return None, "invalid"
-    if "°" in text or "deg" in text or "degree" in text:
-        return math.tan(math.radians(number)) * 100, "numeric"
-    # OSM recommends percentages. Bare numeric values are interpreted as
-    # percentages as well, matching established mapper practice.
-    return number, "numeric"
-
-
-def prepare_feature(
-    feature: Mapping[str, Any],
-    *,
-    edge_kind: str | None = None,
-    estimated_slope_percent: float | None = None,
-    slope_source: str = "missing",
-    slope_confidence: int = 0,
-) -> dict[str, Any]:
-    """Normalize a raw edge record into fields consumed by profile rules."""
-
-    prepared = dict(feature)
-    prepared["edge_kind"] = edge_kind or prepared.get("edge_kind") or "footway"
-    prepared["width_m"] = parse_width_m(prepared.get("width"))
-
-    direct_slope, incline_kind = parse_incline_percent(prepared.get("incline"))
-    if direct_slope is not None:
-        prepared["incline_percent"] = direct_slope
-        prepared["incline_source"] = "direct_osm_numeric"
-        prepared["incline_confidence"] = 100
-    else:
-        prepared["incline_percent"] = estimated_slope_percent
-        prepared["incline_source"] = (
-            slope_source if estimated_slope_percent is not None else incline_kind
-        )
-        prepared["incline_confidence"] = (
-            int(slope_confidence) if estimated_slope_percent is not None else 0
-        )
-
-    cross_slope, cross_kind = parse_incline_percent(
-        prepared.get("incline:across")
-    )
-    prepared["cross_slope_percent"] = cross_slope
-    prepared["cross_slope_source"] = (
-        "direct_osm_numeric" if cross_slope is not None else cross_kind
-    )
-    prepared["cross_slope_confidence"] = 100 if cross_slope is not None else 0
-
-    for field in (
-        "surface",
-        "smoothness",
-        "wheelchair",
-        "crossing",
-        "lit",
-        "highway",
-        "access",
-        "foot",
-    ):
-        prepared[field] = normalize_categorical(prepared.get(field))
-
-    for field in ("associated_kerbs", "associated_tactile_paving"):
-        value = prepared.get(field)
-        if is_unknown(value):
-            prepared[field] = []
-        elif isinstance(value, str):
-            prepared[field] = [normalize_categorical(value)]
-        elif isinstance(value, Sequence):
-            prepared[field] = [
-                normalize_categorical(item)
-                for item in value
-                if not is_unknown(item)
-            ]
-        else:
-            prepared[field] = [normalize_categorical(value)]
-    return prepared
 
 
 def _context_applies(rule: Mapping[str, Any], edge_kind: str) -> bool:
