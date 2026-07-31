@@ -561,6 +561,14 @@ def main() -> None:
             constants.hazard_profile_features_path(profile_id),
             expected_feature_count=len(output_rows),
         )
+        # Also write GeoParquet for analytical and cloud-optimized use
+        if features:
+            profile_gdf = gpd.GeoDataFrame.from_features(
+                features, crs="EPSG:4326"
+            )
+            profile_gdf.to_parquet(
+                constants.hazard_profile_parquet_path(profile_id)
+            )
 
     hazard_hash = hazard_ruleset_hash(HAZARD_RULES)
     hazard_profile_payload = {

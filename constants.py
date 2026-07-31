@@ -63,9 +63,18 @@ hazard_terrain_metadata_path = os.path.join(
 )
 
 
+hazard_tiles_path = os.path.join(hazard_analysis_folderpath, "hazard.pmtiles")
+
+
 def hazard_profile_features_path(profile_id):
     return os.path.join(
         hazard_analysis_folderpath, f"features_{profile_id}.geojson"
+    )
+
+
+def hazard_profile_parquet_path(profile_id):
+    return os.path.join(
+        hazard_analysis_folderpath, f"features_{profile_id}.parquet"
     )
 
 

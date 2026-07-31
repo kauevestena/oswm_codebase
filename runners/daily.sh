@@ -45,13 +45,15 @@ if [ -f data/updates/yesterday.json ]; then
         HAZARD_OUTPUTS_READY=1
         for PROFILE in pedestrian wheelchair blind elderly; do
             if [ ! -s "data/hazard_analysis/features_${PROFILE}.geojson" ] || \
+               [ ! -s "data/hazard_analysis/features_${PROFILE}.parquet" ] || \
                [ ! -s "data/hazard_analysis/terrain_${PROFILE}.png" ]; then
                 HAZARD_OUTPUTS_READY=0
             fi
         done
         if [ ! -s data/hazard_analysis/profiles.json ] || \
            [ ! -s data/hazard_analysis/metadata.json ] || \
-           [ ! -s data/hazard_analysis/terrain.json ]; then
+           [ ! -s data/hazard_analysis/terrain.json ] || \
+           [ ! -s data/hazard_analysis/hazard.pmtiles ]; then
             HAZARD_OUTPUTS_READY=0
         fi
         if [ "$HAZARD_OUTPUTS_READY" -eq 0 ]; then
@@ -83,6 +85,7 @@ run_step oswm_codebase/data_quality/quality_check_compiling.py "quality_check_co
 run_step oswm_codebase/data_quality/external_qc.py             "external_qc"
 run_step oswm_codebase/dashboard/statistics_generation.py      "statistics_generation"
 run_step oswm_codebase/generation/routing_demo_gen.py          "routing_demo_gen"
+run_step oswm_codebase/generation/hazard_tiles_gen.py          "hazard_tiles_gen"
 run_step oswm_codebase/datahub/API/generate_api.py             "generate_api"
 run_step oswm_codebase/datahub/datahub_index_generator.py      "datahub_index"
 

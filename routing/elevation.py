@@ -104,6 +104,13 @@ def _utm_crs_for_lonlat(longitude: float, latitude: float) -> str:
     return f"EPSG:{epsg}"
 
 
+import functools
+from pyproj import Transformer
+
+@functools.lru_cache(maxsize=128)
+def get_transformer(from_crs: str, to_crs: str) -> Transformer:
+    return Transformer.from_crs(from_crs, to_crs, always_xy=True)
+
 def sample_positions(
     geometry: Any, minimum_baseline_m: float, sample_count: int
 ) -> tuple[list[tuple[float, float]], list[float]]:
@@ -112,7 +119,6 @@ def sample_positions(
     if sample_count < 2:
         raise ValueError("sample_count must be at least two")
 
-    from pyproj import Transformer
     from shapely.geometry import LineString
     from shapely.ops import transform
 
@@ -121,8 +127,8 @@ def sample_positions(
 
     centroid = geometry.centroid
     metric_crs = _utm_crs_for_lonlat(centroid.x, centroid.y)
-    to_metric = Transformer.from_crs("EPSG:4326", metric_crs, always_xy=True)
-    to_lonlat = Transformer.from_crs(metric_crs, "EPSG:4326", always_xy=True)
+    to_metric = get_transformer("EPSG:4326", metric_crs)
+    to_lonlat = get_transformer(metric_crs, "EPSG:4326")
     line = transform(to_metric.transform, geometry)
     coordinates = list(line.coords)
     if len(coordinates) < 2 or line.length <= 0:

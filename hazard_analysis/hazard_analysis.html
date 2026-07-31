@@ -97,7 +97,7 @@
             <h2>Read this map as a screening tool</h2>
             <p>Hazards are inferred from available OSM attributes and a global terrain model. A feature with no detected hazard is <strong>not certified safe</strong>.</p>
             <ul>
-                <li>Missing tactile, surface or kerb data remains unknown; it is never treated as “no”.</li>
+                <li>Missing tactile, surface or kerb data remains unknown; it is never treated as "no".</li>
                 <li>Longitudinal terrain slope is contextual and directional. Cross slope is used only when <code>incline:across=*</code> is explicitly mapped.</li>
                 <li>Surface-material rules are provisional proxies. Critical means either an apparent barrier or an extreme contextual safety risk—the popup states which.</li>
             </ul>
@@ -105,10 +105,18 @@
         </div>
     </div>
 
-    <script src="https://unpkg.com/maplibre-gl@6/dist/maplibre-gl.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@7/turf.min.js"></script>
-    <script>
-        const DATA_ROOT = "../../data/hazard_analysis";
+    <script type="module">
+        import * as maplibregl from 'https://unpkg.com/maplibre-gl@6/dist/maplibre-gl.mjs';
+        import { Protocol as PmtilesProtocol } from 'https://cdn.jsdelivr.net/npm/pmtiles@4/+esm';
+
+        // Resolve the PMTiles and data URLs relative to this HTML file
+        const HAZARD_ROOT = new URL("../../data/hazard_analysis/", import.meta.url);
+        const PMTILES_URL = new URL("hazard.pmtiles", HAZARD_ROOT).href;
+
+        // Register PMTiles protocol
+        const protocol = new PmtilesProtocol();
+        maplibregl.addProtocol("pmtiles", protocol.tile);
+
         const map = new maplibregl.Map({
             container: "map",
             style: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
@@ -116,7 +124,7 @@
         });
         map.addControl(new maplibregl.NavigationControl(), "top-right");
 
-        const state = { metadata: null, terrain: null, profile: null, cache: new Map(), fitted: false };
+        const state = { metadata: null, terrain: null, profile: null, fitted: false };
         const $ = id => document.getElementById(id);
         const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, char =>
             ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
@@ -141,35 +149,76 @@
                 .map(([_level, item]) => `<div class="legend-row"><span class="swatch" style="background:${item.color}"></span>${escapeHtml(item.label)}</div>`)
                 .join("") + '<div class="legend-row"><span class="swatch" style="background:#6b7280;border-top:2px dashed white"></span>Insufficient data</div>';
             for (const id of ["profileSelect", "categorySelect", "severitySelect", "confidenceRange", "unknownToggle"]) {
-                $(id).addEventListener("input", id === "profileSelect" ? loadProfile : applyFilters);
+                $(id).addEventListener("input", id === "profileSelect" ? switchProfile : applyFilters);
             }
             $("terrainToggle").addEventListener("change", updateTerrain);
         }
 
-        async function loadProfile() {
+        function switchProfile() {
             const profile = $("profileSelect").value;
             state.profile = profile;
             $("profileDescription").textContent = state.metadata.profiles[profile].description;
-            $("loading").style.display = "block";
-            try {
-                if (!state.cache.has(profile)) {
-                    const response = await fetch(`${DATA_ROOT}/features_${profile}.geojson`);
-                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                    state.cache.set(profile, await response.json());
+            const sourceLayer = `hazard_${profile}`;
+
+            // Update the source-layer on all hazard layers
+            for (const layerId of ["unknown-lines", "hazard-lines", "hazard-hit"]) {
+                if (map.getLayer(layerId)) {
+                    map.removeLayer(layerId);
                 }
-                const data = state.cache.get(profile);
-                map.getSource("hazards").setData(data);
-                if (!state.fitted && data.features.length) {
-                    map.fitBounds(turf.bbox(data), { padding: 45, maxZoom: 16 });
-                    state.fitted = true;
-                }
-                applyFilters();
-                updateTerrain();
-            } catch (error) {
-                $("loading").textContent = `Could not load profile: ${error.message}`;
-                return;
             }
-            $("loading").style.display = "none";
+            addHazardLayers(sourceLayer);
+            applyFilters();
+            updateTerrain();
+
+            fitMapBounds();
+        }
+
+        function fitMapBounds() {
+            if (state.fitted) return;
+            if (state.terrain?.bounds) {
+                const [west, south, east, north] = state.terrain.bounds;
+                map.fitBounds([[west, south], [east, north]], { padding: 45, maxZoom: 16 });
+                state.fitted = true;
+            } else {
+                fetch(new URL("../../data/boundaries/polygon.geojson", import.meta.url).href)
+                    .then(res => res.json())
+                    .then(boundary => {
+                        if (boundary && !state.fitted) {
+                            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                            const coords = boundary.coordinates ? boundary.coordinates.flat(boundary.type === "MultiPolygon" ? 2 : 1) : [];
+                            for (const coord of coords) {
+                                if (Array.isArray(coord) && coord.length >= 2) {
+                                    const [lng, lat] = coord;
+                                    if (lng < minX) minX = lng;
+                                    if (lng > maxX) maxX = lng;
+                                    if (lat < minY) minY = lat;
+                                    if (lat > maxY) maxY = lat;
+                                }
+                            }
+                            if (Number.isFinite(minX)) {
+                                map.fitBounds([[minX, minY], [maxX, maxY]], { padding: 45, maxZoom: 16 });
+                                state.fitted = true;
+                            }
+                        }
+                    }).catch(() => {});
+            }
+        }
+
+        function addHazardLayers(sourceLayer) {
+            map.addLayer({ id: "unknown-lines", type: "line", source: "hazards",
+                "source-layer": sourceLayer,
+                filter: ["==", ["get", "status"], "insufficient_data"],
+                paint: { "line-color": "#6b7280", "line-width": 2, "line-dasharray": [2,2], "line-opacity": .55 } });
+            map.addLayer({ id: "hazard-lines", type: "line", source: "hazards",
+                "source-layer": sourceLayer,
+                paint: {
+                    "line-color": ["match", ["get", "severity"], 1,"#fee08b",2,"#fdae61",3,"#f46d43",4,"#a50026","#4daf4a"],
+                    "line-width": ["interpolate", ["linear"], ["zoom"], 10, 1.5, 17, 6],
+                    "line-opacity": .9
+                }});
+            map.addLayer({ id: "hazard-hit", type: "line", source: "hazards",
+                "source-layer": sourceLayer,
+                paint: { "line-color": "rgba(0,0,0,0)", "line-width": 14 } });
         }
 
         function applyFilters() {
@@ -197,7 +246,7 @@
             }
             if (!visible || !state.profile) return;
             const profile = state.terrain.profiles[state.profile];
-            const url = `../../${profile.path}`;
+            const url = new URL("../../" + profile.path, import.meta.url).href;
             if (map.getSource("terrain-source")) {
                 map.getSource("terrain-source").updateImage({ url, coordinates: state.terrain.coordinates });
             }
@@ -229,9 +278,11 @@
         }
 
         async function initialise() {
+            const profilesUrl = new URL("profiles.json", HAZARD_ROOT).href;
+            const terrainUrl = new URL("terrain.json", HAZARD_ROOT).href;
             [state.metadata, state.terrain] = await Promise.all([
-                fetch(`${DATA_ROOT}/profiles.json`).then(response => response.json()),
-                fetch(`${DATA_ROOT}/terrain.json`).then(response => response.json())
+                fetch(profilesUrl).then(response => response.json()),
+                fetch(terrainUrl).then(response => response.json())
             ]);
             setupControls();
             $("source").innerHTML = state.terrain.available
@@ -247,18 +298,14 @@
                 });
                 map.addLayer({ id: "terrain-potential", type: "raster", source: "terrain-source",
                     layout: { visibility: "none" }, paint: { "raster-opacity": .7 } });
-                map.addSource("hazards", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
-                map.addLayer({ id: "unknown-lines", type: "line", source: "hazards",
-                    filter: ["==", ["get", "status"], "insufficient_data"],
-                    paint: { "line-color": "#6b7280", "line-width": 2, "line-dasharray": [2,2], "line-opacity": .55 } });
-                map.addLayer({ id: "hazard-lines", type: "line", source: "hazards",
-                    paint: {
-                        "line-color": ["match", ["get", "severity"], 1,"#fee08b",2,"#fdae61",3,"#f46d43",4,"#a50026","#4daf4a"],
-                        "line-width": ["interpolate", ["linear"], ["zoom"], 10, 1.5, 17, 6],
-                        "line-opacity": .9
-                    }});
-                map.addLayer({ id: "hazard-hit", type: "line", source: "hazards",
-                    paint: { "line-color": "rgba(0,0,0,0)", "line-width": 14 } });
+
+                // PMTiles vector source — all profiles as source-layers
+                map.addSource("hazards", {
+                    type: "vector",
+                    url: `pmtiles://${PMTILES_URL}`
+                });
+
+                // Click + cursor handlers (registered once, layer is swapped on profile change)
                 map.on("click", "hazard-hit", event => {
                     const feature = event.features[0];
                     new maplibregl.Popup().setLngLat(event.lngLat)
@@ -266,9 +313,14 @@
                 });
                 map.on("mouseenter", "hazard-hit", () => map.getCanvas().style.cursor = "pointer");
                 map.on("mouseleave", "hazard-hit", () => map.getCanvas().style.cursor = "");
-                loadProfile();
+
+                switchProfile();
             };
-            if (map.isStyleLoaded()) addLayers(); else map.once("load", addLayers);
+            if (map.isStyleLoaded() || map.loaded?.()) {
+                addLayers();
+            } else {
+                map.on("load", addLayers);
+            }
         }
 
         $("closeWelcome").addEventListener("click", () => $("welcome").hidden = true);
