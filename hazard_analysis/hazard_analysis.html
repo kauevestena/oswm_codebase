@@ -19,7 +19,12 @@
             overflow: auto; padding: 15px; border-radius: 12px;
             background: rgba(255,255,255,.96); box-shadow: 0 5px 20px rgba(0,0,0,.18);
         }
-        h1 { margin: 0 0 5px; font-size: 20px; }
+        .panel-header { display: flex; align-items: center; justify-content: space-between; margin: 0 0 5px; }
+        h1 { margin: 0; font-size: 20px; }
+        .guide-link { display: inline-block; padding: 4px 9px; font-size: 11px; font-weight: 700;
+            color: #165a72; background: #e8f4f8; border: 1px solid #b8dae6; border-radius: 5px;
+            text-decoration: none; white-space: nowrap; cursor: pointer; }
+        .guide-link:hover { background: #d0ecf4; }
         .subtitle, .note { color: #59636e; font-size: 12px; line-height: 1.4; }
         .control { margin-top: 12px; }
         label { display: block; margin-bottom: 4px; font-size: 11px; font-weight: 750;
@@ -63,7 +68,10 @@
     </a>
     <div id="map"></div>
     <aside id="panel">
-        <h1>Hazard Analysis</h1>
+        <div class="panel-header">
+            <h1>Hazard Analysis</h1>
+            <a href="classification_guide.html" target="_blank" class="guide-link" id="guideLink" title="Open the full classification guide">📋 Guide</a>
+        </div>
         <div class="subtitle">Evidence-based pedestrian difficulty and danger screening</div>
         <div class="control">
             <label for="profileSelect">User profile</label>
@@ -103,7 +111,10 @@
                 <li>Longitudinal terrain slope is contextual and directional. Cross slope is used only when <code>incline:across=*</code> is explicitly mapped.</li>
                 <li>Surface-material rules are provisional proxies. Critical means either an apparent barrier or an extreme contextual safety risk—the popup states which.</li>
             </ul>
-            <button id="closeWelcome">Explore the map</button>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                <button id="closeWelcome">Explore the map</button>
+                <a href="classification_guide.html" target="_blank" class="guide-link" style="padding:9px 15px;font-size:13px">📋 Classification Guide</a>
+            </div>
         </div>
     </div>
 

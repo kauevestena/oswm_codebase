@@ -180,6 +180,10 @@ class HazardClientWiringTests(unittest.TestCase):
         self.assertIn("terrain-source", self.html)
         self.assertIn("source_attribution", self.html)
 
+    def test_client_links_to_classification_guide(self):
+        self.assertIn('classification_guide.html', self.html)
+        self.assertIn('id="guideLink"', self.html)
+
     def test_shared_generator_emits_both_modules(self):
         self.assertIn("compact_grade_properties", self.generator)
         self.assertIn("compact_hazard_properties", self.generator)
@@ -189,6 +193,29 @@ class HazardClientWiringTests(unittest.TestCase):
         self.assertIn("hazard_analysis.html", self.modules)
         self.assertIn("data/hazard_analysis/profiles.json", self.api)
         self.assertIn('fmt = "PNG"', self.api)
+
+
+class ClassificationGuideTests(unittest.TestCase):
+    def test_generator_produces_valid_html_with_all_rules(self):
+        from hazard_analysis.generate_classification_guide import generate
+        from hazard_analysis.rules import (
+            HAZARD_CATEGORIES,
+            HAZARD_PROFILES,
+            HAZARD_RULES,
+            SEVERITY_LEVELS,
+        )
+
+        guide_html = generate()
+        self.assertIn("<!DOCTYPE html>", guide_html)
+        self.assertIn("Classification Guide", guide_html)
+        for rule in HAZARD_RULES:
+            self.assertIn(rule["id"], guide_html)
+        for cat_id, cat in HAZARD_CATEGORIES.items():
+            self.assertIn(cat["label"], guide_html)
+        for profile_id, profile in HAZARD_PROFILES.items():
+            self.assertIn(profile["label"], guide_html)
+        for level, meta in SEVERITY_LEVELS.items():
+            self.assertIn(meta["label"], guide_html)
 
 
 if __name__ == "__main__":
