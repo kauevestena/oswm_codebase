@@ -181,6 +181,7 @@ def generate_terrain_overlays(
     elevation_config: dict[str, Any],
     terrain_config: dict[str, Any],
     output_dir: str | os.PathLike[str],
+    boundary_geojson_path: str | os.PathLike[str] | None = None,
 ) -> dict[str, Any]:
     """Render one transparent contextual terrain layer per user profile."""
 
@@ -227,6 +228,30 @@ def generate_terrain_overlays(
             "reason": "no global elevation provider covered this node",
             "provider_failures": failures,
         }
+
+    if boundary_geojson_path is not None and os.path.exists(boundary_geojson_path):
+        import json
+        from rasterio.features import geometry_mask
+
+        with open(boundary_geojson_path, "r", encoding="utf-8") as f:
+            boundary_data = json.load(f)
+        
+        geoms = []
+        if boundary_data.get("type") == "FeatureCollection":
+            for feat in boundary_data.get("features", []):
+                if "geometry" in feat:
+                    geoms.append(feat["geometry"])
+        elif boundary_data.get("type") in ("Polygon", "MultiPolygon"):
+            geoms.append(boundary_data)
+        
+        if geoms:
+            mask = geometry_mask(
+                geoms,
+                out_shape=elevation.shape,
+                transform=transform,
+                invert=False
+            )
+            elevation[mask] = np.nan
 
     elevation = _smooth_nan(elevation, sigma)
     latitude = (bounds[1] + bounds[3]) / 2

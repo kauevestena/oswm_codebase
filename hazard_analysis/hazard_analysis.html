@@ -91,7 +91,7 @@
             <input id="confidenceRange" type="range" min="0" max="100" value="0" step="5">
         </div>
         <div class="control inline">
-            <input id="unknownToggle" type="checkbox" checked>
+            <input id="unknownToggle" type="checkbox">
             <label for="unknownToggle">Show insufficient-data features</label>
         </div>
         <div class="control inline">
@@ -305,6 +305,18 @@
 
             const addLayers = () => {
                 if (map.getSource("hazards")) return;
+
+                map.addSource("boundary", {
+                    type: "geojson",
+                    data: new URL("../../data/boundaries/polygon.geojson", import.meta.url).href
+                });
+                map.addLayer({
+                    id: "boundary-line",
+                    type: "line",
+                    source: "boundary",
+                    paint: { "line-color": "#9ca3af", "line-width": 2 }
+                });
+
                 map.addSource("terrain-source", {
                     type: "image",
                     url: "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=",

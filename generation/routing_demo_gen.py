@@ -600,6 +600,7 @@ def main() -> None:
         elevation_config,
         terrain_config,
         constants.hazard_analysis_folderpath,
+        constants.boundaries_geojson_path,
     )
     terrain_metadata["generated_at"] = datetime.now(timezone.utc).isoformat()
     _json_dump(terrain_metadata, constants.hazard_terrain_metadata_path)
