@@ -19,11 +19,6 @@ modules_metadata = {
         "img_src": f"{assets_homepage_path}oswm_route_img.png",
         "text": "Routing Demo",
     },
-    "hazard_analysis": {
-        "url": "oswm_codebase/hazard_analysis/hazard_analysis.html",
-        "img_src": f"{assets_homepage_path}oswm_hazard_img.svg",
-        "text": "Hazard Analysis",
-    },
     "dashboard": {
         "url": "statistics/index.html",
         "img_src": f"{assets_homepage_path}oswm_statistics_img.png",
@@ -38,6 +33,11 @@ modules_metadata = {
         "url": "hub/index.html",
         "img_src": f"{assets_homepage_path}oswm_datahub_img.png",
         "text": "Data Hub",
+    },
+        "hazard_analysis": {
+        "url": "oswm_codebase/hazard_analysis/hazard_analysis.html",
+        "img_src": f"{assets_homepage_path}oswm_hazard_img.png",
+        "text": "Hazard Analysis",
     },
 }
 

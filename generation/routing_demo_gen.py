@@ -584,6 +584,7 @@ def main() -> None:
         "rules": public_rule_metadata(HAZARD_RULES),
     }
     _json_dump(hazard_profile_payload, constants.hazard_profiles_path)
+    _json_dump(HAZARD_RULES, constants.hazard_rules_path)
 
     terrain_config = getattr(
         constants,

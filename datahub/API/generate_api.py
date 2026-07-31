@@ -45,11 +45,18 @@ def get_endpoint_category(path, deliverable):
             return "GDAL VRT Descriptors"
         elif "routing" in path:
             return "Routing & Demos"
-        elif "hazard_analysis" in path:
-            return "Pedestrian Hazard Analysis"
         elif path == "webmap_params.json":
             return "Boundaries & Config"
         return "Map Data Assets"
+        
+    elif deliverable == "hazard_analysis":
+        if "rules.json" in path or "profiles.json" in path or "metadata.json" in path or "terrain.json" in path:
+            return "Rules & Configuration"
+        elif "features_" in path:
+            return "Data (Parquet & GeoJSON)"
+        elif ".png" in path or ".pmtiles" in path:
+            return "Web Maps & Assets"
+        return "Hazard Assets"
         
     elif deliverable == "data_quality":
         if "quality_check/json/" in path:
@@ -130,6 +137,7 @@ def get_endpoint_description(path, filename, deliverable):
             "data/routing/profiles.json": "Browser-safe distance/accessibility routing modes, labels, speeds, grade-to-cost multipliers, and event penalties.",
             "data/routing/metadata.json": "Routing ruleset provenance, slope-source counts, warnings, and generated grade distributions.",
             "data/routing/slope_cache.json": "Reusable derived longitudinal slope estimates keyed by edge geometry and provider configuration.",
+            "data/hazard_analysis/rules.json": "Full JSON serialization of the pedestrian hazard inference ruleset (conditions and effects) used to flag barriers and hazards.",
             "data/hazard_analysis/profiles.json": "Browser-safe hazard profiles, severity levels, categories, explanations, effects, and ruleset provenance.",
             "data/hazard_analysis/metadata.json": "Hazard generation audit, evidence caveats, severity counts, and elevation-source provenance.",
             "data/hazard_analysis/terrain.json": "Terrain overlay bounds, profile thresholds, global AWS DEM attribution, and availability status.",
@@ -149,7 +157,7 @@ def get_endpoint_description(path, filename, deliverable):
         }
         if path in curated_descs:
             return curated_descs[path]
-        return f"Map data asset file: {filename}"
+        return f"Asset file: {filename}"
         
     elif deliverable == "data_quality":
         curated_descs = {
@@ -296,6 +304,7 @@ def generate_data_index():
                 ]
             elif key == "hazard_analysis":
                 files = [
+                    "rules.json",
                     "profiles.json",
                     "metadata.json",
                     "terrain.json",
@@ -362,8 +371,9 @@ def collect_endpoints():
             elif ext == ".html":
                 continue # Skip HTML files like updating status page
                 
-            category = get_endpoint_category(rel_path, "map_data")
-            description = get_endpoint_description(rel_path, f, "map_data")
+            deliv = "hazard_analysis" if "hazard_analysis" in rel_path else "map_data"
+            category = get_endpoint_category(rel_path, deliv)
+            description = get_endpoint_description(rel_path, f, deliv)
             playground = fmt in ["JSON", "GeoJSON", "XML/VRT"]
             
             endpoints.append({
@@ -372,7 +382,7 @@ def collect_endpoints():
                 "format": fmt,
                 "description": description,
                 "playground": playground,
-                "deliverable": "map_data"
+                "deliverable": deliv
             })
             
     # 2. Data Quality
@@ -1120,6 +1130,7 @@ def generate_api_html(endpoints):
     <div class="deliverables-tabs-bar">
         <div class="tabs-container">
             <div class="deliverable-tab active" onclick="switchDeliverable('map_data')" id="tab-map_data">Map Data</div>
+            <div class="deliverable-tab" onclick="switchDeliverable('hazard_analysis')" id="tab-hazard_analysis">Hazard Analysis</div>
             <div class="deliverable-tab" onclick="switchDeliverable('data_quality')" id="tab-data_quality">Data Quality</div>
             <div class="deliverable-tab" onclick="switchDeliverable('vega_specs')" id="tab-vega_specs">Vega Chart Specs</div>
         </div>

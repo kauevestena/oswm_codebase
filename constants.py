@@ -55,6 +55,9 @@ routing_slope_cache_path = os.path.join(routing_folderpath, "slope_cache.json")
 hazard_profiles_path = os.path.join(
     hazard_analysis_folderpath, "profiles.json"
 )
+hazard_rules_path = os.path.join(
+    hazard_analysis_folderpath, "rules.json"
+)
 hazard_metadata_path = os.path.join(
     hazard_analysis_folderpath, "metadata.json"
 )
