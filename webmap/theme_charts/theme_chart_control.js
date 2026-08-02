@@ -149,6 +149,9 @@ export class ThemeChartControl {
         this.panel?.classList.remove("is-hidden");
         this.button?.classList.add("is-active");
         this.button?.setAttribute("aria-expanded", "true");
+        if (this.map) {
+            this.map.fire('oswm-theme-chart-opened');
+        }
         this.render();
     }
 
@@ -260,7 +263,13 @@ export class ThemeChartControl {
     }
 
     disposeCharts() {
-        this.charts.forEach((chart) => chart.dispose());
+        if (!this.charts.length) return;
+        this.charts.forEach((chart) => {
+            if (chart.__oswm_observer) {
+                chart.__oswm_observer.disconnect();
+            }
+            chart.dispose();
+        });
         this.charts = [];
     }
 
@@ -274,12 +283,41 @@ export class ThemeChartControl {
             ? theme.panels || []
             : [theme];
 
+        const chartsToInit = [];
         panels.forEach((panelSummary, index) => {
             const panelTheme = panelThemes[index] || panelSummary;
-            this.content.appendChild(this.renderPanel(panelSummary, panelTheme, panels.length > 1));
+            const { section, chartElement, reducedMotion } = this.renderPanel(panelSummary, panelTheme, panels.length > 1);
+            this.content.appendChild(section);
+            if (chartElement) {
+                chartsToInit.push({ chartElement, summary: panelSummary, theme: panelTheme, reducedMotion });
+            }
         });
         if (!panels.length) this.showMessage("No analytical panels are configured for this theme.");
         this.content.removeAttribute("aria-busy");
+
+        if (this.echarts?.init) {
+            chartsToInit.forEach(({ chartElement, summary, theme, reducedMotion }) => {
+                const chart = this.echarts.init(chartElement);
+                chart.setOption(buildThemeChartOption(summary, theme, { reducedMotion }));
+                this.charts.push(chart);
+                
+                // Ensure chart resizes when container gets its layout dimensions
+                const observer = new ResizeObserver(() => {
+                    chart.resize();
+                });
+                observer.observe(chartElement);
+                // Save observer so it can be disconnected in disposeCharts()
+                chart.__oswm_observer = observer;
+            });
+        } else {
+            chartsToInit.forEach(({ chartElement }) => {
+                chartElement.replaceChildren(createElement(
+                    "p",
+                    "oswm-theme-chart-error",
+                    "The chart renderer could not be loaded.",
+                ));
+            });
+        }
     }
 
     renderPanel(summary, theme, showHeading) {
@@ -293,7 +331,7 @@ export class ThemeChartControl {
                 "oswm-theme-chart-empty",
                 "No rendered features are available for this scope.",
             ));
-            return section;
+            return { section, chartElement: null };
         }
 
         const chartElement = createElement("div", "oswm-theme-chart-canvas");
@@ -304,24 +342,13 @@ export class ThemeChartControl {
         chartElement.setAttribute("aria-label", `${theme.label}. ${metric.label}.`);
         section.appendChild(chartElement);
 
-        if (this.echarts?.init) {
-            const reducedMotion = Boolean(
-                window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches,
-            );
-            const chart = this.echarts.init(chartElement, null, { renderer: "svg" });
-            chart.setOption(buildThemeChartOption(summary, theme, { reducedMotion }));
-            this.charts.push(chart);
-        } else {
-            chartElement.replaceChildren(createElement(
-                "p",
-                "oswm-theme-chart-error",
-                "The chart renderer could not be loaded.",
-            ));
-        }
+        const reducedMotion = Boolean(
+            window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches,
+        );
 
         section.appendChild(createElement("p", "oswm-theme-chart-metric", metric.label));
         section.appendChild(this.renderDataTable(rows));
-        return section;
+        return { section, chartElement, reducedMotion };
     }
 
     renderDataTable(rows) {

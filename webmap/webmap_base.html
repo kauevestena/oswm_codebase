@@ -424,6 +424,17 @@
                     });
                     map.addControl(legendControl, 'top-right');
 
+                    map.on('oswm-theme-chart-opened', () => {
+                        if (legendControl && legendControl.close) {
+                            legendControl.close();
+                        }
+                    });
+                    map.on('oswm-legend-opened', () => {
+                        if (themeChartControl && themeChartControl.close) {
+                            themeChartControl.close();
+                        }
+                    });
+
                 });
 
                 // // Terrain, someday! (TODO)
@@ -465,7 +476,7 @@
                     .then(({ installThemeChartControl }) => {
                         themeChartControl = installThemeChartControl(map, params, {
                             position: 'bottom-left',
-                            loadECharts: () => import('https://cdn.jsdelivr.net/npm/echarts@6.1.0/+esm'),
+                            loadECharts: () => import('https://cdn.jsdelivr.net/npm/echarts@6.1.0/dist/echarts.esm.mjs'),
                             getActiveStyleKey: () => styleSelector.value || 'footway_categories'
                         });
                     })

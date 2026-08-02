@@ -4,7 +4,7 @@
     pointer-events: auto;
 }
 
-.oswm-theme-chart-toggle {
+.maplibregl-ctrl button.oswm-theme-chart-toggle {
     display: grid;
     place-items: center;
     width: 46px;
@@ -12,29 +12,29 @@
     border: 1px solid rgba(23, 33, 38, .28);
     border-radius: 50%;
     padding: 0;
-    background: #fff;
+    background-color: #fff;
     box-shadow: 0 3px 11px rgba(0, 0, 0, .28);
     cursor: pointer;
 }
 
-.oswm-theme-chart-toggle:hover,
-.oswm-theme-chart-toggle.is-active {
-    background: #e9f2e2;
+.maplibregl-ctrl button.oswm-theme-chart-toggle:hover,
+.maplibregl-ctrl button.oswm-theme-chart-toggle.is-active {
+    background-color: #e9f2e2;
 }
 
-.oswm-theme-chart-toggle.is-active {
+.maplibregl-ctrl button.oswm-theme-chart-toggle.is-active {
     border-color: #3a4f2e;
     box-shadow: 0 0 0 3px rgba(58, 79, 46, .24), 0 3px 11px rgba(0, 0, 0, .28);
 }
 
-.oswm-theme-chart-toggle:focus-visible,
+.maplibregl-ctrl button.oswm-theme-chart-toggle:focus-visible,
 .oswm-theme-chart-close:focus-visible,
 .oswm-theme-chart-scope input:focus-visible {
     outline: 3px solid #2b7d92;
     outline-offset: 2px;
 }
 
-.oswm-theme-chart-toggle svg {
+.maplibregl-ctrl button.oswm-theme-chart-toggle svg {
     width: 25px;
     height: 25px;
     fill: #263238;
