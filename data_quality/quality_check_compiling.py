@@ -223,6 +223,7 @@ def main():
                 occ_type=curr["type"],
                 csvpath=csvpath,
                 invert_geom=curr["invert_geomtype"],
+                iso_19157=curr.get("iso_19157", None),
             )
 
             webmap_outpath = f"quality_check/maps/{category}/{quality_category}.html"
@@ -248,22 +249,32 @@ def main():
         <tr>
         <th><b>Category</b></th>
         {'\n'.join(table_category_headers)}
-
+        <th><b>ISO 19157 Type</b></th>
     
         </tr>
 
     """
 
-    about_part = """
-    <h3>
-
-    """
+    about_part = ""
 
 
     topbar = write_dq_topbar(1)
 
     # the webmap!!
     create_marker_cluster_html(qc_main_webmap_path, reversed_centerpoint, dq_maps_z_default)
+
+    # ISO 19157 element badge colors
+    iso_badge_colors = {
+        "Thematic Accuracy": ("#a78bfa", "rgba(167, 139, 250, 0.15)", "rgba(167, 139, 250, 0.3)"),
+        "Logical Consistency": ("#00f2fe", "rgba(0, 242, 254, 0.15)", "rgba(0, 242, 254, 0.3)"),
+    }
+
+    def iso_badge_html(iso_info):
+        """Generate a styled badge for an ISO 19157 element."""
+        element = iso_info["element"]
+        sub_el = iso_info["sub_element"]
+        color, bg, border = iso_badge_colors.get(element, ("#94a3b8", "rgba(148, 163, 184, 0.15)", "rgba(148, 163, 184, 0.3)"))
+        return f'<span style="display:inline-block; background:{bg}; border:1px solid {border}; color:{color}; padding:3px 10px; border-radius:6px; font-size:0.8rem; font-weight:500; line-height:1.4;">{element}<br><span style="font-size:0.7rem; opacity:0.85;">→ {sub_el}</span></span>'
 
     for quality_category in categories_dict_keys:
 
@@ -274,10 +285,25 @@ def main():
         for category in gdf_dict:
 
             tablepart += f'<td>  <a href="pages/{category}/{quality_category}.html"> {categories_dict_keys[quality_category]["occ_count"][category]} </a> </td>'
+
+        # ISO 19157 column
+        iso_info = categories_dict_keys[quality_category].get("iso_19157", {})
+        if iso_info:
+            tablepart += f'<td>{iso_badge_html(iso_info)}</td>'
+        else:
+            tablepart += '<td>—</td>'
+
         tablepart += "</tr>\n"
 
+        # about section with ISO info
+        iso_label = ""
+        if iso_info:
+            iso_label = f' — <em style="color:#94a3b8;">ISO 19157: {iso_info["element"]} → {iso_info["sub_element"]}</em>'
         about_part += (
-            f"{quality_category} : {categories_dict_keys[quality_category]['about']}<br>\n"
+            f'<div style="background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 0.8rem 1rem; margin-bottom: 0.5rem;">'
+            f'<b style="color:#f8fafc;">{quality_category}</b> : '
+            f'<span style="color:#cbd5e1;">{categories_dict_keys[quality_category]["about"]}</span>'
+            f'{iso_label}</div>\n'
         )
 
     print("generating subpages and files")
@@ -289,11 +315,38 @@ def main():
         for quality_category in categories_dict_keys:
             tot_cat += categories_dict_keys[quality_category]["occ_count"][category]
         tablepart += f"<td><b>{tot_cat}</b></td>"
+    tablepart += "<td></td>"  # empty cell for ISO column in totals row
     tablepart += "</tr>\\n"
 
     print("generating QC main page")
 
-    about_part += "</h3>"
+    # ISO 19157 reference legend
+    iso_legend = """
+    <div style="background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 1.5rem; margin: 1.5rem 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <h3 style="margin-top: 0; color: #f8fafc;">📐 ISO 19157:2013 — Data Quality Reference</h3>
+        <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 1rem;">Each quality category is classified according to <a href="https://www.iso.org/standard/32575.html" style="color: #00f2fe;">ISO 19157:2013</a> — Geographic Information: Data Quality. The classification uses the standard's quality elements and sub-elements:</p>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+            <div style="background: rgba(167, 139, 250, 0.1); border: 1px solid rgba(167, 139, 250, 0.3); border-radius: 8px; padding: 1rem;">
+                <h4 style="color: #a78bfa; margin: 0 0 0.5rem 0;">Thematic Accuracy</h4>
+                <ul style="color: #cbd5e1; font-size: 0.85rem; margin: 0; padding-left: 1.2rem;">
+                    <li><b>Non-quantitative Attribute Accuracy</b> — correctness of non-quantitative attributes (keys, values)</li>
+                    <li>Classification Correctness — correctness of class assignments</li>
+                    <li>Quantitative Attribute Accuracy — closeness to true quantitative values</li>
+                </ul>
+            </div>
+            <div style="background: rgba(0, 242, 254, 0.1); border: 1px solid rgba(0, 242, 254, 0.3); border-radius: 8px; padding: 1rem;">
+                <h4 style="color: #00f2fe; margin: 0 0 0.5rem 0;">Logical Consistency</h4>
+                <ul style="color: #cbd5e1; font-size: 0.85rem; margin: 0; padding-left: 1.2rem;">
+                    <li><b>Topological Consistency</b> — correctness of topological relationships</li>
+                    <li><b>Conceptual Consistency</b> — adherence to conceptual schema rules</li>
+                    <li><b>Format Consistency</b> — adherence to data structure/format rules</li>
+                    <li>Domain Consistency — adherence to value domain rules</li>
+                </ul>
+            </div>
+        </div>
+        <p style="color: #64748b; font-size: 0.8rem; margin: 0.8rem 0 0 0; font-style: italic;">Bold sub-elements are currently used in OSWM quality checks.</p>
+    </div>
+    """
 
     # generating the main page:
 
@@ -363,6 +416,8 @@ def main():
         <a href="../updating_infos.html">here you can check the last update and read more about this</a>
         </p>
 
+        {iso_legend}
+
         <h2>Explaining Each category: </h2>
 
         {about_part}
@@ -371,8 +426,15 @@ def main():
     </html> 
     """
 
-    # saving the quality check categories, so one can request to retrieve them:
-    quality_categories_shortened = {k: v["about"] for k, v in categories_dict_keys.items()}
+    # saving the quality check categories (enriched with ISO 19157), so one can request to retrieve them:
+    quality_categories_shortened = {}
+    for k, v in categories_dict_keys.items():
+        entry = {"about": v["about"]}
+        iso = v.get("iso_19157", {})
+        if iso:
+            entry["iso_19157_element"] = iso["element"]
+            entry["iso_19157_sub_element"] = iso["sub_element"]
+        quality_categories_shortened[k] = entry
     dump_json(quality_categories_shortened, qc_categories_index_path)
 
     str_to_file(qcmainpage_txt, qc_mainpage_path)

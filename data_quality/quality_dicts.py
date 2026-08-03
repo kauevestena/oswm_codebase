@@ -18,6 +18,52 @@ category = {
 
 """
 
+# ISO 19157:2013 Data Quality Element classification for each quality category.
+# Each category is mapped to its corresponding element and sub-element from
+# the standard. Reference: https://www.iso.org/standard/32575.html
+iso_19157_classification = {
+    "improper_keys": {
+        "element": "Thematic Accuracy",
+        "sub_element": "Non-quantitative Attribute Accuracy",
+        "iso_reference": "ISO 19157:2013 §D.5.2",
+    },
+    "uncanny_keys": {
+        "element": "Thematic Accuracy",
+        "sub_element": "Non-quantitative Attribute Accuracy",
+        "iso_reference": "ISO 19157:2013 §D.5.2",
+    },
+    "keys_without_wiki": {
+        "element": "Thematic Accuracy",
+        "sub_element": "Non-quantitative Attribute Accuracy",
+        "iso_reference": "ISO 19157:2013 §D.5.2",
+    },
+    "replaceable_values": {
+        "element": "Thematic Accuracy",
+        "sub_element": "Non-quantitative Attribute Accuracy",
+        "iso_reference": "ISO 19157:2013 §D.5.2",
+    },
+    "wrong_mispelled_or_unlisted_values": {
+        "element": "Thematic Accuracy",
+        "sub_element": "Non-quantitative Attribute Accuracy",
+        "iso_reference": "ISO 19157:2013 §D.5.2",
+    },
+    "invalid_characters": {
+        "element": "Logical Consistency",
+        "sub_element": "Format Consistency",
+        "iso_reference": "ISO 19157:2013 §D.2.3",
+    },
+    "disjointed_geometries": {
+        "element": "Logical Consistency",
+        "sub_element": "Topological Consistency",
+        "iso_reference": "ISO 19157:2013 §D.2.4",
+    },
+    "improper_geometries": {
+        "element": "Logical Consistency",
+        "sub_element": "Conceptual Consistency",
+        "iso_reference": "ISO 19157:2013 §D.2.1",
+    },
+}
+
 # Internal definition dicts for the functional part of categories:
 
 improper_keys = {
@@ -143,6 +189,7 @@ categories_dict_keys = {
         "dict": improper_keys,
         "type": "keys",
         "invert_geomtype": False,
+        "iso_19157": iso_19157_classification["improper_keys"],
         "occurrences": {
             "sidewalks": {},
             "crossings": {},
@@ -161,6 +208,7 @@ categories_dict_keys = {
         "dict": uncanny_keys,
         "type": "keys",
         "invert_geomtype": False,
+        "iso_19157": iso_19157_classification["uncanny_keys"],
         "occurrences": {
             "sidewalks": {},
             "crossings": {},
@@ -179,6 +227,7 @@ categories_dict_keys = {
         "dict": "quality_check/keys_without_wiki.json",
         "type": "keys",
         "invert_geomtype": False,
+        "iso_19157": iso_19157_classification["keys_without_wiki"],
         "occurrences": {
             "sidewalks": {},
             "crossings": {},
@@ -197,6 +246,7 @@ categories_dict_keys = {
         "dict": replaceable_values,
         "type": "values",
         "invert_geomtype": False,
+        "iso_19157": iso_19157_classification["replaceable_values"],
         "occurrences": {
             "sidewalks": {},
             "crossings": {},
@@ -215,6 +265,7 @@ categories_dict_keys = {
         "dict": "quality_check/valid_tag_values.json",
         "type": "values",
         "invert_geomtype": False,
+        "iso_19157": iso_19157_classification["wrong_mispelled_or_unlisted_values"],
         "occurrences": {
             "sidewalks": {},
             "crossings": {},
@@ -233,6 +284,7 @@ categories_dict_keys = {
         "dict": invalid_characters,
         "type": "tags",
         "invert_geomtype": False,
+        "iso_19157": iso_19157_classification["invalid_characters"],
         "occurrences": {
             "sidewalks": {},
             "crossings": {},
@@ -273,6 +325,7 @@ geom_dict_keys = {
         "suffix": disjointed_geoms_suffix,
         "type": "geometries",
         "invert_geomtype": False,
+        "iso_19157": iso_19157_classification["disjointed_geometries"],
         "occurrences": {
             "sidewalks": {},
             "crossings": {},
@@ -293,6 +346,7 @@ geom_dict_keys = {
         "suffix": improper_geoms_suffix,
         "type": "geometries",
         "invert_geomtype": True,
+        "iso_19157": iso_19157_classification["improper_geometries"],
         "occurrences": {
             "sidewalks": {},
             "crossings": {},

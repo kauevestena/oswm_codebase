@@ -588,6 +588,7 @@ def gen_quality_report_page_and_files(
     occ_type,
     csvpath,
     invert_geom=False,
+    iso_19157=None,
 ):
 
     # pagename_base = f"{quality_category}_{category}"
@@ -689,6 +690,21 @@ def gen_quality_report_page_and_files(
     </div>
     """
 
+    # Build ISO 19157 badge HTML for the subpage info card
+    iso_badge_subpage = ""
+    if iso_19157:
+        _iso_colors = {
+            "Thematic Accuracy": ("#a78bfa", "rgba(167, 139, 250, 0.15)", "rgba(167, 139, 250, 0.3)"),
+            "Logical Consistency": ("#00f2fe", "rgba(0, 242, 254, 0.15)", "rgba(0, 242, 254, 0.3)"),
+        }
+        _iso_c, _iso_bg, _iso_br = _iso_colors.get(iso_19157["element"], ("#94a3b8", "rgba(148, 163, 184, 0.15)", "rgba(148, 163, 184, 0.3)"))
+        iso_badge_subpage = (
+            f'<p style="margin: 0; font-size: 1rem; color: #f8fafc;"><b>ISO 19157:2013:</b> '
+            f'<span style="display:inline-block; background:{_iso_bg}; border:1px solid {_iso_br}; color:{_iso_c}; padding:3px 10px; border-radius:6px; font-size:0.85rem; font-weight:500;">'
+            f'{iso_19157["element"]} \u2192 {iso_19157["sub_element"]}</span> '
+            f'<span style="color:#64748b; font-size:0.8rem; font-style:italic; margin-left:8px;">({iso_19157["iso_reference"]})</span></p>'
+        )
+
     with open(outpath, "w+", encoding="utf-8") as writer:
 
         page = f"""<!--
@@ -726,7 +742,8 @@ def gen_quality_report_page_and_files(
 
             <div style="background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
                 <p style="margin: 0 0 10px 0; font-size: 1rem; color: #f8fafc;"><b>About:</b> <span style="color: #cbd5e1;">{text}</span></p>
-                <p style="margin: 0; font-size: 1rem; color: #f8fafc;"><b>Type:</b> <span style="color: #cbd5e1;">{occ_type}</span></p>
+                <p style="margin: 0 0 10px 0; font-size: 1rem; color: #f8fafc;"><b>Type:</b> <span style="color: #cbd5e1;">{occ_type}</span></p>
+                {iso_badge_subpage}
             </div>
         </main>
 
