@@ -100,9 +100,20 @@ export class OswmLegendControl {
         this._expanded = !this._expanded;
         this._panel.style.display = this._expanded ? 'block' : 'none';
         
+        if (this._expanded && this._map) {
+            this._map.fire('oswm-legend-opened');
+        }
+
         // Notify external listener (used to sync the left-centered legend)
         if (this._options.onToggle) {
             this._options.onToggle(this._expanded);
+        }
+    }
+
+    /** Close the panel if it is open. */
+    close() {
+        if (this._expanded) {
+            this.toggle();
         }
     }
 

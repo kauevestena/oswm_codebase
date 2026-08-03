@@ -82,7 +82,9 @@ def hazard_profile_parquet_path(profile_id):
 
 
 pipeline_failures_path = os.path.join(updates_folderpath, "pipeline_failures.txt")
-snapshot_summary_path = os.path.join(snapshots_folderpath, "node_summary.json")
+webmap_theme_summary_path = os.path.join(snapshots_folderpath, "node_summary.json")
+# Compatibility alias retained for existing scrutiny-snapshot consumers.
+snapshot_summary_path = webmap_theme_summary_path
 
 # declare, so we can reuse
 stairways_layername = "stairways"

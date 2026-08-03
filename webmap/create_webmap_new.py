@@ -23,12 +23,22 @@ params["bounds"] = get_boundaries_bbox()
 # updating the node's url:
 params["node_url"] = node_homepage_url
 
+webmap_themes = get_webmap_theme_definitions()
+
 params["snapshot"] = {
     "schema_version": 1,
     "node_name": CITY_NAME,
-    "summary_url": snapshot_summary_path,
-    "default_scope": "viewport",
-    "themes": get_snapshot_themes(),
+    "summary_url": webmap_theme_summary_path,
+    "default_scope": "snapshot",
+    "themes": webmap_themes,
+}
+
+params["theme_charts"] = {
+    "schema_version": 1,
+    "node_name": CITY_NAME,
+    "summary_url": webmap_theme_summary_path,
+    "default_scope": "snapshot",
+    "themes": webmap_themes,
 }
 
 # # generating the "sources" and layernames:
@@ -44,21 +54,21 @@ params["styles"] = {
 }
 
 # adding the simple styles:
-for attribute in SNAPSHOT_INTEREST_ATTRIBUTES:
+for attribute in WEBMAP_THEME_ATTRIBUTES:
     color_dict = get_color_dict(
         attribute,
-        SNAPSHOT_ATTRIBUTE_LAYERS.get(attribute, "sidewalks"),
+        WEBMAP_THEME_ATTRIBUTE_LAYERS.get(attribute, "sidewalks"),
     )
     # color_schema = create_maplibre_color_schema(
     #     color_dict, attribute, different_else_color.get(attribute, "gray")
     # )
 
     params["styles"][attribute] = create_simple_map_style(
-        name=SNAPSHOT_INTEREST_ATTRIBUTES[attribute],
+        name=WEBMAP_THEME_ATTRIBUTES[attribute],
         # color_schema=color_schema,
         color_dict=color_dict,
         attribute_name=attribute,
-        else_color=SNAPSHOT_ELSE_COLORS.get(attribute, "gray"),
+        else_color=WEBMAP_THEME_ELSE_COLORS.get(attribute, "gray"),
     )
 
 # Now the numerical styles:
