@@ -58,6 +58,7 @@ OpenSidewalkMap project
 │   ├── datahub/                     static API, acquisition, and watcher/RSS
 │   ├── generation/                  PMTiles, VRT, and routing-data generators
 │   ├── hazard_analysis/             hazard policy, terrain overlays, and webmap
+│   ├── metadata/                    ISO-aligned JSON profile and global generator
 │   ├── routing/                     static routing demonstration
 │   ├── runners/                     setup, daily, weekly, and custom pipelines
 │   ├── webmap/                      MapLibre Webmap and scrutiny snapshots
@@ -67,6 +68,7 @@ OpenSidewalkMap project
     ├── config.py                    node-specific area and tag configuration
     ├── oswm_codebase/               pinned Git submodule
     ├── data/                        generated raw/processed data and PMTiles
+    ├── metadata/                    generated catalogue mirroring data/ structure
     ├── hub/, quality_check/         generated module outputs
     ├── statistics/                  generated dashboards
     ├── index.html, map.html          published entry pages
@@ -85,7 +87,8 @@ Generators run from the node root. They import shared code through the `oswm_cod
 | Completeness | Multi-scale and temporal footway/sidewalk-to-road completeness analysis | Active; computationally and API intensive |
 | Routing demo | Client-side route exploration over generated pedestrian geometries | Experimental |
 | Hazard Analysis | Profile-specific pedestrian hazard screening and global terrain context | Experimental |
-| Data hub and static API | Human-readable hub plus serverless JSON, GeoParquet, PMTiles, VRT, and chart-spec endpoints | Active |
+| Metadata catalogue | Deterministic ISO-aligned JSON catalogue and per-resource records in a sibling `metadata/` tree | Active |
+| Data hub and static API | Human-readable hub plus serverless metadata, JSON, GeoParquet, PMTiles, VRT, and chart-spec endpoints | Active |
 | Change watcher and RSS | Detects relevant OSM changes, helps skip unnecessary pipeline runs, and emits HTML/RSS/Atom-style outputs | Active |
 | Acquisition | Discovers relevant mapping projects from supported third-party platforms | Active, dependent on external services |
 
@@ -157,6 +160,7 @@ git -C oswm_codebase switch -c my-codebase-branch
 
 python oswm_codebase/webmap/create_webmap_new.py --development
 python oswm_codebase/webmap/snapshot/generate_snapshot_summary.py
+python oswm_codebase/metadata/metadata_generation.py
 python oswm_codebase/datahub/datahub_index_generator.py
 ```
 
@@ -176,6 +180,7 @@ From a standalone `oswm_codebase` checkout:
 
 ```bash
 python tests/test_branding_manifest.py
+python -m unittest tests.test_metadata_generation
 python -m unittest discover -s tests/webmap_snapshot -p 'test_*.py'
 python -m unittest discover -s tests/webmap_theme_charts -p 'test_*.py'
 node --test webmap/snapshot/snapshot_stats.test.mjs

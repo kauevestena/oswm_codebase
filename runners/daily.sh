@@ -63,6 +63,11 @@ if [ -f data/updates/yesterday.json ]; then
         echo "No OSM changesets affecting OSWM features yesterday."
         echo "Skipping the remaining OSM-dependent daily updates."
         echo "========================================="
+        # Discovery outputs are lightweight and must still be refreshed after a
+        # codebase update, even when the underlying OSM data did not change.
+        run_step oswm_codebase/metadata/metadata_generation.py "metadata_generation"
+        run_step oswm_codebase/datahub/API/generate_api.py      "generate_api"
+        run_step oswm_codebase/datahub/datahub_index_generator.py "datahub_index"
         if [ -n "$FAILED_STEPS" ]; then
             mkdir -p data/updates
             printf "%b\n" "$FAILED_STEPS" > data/updates/pipeline_failures.txt
@@ -86,6 +91,7 @@ run_step oswm_codebase/data_quality/external_qc.py             "external_qc"
 run_step oswm_codebase/dashboard/statistics_generation.py      "statistics_generation"
 run_step oswm_codebase/generation/routing_demo_gen.py          "routing_demo_gen"
 run_step oswm_codebase/generation/hazard_tiles_gen.py          "hazard_tiles_gen"
+run_step oswm_codebase/metadata/metadata_generation.py         "metadata_generation"
 run_step oswm_codebase/datahub/API/generate_api.py             "generate_api"
 run_step oswm_codebase/datahub/datahub_index_generator.py      "datahub_index"
 

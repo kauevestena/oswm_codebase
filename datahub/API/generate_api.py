@@ -20,11 +20,22 @@ from config import CITY_NAME, USERNAME, REPO_NAME  # noqa: E402
 from constants import node_homepage_url, api_folder  # noqa: E402
 from functions import ensure_parent_folder  # noqa: E402
 from branding import branding_asset_url  # noqa: E402
+from metadata.metadata_generation import metadata_relative_path_for_data  # noqa: E402
 
 
 # Ensure standard libraries are available
 
 def get_endpoint_category(path, deliverable):
+    if deliverable == "metadata":
+        if path == "metadata/index.json":
+            return "Metadata Catalogue"
+        if path.endswith("/index.json"):
+            return "Collection Metadata"
+        parts = path.split("/")
+        if len(parts) > 2:
+            return f"{parts[1].replace('_', ' ').title()} Metadata"
+        return "Resource Metadata"
+
     if path.endswith("index.json"):
         if path in ["data/index.json", "quality_check/index.json", "statistics_specs/index.json"]:
             return "API Index"
@@ -81,6 +92,17 @@ def get_endpoint_category(path, deliverable):
     return "Other"
 
 def get_endpoint_description(path, filename, deliverable):
+    if deliverable == "metadata":
+        try:
+            with open(path, "r", encoding="utf-8") as metadata_file:
+                metadata_record = json.load(metadata_file)
+            abstract = metadata_record.get("abstract")
+            if isinstance(abstract, str) and abstract.strip():
+                return abstract
+        except (OSError, ValueError, TypeError):
+            pass
+        return f"OSWM JSON metadata record: {filename}"
+
     if path.endswith("index.json"):
         if path == "data/index.json":
             return "Returns the list of all available directories and files under the Map Data deliverable."
@@ -346,7 +368,8 @@ def collect_endpoints():
             "format": "JSON",
             "description": "Full configuration for the webmap, including center coordinates, initial zoom level, layers, MapLibre GL styles, and configurations.",
             "playground": True,
-            "deliverable": "map_data"
+            "deliverable": "map_data",
+            "metadata_path": None,
         })
         
     for root, dirs, files in os.walk("data"):
@@ -375,6 +398,9 @@ def collect_endpoints():
             category = get_endpoint_category(rel_path, deliv)
             description = get_endpoint_description(rel_path, f, deliv)
             playground = fmt in ["JSON", "GeoJSON", "XML/VRT"]
+            metadata_path = metadata_relative_path_for_data(rel_path)
+            if not os.path.exists(metadata_path):
+                metadata_path = None
             
             endpoints.append({
                 "category": category,
@@ -382,7 +408,8 @@ def collect_endpoints():
                 "format": fmt,
                 "description": description,
                 "playground": playground,
-                "deliverable": deliv
+                "deliverable": deliv,
+                "metadata_path": metadata_path,
             })
             
     # 2. Data Quality
@@ -403,7 +430,8 @@ def collect_endpoints():
                 "format": "JSON",
                 "description": description,
                 "playground": True,
-                "deliverable": "data_quality"
+                "deliverable": "data_quality",
+                "metadata_path": None,
             })
             
     # 3. Vega Specs
@@ -423,8 +451,28 @@ def collect_endpoints():
                 "format": "JSON",
                 "description": description,
                 "playground": True,
-                "deliverable": "vega_specs"
+                "deliverable": "vega_specs",
+                "metadata_path": None,
             })
+
+    # 4. ISO-aligned OSWM metadata records
+    if os.path.isdir("metadata"):
+        for root, dirs, files in os.walk("metadata"):
+            dirs[:] = sorted(d for d in dirs if not d.startswith("."))
+            for filename in sorted(files):
+                if filename.startswith(".") or not filename.endswith(".json"):
+                    continue
+                file_path = os.path.join(root, filename)
+                rel_path = os.path.relpath(file_path, ".").replace("\\", "/")
+                endpoints.append({
+                    "category": get_endpoint_category(rel_path, "metadata"),
+                    "path": rel_path,
+                    "format": "JSON",
+                    "description": get_endpoint_description(rel_path, filename, "metadata"),
+                    "playground": True,
+                    "deliverable": "metadata",
+                    "metadata_path": None,
+                })
             
     # Sort
     endpoints.sort(key=lambda x: (
@@ -612,6 +660,7 @@ def generate_api_html(endpoints):
             padding: 0.5rem 2rem;
             display: flex;
             gap: 1rem;
+            overflow-x: auto;
         }
 
         .deliverable-tab {
@@ -624,6 +673,8 @@ def generate_api_html(endpoints):
             transition: all 0.2s ease;
             border: 1px solid transparent;
             user-select: none;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .deliverable-tab:hover {
@@ -1130,6 +1181,7 @@ def generate_api_html(endpoints):
     <div class="deliverables-tabs-bar">
         <div class="tabs-container">
             <div class="deliverable-tab active" onclick="switchDeliverable('map_data')" id="tab-map_data">Map Data</div>
+            <div class="deliverable-tab" onclick="switchDeliverable('metadata')" id="tab-metadata">Metadata</div>
             <div class="deliverable-tab" onclick="switchDeliverable('hazard_analysis')" id="tab-hazard_analysis">Hazard Analysis</div>
             <div class="deliverable-tab" onclick="switchDeliverable('data_quality')" id="tab-data_quality">Data Quality</div>
             <div class="deliverable-tab" onclick="switchDeliverable('vega_specs')" id="tab-vega_specs">Vega Chart Specs</div>
@@ -1141,7 +1193,7 @@ def generate_api_html(endpoints):
         <div class="sidebar">
             <div class="glass-panel info-card">
                 <h2>Serverless API Details</h2>
-                <p>OSWM exposes processed city datasets as static files hosted on GitHub Pages. Any standard HTTP client can access these files directly.</p>
+                <p>OSWM exposes processed city datasets and their ISO-aligned JSON metadata as static files hosted on GitHub Pages. Every data endpoint links to its metadata record.</p>
                 <div class="base-url-box" id="base-url-display"></div>
             </div>
 
@@ -1176,6 +1228,7 @@ def generate_api_html(endpoints):
                 <div style="display: flex; gap: 1rem;">
                     <button class="btn btn-primary" id="btn-try" onclick="executePlaygroundRequest()">Try It Out</button>
                     <button class="btn btn-secondary" id="btn-dl" onclick="downloadEndpointFile()">Download File</button>
+                    <a class="btn btn-secondary" id="btn-metadata" href="#" target="_blank" rel="noopener" style="display: none;">View Metadata</a>
                 </div>
 
                 <!-- Response Viewer -->
@@ -1371,6 +1424,15 @@ print(data)</pre>
 
             const fullUrl = baseUrl + ep.path;
             document.getElementById('request-url-input').value = fullUrl;
+
+            const metadataButton = document.getElementById('btn-metadata');
+            if (ep.metadata_path) {
+                metadataButton.href = baseUrl + ep.metadata_path;
+                metadataButton.style.display = 'inline-flex';
+            } else {
+                metadataButton.removeAttribute('href');
+                metadataButton.style.display = 'none';
+            }
 
             // Reset playground response window
             resetPlayground();
