@@ -298,6 +298,41 @@ def main():
     # saving the keys in data:
     dump_json(raw_data_keys, feat_keys_path)
 
+    print("     - Performing Topological Data Quality Checks")
+    create_folder_if_not_exists(crossings_lacking_kerbs_folderpath)
+    create_folder_if_not_exists(kerb_on_top_of_non_crossing_folderpath)
+    
+    final_crossings = gpd.read_parquet(paths_dict["data"]["crossings"])
+    final_kerbs = gpd.read_parquet(paths_dict["data"]["kerbs"])
+    
+    if not final_crossings.empty and not final_kerbs.empty:
+        # Buffer kerbs slightly in local UTM to avoid floating point misses, then convert back
+        kerbs_buffered = final_kerbs.copy()
+        kerbs_buffered.geometry = kerbs_buffered.to_crs(local_utm).buffer(0.2).to_crs(final_kerbs.crs)
+
+        # Buffer crossings by 0.5m as requested to avoid false positives for kerbs_no_crossings
+        crossings_buffered = final_crossings.copy()
+        crossings_buffered.geometry = crossings_buffered.to_crs(local_utm).buffer(0.5).to_crs(final_crossings.crs)
+
+        # 1. kerb_on_top_of_non_crossing
+        # Using sjoin to find kerbs that don't intersect any crossing (using 0.5m buffered crossings)
+        kerbs_joined = gpd.sjoin(final_kerbs, crossings_buffered, how="left", predicate="intersects")
+        # index_right is NaN for kerbs that don't intersect. We get those unique indices.
+        no_crossing_indices = kerbs_joined[kerbs_joined["index_right"].isna()].index.unique()
+        kerbs_no_crossings = final_kerbs.loc[no_crossing_indices]
+        save_geoparquet(kerbs_no_crossings, os.path.join(kerb_on_top_of_non_crossing_folderpath, f"kerbs{kerb_on_top_of_non_crossing_suffix}{data_format}"))
+        
+        # 2. crossings_lacking_kerbs
+        joined_crossings = gpd.sjoin(final_crossings, kerbs_buffered, how="left", predicate="intersects")
+        kerb_counts = joined_crossings.groupby(joined_crossings.index)["index_right"].count()
+        lacking_indices = kerb_counts[kerb_counts < 2].index
+        
+        crossings_lacking = final_crossings.loc[lacking_indices]
+        save_geoparquet(crossings_lacking, os.path.join(crossings_lacking_kerbs_folderpath, f"crossings{crossings_lacking_kerbs_suffix}{data_format}"))
+    else:
+        save_geoparquet(final_kerbs.head(0), os.path.join(kerb_on_top_of_non_crossing_folderpath, f"kerbs{kerb_on_top_of_non_crossing_suffix}{data_format}"))
+        save_geoparquet(final_crossings.head(0), os.path.join(crossings_lacking_kerbs_folderpath, f"crossings{crossings_lacking_kerbs_suffix}{data_format}"))
+
     print("Finishing...")
 
     # generate the "report" of the updating info

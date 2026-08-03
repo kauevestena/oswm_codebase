@@ -37,6 +37,8 @@ snapshots_folderpath = os.path.join(data_folderpath, "snapshots")
 
 improper_geoms_folderpath = os.path.join(data_quality_folderpath, "improper_geoms")
 disjointed_folderpath = os.path.join(data_quality_folderpath, "disjointed")
+crossings_lacking_kerbs_folderpath = os.path.join(data_quality_folderpath, "crossings_lacking_kerbs")
+kerb_on_top_of_non_crossing_folderpath = os.path.join(data_quality_folderpath, "kerb_on_top_of_non_crossing")
 versioning_folderpath = os.path.join(updates_folderpath, "versioning")
 other_footways_folderpath = os.path.join(processed_folderpath, "other_footways")
 tiles_folderpath = os.path.join(data_folderpath, "tiles")
@@ -747,6 +749,8 @@ oswm_footway_fieldname = "oswm_footway"
 # stuff for the geometric quality assurance:
 improper_geoms_suffix = "_improper_geoms"
 disjointed_geoms_suffix = "_disjointed"
+crossings_lacking_kerbs_suffix = "_lacking_kerbs"
+kerb_on_top_of_non_crossing_suffix = "_no_crossing"
 
 basic_html = """
 <!DOCTYPE html>

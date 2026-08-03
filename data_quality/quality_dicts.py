@@ -62,6 +62,21 @@ iso_19157_classification = {
         "sub_element": "Conceptual Consistency",
         "iso_reference": "ISO 19157:2013 §D.2.1",
     },
+    "older_than_five_years": {
+        "element": "Temporal Accuracy",
+        "sub_element": "Temporal Validity",
+        "iso_reference": "ISO 19157:2013",
+    },
+    "crossings_lacking_kerbs": {
+        "element": "Logical Consistency",
+        "sub_element": "Topological Consistency",
+        "iso_reference": "ISO 19157:2013 §D.2.4",
+    },
+    "kerb_on_top_of_non_crossing": {
+        "element": "Logical Consistency",
+        "sub_element": "Topological Consistency",
+        "iso_reference": "ISO 19157:2013 §D.2.4",
+    },
 }
 
 # Internal definition dicts for the functional part of categories:
@@ -178,6 +193,26 @@ disjointed_geoms_dict = {
     "other_footways": {
         "insertions": [key_val_comm, key_val_comm, "check the feature in OSM"]
     },
+}
+
+crossings_lacking_kerbs_dict = {
+    "crossings": {
+        "insertions": [
+            key_val_comm,
+            key_val_comm,
+            "this crossing intersects fewer than 2 kerbs. Generally each crossing should connect to at least 2 kerbs.",
+        ]
+    }
+}
+
+kerb_on_top_of_non_crossing_dict = {
+    "kerbs": {
+        "insertions": [
+            key_val_comm,
+            key_val_comm,
+            "this kerb does not intersect any crossing geometry.",
+        ]
+    }
 }
 
 
@@ -298,21 +333,25 @@ categories_dict_keys = {
             "other_footways": 0,
         },
     },
-    # "missing_value": {
-    #     'about':"tags with only a key, no value",
-    #     'dict' : None,
-    #     'type':'tags',
-    #     'occurrences': {
-    #                         'sidewalks': {},
-    #                         'crossings': {},
-    #                         'kerbs':     {},
-    #                     },
-    #     'occ_count': {
-    #                 'sidewalks': 0,
-    #                 'crossings': 0,
-    #                 'kerbs':     0,
-    #             },
-    # },
+    "older_than_five_years": {
+        "about": "Features that haven't been updated in over five years, potentially outdated.",
+        "dict": None,
+        "type": "age",
+        "invert_geomtype": False,
+        "iso_19157": iso_19157_classification["older_than_five_years"],
+        "occurrences": {
+            "sidewalks": {},
+            "crossings": {},
+            "kerbs": {},
+            "other_footways": {},
+        },
+        "occ_count": {
+            "sidewalks": 0,
+            "crossings": 0,
+            "kerbs": 0,
+            "other_footways": 0,
+        },
+    },
 }
 
 
@@ -347,6 +386,48 @@ geom_dict_keys = {
         "type": "geometries",
         "invert_geomtype": True,
         "iso_19157": iso_19157_classification["improper_geometries"],
+        "occurrences": {
+            "sidewalks": {},
+            "crossings": {},
+            "kerbs": {},
+            "other_footways": {},
+        },
+        "occ_count": {
+            "sidewalks": 0,
+            "crossings": 0,
+            "kerbs": 0,
+            "other_footways": 0,
+        },
+    },
+    "crossings_lacking_kerbs": {
+        "about": "Crossings that intersect fewer than 2 kerbs.",
+        "dict": crossings_lacking_kerbs_dict,
+        "path": crossings_lacking_kerbs_folderpath,
+        "suffix": crossings_lacking_kerbs_suffix,
+        "type": "geometries",
+        "invert_geomtype": False,
+        "iso_19157": iso_19157_classification["crossings_lacking_kerbs"],
+        "occurrences": {
+            "sidewalks": {},
+            "crossings": {},
+            "kerbs": {},
+            "other_footways": {},
+        },
+        "occ_count": {
+            "sidewalks": 0,
+            "crossings": 0,
+            "kerbs": 0,
+            "other_footways": 0,
+        },
+    },
+    "kerb_on_top_of_non_crossing": {
+        "about": "Kerbs that do not intersect any crossing geometry.",
+        "dict": kerb_on_top_of_non_crossing_dict,
+        "path": kerb_on_top_of_non_crossing_folderpath,
+        "suffix": kerb_on_top_of_non_crossing_suffix,
+        "type": "geometries",
+        "invert_geomtype": False,
+        "iso_19157": iso_19157_classification["kerb_on_top_of_non_crossing"],
         "occurrences": {
             "sidewalks": {},
             "crossings": {},

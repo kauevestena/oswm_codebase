@@ -12,6 +12,14 @@ def main():
     qc_favicon_url = branding_asset_url("favicon", "../oswm_codebase")
     gdf_dict = get_gdfs_dict(raw_data=True)
 
+    # Load processed data to access the 'age' and 'last_update' attributes for temporal quality checks
+    gdf_dict_processed = get_gdfs_dict(raw_data=False)
+    age_lookup = {}
+    for cat, p_df in gdf_dict_processed.items():
+        if not p_df.empty and 'age' in p_df.columns and 'last_update' in p_df.columns:
+            age_lookup[cat] = p_df.set_index('id')[['age', 'last_update']].to_dict('index')
+
+
     type_dict = geom_type_dict.copy()
 
     type_dict = {
@@ -161,6 +169,20 @@ def main():
 
                                     break
 
+                if curr["type"] == "age":
+                    age_info = age_lookup.get(category, {}).get(row.id)
+                    if age_info and age_info['age'] >= 5:
+                        comment = "Feature has not been updated in 5 years or more"
+                        val_list = [
+                            row.id,
+                            "last_update",
+                            age_info['last_update'],
+                            comment,
+                        ]
+                        add_to_occurrences(
+                            curr, category, val_list, row.id, row.element
+                        )
+                        add_to_map_data(row, quality_category, category)
 
     # add the  geometric categories, processed elsewhere:
     for quality_category in geom_dict_keys:
@@ -324,27 +346,51 @@ def main():
     iso_legend = """
     <div style="background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 1.5rem; margin: 1.5rem 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
         <h3 style="margin-top: 0; color: #f8fafc;">📐 ISO 19157:2013 — Data Quality Reference</h3>
-        <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 1rem;">Each quality category is classified according to <a href="https://www.iso.org/standard/32575.html" style="color: #00f2fe;">ISO 19157:2013</a> — Geographic Information: Data Quality. The classification uses the standard's quality elements and sub-elements:</p>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+        <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 1rem;">Each quality category is classified according to <a href="https://www.iso.org/standard/32575.html" style="color: #00f2fe;">ISO 19157:2013</a> — Geographic Information: Data Quality. The classification uses the standard's 5 main quality elements:</p>
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
             <div style="background: rgba(167, 139, 250, 0.1); border: 1px solid rgba(167, 139, 250, 0.3); border-radius: 8px; padding: 1rem;">
                 <h4 style="color: #a78bfa; margin: 0 0 0.5rem 0;">Thematic Accuracy</h4>
                 <ul style="color: #cbd5e1; font-size: 0.85rem; margin: 0; padding-left: 1.2rem;">
-                    <li><b>Non-quantitative Attribute Accuracy</b> — correctness of non-quantitative attributes (keys, values)</li>
-                    <li>Classification Correctness — correctness of class assignments</li>
-                    <li>Quantitative Attribute Accuracy — closeness to true quantitative values</li>
+                    <li><b>Non-quantitative Attribute Accuracy</b></li>
+                    <li>Classification Correctness</li>
+                    <li>Quantitative Attribute Accuracy</li>
                 </ul>
             </div>
             <div style="background: rgba(0, 242, 254, 0.1); border: 1px solid rgba(0, 242, 254, 0.3); border-radius: 8px; padding: 1rem;">
                 <h4 style="color: #00f2fe; margin: 0 0 0.5rem 0;">Logical Consistency</h4>
                 <ul style="color: #cbd5e1; font-size: 0.85rem; margin: 0; padding-left: 1.2rem;">
-                    <li><b>Topological Consistency</b> — correctness of topological relationships</li>
-                    <li><b>Conceptual Consistency</b> — adherence to conceptual schema rules</li>
-                    <li><b>Format Consistency</b> — adherence to data structure/format rules</li>
-                    <li>Domain Consistency — adherence to value domain rules</li>
+                    <li><b>Topological Consistency</b></li>
+                    <li><b>Conceptual Consistency</b></li>
+                    <li><b>Format Consistency</b></li>
+                    <li>Domain Consistency</li>
                 </ul>
             </div>
+            <div style="background: rgba(148, 163, 184, 0.1); border: 1px solid rgba(148, 163, 184, 0.3); border-radius: 8px; padding: 1rem;">
+                <h4 style="color: #94a3b8; margin: 0 0 0.5rem 0;">Temporal Accuracy</h4>
+                <ul style="color: #cbd5e1; font-size: 0.85rem; margin: 0; padding-left: 1.2rem;">
+                    <li><b>Temporal Validity</b></li>
+                    <li>Temporal Consistency</li>
+                    <li>Accuracy of a Time Measurement</li>
+                </ul>
+            </div>
+            <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; padding: 1rem;">
+                <h4 style="color: #38bdf8; margin: 0 0 0.5rem 0;">Positional Accuracy</h4>
+                <ul style="color: #cbd5e1; font-size: 0.85rem; margin: 0; padding-left: 1.2rem;">
+                    <li>Absolute or External Accuracy</li>
+                    <li>Relative or Internal Accuracy</li>
+                    <li>Gridded Data Position Accuracy</li>
+                </ul>
+            </div>
+            <div style="background: rgba(74, 222, 128, 0.1); border: 1px solid rgba(74, 222, 128, 0.3); border-radius: 8px; padding: 1rem;">
+                <h4 style="color: #4ade80; margin: 0 0 0.5rem 0;">Completeness</h4>
+                <ul style="color: #cbd5e1; font-size: 0.85rem; margin: 0; padding-left: 1.2rem;">
+                    <li>Commission (excess data)</li>
+                    <li>Omission (missing data)</li>
+                </ul>
+                <p style="color: #cbd5e1; font-size: 0.85rem; margin: 0.5rem 0 0 0; font-style: italic;">Note: Completeness is evaluated in a zonal-based fashion in the separate <a href="completeness/index.html" style="color: #4ade80;">OSWM completeness dashboard</a> rather than per-feature.</p>
+            </div>
         </div>
-        <p style="color: #64748b; font-size: 0.8rem; margin: 0.8rem 0 0 0; font-style: italic;">Bold sub-elements are currently used in OSWM quality checks.</p>
+        <p style="color: #64748b; font-size: 0.8rem; margin: 0.8rem 0 0 0; font-style: italic;">Bold sub-elements are currently used in the per-feature quality checks.</p>
     </div>
     """
 
