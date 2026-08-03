@@ -29,6 +29,10 @@ python oswm_codebase/metadata/metadata_generation.py
 python oswm_codebase/metadata/metadata_generation.py --validate-only --verify-checksums
 ```
 
+For a complete post-checkout sequence—including localisation, API/Data Hub
+refresh, the daily-runner alternative, and node staging—see
+[`FIRST_GENERATION.md`](FIRST_GENERATION.md).
+
 The generator:
 
 - reads node identity from `config.py`;
