@@ -338,59 +338,66 @@ def main():
             tot_cat += categories_dict_keys[quality_category]["occ_count"][category]
         tablepart += f"<td><b>{tot_cat}</b></td>"
     tablepart += "<td></td>"  # empty cell for ISO column in totals row
-    tablepart += "</tr>\\n"
+    tablepart += "</tr>\n"
 
     print("generating QC main page")
 
     # ISO 19157 reference legend
     iso_legend = """
     <div style="background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 1.5rem; margin: 1.5rem 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-        <h3 style="margin-top: 0; color: #f8fafc;">📐 ISO 19157:2013 — Data Quality Reference</h3>
-        <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 1rem;">Each quality category is classified according to <a href="https://www.iso.org/standard/32575.html" style="color: #00f2fe;">ISO 19157:2013</a> — Geographic Information: Data Quality. The classification uses the standard's 5 main quality elements:</p>
+        <h3 style="margin-top: 0; color: #f8fafc; font-size: 1.3rem;">📐 ISO 19157:2013 — Data Quality Reference</h3>
+        <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 1.5rem;">Each quality category is classified according to <a href="https://www.iso.org/standard/32575.html" style="color: #00f2fe; text-decoration: none;">ISO 19157:2013</a>. The classification uses the standard's 5 main quality elements:</p>
+        
         <div style="display: flex; flex-direction: column; gap: 1rem;">
+            
             <div style="background: rgba(167, 139, 250, 0.1); border: 1px solid rgba(167, 139, 250, 0.3); border-radius: 8px; padding: 1rem;">
-                <h4 style="color: #a78bfa; margin: 0 0 0.5rem 0;">Thematic Accuracy</h4>
-                <ul style="color: #cbd5e1; font-size: 0.85rem; margin: 0; padding-left: 1.2rem;">
-                    <li><b>Non-quantitative Attribute Accuracy</b></li>
-                    <li>Classification Correctness</li>
-                    <li>Quantitative Attribute Accuracy</li>
-                </ul>
+                <h4 style="color: #a78bfa; margin: 0 0 0.5rem 0; font-size: 1rem; font-weight: 600;">Thematic Accuracy</h4>
+                <div style="color: #cbd5e1; font-size: 0.85rem; display: flex; flex-wrap: wrap; gap: 1.5rem;">
+                    <span>• <b>Non-quantitative Attribute Accuracy</b></span>
+                    <span>• Classification Correctness</span>
+                    <span>• Quantitative Attribute Accuracy</span>
+                </div>
             </div>
+
             <div style="background: rgba(0, 242, 254, 0.1); border: 1px solid rgba(0, 242, 254, 0.3); border-radius: 8px; padding: 1rem;">
-                <h4 style="color: #00f2fe; margin: 0 0 0.5rem 0;">Logical Consistency</h4>
-                <ul style="color: #cbd5e1; font-size: 0.85rem; margin: 0; padding-left: 1.2rem;">
-                    <li><b>Topological Consistency</b></li>
-                    <li><b>Conceptual Consistency</b></li>
-                    <li><b>Format Consistency</b></li>
-                    <li>Domain Consistency</li>
-                </ul>
+                <h4 style="color: #00f2fe; margin: 0 0 0.5rem 0; font-size: 1rem; font-weight: 600;">Logical Consistency</h4>
+                <div style="color: #cbd5e1; font-size: 0.85rem; display: flex; flex-wrap: wrap; gap: 1.5rem;">
+                    <span>• <b>Topological Consistency</b></span>
+                    <span>• <b>Conceptual Consistency</b></span>
+                    <span>• <b>Format Consistency</b></span>
+                    <span>• Domain Consistency</span>
+                </div>
             </div>
+            
             <div style="background: rgba(148, 163, 184, 0.1); border: 1px solid rgba(148, 163, 184, 0.3); border-radius: 8px; padding: 1rem;">
-                <h4 style="color: #94a3b8; margin: 0 0 0.5rem 0;">Temporal Accuracy</h4>
-                <ul style="color: #cbd5e1; font-size: 0.85rem; margin: 0; padding-left: 1.2rem;">
-                    <li><b>Temporal Validity</b></li>
-                    <li>Temporal Consistency</li>
-                    <li>Accuracy of a Time Measurement</li>
-                </ul>
+                <h4 style="color: #94a3b8; margin: 0 0 0.5rem 0; font-size: 1rem; font-weight: 600;">Temporal Accuracy</h4>
+                <div style="color: #cbd5e1; font-size: 0.85rem; display: flex; flex-wrap: wrap; gap: 1.5rem;">
+                    <span>• <b>Temporal Validity</b></span>
+                    <span>• Temporal Consistency</span>
+                    <span>• Accuracy of a Time Measurement</span>
+                </div>
             </div>
+
             <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; padding: 1rem;">
-                <h4 style="color: #38bdf8; margin: 0 0 0.5rem 0;">Positional Accuracy</h4>
-                <ul style="color: #cbd5e1; font-size: 0.85rem; margin: 0; padding-left: 1.2rem;">
-                    <li>Absolute or External Accuracy</li>
-                    <li>Relative or Internal Accuracy</li>
-                    <li>Gridded Data Position Accuracy</li>
-                </ul>
+                <h4 style="color: #38bdf8; margin: 0 0 0.5rem 0; font-size: 1rem; font-weight: 600;">Positional Accuracy</h4>
+                <div style="color: #cbd5e1; font-size: 0.85rem; display: flex; flex-wrap: wrap; gap: 1.5rem;">
+                    <span>• Absolute or External Accuracy</span>
+                    <span>• Relative or Internal Accuracy</span>
+                    <span>• Gridded Data Position Accuracy</span>
+                </div>
             </div>
+
             <div style="background: rgba(74, 222, 128, 0.1); border: 1px solid rgba(74, 222, 128, 0.3); border-radius: 8px; padding: 1rem;">
-                <h4 style="color: #4ade80; margin: 0 0 0.5rem 0;">Completeness</h4>
-                <ul style="color: #cbd5e1; font-size: 0.85rem; margin: 0; padding-left: 1.2rem;">
-                    <li>Commission (excess data)</li>
-                    <li>Omission (missing data)</li>
-                </ul>
-                <p style="color: #cbd5e1; font-size: 0.85rem; margin: 0.5rem 0 0 0; font-style: italic;">Note: Completeness is evaluated in a zonal-based fashion in the separate <a href="completeness/index.html" style="color: #4ade80;">OSWM completeness dashboard</a> rather than per-feature.</p>
+                <h4 style="color: #4ade80; margin: 0 0 0.5rem 0; font-size: 1rem; font-weight: 600;">Completeness</h4>
+                <div style="color: #cbd5e1; font-size: 0.85rem; display: flex; flex-wrap: wrap; gap: 1.5rem;">
+                    <span>• Commission (excess data)</span>
+                    <span>• Omission (missing data)</span>
+                </div>
+                <div style="color: #cbd5e1; font-size: 0.85rem; margin-top: 0.5rem; font-style: italic;">Note: Completeness is evaluated in a zonal-based fashion in the <a href="completeness/index.html" style="color: #4ade80;">OSWM Completeness Map</a>.</div>
             </div>
+
         </div>
-        <p style="color: #64748b; font-size: 0.8rem; margin: 0.8rem 0 0 0; font-style: italic;">Bold sub-elements are currently used in the per-feature quality checks.</p>
+        <p style="color: #64748b; font-size: 0.8rem; margin: 1rem 0 0 0; font-style: italic;">Bold sub-elements are currently used in the per-feature quality checks.</p>
     </div>
     """
 
