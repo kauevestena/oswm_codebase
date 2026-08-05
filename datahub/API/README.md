@@ -1,6 +1,6 @@
 # OSWM Serverless API
 
-OSWM exposes its processed data as a **static, serverless API** hosted on GitHub Pages. There is no backend — every "endpoint" is a fixed HTTPS URL that returns a static file. Any HTTP `GET` request works: browser `fetch()`, Python `requests`, GDAL, a PMTiles client, etc.
+OSWM exposes its processed data and **ISO-aligned JSON metadata** as a static, serverless API hosted on GitHub Pages. There is no backend — every "endpoint" is a fixed HTTPS URL that returns a static file. Any HTTP `GET` request works: browser `fetch()`, Python `requests`, GDAL, a PMTiles client, etc.
 
 **No authentication. No rate limits beyond GitHub Pages defaults. CORS is open.**
 
@@ -13,6 +13,38 @@ https://kauevestena.github.io/opensidewalkmap_beta/
 ```
 
 All paths below are relative to this base URL.
+
+---
+
+## Metadata Catalogue
+
+Every node publishes a metadata catalogue at:
+
+```text
+metadata/index.json
+```
+
+The `metadata/` tree mirrors `data/` without changing the data layout. Folder
+indexes map directly, while data files retain their complete filename and gain
+`.metadata.json`:
+
+```text
+data/processed/index.json
+→ metadata/processed/index.json
+
+data/processed/sidewalks.parquet
+→ metadata/processed/sidewalks.parquet.metadata.json
+```
+
+Each resource record includes identification, node extent, temporal status,
+lineage, quality scope, distribution links, media type, size, and SHA-256. The
+interactive API exposes a dedicated **Metadata** tab and a **View Metadata**
+link for every indexed data endpoint.
+
+The OSWM JSON profile uses ISO 15836-1 for every record. Geographic and mixed
+records additionally align with ISO 19115-1, ISO 19115-2, and ISO 19157-1;
+feature resources also use ISO 19110 concepts. It does not claim conformance to
+the ISO 19115-3 XML encoding.
 
 ---
 

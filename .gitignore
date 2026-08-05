@@ -189,4 +189,5 @@ tests/*
 !tests/webmap_theme_charts/*.py
 !tests/test_routing_*.py
 !tests/test_hazard_analysis.py
+!tests/test_metadata_generation.py
 tests.py

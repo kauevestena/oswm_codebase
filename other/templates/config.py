@@ -22,6 +22,11 @@ CITY_NAME = "Curitiba"
 # simple name, spaces must be replaced by underscores, no special characters, all in lowercase
 CITY_SHORTNAME = "curitiba"
 
+# Metadata records are published in English ("en") by default. The timezone is
+# automatically determined from MID_LAT/MID_LGT (or BOUNDING_BOX).
+# METADATA_TIMEZONE = "America/Sao_Paulo"  # Optional manual override
+
+
 # username, for adresses
 USERNAME = "kauevestena"
 

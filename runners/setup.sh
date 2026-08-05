@@ -4,4 +4,6 @@ python oswm_codebase/other/wipers/wipe_changed_stuff.py || echo "wipe_changed_st
 
 python oswm_codebase/special_updates.py || echo "special_updates.py failed"; \
 
+python oswm_codebase/metadata/metadata_generation.py || echo "metadata_generation.py failed"; \
+
 python oswm_codebase/datahub/API/generate_api.py || echo "generate_api.py failed"
