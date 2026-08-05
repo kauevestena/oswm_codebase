@@ -782,3 +782,58 @@ watcher_yesterday_path = os.path.join(updates_folderpath, "yesterday.json")
 # Number of keywords (from the top of the SEARCH_KEYWORDS list) used when
 # querying external project-management platforms for pedestrian-data projects.
 DEFAULT_ACQ_KEYWORDS_COUNT = 4
+
+# Metadata localization constants & auto-detection
+METADATA_LANGUAGE = "en"
+
+
+def _determine_metadata_timezone():
+    config_mod = sys.modules.get("config")
+
+    # 1. Allow explicit override from config if defined
+    explicit_tz = (
+        getattr(config_mod, "METADATA_TIMEZONE", None)
+        if config_mod
+        else globals().get("METADATA_TIMEZONE")
+    )
+    if explicit_tz:
+        return explicit_tz
+
+    # 2. Determine lat/lng from MID_LAT/MID_LGT or fallback to BOUNDING_BOX
+    lat = (
+        getattr(config_mod, "MID_LAT", None)
+        if config_mod
+        else globals().get("MID_LAT")
+    )
+    lng = (
+        getattr(config_mod, "MID_LGT", None)
+        if config_mod
+        else globals().get("MID_LGT")
+    )
+
+    if lat is None or lng is None:
+        bbox = (
+            getattr(config_mod, "BOUNDING_BOX", None)
+            if config_mod
+            else globals().get("BOUNDING_BOX")
+        )
+        if bbox and len(bbox) == 4:
+            lat = (bbox[0] + bbox[2]) / 2.0
+            lng = (bbox[1] + bbox[3]) / 2.0
+
+    # 3. Query TimezoneFinder
+    if lat is not None and lng is not None:
+        try:
+            from timezonefinder import TimezoneFinder
+
+            tf = TimezoneFinder()
+            found_tz = tf.timezone_at(lng=float(lng), lat=float(lat))
+            if found_tz:
+                return found_tz
+        except Exception:
+            pass
+
+    return "UTC"
+
+
+METADATA_TIMEZONE = _determine_metadata_timezone()

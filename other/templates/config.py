@@ -22,11 +22,10 @@ CITY_NAME = "Curitiba"
 # simple name, spaces must be replaced by underscores, no special characters, all in lowercase
 CITY_SHORTNAME = "curitiba"
 
-# Metadata records are published in English by default. Use a BCP 47 language
-# tag and an IANA timezone name appropriate for the node when localising a new
-# deployment.
-METADATA_LANGUAGE = "en"
-METADATA_TIMEZONE = "America/Sao_Paulo"
+# Metadata records are published in English ("en") by default. The timezone is
+# automatically determined from MID_LAT/MID_LGT (or BOUNDING_BOX).
+# METADATA_TIMEZONE = "America/Sao_Paulo"  # Optional manual override
+
 
 # username, for adresses
 USERNAME = "kauevestena"

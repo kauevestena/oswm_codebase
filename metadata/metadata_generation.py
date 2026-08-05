@@ -237,15 +237,38 @@ def _node_context(node_root: Path) -> dict[str, Any]:
     city = str(getattr(config, "CITY_NAME", node_root.name))
     username = str(getattr(config, "USERNAME", "unknown"))
     repository = str(getattr(config, "REPO_NAME", node_root.name))
-    language = str(getattr(config, "METADATA_LANGUAGE", "en"))
-    base_url = str(
-        getattr(
-            config,
-            "NODE_BASE_URL",
-            f"https://{username}.github.io/{repository}/",
-        )
-    ).rstrip("/") + "/"
-    timezone_name = str(getattr(config, "METADATA_TIMEZONE", "UTC"))
+
+    default_lang = "en"
+    default_tz = "UTC"
+    codebase_root = Path(__file__).resolve().parents[1]
+    if str(codebase_root) not in sys.path:
+        sys.path.insert(0, str(codebase_root))
+    try:
+        from constants import METADATA_LANGUAGE, METADATA_TIMEZONE
+
+        default_lang = METADATA_LANGUAGE
+        default_tz = METADATA_TIMEZONE
+    except ImportError:
+        try:
+            from oswm_codebase.constants import METADATA_LANGUAGE, METADATA_TIMEZONE
+
+            default_lang = METADATA_LANGUAGE
+            default_tz = METADATA_TIMEZONE
+        except ImportError:
+            pass
+
+    language = str(getattr(config, "METADATA_LANGUAGE", default_lang))
+    base_url = (
+        str(
+            getattr(
+                config,
+                "NODE_BASE_URL",
+                f"https://{username}.github.io/{repository}/",
+            )
+        ).rstrip("/")
+        + "/"
+    )
+    timezone_name = str(getattr(config, "METADATA_TIMEZONE", default_tz))
 
     return {
         "city": city,
@@ -256,6 +279,7 @@ def _node_context(node_root: Path) -> dict[str, Any]:
         "timezone": timezone_name,
         "repository_url": f"https://github.com/{username}/{repository}",
     }
+
 
 
 def _profile(domain: str, include_feature_catalogue: bool) -> dict[str, Any]:

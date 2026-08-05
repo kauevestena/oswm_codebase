@@ -26,8 +26,8 @@ class MetadataGenerationTests(unittest.TestCase):
                     'CITY_SHORTNAME = "milan"',
                     'USERNAME = "oswm-test"',
                     'REPO_NAME = "milan-node"',
-                    'METADATA_LANGUAGE = "en"',
-                    'METADATA_TIMEZONE = "Europe/Rome"',
+                    "MID_LAT = 45.464",
+                    "MID_LGT = 9.190",
                 ]
             )
             + "\n",

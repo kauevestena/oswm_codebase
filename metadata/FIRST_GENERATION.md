@@ -19,15 +19,16 @@ For reproducible deployment, the node should ultimately commit the tested
 
 ## 2. Configure metadata localisation
 
-The generator defaults to English and UTC when these optional values are not
-present in the node's `config.py`. Defining them explicitly is recommended,
-especially because timestamps in `data/updates/registry.json` have no timezone
-offset:
+The metadata generator automatically publishes records in English (`METADATA_LANGUAGE = "en"`)
+and determines the node's timezone (`METADATA_TIMEZONE`) from `MID_LAT` and `MID_LGT`
+(or `BOUNDING_BOX` center coordinates) using `timezonefinder`.
+
+If needed, an explicit timezone override can be defined in the node's `config.py`:
 
 ```python
-METADATA_LANGUAGE = "en"  # BCP 47 language tag
-METADATA_TIMEZONE = "Europe/Rome"  # IANA timezone name; adapt for the node
+METADATA_TIMEZONE = "America/Sao_Paulo"  # Optional override
 ```
+
 
 Existing node identity settings (`CITY_NAME`, `USERNAME`, and `REPO_NAME`) are
 used to construct titles, responsible-party entries, repository links, and
