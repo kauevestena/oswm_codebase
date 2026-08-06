@@ -201,6 +201,9 @@ def test_workflow_contracts_are_parseable_scoped_and_serialized():
             ROOT / "workflows" / name
         ).read_text()
     assert "actions/deploy-pages@v4" in (ROOT / "workflows/pages.yml").read_text()
+    assert "other/auxiliary_scripts/validate_tiles.py" in (
+        ROOT / "workflows/data_daily_updating.yml"
+    ).read_text()
     manifest = json.loads((ROOT / "workflows/manifest.json").read_text())
     assert "workflows/deploy_pages.yml" in manifest["retired"]
 
