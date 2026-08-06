@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "managed": [
+    "workflows/customizable.yml",
+    "workflows/data_daily_updating.yml",
+    "workflows/pages.yml",
+    "workflows/setup.yml",
+    "workflows/special_updates.yml",
+    "workflows/update_codebase.yml",
+    "workflows/weekly.yml"
+  ],
+  "retired": [
+    "workflows/fix_submodules.yml",
+    "workflows/manual_stash.yml"
+  ]
+}

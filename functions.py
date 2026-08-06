@@ -8,6 +8,8 @@ from xml.etree import ElementTree
 import geopandas as gpd
 from constants import *
 from shapely import box
+from boundary_acquisition import resolve_boundary
+from time_utils import isoformat_utc
 
 """
 
@@ -83,15 +85,21 @@ class fileAsStrHandler:
 
 
 def formatted_datetime_now():
-    now = datetime.now()
-    return now.strftime("%d/%m/%Y %H:%M:%S")
+    """Return a timezone-aware UTC ISO-8601 timestamp."""
+
+    return isoformat_utc()
 
 
-def record_datetime(key, json_path=updating_infos_path):
+def record_datetime(key, json_path=updating_infos_path, value=None):
 
-    datadict = read_json(json_path)
+    try:
+        datadict = read_json(json_path)
+        if not isinstance(datadict, dict):
+            datadict = {}
+    except (OSError, ValueError, TypeError):
+        datadict = {}
 
-    datadict[key] = formatted_datetime_now()
+    datadict[key] = isoformat_utc(value) if value is not None else formatted_datetime_now()
 
     dump_json(datadict, json_path)
 
@@ -539,57 +547,25 @@ def get_territory_polygon(place_name, outpath=None, outpath_metadata=None):
     Returns:
         dict: The territory polygon as a GeoJSON object.
     """
-    # Make a request to Nominatim API with the place name
-    url = "https://nominatim.openstreetmap.org/search"
-    params = {"q": place_name, "format": "json", "polygon_geojson": 1}
-    headers = {"User-Agent": "city_dems/1.0 (https://github.com/kauevestena/city_dems)"}
-    response = requests.get(url, params=params, headers=headers)
-
-    # Check for HTTP errors
-    response.raise_for_status()
-
-    # Parse the response as a JSON object
-    data = response.json()
-
-    # Check if data is empty
-    if not data:
-        raise ValueError(f"No results found for place: {place_name}")
-
-    # sort data by "importance", that is a key in each dictionary of the list:
-    data.sort(key=lambda x: x["importance"], reverse=True)
-
-    # Prefer administrative boundaries (Polygon/MultiPolygon) over point results
-    # Filter for boundary/administrative entries first
-    boundary_results = [
-        r
-        for r in data
-        if r.get("class") == "boundary" and r.get("type") == "administrative"
-    ]
-
-    # If no boundary results, try to find any result with a Polygon geometry
-    if not boundary_results:
-        boundary_results = [
-            r
-            for r in data
-            if r.get("geojson", {}).get("type") in ("Polygon", "MultiPolygon")
-        ]
-
-    # Use boundary result if available, otherwise fall back to top importance result
-    selected_result = boundary_results[0] if boundary_results else data[0]
-
-    # Get the polygon of the territory as a GeoJSON object
-    polygon = selected_result["geojson"]
+    polygon, metadata = resolve_boundary(
+        place_name,
+        relation_id=globals().get("OSM_RELATION_ID"),
+        base_url=globals().get(
+            "NOMINATIM_URL", "https://nominatim.openstreetmap.org"
+        ),
+        user_agent=globals().get(
+            "NOMINATIM_USER_AGENT",
+            "OpenSidewalkMap/1.0 (https://github.com/kauevestena/oswm_codebase)",
+        ),
+        timeout_seconds=globals().get("NOMINATIM_TIMEOUT_SECONDS", 30),
+        attempts=globals().get("NOMINATIM_ATTEMPTS", 3),
+        backoff_seconds=globals().get("NOMINATIM_BACKOFF_SECONDS", 2),
+    )
 
     if outpath:
         dump_json(polygon, outpath)
 
     if outpath_metadata:
-
-        if "geojson" in selected_result:
-            del selected_result["geojson"]
-
-        metadata = selected_result
-
         dump_json(metadata, outpath_metadata)
 
     # Return the polygon
@@ -604,7 +580,7 @@ def bbox_geodataframe(bbox, resort=True):
     if resort:
         bbox = resort_bbox(bbox)
 
-    return gpd.GeoDataFrame(geometry=[box(*bbox)])
+    return gpd.GeoDataFrame(geometry=[box(*bbox)], crs="EPSG:4326")
 
 
 def resort_bbox(bbox):

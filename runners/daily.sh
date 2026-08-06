@@ -1,115 +1,76 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -uo pipefail
 
-# Track which steps failed
-FAILED_STEPS=""
 PYTHON_BIN="${PYTHON:-python}"
-
-if ! command -v "$PYTHON_BIN" >/dev/null 2>&1 && command -v python3 >/dev/null 2>&1; then
-    PYTHON_BIN="python3"
+if ! command -v "$PYTHON_BIN" >/dev/null 2>&1; then
+    PYTHON_BIN=python3
 fi
+
+FAILED_STEPS=()
 
 run_step() {
     local script="$1"
     local label="$2"
-    echo "========================================="
-    echo "Running: $label"
-    echo "========================================="
-    if "$PYTHON_BIN" "$script"; then
-        echo "✓ $label succeeded"
-    else
-        echo "✗ $label FAILED (exit code: $?)"
-        FAILED_STEPS="${FAILED_STEPS}\n- ${label}"
+    echo "==> $label"
+    if ! "$PYTHON_BIN" "$script"; then
+        FAILED_STEPS+=("$label")
     fi
-    echo ""
 }
 
-# Run watcher first to generate/update everything
-echo "========================================="
-echo "Running: watcher watchdog"
-echo "========================================="
-if "$PYTHON_BIN" oswm_codebase/datahub/watcher/watcher_lib.py; then
-    echo "Watcher executed successfully."
+WATCHER_STATUS=0
+"$PYTHON_BIN" oswm_codebase/datahub/watcher/watcher_lib.py || WATCHER_STATUS=$?
+
+DECISION_ARGS=(
+    --root . decide
+    --watcher-status "$WATCHER_STATUS"
+    --output data/updates/pipeline_decision.json
+)
+case "${OSWM_FORCE_REGEN:-}" in
+    1|true|TRUE|yes|YES|on|ON) DECISION_ARGS+=(--force) ;;
+esac
+"$PYTHON_BIN" oswm_codebase/pipeline_decision.py "${DECISION_ARGS[@]}" || exit 1
+
+MODE=$("$PYTHON_BIN" -c 'import json; print(json.load(open("data/updates/pipeline_decision.json"))["mode"])')
+echo "Pipeline mode: $MODE"
+
+if [ "$MODE" = "skip" ]; then
+    run_step oswm_codebase/datahub/acquisition/generate_acquisition.py "generate_acquisition"
+    run_step oswm_codebase/metadata/metadata_generation.py "metadata_generation"
+    run_step oswm_codebase/datahub/API/generate_api.py "generate_api"
+    run_step oswm_codebase/datahub/datahub_index_generator.py "datahub_index"
 else
-    echo "Watcher executed (updates needed or check inconclusive)."
-fi
-echo ""
-
-# Acquisition discovers new external projects independently of OSM changesets,
-# so it must run before the no-changes early exit.
-run_step oswm_codebase/datahub/acquisition/generate_acquisition.py "generate_acquisition"
-
-# Check if there are no changesets yesterday
-if [ -f data/updates/yesterday.json ]; then
-    NUM_CHANGESETS=$("$PYTHON_BIN" -c "import json; print(len(json.load(open('data/updates/yesterday.json'))))" 2>/dev/null)
-    if [ -n "$NUM_CHANGESETS" ] && [ "$NUM_CHANGESETS" -eq 0 ]; then
-        HAZARD_OUTPUTS_READY=1
-        for PROFILE in pedestrian wheelchair blind elderly; do
-            if [ ! -s "data/hazard_analysis/features_${PROFILE}.geojson" ] || \
-               [ ! -s "data/hazard_analysis/features_${PROFILE}.parquet" ] || \
-               [ ! -s "data/hazard_analysis/terrain_${PROFILE}.png" ]; then
-                HAZARD_OUTPUTS_READY=0
-            fi
-        done
-        if [ ! -s data/hazard_analysis/profiles.json ] || \
-           [ ! -s data/hazard_analysis/metadata.json ] || \
-           [ ! -s data/hazard_analysis/terrain.json ] || \
-           [ ! -s data/hazard_analysis/hazard.pmtiles ]; then
-            HAZARD_OUTPUTS_READY=0
-        fi
-        if [ "$HAZARD_OUTPUTS_READY" -eq 0 ]; then
-            echo "Hazard deployment artifacts are missing; continuing generation."
-        else
-        echo "========================================="
-        echo "No OSM changesets affecting OSWM features yesterday."
-        echo "Skipping the remaining OSM-dependent daily updates."
-        echo "========================================="
-        # Discovery outputs are lightweight and must still be refreshed after a
-        # codebase update, even when the underlying OSM data did not change.
-        run_step oswm_codebase/metadata/metadata_generation.py "metadata_generation"
-        run_step oswm_codebase/datahub/API/generate_api.py      "generate_api"
-        run_step oswm_codebase/datahub/datahub_index_generator.py "datahub_index"
-        if [ -n "$FAILED_STEPS" ]; then
-            mkdir -p data/updates
-            printf "%b\n" "$FAILED_STEPS" > data/updates/pipeline_failures.txt
-            exit 1
-        fi
-        rm -f data/updates/pipeline_failures.txt
-        exit 0
-        fi
+    if [ "$MODE" = "generate" ]; then
+        run_step oswm_codebase/getting_data.py "getting_data"
     fi
+
+    if [ "${#FAILED_STEPS[@]}" -eq 0 ]; then
+        "$PYTHON_BIN" oswm_codebase/node_outputs.py --root . reset-derived || exit 1
+    fi
+
+    run_step oswm_codebase/filtering_adapting_data.py "filtering_adapting_data"
+    run_step oswm_codebase/generation/vec_tiles_gen.py "vec_tiles_gen"
+    run_step oswm_codebase/generation/vrt.py "vrt"
+    run_step oswm_codebase/webmap/snapshot/generate_snapshot_summary.py "generate_snapshot_summary"
+    run_step oswm_codebase/webmap/create_webmap_new.py "create_webmap_new"
+    run_step oswm_codebase/data_quality/tag_values_checking.py "tag_values_checking"
+    run_step oswm_codebase/data_quality/quality_check_compiling.py "quality_check_compiling"
+    run_step oswm_codebase/data_quality/external_qc.py "external_qc"
+    run_step oswm_codebase/dashboard/statistics_generation.py "statistics_generation"
+    run_step oswm_codebase/generation/routing_demo_gen.py "routing_demo_gen"
+    run_step oswm_codebase/generation/hazard_tiles_gen.py "hazard_tiles_gen"
+    run_step oswm_codebase/datahub/acquisition/generate_acquisition.py "generate_acquisition"
+    run_step oswm_codebase/metadata/metadata_generation.py "metadata_generation"
+    run_step oswm_codebase/datahub/API/generate_api.py "generate_api"
+    run_step oswm_codebase/datahub/datahub_index_generator.py "datahub_index"
 fi
 
-# Each step runs independently regardless of the others
-run_step oswm_codebase/getting_data.py             "getting_data"
-run_step oswm_codebase/filtering_adapting_data.py  "filtering_adapting_data"
-run_step oswm_codebase/generation/vec_tiles_gen.py "vec_tiles_gen"
-run_step oswm_codebase/webmap/snapshot/generate_snapshot_summary.py "generate_snapshot_summary"
-run_step oswm_codebase/webmap/create_webmap_new.py "create_webmap_new"
-run_step oswm_codebase/data_quality/tag_values_checking.py     "tag_values_checking"
-run_step oswm_codebase/data_quality/quality_check_compiling.py "quality_check_compiling"
-run_step oswm_codebase/data_quality/external_qc.py             "external_qc"
-run_step oswm_codebase/dashboard/statistics_generation.py      "statistics_generation"
-run_step oswm_codebase/generation/routing_demo_gen.py          "routing_demo_gen"
-run_step oswm_codebase/generation/hazard_tiles_gen.py          "hazard_tiles_gen"
-run_step oswm_codebase/metadata/metadata_generation.py         "metadata_generation"
-run_step oswm_codebase/datahub/API/generate_api.py             "generate_api"
-run_step oswm_codebase/datahub/datahub_index_generator.py      "datahub_index"
-
-
-# Print summary and propagate failure
-echo "========================================="
-echo "PIPELINE SUMMARY"
-echo "========================================="
-
-if [ -n "$FAILED_STEPS" ]; then
-    echo "The following steps FAILED:"
-    printf "%b\n" "$FAILED_STEPS"
-    # Write failure list for the workflow notification step to read
+if [ "${#FAILED_STEPS[@]}" -ne 0 ]; then
     mkdir -p data/updates
-    printf "%b\n" "$FAILED_STEPS" > data/updates/pipeline_failures.txt
+    printf '%s\n' "${FAILED_STEPS[@]}" > data/updates/pipeline_failures.txt
+    printf 'Pipeline failed in: %s\n' "${FAILED_STEPS[*]}" >&2
     exit 1
-else
-    echo "✓ All steps completed successfully."
-    rm -f data/updates/pipeline_failures.txt
-    exit 0
 fi
+
+"$PYTHON_BIN" oswm_codebase/node_outputs.py --root . require
+"$PYTHON_BIN" oswm_codebase/pipeline_decision.py --root . record-success
+rm -f data/updates/pipeline_failures.txt

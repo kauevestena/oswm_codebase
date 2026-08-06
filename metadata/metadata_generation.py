@@ -25,6 +25,12 @@ from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 from typing import Any, Iterable
 
+CODEBASE_ROOT = Path(__file__).resolve().parents[1]
+if str(CODEBASE_ROOT) not in sys.path:
+    sys.path.insert(0, str(CODEBASE_ROOT))
+
+from time_utils import parse_timestamp
+
 try:
     from zoneinfo import ZoneInfo
 except ImportError:  # pragma: no cover - Python 3.9+ is used by OSWM
@@ -334,26 +340,11 @@ def _parse_registry_timestamp(node_root: Path, timezone_name: str) -> tuple[str 
     if not isinstance(registry, dict):
         return None, {}
 
-    tz = timezone.utc
-    if ZoneInfo is not None:
-        try:
-            tz = ZoneInfo(timezone_name)
-        except (KeyError, ValueError):
-            tz = timezone.utc
-
     parsed: list[datetime] = []
     for value in registry.values():
-        if not isinstance(value, str):
-            continue
-        for pattern in ("%d/%m/%Y %H:%M:%S", "%Y-%m-%dT%H:%M:%S%z"):
-            try:
-                candidate = datetime.strptime(value, pattern)
-                if candidate.tzinfo is None:
-                    candidate = candidate.replace(tzinfo=tz)
-                parsed.append(candidate)
-                break
-            except ValueError:
-                continue
+        candidate = parse_timestamp(value, timezone_name)
+        if candidate is not None:
+            parsed.append(candidate)
 
     updated = max(parsed).isoformat() if parsed else None
     return updated, registry

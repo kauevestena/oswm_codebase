@@ -476,7 +476,7 @@
                     .then(({ installThemeChartControl }) => {
                         themeChartControl = installThemeChartControl(map, params, {
                             position: 'bottom-left',
-                            loadECharts: () => import('https://cdn.jsdelivr.net/npm/echarts@6.1.0/dist/echarts.esm.mjs'),
+                            loadECharts: () => import('https://cdn.jsdelivr.net/npm/echarts@6.1.0/+esm'),
                             getActiveStyleKey: () => styleSelector.value || 'footway_categories'
                         });
                     })
@@ -486,6 +486,7 @@
                     .then(({ installSnapshotControl }) => {
                         installSnapshotControl(map, params, {
                             position: 'top-right',
+                            maplibregl,
                             getActiveStyleKey: () => styleSelector.value || 'footway_categories'
                         });
                     })

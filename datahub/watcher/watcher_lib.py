@@ -9,11 +9,12 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from dh_lib import *  # noqa: F403 – sets up sys.path and folder structure
 from functions import read_json  # noqa: F811
-from constants import updating_infos_path, boundaries_geojson_path, watcher_page_path, watcher_rss_path, watcher_changesets_rss_path, watcher_history_path, watcher_yesterday_path, REPO_NAME, USERNAME, node_homepage_url  # noqa: F811
+from constants import updating_infos_path, boundaries_geojson_path, watcher_page_path, watcher_rss_path, watcher_changesets_rss_path, watcher_history_path, watcher_yesterday_path, REPO_NAME, USERNAME, node_homepage_url, METADATA_TIMEZONE as NODE_TIMEZONE  # noqa: F811
 from config import CITY_NAME  # noqa: F811
 import requests  # noqa: F811
 import geopandas as gpd  # noqa: F811
 from functions import dump_json, formatted_datetime_now # noqa: F811
+from time_utils import isoformat_utc, parse_timestamp
 
 # ---------------------------------------------------------------------------
 # OHSOME API Config
@@ -85,9 +86,7 @@ def _load_last_processed_time(key: str = "Data Fetching") -> datetime | None:
         info = read_json(updating_infos_path)
         raw = info.get(key)
         if raw:
-            return datetime.strptime(raw, "%d/%m/%Y %H:%M:%S").replace(
-                tzinfo=timezone.utc
-            )
+            return parse_timestamp(raw, NODE_TIMEZONE)
     except Exception:
         pass
     return None
@@ -1225,6 +1224,19 @@ if __name__ == "__main__":
         generate_watcher_page(history, results, activity)
         print("Done! Dashboard generated at:", watcher_page_path)
     
+    decision_path = os.path.join(
+        os.path.dirname(updating_infos_path), "watcher_decision.json"
+    )
+    dump_json(
+        {
+            "schema_version": 1,
+            "checked_at": isoformat_utc(),
+            "needs_update": any_update,
+            "layers": results,
+        },
+        decision_path,
+    )
+
     if any_update:
         sys.exit(1)
     else:

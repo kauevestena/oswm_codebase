@@ -29,7 +29,7 @@ params["snapshot"] = {
     "schema_version": 1,
     "node_name": CITY_NAME,
     "summary_url": webmap_theme_summary_path,
-    "default_scope": "snapshot",
+    "default_scope": "node",
     "themes": webmap_themes,
 }
 
@@ -37,7 +37,7 @@ params["theme_charts"] = {
     "schema_version": 1,
     "node_name": CITY_NAME,
     "summary_url": webmap_theme_summary_path,
-    "default_scope": "snapshot",
+    "default_scope": "node",
     "themes": webmap_themes,
 }
 
