@@ -10,6 +10,7 @@
     "workflows/weekly.yml"
   ],
   "retired": [
+    "workflows/deploy_pages.yml",
     "workflows/fix_submodules.yml",
     "workflows/manual_stash.yml"
   ]
