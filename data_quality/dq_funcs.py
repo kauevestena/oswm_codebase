@@ -488,6 +488,19 @@ def create_marker_cluster_html(
     }
 
     geojson_json_str = json.dumps(geojson_dict, ensure_ascii=False)
+
+    # Inline the city boundary polygon so no runtime fetch is needed
+    try:
+        _raw_polygon = read_json(boundaries_geojson_path)
+        _boundary_feature = {
+            "type": "Feature",
+            "geometry": _raw_polygon,
+            "properties": {}
+        }
+        boundary_geojson_str = json.dumps(_boundary_feature, ensure_ascii=False)
+    except Exception:
+        boundary_geojson_str = '{"type":"Feature","geometry":null,"properties":{}}'
+
     center_lon = centerpoint[1]
     center_lat = centerpoint[0]
 
@@ -579,6 +592,22 @@ def create_marker_cluster_html(
         map.addControl(new maplibregl.ScaleControl({{ unit: 'metric' }}), 'bottom-right');
 
         map.on('load', () => {{
+            // City boundary outline
+            map.addSource('city-boundary', {{
+                type: 'geojson',
+                data: {boundary_geojson_str}
+            }});
+            map.addLayer({{
+                id: 'city-boundary-line',
+                type: 'line',
+                source: 'city-boundary',
+                paint: {{
+                    'line-color': '#9ca3af',
+                    'line-width': 1.5,
+                    'line-opacity': 0.8
+                }}
+            }});
+
             map.addSource('dq-markers', {{
                 type: 'geojson',
                 data: geojsonData,
