@@ -48,9 +48,18 @@ if has_errors:
     print("\n⚠ Cannot generate hazard tiles: missing input files.")
     sys.exit(1)
 
-# Remove any existing output so we can build fresh
-if os.path.exists(outpath):
-    os.remove(outpath)
+# Load existing global_params.json if present
+global_params = {}
+if os.path.exists(global_params_path):
+    try:
+        global_params = read_json(global_params_path)
+    except Exception:
+        global_params = {}
+
+if "tile_max_zoom" not in global_params:
+    global_params["tile_max_zoom"] = {}
+
+current_max_zoom = global_params["tile_max_zoom"].get("hazard", TILES_MAX_ZOOM)
 
 # Generate a VRT file to bundle all profiles into one ogr2ogr pass
 vrt_path = os.path.join(hazard_analysis_folderpath, "hazard_layers.vrt")
@@ -65,46 +74,61 @@ with open(vrt_path, "w") as f:
         f.write(f'    </OGRVRTLayer>\n')
     f.write("</OGRVRTDataSource>\n")
 
-if use_docker:
-    runstring = (
-        f"docker run --rm -v ./data:/data {docker_img} "
-        f"ogr2ogr -of PMTiles {outpath} {vrt_path} "
-        f"-dsco MINZOOM={TILES_MIN_ZOOM} -dsco MAXZOOM={TILES_MAX_ZOOM} -progress"
-    )
-else:
-    runstring = (
-        f"ogr2ogr -of PMTiles {outpath} {vrt_path} "
-        f"-dsco MINZOOM={TILES_MIN_ZOOM} -dsco MAXZOOM={TILES_MAX_ZOOM} -progress"
-    )
+while True:
+    # Remove any existing output so we can build fresh
+    if os.path.exists(outpath):
+        os.remove(outpath)
 
-print("Creating unified PMTiles layer from all profiles...")
-result = subprocess.run(runstring, shell=True, capture_output=True, text=True)
-
-if result.returncode != 0:
-    msg = f"ogr2ogr failed (exit {result.returncode}): {result.stderr.strip()}"
-    print(f"  ERROR: {msg}")
-    report["_generation"] = {"status": "error", "reason": msg}
-    has_errors = True
-else:
-    print("  OK: PMTiles generated successfully")
-    report["_generation"] = {"status": "ok"}
-
-# Final validation
-if os.path.exists(outpath):
-    filesize = os.path.getsize(outpath)
-    if filesize < 1024:
-        msg = f"output file is only {filesize} bytes — tiles may be empty or corrupt"
-        print(f"  WARNING: {msg}")
-        report["_output"] = {"status": "warning", "reason": msg, "filesize": filesize}
-        has_errors = True
+    if use_docker:
+        runstring = (
+            f"docker run --rm -v ./data:/data {docker_img} "
+            f"ogr2ogr -of PMTiles {outpath} {vrt_path} "
+            f"-dsco MINZOOM={TILES_MIN_ZOOM} -dsco MAXZOOM={current_max_zoom} -progress"
+        )
     else:
-        print(f"\n✓ Hazard PMTiles generated: '{outpath}' ({filesize:,} bytes)")
-        report["_output"] = {"status": "ok", "filesize": filesize}
-else:
-    msg = f"output file '{outpath}' was not created"
-    print(f"  ERROR: {msg}")
-    report["_output"] = {"status": "error", "reason": msg}
-    has_errors = True
+        runstring = (
+            f"ogr2ogr -of PMTiles {outpath} {vrt_path} "
+            f"-dsco MINZOOM={TILES_MIN_ZOOM} -dsco MAXZOOM={current_max_zoom} -progress"
+        )
+
+    print(f"Creating unified PMTiles layer from all profiles (MAXZOOM={current_max_zoom})...")
+    result = subprocess.run(runstring, shell=True, capture_output=True, text=True)
+
+    if result.returncode != 0:
+        msg = f"ogr2ogr failed (exit {result.returncode}): {result.stderr.strip()}"
+        print(f"  ERROR: {msg}")
+        report["_generation"] = {"status": "error", "reason": msg}
+        has_errors = True
+        break
+    elif os.path.exists(outpath):
+        filesize = os.path.getsize(outpath)
+        if filesize > MAX_TILE_FILESIZE_BYTES and current_max_zoom > TILES_MIN_ZOOM:
+            print(
+                f"  WARNING: '{outpath}' generated size is {filesize:,} bytes (> 100 MB limit). "
+                f"Stepping down MAXZOOM from {current_max_zoom} to {current_max_zoom - 1}..."
+            )
+            os.remove(outpath)
+            current_max_zoom -= 1
+            continue
+        elif filesize < 1024:
+            msg = f"output file is only {filesize} bytes — tiles may be empty or corrupt"
+            print(f"  WARNING: {msg}")
+            report["_output"] = {"status": "warning", "reason": msg, "filesize": filesize}
+            has_errors = True
+            break
+        else:
+            print(f"\n✓ Hazard PMTiles generated: '{outpath}' ({filesize:,} bytes, MAXZOOM={current_max_zoom})")
+            report["_generation"] = {"status": "ok"}
+            report["_output"] = {"status": "ok", "filesize": filesize, "max_zoom": current_max_zoom}
+            global_params["tile_max_zoom"]["hazard"] = current_max_zoom
+            dump_json(global_params, global_params_path)
+            break
+    else:
+        msg = f"output file '{outpath}' was not created"
+        print(f"  ERROR: {msg}")
+        report["_output"] = {"status": "error", "reason": msg}
+        has_errors = True
+        break
 
 # Write report
 report_path = os.path.join(hazard_analysis_folderpath, "tile_generation_report.json")

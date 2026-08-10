@@ -70,7 +70,11 @@ def main():
                                     add_to_map_data(row, quality_category, category)
 
                     if isinstance(curr["dict"], str):
-                        curr_ref_dict = read_json(curr["dict"])[category]
+                        curr_ref_dict = (
+                            read_json(curr["dict"]).get(category, {})
+                            if os.path.exists(curr["dict"])
+                            else {}
+                        )
 
                         for osmkey in curr_ref_dict:
 
@@ -117,7 +121,11 @@ def main():
                                         add_to_map_data(row, quality_category, category)
 
                     if isinstance(curr["dict"], str):
-                        curr_ref_dict = read_json(curr["dict"])[category]
+                        curr_ref_dict = (
+                            read_json(curr["dict"]).get(category, {})
+                            if os.path.exists(curr["dict"])
+                            else {}
+                        )
 
                         for osmkey in curr_ref_dict:
                             for osmvalue in curr_ref_dict[osmkey]:
@@ -491,6 +499,7 @@ def main():
     dump_json(quality_categories_shortened, qc_categories_index_path)
 
     str_to_file(qcmainpage_txt, qc_mainpage_path)
+    str_to_file(qcmainpage_txt, os.path.join(dq_rootfolder, "index.html"))
 
     # AGING RECORDING PART:
 

@@ -253,7 +253,7 @@
                 map.addControl(new maplibregl.FullscreenControl());
                 map.addControl(new maplibregl.ScaleControl());
 
-                map.fitBounds(params['bounds']);
+                map.fitBounds(params['bounds'], { animate: false });
                 // map.addControl(new LogoControl({compact: false}));
 
                 // add hash

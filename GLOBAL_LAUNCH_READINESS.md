@@ -51,6 +51,7 @@ python oswm_codebase/node_outputs.py --root . reset-node --apply
 python oswm_codebase/node_outputs.py --root . reset-derived
 
 # Enforce the deployment-product contract and GitHub size guard.
+python oswm_codebase/node_outputs.py --root . manifest
 python oswm_codebase/node_outputs.py --root . require
 python oswm_codebase/node_outputs.py --root . validate-sizes --max-mib 95
 ```
@@ -93,6 +94,11 @@ passes.
 Registry writes use timezone-aware UTC ISO-8601 strings. Existing
 `DD/MM/YYYY HH:MM:SS` values are interpreted in `METADATA_TIMEZONE` (UTC when
 unspecified) and remain readable during migration.
+
+The manifest includes every public entry page, including acquisition, API,
+quality, statistics, and watcher pages. Full rebuilds re-render the watcher
+dashboard and feeds after derived-output cleanup, and the final `require` gate
+fails the run when any declared page or feed is missing or empty.
 
 ### Safe fleet automation
 

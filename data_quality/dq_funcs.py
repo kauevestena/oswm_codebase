@@ -618,6 +618,7 @@ def gen_quality_report_page_and_files(
     op_nodes, op_ways, op_rels = [], [], []
 
     # the main iteration
+    os.makedirs(os.path.dirname(csvpath), exist_ok=True)
     with open(csvpath, "w+", encoding="utf-8") as file:
         writer = csv.writer(file, delimiter=",", quotechar='"')
         writer.writerow(["osm_id", "feat_type", "key", "value", "commentary"])

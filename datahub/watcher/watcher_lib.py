@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import os
 import sys
 from datetime import datetime, timezone, timedelta
@@ -1175,9 +1176,61 @@ def generate_watcher_page(history: dict, results: dict, activity: dict):
 # CLI
 # ---------------------------------------------------------------------------
 
-if __name__ == "__main__":
-    results = needs_update()
+def render_watcher_outputs(results: dict) -> bool:
+    """Render the dashboard and feeds from an already-computed decision."""
+    bboxes = _boundary_bboxes()
+    if not bboxes:
+        print(
+            "[watcher] Cannot render dashboard: generated boundary is unavailable.",
+            file=sys.stderr,
+        )
+        return False
 
+    print("\n--- Updating History and Generating Dashboard ---")
+    history = update_watcher_history(list(results.keys()), bboxes)
+    now_dt = datetime.now(tz=timezone.utc)
+    max_ts = _ohsome_max_timestamp()
+    end_dt = min(now_dt, max_ts) if max_ts else now_dt
+    end_dt = end_dt.replace(hour=0, minute=0, second=0, microsecond=0)
+    activity = get_changeset_activity(bboxes, end_dt)
+
+    try:
+        dump_json(activity.get("yesterday", []), watcher_yesterday_path)
+        print(f"[watcher] Yesterday's changesets serialized to: {watcher_yesterday_path}")
+    except Exception as e:
+        print(f"[watcher] Failed to serialize yesterday's changesets: {e}")
+
+    generate_rss_feed(history)
+    generate_changeset_rss_feed(activity)
+    generate_watcher_page(history, results, activity)
+    print("Done! Dashboard generated at:", watcher_page_path)
+    return True
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        description="Check for OSM updates and render watcher outputs."
+    )
+    parser.add_argument(
+        "--render-only",
+        action="store_true",
+        help="render from the saved watcher decision without repeating the update check",
+    )
+    args = parser.parse_args(argv)
+    decision_path = os.path.join(os.path.dirname(updating_infos_path), "watcher_decision.json")
+
+    if args.render_only:
+        decision = read_json(decision_path) if os.path.exists(decision_path) else {}
+        results = decision.get("layers") if isinstance(decision, dict) else None
+        if not isinstance(results, dict) or not results:
+            print(
+                f"[watcher] Cannot render: missing layer decision in {decision_path}.",
+                file=sys.stderr,
+            )
+            return 2
+        return 0 if render_watcher_outputs(results) else 2
+
+    results = needs_update()
     print("\n--- Watcher results ---")
     any_update = False
     for layer, status in results.items():
@@ -1188,8 +1241,7 @@ if __name__ == "__main__":
             label = "up to date"
         else:
             label = "UNKNOWN (check failed)"
-            any_update = True  # conservative
-
+            any_update = True
         print(f"  {layer:<20} {label}")
 
     print()
@@ -1197,36 +1249,12 @@ if __name__ == "__main__":
         print("Conclusion: at least one layer has changes — run the full pipeline.")
     else:
         print("Conclusion: no changes detected — skipping data download.")
-        
-    bboxes = _boundary_bboxes()
-    if bboxes:
-        print("\n--- Updating History and Generating Dashboard ---")
-        history = update_watcher_history(list(results.keys()), bboxes)
-        
-        # Calculate end_dt for changeset queries
-        now_dt = datetime.now(tz=timezone.utc)
-        max_ts = _ohsome_max_timestamp()
-        end_dt = min(now_dt, max_ts) if max_ts else now_dt
-        end_dt = end_dt.replace(hour=0, minute=0, second=0, microsecond=0)
-        
-        # Fetch changeset activity
-        activity = get_changeset_activity(bboxes, end_dt)
-        
-        # Serialize yesterday's changesets
-        try:
-            dump_json(activity.get("yesterday", []), watcher_yesterday_path)
-            print(f"[watcher] Yesterday's changesets serialized to: {watcher_yesterday_path}")
-        except Exception as e:
-            print(f"[watcher] Failed to serialize yesterday's changesets: {e}")
-        
-        generate_rss_feed(history)
-        generate_changeset_rss_feed(activity)
-        generate_watcher_page(history, results, activity)
-        print("Done! Dashboard generated at:", watcher_page_path)
-    
-    decision_path = os.path.join(
-        os.path.dirname(updating_infos_path), "watcher_decision.json"
-    )
+
+    # A cold start has no boundary yet. The daily runner renders again after
+    # generation; existing nodes still refresh the dashboard during checking.
+    if _boundary_bboxes():
+        render_watcher_outputs(results)
+
     dump_json(
         {
             "schema_version": 1,
@@ -1236,8 +1264,8 @@ if __name__ == "__main__":
         },
         decision_path,
     )
+    return 1 if any_update else 0
 
-    if any_update:
-        sys.exit(1)
-    else:
-        sys.exit(0)
+
+if __name__ == "__main__":
+    sys.exit(main())

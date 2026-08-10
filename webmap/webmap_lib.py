@@ -159,13 +159,15 @@ layertypes_basedict = {
 color_attribute = {"fill": "fill-color", "line": "line-color", "circle": "circle-color"}
 
 
-def get_sources(terrain_url=None, only_urls=False):
+def get_sources(terrain_url=None, only_urls=False, use_relative=True):
     ret = {}
     ret["sources"] = {}
 
+    base_url = "" if use_relative else node_homepage_url
+
     for layername in paths_dict["map_layers"]:
         ret[f"{layername}_url"] = (
-            f"{node_homepage_url}{tiles_folderpath}/{layername}.pmtiles"
+            f"{base_url}{tiles_folderpath}/{layername}.pmtiles"
         )
 
         ret["sources"][f"oswm_pmtiles_{layername}"] = {
@@ -175,7 +177,7 @@ def get_sources(terrain_url=None, only_urls=False):
             "attribution": r'© <a href="https://openstreetmap.org">OpenStreetMap Contributors</a>',
         }
 
-    ret["boundaries_url"] = f"{node_homepage_url}{boundaries_geojson_path}"
+    ret["boundaries_url"] = f"{base_url}{boundaries_geojson_path}"
 
     # basemap:
     ret["sources"]["osm"] = {

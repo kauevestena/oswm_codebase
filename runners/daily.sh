@@ -11,8 +11,9 @@ FAILED_STEPS=()
 run_step() {
     local script="$1"
     local label="$2"
+    shift 2
     echo "==> $label"
-    if ! "$PYTHON_BIN" "$script"; then
+    if ! "$PYTHON_BIN" "$script" "$@"; then
         FAILED_STEPS+=("$label")
     fi
 }
@@ -54,10 +55,14 @@ else
     run_step oswm_codebase/webmap/create_webmap_new.py "create_webmap_new"
     run_step oswm_codebase/data_quality/tag_values_checking.py "tag_values_checking"
     run_step oswm_codebase/data_quality/quality_check_compiling.py "quality_check_compiling"
+    run_step oswm_codebase/data_quality/completeness/completeness_runner.py "completeness_runner"
     run_step oswm_codebase/data_quality/external_qc.py "external_qc"
     run_step oswm_codebase/dashboard/statistics_generation.py "statistics_generation"
     run_step oswm_codebase/generation/routing_demo_gen.py "routing_demo_gen"
     run_step oswm_codebase/generation/hazard_tiles_gen.py "hazard_tiles_gen"
+    # reset-derived removes hub/, including the dashboard made by the initial
+    # update check. Render it again after boundaries and derived data exist.
+    run_step oswm_codebase/datahub/watcher/watcher_lib.py "watcher_render" --render-only
     run_step oswm_codebase/datahub/acquisition/generate_acquisition.py "generate_acquisition"
     run_step oswm_codebase/metadata/metadata_generation.py "metadata_generation"
     run_step oswm_codebase/datahub/API/generate_api.py "generate_api"

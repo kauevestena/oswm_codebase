@@ -10,7 +10,13 @@ import pytest
 import yaml
 
 from boundary_acquisition import BoundaryAcquisitionError, resolve_boundary
-from node_outputs import reset_derived, reset_initialization
+from node_outputs import (
+    REQUIRED_OUTPUTS,
+    REQUIRED_PUBLIC_PAGES,
+    required_outputs,
+    reset_derived,
+    reset_initialization,
+)
 from overpass_acquisition import features_from_polygon_with_failover
 from pipeline_decision import CODEBASE_REVISION_KEY, decide
 from special_updates import synchronize
@@ -18,6 +24,31 @@ from time_utils import isoformat_utc, parse_timestamp
 
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def test_generated_output_manifest_includes_all_public_entry_pages():
+    expected = {
+        "index.html",
+        "map.html",
+        "statistics/index.html",
+        "hub/index.html",
+        "hub/API/index.html",
+        "hub/acquisition/index.html",
+        "hub/watcher/index.html",
+    }
+    assert expected <= set(REQUIRED_PUBLIC_PAGES)
+    assert {
+        "hub/watcher/feed.xml",
+        "hub/watcher/changesets.xml",
+        "hub/acquisition/results.json",
+    } <= set(REQUIRED_OUTPUTS)
+
+
+def test_generated_output_manifest_expands_statistics_specs(tmp_path):
+    spec = tmp_path / "statistics_specs/sidewalks/width.json"
+    spec.parent.mkdir(parents=True)
+    spec.write_text("{}\n")
+    assert "statistics/sidewalks/width.html" in required_outputs(tmp_path)
 
 
 class FakeResponse:

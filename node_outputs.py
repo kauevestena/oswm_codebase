@@ -21,6 +21,7 @@ INITIALIZATION_RESET_PATHS = (
     "statistics_specs",
     "map.html",
     "webmap_params.json",
+    "global_params.json",
     "run_log.txt",
     "run_log_full.txt",
 )
@@ -40,11 +41,13 @@ DERIVED_RESET_PATHS = (
     "statistics_specs",
     "map.html",
     "webmap_params.json",
+    "global_params.json",
 )
 
 PRESERVED_DURING_DERIVED_RESET = ("quality_check/keys_without_wiki.json",)
 
-REQUIRED_OUTPUTS = (
+REQUIRED_DATA_OUTPUTS = (
+    "data/index.json",
     "data/boundaries/infos.json",
     "data/boundaries/polygon.geojson",
     "data/boundaries/polygon.parquet",
@@ -66,11 +69,44 @@ REQUIRED_OUTPUTS = (
     "data/hazard_analysis/metadata.json",
     "data/hazard_analysis/hazard.pmtiles",
     "data/snapshots/node_summary.json",
+    "data/updates/index.html",
+    "metadata/index.json",
+    "statistics_specs/index.json",
+    "global_params.json",
+)
+
+REQUIRED_QUALITY_OUTPUTS = (
     "quality_check/index.json",
-    "statistics/index.html",
-    "hub/API/index.html",
+    "quality_check/index.html",
+    "quality_check/oswm_qc_main.html",
+    "quality_check/oswm_qc_external.html",
+    "quality_check/map.html",
+    "quality_check/completeness/index.html",
+    "quality_check/completeness/data.json",
+)
+
+REQUIRED_PUBLIC_PAGES = (
     "index.html",
     "map.html",
+    "statistics/index.html",
+    "hub/index.html",
+    "hub/API/index.html",
+    "hub/acquisition/index.html",
+    "hub/watcher/index.html",
+)
+
+REQUIRED_HUB_OUTPUTS = (
+    "hub/acquisition/results.json",
+    "hub/watcher/feed.xml",
+    "hub/watcher/changesets.xml",
+)
+
+# Canonical post-generation manifest used by runners, decisions, audits, and tests.
+REQUIRED_OUTPUTS = (
+    *REQUIRED_DATA_OUTPUTS,
+    *REQUIRED_QUALITY_OUTPUTS,
+    *REQUIRED_PUBLIC_PAGES,
+    *REQUIRED_HUB_OUTPUTS,
     "webmap_params.json",
 )
 
@@ -94,6 +130,7 @@ STAGE_PROFILES = {
         "index.html",
         "map.html",
         "webmap_params.json",
+        "global_params.json",
     ),
     "weekly": (
         "data/updates",
@@ -114,6 +151,7 @@ STAGE_PROFILES = {
         "index.html",
         "map.html",
         "webmap_params.json",
+        "global_params.json",
     ),
 }
 
@@ -180,10 +218,25 @@ def reset_derived(root: Path) -> list[str]:
     return removed
 
 
+def required_outputs(root: Path) -> tuple[str, ...]:
+    """Return the fixed manifest plus chart pages declared by generated specs."""
+    outputs = list(REQUIRED_OUTPUTS)
+    specs_root = root / "statistics_specs"
+    if specs_root.is_dir():
+        for spec in sorted(specs_root.rglob("*.json")):
+            if spec.name == "index.json":
+                continue
+            chart = Path("statistics") / spec.relative_to(specs_root).with_suffix(".html")
+            relative = chart.as_posix()
+            if relative not in outputs:
+                outputs.append(relative)
+    return tuple(outputs)
+
+
 def missing_required(root: Path) -> list[str]:
     return [
         relative
-        for relative in REQUIRED_OUTPUTS
+        for relative in required_outputs(root)
         if not (root / relative).is_file() or (root / relative).stat().st_size == 0
     ]
 
@@ -238,6 +291,7 @@ def main(argv: list[str] | None = None) -> int:
     reset_node = subparsers.add_parser("reset-node")
     reset_node.add_argument("--apply", action="store_true")
     subparsers.add_parser("reset-derived")
+    subparsers.add_parser("manifest")
     subparsers.add_parser("require")
     stage = subparsers.add_parser("stage")
     stage.add_argument("profile", choices=sorted(STAGE_PROFILES))
@@ -249,9 +303,19 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(reset_initialization(args.root, apply=args.apply), indent=2))
     elif args.command == "reset-derived":
         print(json.dumps({"removed": reset_derived(args.root)}, indent=2))
+    elif args.command == "manifest":
+        print(json.dumps({"required_outputs": list(required_outputs(args.root))}, indent=2))
     elif args.command == "require":
         missing = missing_required(args.root)
-        print(json.dumps({"missing": missing}, indent=2))
+        print(
+            json.dumps(
+                {
+                    "required_outputs": list(required_outputs(args.root)),
+                    "missing": missing,
+                },
+                indent=2,
+            )
+        )
         return 1 if missing else 0
     elif args.command == "stage":
         print(json.dumps({"staged_paths": stage_profile(args.root, args.profile)}, indent=2))

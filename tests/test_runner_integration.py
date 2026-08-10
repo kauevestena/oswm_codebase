@@ -25,6 +25,7 @@ RUNNER_SCRIPTS = (
     "webmap/create_webmap_new.py",
     "data_quality/tag_values_checking.py",
     "data_quality/quality_check_compiling.py",
+    "data_quality/completeness/completeness_runner.py",
     "data_quality/external_qc.py",
     "dashboard/statistics_generation.py",
     "generation/routing_demo_gen.py",
@@ -50,6 +51,8 @@ relative = Path(__file__).resolve().relative_to(root / "oswm_codebase").as_posix
 with (root / "events.log").open("a") as handle:
     handle.write(relative + "\\n")
 if relative == "datahub/watcher/watcher_lib.py":
+    if "--render-only" in sys.argv:
+        raise SystemExit(0)
     raise SystemExit(int(os.environ.get("WATCHER_EXIT", "0")))
 if relative == "getting_data.py":
     for item in %r:
@@ -111,6 +114,7 @@ def test_cold_runner_fetches_then_generates_complete_contract(tmp_path):
     events = (tmp_path / "events.log").read_text()
     assert "getting_data.py" in events
     assert "filtering_adapting_data.py" in events
+    assert events.count("datahub/watcher/watcher_lib.py") == 2
 
 
 def test_no_change_runner_skips_osm_dependent_generation(tmp_path):
@@ -121,6 +125,7 @@ def test_no_change_runner_skips_osm_dependent_generation(tmp_path):
     assert "getting_data.py" not in events
     assert "filtering_adapting_data.py" not in events
     assert "metadata/metadata_generation.py" in events
+    assert events.count("datahub/watcher/watcher_lib.py") == 1
 
 
 def test_codebase_change_rebuilds_derived_products_without_redownload(tmp_path):
@@ -130,5 +135,6 @@ def test_codebase_change_rebuilds_derived_products_without_redownload(tmp_path):
     events = (tmp_path / "events.log").read_text()
     assert "getting_data.py" not in events
     assert "filtering_adapting_data.py" in events
+    assert events.count("datahub/watcher/watcher_lib.py") == 2
     registry = json.loads((tmp_path / "data/updates/registry.json").read_text())
     assert registry[CODEBASE_REVISION_KEY] == "new"

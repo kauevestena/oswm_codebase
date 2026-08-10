@@ -18,7 +18,12 @@ params["data_layers"] = MAP_DATA_LAYERS
 params["layer_types"] = layer_type_groups
 
 # boundaries:
-params["bounds"] = get_boundaries_bbox()
+bounds = get_boundaries_bbox()
+params["bounds"] = bounds
+params["center"] = [
+    (bounds[0] + bounds[2]) / 2.0,
+    (bounds[1] + bounds[3]) / 2.0,
+]
 
 # updating the node's url:
 params["node_url"] = node_homepage_url

@@ -52,8 +52,9 @@ OHSOME_FILTERS = {
 }
 
 OHSOME_BATCH_SIZE = 50
-MAX_RETRIES = 3
-RETRY_DELAY = 5
+MAX_RETRIES = 1
+RETRY_DELAY = 2
+OHSOME_TIMEOUT = 10
 
 ROADS_CACHE_PATH = os.path.join(processed_folderpath, "roads_for_completeness.parquet")
 
@@ -368,7 +369,7 @@ def query_ohsome_z15(bboxes_z15, filter_str, timestamp, silent=False):
         data = None
         for attempt in range(MAX_RETRIES):
             try:
-                resp = requests.post(url, data=params, timeout=120)
+                resp = requests.post(url, data=params, timeout=OHSOME_TIMEOUT)
                 resp.raise_for_status()
                 data = resp.json()
                 break
@@ -630,19 +631,21 @@ def run_completeness_analysis(
     bounds,
     existing_data=None,
     silent=False,
+    offline=False,
 ):
     """
     Main entry point for the completeness analysis.
 
     If existing_data is None (first run):
-      - OHSOME kickstart for 3 prior months
+      - OHSOME kickstart for 3 prior months (unless offline)
       - Local snapshot for current month
 
     If existing_data is provided (incremental):
       - Local snapshot for current month
-      - OHSOME for one more historical month
+      - OHSOME for one more historical month (unless offline)
     """
     current_ts = get_current_timestamp()
+    is_offline = offline or bool(os.environ.get("OSWM_OFFLINE"))
 
     # Step 1: Local snapshot (always)
     if not silent:
@@ -654,7 +657,10 @@ def run_completeness_analysis(
     local_z17 = {"roads": z17_roads, "footways": z17_footways, "sidewalks": z17_sidewalks}
 
     # Step 2: Determine OHSOME timestamps
-    if existing_data is None:
+    if is_offline:
+        ohsome_timestamps = []
+        all_timestamps = [current_ts]
+    elif existing_data is None:
         # First run: kickstart with 3 prior months
         ohsome_timestamps = generate_kickstart_timestamps(n_months=3)
         all_timestamps = ohsome_timestamps + [current_ts]
