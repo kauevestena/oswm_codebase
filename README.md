@@ -114,7 +114,7 @@ Generators run from the node root. They import shared code through the `oswm_cod
 | Dashboard/statistics | Altair/Vega charts for individual pedestrian layers and aggregated data | Active |
 | Data quality | Tag-value checks, geometry checks, report tables, QA maps, and external-provider links | Active |
 | Completeness | Multi-scale and temporal footway/sidewalk-to-road completeness analysis | Active; computationally and API intensive |
-| Routing demo | Client-side route exploration over generated pedestrian geometries | Experimental |
+| Routing demo | Static route exploration & deprecated Streamlit prototype (`deprecated/streamlit_routing`) | Experimental / Deprecated |
 | Hazard Analysis | Profile-specific pedestrian hazard screening and global terrain context | Experimental |
 | Metadata catalogue | Deterministic ISO-aligned JSON catalogue and per-resource records in a sibling `metadata/` tree | Active |
 | Data hub and static API | Human-readable hub plus serverless metadata, JSON, GeoParquet, PMTiles, VRT, and chart-spec endpoints | Active |

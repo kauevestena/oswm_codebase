@@ -11,8 +11,6 @@ attrs==26.1.0
     #   referencing
 beautifulsoup4==4.15.0
     # via -r requirements.in
-branca==0.8.2
-    # via folium
 certifi==2026.7.22
     # via
     #   pyogrio
@@ -40,8 +38,6 @@ cycler==0.12.1
     # via matplotlib
 flatbuffers==25.12.19
     # via timezonefinder
-folium==0.20.0
-    # via -r requirements.in
 fonttools==4.63.0
     # via matplotlib
 geopandas==1.1.4
@@ -57,8 +53,6 @@ idna==3.18
 jinja2==3.1.6
     # via
     #   altair
-    #   branca
-    #   folium
 joblib==1.5.3
     # via scikit-learn
 jsonschema==4.26.0
@@ -82,7 +76,6 @@ networkx==3.6.1
 numpy==2.5.1
     # via
     #   contourpy
-    #   folium
     #   geopandas
     #   matplotlib
     #   osmnx
@@ -141,7 +134,6 @@ referencing==0.37.0
 requests==2.34.2
     # via
     #   -r requirements.in
-    #   folium
     #   osm2geojson
     #   osmapi
     #   osmnx
@@ -184,5 +176,3 @@ urllib3==2.7.0
     # via requests
 webencodings==0.5.1
     # via html5lib
-xyzservices==2026.3.0
-    # via folium
