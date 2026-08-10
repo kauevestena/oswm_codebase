@@ -614,20 +614,54 @@ def create_marker_cluster_html(
                 }}
             }});
 
-            map.addLayer({{
-                id: 'cluster-count',
-                type: 'symbol',
-                source: 'dq-markers',
-                filter: ['has', 'point_count'],
-                layout: {{
-                    'text-field': '{{point_count_abbreviated}}',
-                    'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
-                    'text-size': 13
-                }},
-                paint: {{
-                    'text-color': '#1e293b'
-                }}
-            }});
+            // Cluster count overlay — HTML divs positioned over each cluster circle.
+            // Avoids needing a glyph/font server which can block the map from loading.
+            const clusterLabels = new Map();
+            const mapCanvas = map.getCanvasContainer();
+
+            function formatCount(n) {{
+                if (n >= 1000) return (Math.round(n / 100) / 10) + 'k';
+                return String(n);
+            }}
+
+            function updateClusterLabels() {{
+                const features = map.queryRenderedFeatures({{ layers: ['clusters'] }});
+                const seen = new Set();
+
+                features.forEach(f => {{
+                    const id = f.properties.cluster_id;
+                    const count = f.properties.point_count;
+                    const pos = map.project(f.geometry.coordinates);
+                    seen.add(id);
+
+                    if (!clusterLabels.has(id)) {{
+                        const el = document.createElement('div');
+                        el.style.position = 'absolute';
+                        el.style.pointerEvents = 'none';
+                        el.style.fontFamily = 'Outfit, sans-serif';
+                        el.style.fontWeight = '700';
+                        el.style.fontSize = '12px';
+                        el.style.color = '#1e293b';
+                        el.style.transform = 'translate(-50%, -50%)';
+                        el.style.whiteSpace = 'nowrap';
+                        el.style.zIndex = '10';
+                        mapCanvas.appendChild(el);
+                        clusterLabels.set(id, el);
+                    }}
+
+                    const el = clusterLabels.get(id);
+                    el.textContent = formatCount(count);
+                    el.style.left = pos.x + 'px';
+                    el.style.top = pos.y + 'px';
+                    el.style.display = 'block';
+                }});
+
+                clusterLabels.forEach((el, id) => {{
+                    if (!seen.has(id)) el.style.display = 'none';
+                }});
+            }}
+
+            map.on('render', updateClusterLabels);
 
             map.addLayer({{
                 id: 'unclustered-point',
