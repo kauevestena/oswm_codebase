@@ -55,8 +55,26 @@ for name in subfoldernames:
 
 
 # # # functions:
-def add_to_map_data(row_tuple, quality_category, category):
+def add_to_map_data(row_tuple, quality_category, category, issue_key=None, issue_val=None, issue_comment=None):
     id = row_tuple.id
+    
+    def sanitize(v):
+        import math
+        if isinstance(v, float) and math.isnan(v):
+            return "N/A"
+        if v is None:
+            return ""
+        return str(v)
+
+    issue_details = None
+    if issue_key is not None or issue_val is not None or issue_comment is not None:
+        issue_details = {
+            "category": sanitize(quality_category),
+            "key": sanitize(issue_key),
+            "value": sanitize(issue_val),
+            "comment": sanitize(issue_comment)
+        }
+
     if id not in map_view_data:
         rep_point = row_tuple.geometry.representative_point()
         map_view_data[id] = {
@@ -67,11 +85,17 @@ def add_to_map_data(row_tuple, quality_category, category):
             "quality_category": {quality_category},
             "category": {category},
             "feat_type": row_tuple.element,
+            "issues": [issue_details] if issue_details else []
         }
     else:
         # Always update both sets so per-category filtering works correctly
         map_view_data[id]["quality_category"].add(quality_category)
         map_view_data[id]["category"].add(category)
+        if issue_details:
+            if "issues" not in map_view_data[id]:
+                map_view_data[id]["issues"] = []
+            if issue_details not in map_view_data[id]["issues"]:
+                map_view_data[id]["issues"].append(issue_details)
 
 
 def add_to_occurrences(curr, category, val_list, feature_id, feature_type):
@@ -463,9 +487,25 @@ def create_marker_cluster_html(
                 special_map_view_data[k] = v
         map_view_data_to_use = special_map_view_data
 
+    issues_registry = []
+    issue_to_id = {}
+
     features = []
     for item in map_view_data_to_use.values():
         lat, lon = item["point"][0], item["point"][1]
+        
+        issues = item.get("issues", [])
+        issue_ids = []
+        for issue in issues:
+            issue_key = (issue["category"], issue["key"], issue["value"], issue["comment"])
+            if issue_key not in issue_to_id:
+                issue_id = len(issues_registry)
+                issue_to_id[issue_key] = issue_id
+                issues_registry.append(issue)
+            else:
+                issue_id = issue_to_id[issue_key]
+            issue_ids.append(issue_id)
+
         features.append({
             "type": "Feature",
             "geometry": {
@@ -476,6 +516,7 @@ def create_marker_cluster_html(
                 "id": item["id"],
                 "feat_type": item["feat_type"],
                 "quality_categories": ", ".join(sorted(list(item["quality_category"]))),
+                "issue_ids": json.dumps(issue_ids, ensure_ascii=False),
                 "osm_url": osm_feature_url(item["id"], item["feat_type"]),
                 "josm_url": f"http://127.0.0.1:8111/load_object?new_layer=false&objects={item['feat_type'][0]}{item['id']}",
                 "id_url": f"https://www.openstreetmap.org/edit?editor=id&{item['feat_type']}={item['id']}#map=20/{lat}/{lon}"
@@ -503,6 +544,19 @@ def create_marker_cluster_html(
 
     center_lon = centerpoint[1]
     center_lat = centerpoint[0]
+    issues_registry_json = json.dumps(issues_registry, ensure_ascii=False)
+
+    geojson_outpath = outpath.replace(".html", ".geojson")
+    registry_outpath = outpath.replace(".html", "_registry.json")
+    
+    with open(geojson_outpath, "w", encoding="utf-8") as f:
+        f.write(geojson_json_str)
+        
+    with open(registry_outpath, "w", encoding="utf-8") as f:
+        f.write(issues_registry_json)
+        
+    geojson_filename = os.path.basename(geojson_outpath)
+    registry_filename = os.path.basename(registry_outpath)
 
     html_content = f"""<!--
   Generated automatically by oswm_codebase/data_quality/dq_funcs.py
@@ -542,6 +596,9 @@ def create_marker_cluster_html(
         .maplibregl-ctrl-top-right {{
             top: 10px;
         }}
+        .custom-dq-popup {{
+            z-index: 1000 !important;
+        }}
         .custom-dq-popup .maplibregl-popup-content {{
             background: #ffffff;
             border-radius: 8px;
@@ -562,7 +619,10 @@ def create_marker_cluster_html(
     <div id="map"></div>
 
     <script>
-        const geojsonData = {geojson_json_str};
+        let issuesRegistry = [];
+        fetch('{registry_filename}').then(r => r.json()).then(data => {{
+            issuesRegistry = data;
+        }}).catch(e => console.error("Could not load registry:", e));
 
         const map = new maplibregl.Map({{
             container: 'map',
@@ -610,10 +670,11 @@ def create_marker_cluster_html(
 
             map.addSource('dq-markers', {{
                 type: 'geojson',
-                data: geojsonData,
+                data: '{geojson_filename}',
                 cluster: true,
                 clusterMaxZoom: 14,
-                clusterRadius: 50
+                clusterRadius: 50,
+                generateId: true
             }});
 
             map.addLayer({{
@@ -638,8 +699,8 @@ def create_marker_cluster_html(
                         26, 100,
                         32
                     ],
-                    'circle-stroke-width': 2,
-                    'circle-stroke-color': 'rgba(255, 255, 255, 0.8)'
+                    'circle-stroke-width': ['case', ['boolean', ['feature-state', 'hover'], false], 4, 2],
+                    'circle-stroke-color': ['case', ['boolean', ['feature-state', 'hover'], false], '#ffffff', 'rgba(255,255,255,0.6)']
                 }}
             }});
 
@@ -698,22 +759,19 @@ def create_marker_cluster_html(
                 source: 'dq-markers',
                 filter: ['!', ['has', 'point_count']],
                 paint: {{
-                    'circle-color': '#00f2fe',
+                    'circle-color': ['case', ['boolean', ['feature-state', 'hover'], false], '#475569', '#1e293b'],
                     'circle-radius': 7,
-                    'circle-stroke-width': 2,
-                    'circle-stroke-color': '#0f172a'
+                    'circle-stroke-width': ['case', ['boolean', ['feature-state', 'hover'], false], 3, 1.5],
+                    'circle-stroke-color': ['case', ['boolean', ['feature-state', 'hover'], false], '#94a3b8', '#64748b']
                 }}
             }});
 
             map.on('click', 'clusters', (e) => {{
                 const features = map.queryRenderedFeatures(e.point, {{ layers: ['clusters'] }});
-                const clusterId = features[0].properties.cluster_id;
-                map.getSource('dq-markers').getClusterExpansionZoom(clusterId, (err, zoom) => {{
-                    if (err) return;
-                    map.easeTo({{
-                        center: features[0].geometry.coordinates,
-                        zoom: zoom
-                    }});
+                map.easeTo({{
+                    center: features[0].geometry.coordinates,
+                    zoom: map.getZoom() + 1,
+                    duration: 300
                 }});
             }});
 
@@ -721,11 +779,29 @@ def create_marker_cluster_html(
                 const coordinates = e.features[0].geometry.coordinates.slice();
                 const props = e.features[0].properties;
 
+                let issues_html = "";
+                if (props.issue_ids) {{
+                    let idsList;
+                    try {{
+                        idsList = typeof props.issue_ids === 'string' ? JSON.parse(props.issue_ids) : props.issue_ids;
+                    }} catch (err) {{
+                        idsList = [];
+                    }}
+                    idsList.forEach(issueId => {{
+                        const issue = issuesRegistry[issueId];
+                        if (issue) {{
+                            issues_html += `<div style='margin-bottom: 8px; font-size: 13px;'><strong style='color: #4facfe;'>${{issue.category}}</strong><br/><b>Key:</b> ${{issue.key}} | <b>Value:</b> ${{issue.value}}<br/><b>Comment:</b> ${{issue.comment}}</div>`;
+                        }}
+                    }});
+                }}
+
                 const popupHtml = `
-                    <div style="font-family: 'Outfit', sans-serif; min-width: 180px;">
-                        <h4 style="margin: 0 0 5px 0; color: #0088aa; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px;">Feature: ${{props.feat_type}} ${{props.id}}</h4>
-                        <p style="margin: 0 0 12px 0; font-size: 13px; color: #444; line-height: 1.4;"><b>Categories:</b><br>${{props.quality_categories}}</p>
-                        <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <div style="font-family: 'Outfit', sans-serif; min-width: 220px; max-width: 320px; max-height: 350px; display: flex; flex-direction: column;">
+                        <h4 style="margin: 0 0 5px 0; color: #0088aa; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px; flex-shrink: 0;">Feature: ${{props.feat_type}} ${{props.id}}</h4>
+                        <div style="overflow-y: auto; flex-grow: 1; margin: 10px 0; padding-right: 5px;">
+                            ${{issues_html ? issues_html : `<p style="margin: 0 0 12px 0; font-size: 13px; color: #444; line-height: 1.4;"><b>Categories:</b><br>${{props.quality_categories}}</p>`}}
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; padding-top: 5px; border-top: 1px solid #eee;">
                             <a href="${{props.osm_url}}" target="_blank" style="background: #4facfe; color: white; padding: 6px 10px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">↗ Open in OSM</a>
                             <a href="${{props.josm_url}}" target="_blank" style="background: #10b981; color: white; padding: 6px 10px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">⚙ Open in JOSM</a>
                             <a href="${{props.id_url}}" target="_blank" style="background: #8b5cf6; color: white; padding: 6px 10px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">✎ Open in iD Editor</a>
@@ -743,10 +819,43 @@ def create_marker_cluster_html(
                     .addTo(map);
             }});
 
-            map.on('mouseenter', 'clusters', () => map.getCanvas().style.cursor = 'pointer');
-            map.on('mouseleave', 'clusters', () => map.getCanvas().style.cursor = '');
-            map.on('mouseenter', 'unclustered-point', () => map.getCanvas().style.cursor = 'pointer');
-            map.on('mouseleave', 'unclustered-point', () => map.getCanvas().style.cursor = '');
+            // Hover state tracking — clusters
+            let hoveredClusterId = null;
+            map.on('mousemove', 'clusters', (e) => {{
+                const newId = e.features[0].id;
+                if (newId !== hoveredClusterId) {{
+                    if (hoveredClusterId !== null)
+                        map.setFeatureState({{ source: 'dq-markers', id: hoveredClusterId }}, {{ hover: false }});
+                    hoveredClusterId = newId;
+                    map.setFeatureState({{ source: 'dq-markers', id: hoveredClusterId }}, {{ hover: true }});
+                }}
+                map.getCanvas().style.cursor = 'pointer';
+            }});
+            map.on('mouseleave', 'clusters', () => {{
+                if (hoveredClusterId !== null)
+                    map.setFeatureState({{ source: 'dq-markers', id: hoveredClusterId }}, {{ hover: false }});
+                hoveredClusterId = null;
+                map.getCanvas().style.cursor = '';
+            }});
+
+            // Hover state tracking — individual points
+            let hoveredPointId = null;
+            map.on('mousemove', 'unclustered-point', (e) => {{
+                const newId = e.features[0].id;
+                if (newId !== hoveredPointId) {{
+                    if (hoveredPointId !== null)
+                        map.setFeatureState({{ source: 'dq-markers', id: hoveredPointId }}, {{ hover: false }});
+                    hoveredPointId = newId;
+                    map.setFeatureState({{ source: 'dq-markers', id: hoveredPointId }}, {{ hover: true }});
+                }}
+                map.getCanvas().style.cursor = 'pointer';
+            }});
+            map.on('mouseleave', 'unclustered-point', () => {{
+                if (hoveredPointId !== null)
+                    map.setFeatureState({{ source: 'dq-markers', id: hoveredPointId }}, {{ hover: false }});
+                hoveredPointId = null;
+                map.getCanvas().style.cursor = '';
+            }});
         }});
     </script>
 </body>

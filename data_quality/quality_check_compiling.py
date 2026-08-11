@@ -67,7 +67,7 @@ def main():
                                         curr, category, val_list, row.id, row.element
                                     )
 
-                                    add_to_map_data(row, quality_category, category)
+                                    add_to_map_data(row, quality_category, category, issue_key=val_list[1], issue_val=val_list[2], issue_comment=val_list[3])
 
                     if isinstance(curr["dict"], str):
                         curr_ref_dict = (
@@ -94,7 +94,7 @@ def main():
                                         curr, category, val_list, row.id, row.element
                                     )
 
-                                    add_to_map_data(row, quality_category, category)
+                                    add_to_map_data(row, quality_category, category, issue_key=val_list[1], issue_val=val_list[2], issue_comment=val_list[3])
 
                 if curr["type"] == "values":
                     if isinstance(curr["dict"], dict):
@@ -118,7 +118,7 @@ def main():
                                             row.element,
                                         )
 
-                                        add_to_map_data(row, quality_category, category)
+                                        add_to_map_data(row, quality_category, category, issue_key=val_list[1], issue_val=val_list[2], issue_comment=val_list[3])
 
                     if isinstance(curr["dict"], str):
                         curr_ref_dict = (
@@ -152,7 +152,7 @@ def main():
                                                 row.element,
                                             )
 
-                                            add_to_map_data(row, quality_category, category)
+                                            add_to_map_data(row, quality_category, category, issue_key=val_list[1], issue_val=val_list[2], issue_comment=val_list[3])
 
                 if curr["type"] == "tags":
 
@@ -173,7 +173,7 @@ def main():
                                         curr, category, val_list, row.id, row.element
                                     )
 
-                                    add_to_map_data(row, quality_category, category)
+                                    add_to_map_data(row, quality_category, category, issue_key=val_list[1], issue_val=val_list[2], issue_comment=val_list[3])
 
                                     break
 
@@ -190,7 +190,7 @@ def main():
                         add_to_occurrences(
                             curr, category, val_list, row.id, row.element
                         )
-                        add_to_map_data(row, quality_category, category)
+                        add_to_map_data(row, quality_category, category, issue_key=val_list[1], issue_val=val_list[2], issue_comment=val_list[3])
 
     # add the  geometric categories, processed elsewhere:
     for quality_category in geom_dict_keys:
@@ -216,7 +216,7 @@ def main():
                 val_list = [row.id, *curr["dict"][data_category]["insertions"]]
 
                 add_to_occurrences(curr, data_category, val_list, row.id, row.element)
-                add_to_map_data(row, quality_category, data_category)
+                add_to_map_data(row, quality_category, data_category, issue_key=val_list[1], issue_val=val_list[2], issue_comment=val_list[3])
 
     # add the "geoms_dicts_keys" to "categories_dict_keys":
     for quality_category in geom_dict_keys:
