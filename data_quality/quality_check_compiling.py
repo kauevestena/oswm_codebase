@@ -313,6 +313,7 @@ def main():
     iso_badge_colors = {
         "Thematic Accuracy": ("#a78bfa", "rgba(167, 139, 250, 0.15)", "rgba(167, 139, 250, 0.3)"),
         "Logical Consistency": ("#00f2fe", "rgba(0, 242, 254, 0.15)", "rgba(0, 242, 254, 0.3)"),
+        "Completeness": ("#4ade80", "rgba(74, 222, 128, 0.15)", "rgba(74, 222, 128, 0.3)"),
     }
 
     def iso_badge_html(iso_info):
