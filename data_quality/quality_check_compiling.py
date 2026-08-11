@@ -176,6 +176,22 @@ def main():
                                     add_to_map_data(row, quality_category, category, issue_key=val_list[1], issue_val=val_list[2], issue_comment=val_list[3])
 
                                     break
+                if curr["type"] == "missing_keys":
+                    if isinstance(curr["dict"], dict) and category in curr["dict"]:
+                        for osmkey in curr["dict"][category]:
+                            value = getattr(row, osmkey, None)
+                            if pd.isna(value) or value == "":
+                                if not row.id in curr["occurrences"][category]:
+                                    val_list = [
+                                        row.id,
+                                        osmkey,
+                                        "MISSING",
+                                        curr["dict"][category][osmkey],
+                                    ]
+                                    add_to_occurrences(
+                                        curr, category, val_list, row.id, row.element
+                                    )
+                                    add_to_map_data(row, quality_category, category, issue_key=val_list[1], issue_val=val_list[2], issue_comment=val_list[3])
 
                 if curr["type"] == "age":
                     age_info = age_lookup.get(category, {}).get(row.id)
