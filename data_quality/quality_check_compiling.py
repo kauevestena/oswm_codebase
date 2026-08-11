@@ -1,4 +1,4 @@
-# import pandas as pd
+import pandas as pd
 from dq_funcs import *
 from quality_dicts import *
 from functions import *
@@ -54,7 +54,7 @@ def main():
                         for osmkey in curr["dict"][category]:
                             value = getattr(row, osmkey, None)
 
-                            if value:
+                            if pd.notna(value) and value != "":
                                 if not row.id in curr["occurrences"][category]:
                                     val_list = [
                                         row.id,
@@ -80,7 +80,7 @@ def main():
 
                             value = getattr(row, osmkey, None)
 
-                            if value:
+                            if pd.notna(value) and value != "":
                                 if not row.id in curr["occurrences"][category]:
 
                                     val_list = [
@@ -131,7 +131,7 @@ def main():
                             for osmvalue in curr_ref_dict[osmkey]:
                                 value = getattr(row, osmkey, None)
 
-                                if value:
+                                if pd.notna(value) and value != "":
                                     if value not in curr_ref_dict[osmkey]:
                                         if not row.id in curr["occurrences"][category]:
 
