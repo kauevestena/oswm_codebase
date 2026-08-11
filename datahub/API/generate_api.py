@@ -155,9 +155,12 @@ def get_endpoint_description(path, filename, deliverable):
             "data/vrts/data.vrt": "GDAL Virtual Format file linking all processed parquet files together.",
             "data/vrts/data_raw.vrt": "GDAL Virtual Format file linking all raw parquet files together.",
             "data/vrts/tiles.vrt": "GDAL Virtual Format file referencing tile-oriented datasets.",
-            "data/routing/demo.geojson": "Transitional GeoJSON routing network with compact, directional accessibility grades.",
-            "data/routing/profiles.json": "Browser-safe distance/accessibility routing modes, labels, speeds, grade-to-cost multipliers, and event penalties.",
-            "data/routing/metadata.json": "Routing ruleset provenance, slope-source counts, warnings, and generated grade distributions.",
+            "data/routing/demo.geojson": "Analytical GeoJSON routing network with compact, directional accessibility grades.",
+            "data/routing/network.oswmg": "Versioned typed-array routing topology with profile weights and an indexed segment lookup for the browser worker.",
+            "data/routing/network.pmtiles": "Lightweight routing-network vector tiles used by the MapLibre demo.",
+            "data/routing/tile_generation_report.json": "Validation result, input feature count, and byte size for the routing PMTiles build.",
+            "data/routing/profiles.json": "Browser-safe distance/accessibility routing modes plus binary graph and display-layer metadata.",
+            "data/routing/metadata.json": "Routing ruleset provenance, binary-graph audit, slope-source counts, warnings, and generated grade distributions.",
             "data/routing/slope_cache.json": "Reusable derived longitudinal slope estimates keyed by edge geometry and provider configuration.",
             "data/hazard_analysis/rules.json": "Full JSON serialization of the pedestrian hazard inference ruleset (conditions and effects) used to flag barriers and hazards.",
             "data/hazard_analysis/profiles.json": "Browser-safe hazard profiles, severity levels, categories, explanations, effects, and ruleset provenance.",
@@ -320,9 +323,12 @@ def generate_data_index():
             elif key == "routing":
                 files = [
                     "demo.geojson",
+                    "network.oswmg",
+                    "network.pmtiles",
                     "profiles.json",
                     "metadata.json",
                     "slope_cache.json",
+                    "tile_generation_report.json",
                 ]
             elif key == "hazard_analysis":
                 files = [
@@ -387,6 +393,8 @@ def collect_endpoints():
                 fmt = "GeoParquet"
             elif ext == ".pmtiles":
                 fmt = "PMTiles"
+            elif ext == ".oswmg":
+                fmt = "OSWM Binary Graph"
             elif ext == ".vrt":
                 fmt = "XML/VRT"
             elif ext == ".png":
@@ -1552,6 +1560,8 @@ print(data)</pre>
                 jsCode = '// Read vector tiles efficiently in JS\\nimport { PMTiles } from \\'pmtiles\\';\\n\\nconst tilesUrl = \\'' + url + '\\';\\nconst p = new PMTiles(tilesUrl);\\n// Add to maplibre or leaflet...';
             } else if (format === 'GeoParquet') {
                 jsCode = '// Reading GeoParquet in JS requires specialized libraries like @loaders.gl/parquet\\n// See: https://loaders.gl/docs/specifications/category-gis';
+            } else if (format === 'OSWM Binary Graph') {
+                jsCode = 'fetch(\\'' + url + '\\')\\n  .then(response => response.arrayBuffer())\\n  .then(graphBuffer => console.log(graphBuffer.byteLength));';
             }
             document.getElementById('code-js').textContent = jsCode;
 
@@ -1563,6 +1573,8 @@ print(data)</pre>
                 pyCode = 'import geopandas as gpd\\n\\n# Open GeoJSON directly via HTTP/s URL\\nurl = "' + url + '"\\ngdf = gpd.read_file(url)\\nprint(gdf.head())';
             } else if (format === 'PMTiles') {
                 pyCode = 'from pmtiles.reader import Reader\\nimport urllib.request\\n\\n# Read pmtiles headers\\nurl = "' + url + '"\\n# Open stream and read...';
+            } else if (format === 'OSWM Binary Graph') {
+                pyCode = 'import requests\\n\\nurl = "' + url + '"\\ngraph_bytes = requests.get(url).content\\nprint(len(graph_bytes))';
             }
             document.getElementById('code-py').textContent = pyCode;
 
@@ -1570,6 +1582,8 @@ print(data)</pre>
             let gdalCode = 'ogrinfo -ro -al "/vsicurl/' + url + '"';
             if (format === 'PMTiles') {
                 gdalCode = '# GDAL support for PMTiles starting from version 3.8.0\\nogrinfo -ro -al "/vsipmtiles/vsicurl/' + url + '"';
+            } else if (format === 'OSWM Binary Graph') {
+                gdalCode = '# Custom OSWM routing graph; consume it with routing/routing_worker.js';
             }
             document.getElementById('code-gdal').textContent = gdalCode;
 

@@ -56,8 +56,20 @@ if [ -f data/updates/yesterday.json ]; then
            [ ! -s data/hazard_analysis/hazard.pmtiles ]; then
             HAZARD_OUTPUTS_READY=0
         fi
-        if [ "$HAZARD_OUTPUTS_READY" -eq 0 ]; then
-            echo "Hazard deployment artifacts are missing; continuing generation."
+        ROUTING_OUTPUTS_READY=1
+        for ROUTING_OUTPUT in \
+            data/routing/demo.geojson \
+            data/routing/network.oswmg \
+            data/routing/network.pmtiles \
+            data/routing/profiles.json \
+            data/routing/metadata.json; do
+            if [ ! -s "$ROUTING_OUTPUT" ]; then
+                ROUTING_OUTPUTS_READY=0
+            fi
+        done
+        if [ "$HAZARD_OUTPUTS_READY" -eq 0 ] || \
+           [ "$ROUTING_OUTPUTS_READY" -eq 0 ]; then
+            echo "Routing or hazard deployment artifacts are missing; continuing generation."
         else
         echo "========================================="
         echo "No OSM changesets affecting OSWM features yesterday."
@@ -90,6 +102,7 @@ run_step oswm_codebase/data_quality/quality_check_compiling.py "quality_check_co
 run_step oswm_codebase/data_quality/external_qc.py             "external_qc"
 run_step oswm_codebase/dashboard/statistics_generation.py      "statistics_generation"
 run_step oswm_codebase/generation/routing_demo_gen.py          "routing_demo_gen"
+run_step oswm_codebase/generation/routing_tiles_gen.py         "routing_tiles_gen"
 run_step oswm_codebase/generation/hazard_tiles_gen.py          "hazard_tiles_gen"
 run_step oswm_codebase/metadata/metadata_generation.py         "metadata_generation"
 run_step oswm_codebase/datahub/API/generate_api.py             "generate_api"

@@ -33,7 +33,9 @@ Dashboard or Hazard Analysis dependency is introduced.
 The static routing module supports a first-class shortest-distance baseline
 plus wheelchair, blind/low-vision and elderly profiles, with optional
 side-by-side route comparison. Profile judgments are maintained as plain
-Python dictionaries and precomputed during node generation. See
+Python dictionaries and precomputed during node generation. The browser uses
+a compact typed-array graph in a Web Worker for routing and PMTiles for network
+rendering, leaving GeoJSON as an analytical export. See
 [`routing/README.md`](routing/README.md) for the architecture, slope-source
 hierarchy and calibration workflow.
 

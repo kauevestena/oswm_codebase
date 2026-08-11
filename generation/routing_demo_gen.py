@@ -1,9 +1,8 @@
 """Generate shared accessibility-aware routing and hazard datasets.
 
-The current output remains GeoJSON so existing nodes can adopt profiles before
-the planned compact binary graph format lands. All expensive policy decisions
-are nevertheless precomputed here: the browser receives small directional
-grades rather than raw OSM accessibility tags.
+The browser routes over a compact typed-array graph.  GeoJSON remains an
+analytical/debugging export and the input to the separately generated PMTiles
+display archive.
 """
 
 from __future__ import annotations
@@ -52,6 +51,7 @@ from hazard_analysis.validation import (
     ruleset_hash as hazard_ruleset_hash,
     validate_rules,
 )
+from routing.binary_graph import SCHEMA_VERSION, build_binary_graph
 from routing.elevation import (
     ElevationResolver,
     SlopeEstimate,
@@ -530,6 +530,24 @@ def main() -> None:
         "distance_profile_id": distance_profile_id,
         "profiles": public_profile_metadata(ROUTING_PROFILES),
     }
+    graph_metadata = build_binary_graph(
+        routing_collection,
+        profile_payload,
+        constants.routing_graph_path,
+    )
+    profile_payload.update(
+        {
+            "graph_schema_version": SCHEMA_VERSION,
+            "graph_filename": os.path.basename(constants.routing_graph_path),
+            "graph_profile_order": graph_metadata["profile_order"],
+            "graph_sha256": graph_metadata["sha256"],
+            "graph_byte_size": graph_metadata["byte_size"],
+            "display_tiles_filename": os.path.basename(
+                constants.routing_tiles_path
+            ),
+            "display_source_layer": "routing",
+        }
+    )
     _json_dump(profile_payload, constants.routing_profiles_path)
 
     metadata = {
@@ -543,6 +561,7 @@ def main() -> None:
         ),
         "slope_source_counts": dict(source_counts),
         "elevation_provider_fingerprint": resolver_fingerprint,
+        "binary_graph": graph_metadata,
         "profile_audit": _profile_audit(output_properties),
         "warnings": [
             "Profile rules are provisional and require participatory calibration.",
@@ -636,7 +655,8 @@ def main() -> None:
     _json_dump(hazard_metadata, constants.hazard_metadata_path)
     print(
         f"Generated {len(output_rows)} routable features at "
-        f"{constants.routing_demo_path} and {len(output_rows)} hazard "
+        f"{constants.routing_demo_path}, binary graph at "
+        f"{constants.routing_graph_path}, and {len(output_rows)} hazard "
         "features per profile."
     )
 
