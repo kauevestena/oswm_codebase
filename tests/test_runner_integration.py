@@ -18,6 +18,7 @@ RUNNER_SCRIPTS = (
     "datahub/watcher/watcher_lib.py",
     "datahub/acquisition/generate_acquisition.py",
     "getting_data.py",
+    "getting_feature_versioning_data.py",
     "filtering_adapting_data.py",
     "generation/vec_tiles_gen.py",
     "generation/vrt.py",
