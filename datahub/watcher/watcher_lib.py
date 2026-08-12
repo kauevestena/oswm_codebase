@@ -742,7 +742,7 @@ def generate_watcher_page(history: dict, results: dict, activity: dict):
                         <th>Changeset ID</th>
                         <th>User</th>
                         <th>Comment</th>
-                        <th>Changes</th>
+                        <th>OSWM Changes</th>
                         <th>Edits (Add/Mod/Del)</th>
                         <th>Links</th>
                     </tr>
@@ -758,7 +758,7 @@ def generate_watcher_page(history: dict, results: dict, activity: dict):
                     <td><code>{cs["id"]}</code></td>
                     <td><a href="https://www.openstreetmap.org/user/{user}" target="_blank" style="color: var(--text-main); text-decoration: none; font-weight: 500;">{user}</a></td>
                     <td><div class="comment-text" title="{comment}">{comment}</div></td>
-                    <td>{cs["changes_count"]}</td>
+                    <td>{cs["additions"] + cs["modifications"] + cs["deletions"]}</td>
                     <td>
                         <span class="badge badge-add">+{cs["additions"]}</span>
                         <span class="badge badge-mod">~{cs["modifications"]}</span>
@@ -789,7 +789,7 @@ def generate_watcher_page(history: dict, results: dict, activity: dict):
                         <th>User</th>
                         <th>Comment</th>
                         <th>Date</th>
-                        <th>Changes</th>
+                        <th>Total OSM Changes</th>
                         <th>OSWM Deletions</th>
                         <th>Links</th>
                     </tr>
@@ -993,6 +993,7 @@ def generate_watcher_page(history: dict, results: dict, activity: dict):
             text-align: left;
             padding: 0.75rem 1rem;
             border-bottom: 1px solid var(--card-border);
+            white-space: nowrap;
         }}
         th {{
             font-weight: 500;
