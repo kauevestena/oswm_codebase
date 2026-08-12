@@ -1234,7 +1234,8 @@ function updateFeatureLayers() {{
       const sourceId = 'pmtiles-' + lname;
       map.addSource(sourceId, {{
         type: 'vector',
-        url: 'pmtiles://../../data/tiles/' + lname + '.pmtiles'
+        url: 'pmtiles://../../data/tiles/' + lname + '.pmtiles',
+        promoteId: '@id'
       }});
       
       const filterMissing = [
@@ -1251,7 +1252,7 @@ function updateFeatureLayers() {{
         'source-layer': lname,
         paint: {{
           'line-color': '#d73027',
-          'line-width': 2.5
+          'line-width': ['case', ['boolean', ['feature-state', 'hover'], false], 5.0, 2.5]
         }},
         filter: ['all', ['==', ['geometry-type'], 'LineString'], filterMissing]
       }});
@@ -1263,7 +1264,7 @@ function updateFeatureLayers() {{
         'source-layer': lname,
         paint: {{
           'circle-color': '#d73027',
-          'circle-radius': 3.5,
+          'circle-radius': ['case', ['boolean', ['feature-state', 'hover'], false], 6.0, 3.5],
           'circle-stroke-width': 1,
           'circle-stroke-color': '#0f172a'
         }},
@@ -1277,7 +1278,7 @@ function updateFeatureLayers() {{
         'source-layer': lname,
         paint: {{
           'fill-color': '#d73027',
-          'fill-opacity': 0.5
+          'fill-opacity': ['case', ['boolean', ['feature-state', 'hover'], false], 1.5, 0.5]
         }},
         filter: ['all', ['any', ['==', ['geometry-type'], 'Polygon'], ['==', ['geometry-type'], 'MultiPolygon']], filterMissing]
       }});
@@ -1446,9 +1447,11 @@ map.on('load', () => {{
 
   for (let z = {MIN_ZOOM}; z <= {MAX_ZOOM}; z++) {{
     map.on('click', 'tiles-z' + z, (e) => {{
+      const isAttr = (currentMode === 'attributes');
+      if (isAttr && showFeatures) return; // Disable tile click when showing vector features
+
       const f = e.features[0];
       const p = f.properties;
-      const isAttr = (currentMode === 'attributes');
       const suffix = isAttr ? '_t' + {last_idx} : '_t' + currentTsIdx;
       
       const bStr = `${{p.bbox[0]}},${{p.bbox[1]}},${{p.bbox[2]}},${{p.bbox[3]}}`;
@@ -1561,9 +1564,80 @@ map.on('load', () => {{
       }}
     }});
 
-    map.on('mouseenter', 'tiles-z' + z, () => {{ map.getCanvas().style.cursor = 'pointer'; }});
+    map.on('mouseenter', 'tiles-z' + z, () => {{ if (!(currentMode === 'attributes' && showFeatures)) map.getCanvas().style.cursor = 'pointer'; }});
     map.on('mouseleave', 'tiles-z' + z, () => {{ map.getCanvas().style.cursor = ''; }});
   }}
+
+  let hoveredFeature = null;
+
+  map.on('mousemove', (e) => {{
+    if (currentMode !== 'attributes' || !showFeatures) return;
+    if (!map.getStyle()) return;
+    const layers = map.getStyle().layers.filter(l => l.id.startsWith('feature-layer-')).map(l => l.id);
+    if (!layers.length) return;
+    const features = map.queryRenderedFeatures(e.point, {{ layers }});
+    
+    if (features.length) {{
+      map.getCanvas().style.cursor = 'pointer';
+      const f = features[0];
+      if (hoveredFeature && (hoveredFeature.id !== f.id || hoveredFeature.source !== f.source)) {{
+        map.setFeatureState(hoveredFeature, {{ hover: false }});
+      }}
+      if (f.id !== undefined) {{
+        hoveredFeature = {{ source: f.source, sourceLayer: f.sourceLayer, id: f.id }};
+        map.setFeatureState(hoveredFeature, {{ hover: true }});
+      }}
+    }} else {{
+      map.getCanvas().style.cursor = '';
+      if (hoveredFeature) {{
+        map.setFeatureState(hoveredFeature, {{ hover: false }});
+        hoveredFeature = null;
+      }}
+    }}
+  }});
+
+  map.on('click', (e) => {{
+    if (currentMode !== 'attributes' || !showFeatures) return;
+    if (!map.getStyle()) return;
+    const layers = map.getStyle().layers.filter(l => l.id.startsWith('feature-layer-')).map(l => l.id);
+    if (!layers.length) return;
+    const features = map.queryRenderedFeatures(e.point, {{ layers }});
+    
+    if (features.length) {{
+      const f = features[0];
+      const props = f.properties;
+      let osmId = props['@id'] || props.id || props.osm_id || f.id || 'Unknown';
+      let featType = 'node';
+      
+      if (f.geometry.type === 'LineString' || f.geometry.type === 'MultiLineString' || f.geometry.type === 'Polygon' || f.geometry.type === 'MultiPolygon') {{
+        featType = 'way';
+      }}
+
+      if (osmId.toString().includes('/')) {{
+        const parts = osmId.toString().split('/');
+        featType = parts[0];
+        osmId = parts[1];
+      }}
+      
+      const numericId = osmId.toString().replace(/[^0-9]/g, '');
+      const osmUrl = `https://www.openstreetmap.org/${{featType}}/${{numericId}}`;
+      
+      const titles = {{ surface: 'Surface', smoothness: 'Smoothness', width: 'Width', tactile_paving: 'Tactile Paving', wheelchair: 'Wheelchair', kerb: 'Kerb' }};
+      
+      const popupHtml = `
+        <div style="font-family: 'Outfit', sans-serif; min-width: 180px;">
+            <h4 style="margin: 0 0 10px 0; color: #00f2fe; font-size: 14px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">Missing Tag: ${{titles[currentMetricAttr]}}</h4>
+            <p style="margin: 0 0 12px 0; font-size: 13px; color: #cbd5e1;"><b>OSM ID:</b> ${{osmId}}</p>
+            <a href="${{osmUrl}}" target="_blank" style="display: block; background: #4facfe; color: white; padding: 6px 10px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">↗ Open in OSM</a>
+        </div>
+      `;
+      
+      new maplibregl.Popup({{ className: 'dark-popup' }})
+        .setLngLat(e.lngLat)
+        .setHTML(popupHtml)
+        .addTo(map);
+    }}
+  }});
 }});
 
 document.getElementById('mode-geometry').addEventListener('click', () => {{
