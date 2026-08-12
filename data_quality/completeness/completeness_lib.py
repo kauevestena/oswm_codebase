@@ -1023,7 +1023,7 @@ def _build_map_html(geojson_str, boundary_geojson_str, center_lon, center_lat, c
   .legend h4 {{ color: #00f2fe; font-size: 0.8rem; margin-bottom: 8px; font-weight: 600; }}
   .legend .bar {{
     width: 180px; height: 14px; border-radius: 4px;
-    background: linear-gradient(to right, #d73027, #fc8d59, #fee08b, #d9ef8b, #66bd63, #1a9850);
+    background: linear-gradient(to right, #00204d, #00336f, #414d6b, #7c7b78, #bca35f, #ffea46);
   }}
   .legend .labels {{
     display: flex; justify-content: space-between; font-size: 0.7rem;
@@ -1172,12 +1172,12 @@ function ratioToColor(ratio) {{
   if (ratio === null || ratio === undefined) return 'rgba(71, 85, 105, 0.5)';
   const r = Math.min(ratio, 1.0);
   const stops = [
-    [0.0, [215, 48, 39]],
-    [0.15, [252, 141, 89]],
-    [0.3, [254, 224, 139]],
-    [0.5, [217, 239, 139]],
-    [0.75, [102, 189, 99]],
-    [1.0, [26, 152, 80]]
+    [0.0, [0, 32, 77]],
+    [0.15, [0, 51, 111]],
+    [0.3, [65, 77, 107]],
+    [0.5, [124, 123, 120]],
+    [0.75, [188, 163, 95]],
+    [1.0, [255, 234, 70]]
   ];
   let lower = stops[0], upper = stops[stops.length - 1];
   for (let i = 0; i < stops.length - 1; i++) {{
