@@ -42,6 +42,9 @@ if [ "$MODE" = "skip" ]; then
 else
     if [ "$MODE" = "generate" ]; then
         run_step oswm_codebase/getting_data.py "getting_data"
+        if [ ! -d "data/updates/versioning" ]; then
+            run_step oswm_codebase/getting_feature_versioning_data.py "getting_feature_versioning_data"
+        fi
     fi
 
     if [ "${#FAILED_STEPS[@]}" -eq 0 ]; then
