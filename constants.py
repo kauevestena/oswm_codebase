@@ -52,7 +52,12 @@ boundaries_infos_path = os.path.join(boundaries_folderpath, "infos.json")
 boundaries_md_path = os.path.join(boundaries_folderpath, "metadata.json")
 updating_infos_path = os.path.join(updates_folderpath, "registry.json")
 data_updating_path = os.path.join(updates_folderpath, "index.html")
-routing_demo_path = os.path.join(routing_folderpath, "demo.geojson")
+routing_parquet_path = os.path.join(routing_folderpath, "network.parquet")
+routing_graph_path = os.path.join(routing_folderpath, "network.oswmg")
+routing_tiles_path = os.path.join(routing_folderpath, "network.pmtiles")
+routing_tiles_report_path = os.path.join(
+    routing_folderpath, "tile_generation_report.json"
+)
 routing_profiles_path = os.path.join(routing_folderpath, "profiles.json")
 routing_metadata_path = os.path.join(routing_folderpath, "metadata.json")
 routing_slope_cache_path = os.path.join(routing_folderpath, "slope_cache.json")

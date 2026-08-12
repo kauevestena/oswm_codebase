@@ -27,6 +27,6 @@ jobs:
       - run: python -m pip check
       - run: python -m pytest -q
       - name: Run JavaScript module tests
-        run: node --test webmap/snapshot/*.test.mjs webmap/theme_charts/*.test.mjs
+        run: node --test tests/routing_worker.test.mjs webmap/snapshot/*.test.mjs webmap/theme_charts/*.test.mjs
       - name: Parse runner scripts
         run: bash -n runners/*.sh local_setup.sh other/fix_scripts/fix_version_checkout.sh

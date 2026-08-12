@@ -84,10 +84,13 @@
             "description": "Routing files, network properties, and routing demo data.",
             "path": "data/routing",
             "files": [
-                "demo.geojson",
                 "metadata.json",
+                "network.oswmg",
+                "network.parquet",
+                "network.pmtiles",
                 "profiles.json",
-                "slope_cache.json"
+                "slope_cache.json",
+                "tile_generation_report.json"
             ]
         }
     }

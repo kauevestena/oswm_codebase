@@ -62,6 +62,7 @@ else
     run_step oswm_codebase/data_quality/external_qc.py "external_qc"
     run_step oswm_codebase/dashboard/statistics_generation.py "statistics_generation"
     run_step oswm_codebase/generation/routing_demo_gen.py "routing_demo_gen"
+    run_step oswm_codebase/generation/routing_tiles_gen.py "routing_tiles_gen"
     run_step oswm_codebase/generation/hazard_tiles_gen.py "hazard_tiles_gen"
     # reset-derived removes hub/, including the dashboard made by the initial
     # update check. Render it again after boundaries and derived data exist.

@@ -30,6 +30,7 @@ RUNNER_SCRIPTS = (
     "data_quality/external_qc.py",
     "dashboard/statistics_generation.py",
     "generation/routing_demo_gen.py",
+    "generation/routing_tiles_gen.py",
     "generation/hazard_tiles_gen.py",
     "metadata/metadata_generation.py",
     "datahub/API/generate_api.py",

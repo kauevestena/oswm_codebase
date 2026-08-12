@@ -142,6 +142,7 @@ MEDIA_TYPES = {
     ".geojson": ("application/geo+json", "GeoJSON"),
     ".parquet": ("application/vnd.apache.parquet", "GeoParquet"),
     ".pmtiles": ("application/vnd.pmtiles", "PMTiles"),
+    ".oswmg": ("application/octet-stream", "OSWM Binary Graph"),
     ".vrt": ("application/xml", "GDAL VRT"),
     ".json": ("application/json", "JSON"),
     ".html": ("text/html", "HTML"),
@@ -409,7 +410,7 @@ def _folder_profile(relative: PurePosixPath) -> dict[str, Any]:
 
 def _humanize(value: str) -> str:
     value = re.sub(r"\.(metadata\.)?json$", "", value, flags=re.IGNORECASE)
-    value = re.sub(r"\.(geojson|parquet|pmtiles|vrt|png|html|csv|txt)$", "", value, flags=re.IGNORECASE)
+    value = re.sub(r"\.(geojson|parquet|pmtiles|oswmg|vrt|png|html|csv|txt)$", "", value, flags=re.IGNORECASE)
     return value.replace("_", " ").replace("-", " ").strip().title()
 
 
@@ -424,7 +425,7 @@ def _media_type(path: Path) -> tuple[str, str]:
 def _resource_type(path: Path) -> str:
     suffix = path.suffix.lower()
     name = path.name.lower()
-    if suffix in {".geojson", ".parquet"}:
+    if suffix in {".geojson", ".parquet", ".oswmg"}:
         return "dataset"
     if suffix == ".pmtiles":
         return "tileset"

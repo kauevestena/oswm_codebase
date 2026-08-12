@@ -20,8 +20,11 @@ with users and accessibility specialists.
 | `profile_validation.py` | Structural and numerical safety checks |
 | `grading.py` | Attribute normalization and grade calculation |
 | `elevation.py` | Elevation-provider hierarchy and slope cache |
-| `routing_demo.html` | Static MapLibre and PathFinder client |
+| `binary_graph.py` | Versioned typed-array graph serializer and spatial index |
+| `routing_worker.js` | Indexed snapping and A* routing off the browser main thread |
+| `routing_demo.html` | Static MapLibre client with PMTiles network rendering |
 | `../generation/routing_demo_gen.py` | Offline routing-data generation |
+| `../generation/routing_tiles_gen.py` | Lightweight display PMTiles generation |
 
 Policy changes should normally touch only `profile_rules.py`. The remaining
 modules should not contain profile-specific accessibility judgments.
@@ -60,6 +63,13 @@ in feature-coordinate order is an ascent forward and a descent backward.
 The distance profile needs no grades, so no redundant `distance_grade_*`
 properties are written to every edge.
 
+The same offline pass serializes the rounded topology and every profile's
+directional edge costs into `network.oswmg`. The browser reads its arrays
+directly, snaps clicks through the embedded uniform-grid segment index, and
+runs A* in a Web Worker. Network drawing is intentionally separate: MapLibre
+streams the much smaller `network.pmtiles` archive and never downloads the
+analytical GeoParquet to calculate a route.
+
 ## Route comparison
 
 When an accessibility profile is selected, the browser offers **Compare with
@@ -94,14 +104,17 @@ need to be sampled again.
 
 | File | Contents |
 |---|---|
-| `data/routing/demo.geojson` | Transitional geometry plus compact grades |
-| `data/routing/profiles.json` | Browser-safe labels and cost rules |
-| `data/routing/metadata.json` | Ruleset, provenance and grade audit |
+| `data/routing/network.parquet` | Analytical geometry plus compact directional grades |
+| `data/routing/network.oswmg` | Typed topology, profile costs and snapping index |
+| `data/routing/network.pmtiles` | Lightweight MapLibre display network |
+| `data/routing/profiles.json` | Browser-safe labels and graph contract |
+| `data/routing/metadata.json` | Ruleset, graph checksum, provenance and grade audit |
 | `data/routing/slope_cache.json` | Reusable derived slopes |
+| `data/routing/tile_generation_report.json` | PMTiles generation validation |
 
-The GeoJSON is transitional. A future version can serialize the same
-precomputed properties into typed arrays/a compact topology graph without
-changing the human-editable rules.
+`network.parquet` is the expert-facing scrutiny dataset and the direct source
+for PMTiles generation. GeoJSON is not generated anywhere in the routing
+pipeline.
 
 ## Safely changing a profile
 
@@ -111,6 +124,7 @@ changing the human-editable rules.
 
    ```bash
    python -m unittest discover -s tests -p "test_routing_*.py" -v
+   node --test tests/routing_worker.test.mjs
    ```
 
 4. Generate at least one node and inspect `data/routing/metadata.json`.
