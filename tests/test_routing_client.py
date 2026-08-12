@@ -66,6 +66,11 @@ class RoutingClientWiringTests(unittest.TestCase):
         self.assertIn("routing_metadata_path", self.generator)
         self.assertIn("routing_slope_cache_path", self.generator)
         self.assertIn("routing_graph_path", self.generator)
+        self.assertIn("routing_parquet_path", self.generator)
+        self.assertIn("_write_geoparquet", self.generator)
+        self.assertNotIn("routing_demo_path", self.generator)
+        self.assertNotIn("routing_collection", self.generator)
+        self.assertIn("build_binary_graph(\n        output_rows", self.generator)
         self.assertIn("profile_ruleset_hash", self.generator)
         self.assertIn('"distance_profile_id": distance_profile_id', self.generator)
         self.assertIn('"graph_sha256": graph_metadata["sha256"]', self.generator)
@@ -76,18 +81,18 @@ class RoutingClientWiringTests(unittest.TestCase):
         self.assertIn("type: 'vector'", self.html)
         self.assertIn("'source-layer'", self.html)
         self.assertIn("routing_tiles_path", self.tiles_generator)
+        self.assertIn("routing_parquet_path", self.tiles_generator)
+        self.assertNotIn("routing_demo_path", self.tiles_generator)
         self.assertIn("DISPLAY_LAYER = \"routing\"", self.tiles_generator)
 
     def test_daily_workflow_caches_elevation_tiles(self):
         self.assertIn("actions/cache@v4", self.daily_workflow)
         self.assertIn(".cache/oswm/elevation", self.daily_workflow)
         self.assertIn("routing_tiles_gen.py", self.daily_runner)
-        self.assertIn("data/routing/network.oswmg", self.daily_runner)
-        self.assertIn("data/routing/network.pmtiles", self.daily_runner)
 
     def test_data_api_lists_generated_routing_artifacts(self):
         for filename in (
-            "demo.geojson",
+            "network.parquet",
             "network.oswmg",
             "network.pmtiles",
             "tile_generation_report.json",
@@ -96,6 +101,7 @@ class RoutingClientWiringTests(unittest.TestCase):
             "slope_cache.json",
         ):
             self.assertIn(filename, self.api_generator)
+        self.assertNotIn("demo.geojson", self.api_generator)
 
 
 if __name__ == "__main__":

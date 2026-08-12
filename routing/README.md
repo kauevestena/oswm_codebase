@@ -68,7 +68,7 @@ directional edge costs into `network.oswmg`. The browser reads its arrays
 directly, snaps clicks through the embedded uniform-grid segment index, and
 runs A* in a Web Worker. Network drawing is intentionally separate: MapLibre
 streams the much smaller `network.pmtiles` archive and never downloads the
-analytical GeoJSON to calculate a route.
+analytical GeoParquet to calculate a route.
 
 ## Route comparison
 
@@ -104,7 +104,7 @@ need to be sampled again.
 
 | File | Contents |
 |---|---|
-| `data/routing/demo.geojson` | Analytical geometry plus compact grades |
+| `data/routing/network.parquet` | Analytical geometry plus compact directional grades |
 | `data/routing/network.oswmg` | Typed topology, profile costs and snapping index |
 | `data/routing/network.pmtiles` | Lightweight MapLibre display network |
 | `data/routing/profiles.json` | Browser-safe labels and graph contract |
@@ -112,8 +112,9 @@ need to be sampled again.
 | `data/routing/slope_cache.json` | Reusable derived slopes |
 | `data/routing/tile_generation_report.json` | PMTiles generation validation |
 
-`demo.geojson` remains available for analysis and debugging, but it is not a
-runtime dependency of the routing page.
+`network.parquet` is the expert-facing scrutiny dataset and the direct source
+for PMTiles generation. GeoJSON is not generated anywhere in the routing
+pipeline.
 
 ## Safely changing a profile
 

@@ -1,0 +1,32 @@
+name: core_ci
+
+on:
+  push:
+    branches: [main, "agent/**"]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gdal-bin libgdal-dev
+      - run: python -m pip install -r requirements-dev.txt
+      - run: python -m pip check
+      - run: python -m pytest -q
+      - name: Run JavaScript module tests
+        run: node --test tests/routing_worker.test.mjs webmap/snapshot/*.test.mjs webmap/theme_charts/*.test.mjs
+      - name: Parse runner scripts
+        run: bash -n runners/*.sh local_setup.sh other/fix_scripts/fix_version_checkout.sh

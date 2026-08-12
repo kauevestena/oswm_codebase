@@ -36,16 +36,17 @@ def _fetch_batch(ids_batch, is_node=False):
     """Fetch a batch of features using the multi-fetch OSM API endpoint."""
     api = osmapi.OsmApi()
     results = {}
+    multi_func = getattr(api, "nodes_get" if is_node else "ways_get", getattr(api, "NodesGet" if is_node else "WaysGet", None))
+    single_func = getattr(api, "node_get" if is_node else "way_get", getattr(api, "NodeGet" if is_node else "WayGet", None))
     try:
-        fetched = api.NodesGet(ids_batch) if is_node else api.WaysGet(ids_batch)
+        fetched = multi_func(ids_batch)
         for fid in ids_batch:
             results[fid] = _parse_result(fetched.get(fid))
     except Exception:
         # Fallback: individual fetches for the failed batch
-        fetch_func = api.NodeGet if is_node else api.WayGet
         for fid in ids_batch:
             try:
-                results[fid] = _parse_result(fetch_func(fid))
+                results[fid] = _parse_result(single_func(fid))
             except Exception:
                 results[fid] = _DEFAULT_RET
     return results
@@ -73,7 +74,8 @@ def fetch_all_versioning(ids, is_node=False):
 
 
 # --- Main ---
-gdf_dicts = get_gdfs_dict()
+create_folder_if_not_exists(versioning_folderpath)
+gdf_dicts = get_gdfs_dict(raw_data=True)
 
 for category in gdf_dicts:
     print(f"\ncategory: {category}")

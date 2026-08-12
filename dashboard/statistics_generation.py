@@ -80,6 +80,37 @@ with open(os.path.join(statistics_basepath, "failed_gen.txt"), "w+") as error_re
                 )
 
                 # remove_if_exists(outpath)
+                
+                # Check for completely empty/NaN data to render a graceful fallback
+                is_empty = False
+                if "df" in spec["params"] and "column" in spec["params"]:
+                    df = spec["params"]["df"]
+                    col = spec["params"]["column"]
+                    if df is not None and col in df:
+                        if df[col].dropna().empty:
+                            is_empty = True
+                
+                if "input_gdf" in spec["params"] and "fieldname" in spec["params"]:
+                    df = spec["params"]["input_gdf"]
+                    col = spec["params"]["fieldname"]
+                    if df is not None and col in df:
+                        if df[col].dropna().empty:
+                            is_empty = True
+
+                if is_empty:
+                    print(f"Data for {chart_spec} is completely empty/NaN. Creating placeholder.")
+                    with open(outpath, "w") as f:
+                        f.write("<!DOCTYPE html>\n<html>\n<head>\n</head>\n<body>\n"
+                                "<div style='padding: 2rem; text-align: center; font-family: sans-serif; margin-top: 50px;'>"
+                                "<h3>No data available for this chart.</h3>"
+                                "<p>Update age and versioning data might not have been fetched for this node yet. This is typically collected on a weekly basis.</p>"
+                                "</div>\n</body>\n</html>")
+                    
+                    # We still want to add it to the dashboard lists
+                    generated_list_dict[category].append(outpath)
+                    charts_titles[outpath] = spec["title"]
+                    charts_explanations[outpath] = explanation_base.format(spec["explanation"])
+                    continue
 
                 print("generating ", outpath)
                 chart_obj = spec["function"](**spec["params"])

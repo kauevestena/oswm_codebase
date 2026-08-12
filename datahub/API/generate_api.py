@@ -155,7 +155,7 @@ def get_endpoint_description(path, filename, deliverable):
             "data/vrts/data.vrt": "GDAL Virtual Format file linking all processed parquet files together.",
             "data/vrts/data_raw.vrt": "GDAL Virtual Format file linking all raw parquet files together.",
             "data/vrts/tiles.vrt": "GDAL Virtual Format file referencing tile-oriented datasets.",
-            "data/routing/demo.geojson": "Analytical GeoJSON routing network with compact, directional accessibility grades.",
+            "data/routing/network.parquet": "GeoParquet routing network with compact, directional accessibility grades for expert scrutiny.",
             "data/routing/network.oswmg": "Versioned typed-array routing topology with profile weights and an indexed segment lookup for the browser worker.",
             "data/routing/network.pmtiles": "Lightweight routing-network vector tiles used by the MapLibre demo.",
             "data/routing/tile_generation_report.json": "Validation result, input feature count, and byte size for the routing PMTiles build.",
@@ -322,7 +322,7 @@ def generate_data_index():
                 files = ["improper_geoms/sidewalks_improper_geoms.parquet", "improper_geoms/crossings_improper_geoms.parquet", "improper_geoms/kerbs_improper_geoms.parquet", "disjointed/crossings_disjointed.parquet", "disjointed/kerbs_disjointed.parquet"]
             elif key == "routing":
                 files = [
-                    "demo.geojson",
+                    "network.parquet",
                     "network.oswmg",
                     "network.pmtiles",
                     "profiles.json",

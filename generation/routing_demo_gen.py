@@ -1,8 +1,7 @@
 """Generate shared accessibility-aware routing and hazard datasets.
 
-The browser routes over a compact typed-array graph.  GeoJSON remains an
-analytical/debugging export and the input to the separately generated PMTiles
-display archive.
+The browser routes over a compact typed-array graph, while GeoParquet provides
+the downloadable analytical network and the input for PMTiles rendering.
 """
 
 from __future__ import annotations
@@ -287,6 +286,40 @@ def _json_dump(
         raise
 
 
+def _write_geoparquet(
+    rows: list[dict[str, Any]],
+    path: str,
+) -> dict[str, Any]:
+    """Atomically write and validate the analytical routing network."""
+
+    destination = Path(path)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    temporary = destination.parent / (
+        f".{destination.stem}.tmp.{os.getpid()}{destination.suffix}"
+    )
+    frame = gpd.GeoDataFrame(rows, geometry="geometry", crs="EPSG:4326")
+    try:
+        frame.to_parquet(temporary, index=False)
+        validated = gpd.read_parquet(temporary)
+        if len(validated) != len(rows):
+            raise ValueError(
+                f"{destination}: expected {len(rows)} features, "
+                f"got {len(validated)}"
+            )
+        if validated.crs is None:
+            raise ValueError(f"{destination}: GeoParquet CRS metadata is missing")
+        os.replace(temporary, destination)
+    except Exception:
+        temporary.unlink(missing_ok=True)
+        raise
+    return {
+        "filename": destination.name,
+        "byte_size": destination.stat().st_size,
+        "feature_count": len(rows),
+        "format": "GeoParquet",
+    }
+
+
 def _profile_audit(
     properties: list[dict[str, Any]],
 ) -> dict[str, dict[str, Any]]:
@@ -496,25 +529,9 @@ def main() -> None:
     os.makedirs(constants.routing_folderpath, exist_ok=True)
     save_slope_cache(constants.routing_slope_cache_path, new_slope_cache)
 
-    routing_collection = {
-        "type": "FeatureCollection",
-        "features": [
-            {
-                "type": "Feature",
-                "geometry": mapping(row["geometry"]),
-                "properties": {
-                    key: value
-                    for key, value in row.items()
-                    if key != "geometry"
-                },
-            }
-            for row in output_rows
-        ],
-    }
-    _json_dump(
-        routing_collection,
-        constants.routing_demo_path,
-        expected_feature_count=len(output_rows),
+    parquet_metadata = _write_geoparquet(
+        output_rows,
+        constants.routing_parquet_path,
     )
 
     rules_hash = profile_ruleset_hash(ROUTING_PROFILES)
@@ -531,7 +548,7 @@ def main() -> None:
         "profiles": public_profile_metadata(ROUTING_PROFILES),
     }
     graph_metadata = build_binary_graph(
-        routing_collection,
+        output_rows,
         profile_payload,
         constants.routing_graph_path,
     )
@@ -542,6 +559,9 @@ def main() -> None:
             "graph_profile_order": graph_metadata["profile_order"],
             "graph_sha256": graph_metadata["sha256"],
             "graph_byte_size": graph_metadata["byte_size"],
+            "analytical_network_filename": os.path.basename(
+                constants.routing_parquet_path
+            ),
             "display_tiles_filename": os.path.basename(
                 constants.routing_tiles_path
             ),
@@ -561,6 +581,7 @@ def main() -> None:
         ),
         "slope_source_counts": dict(source_counts),
         "elevation_provider_fingerprint": resolver_fingerprint,
+        "analytical_network": parquet_metadata,
         "binary_graph": graph_metadata,
         "profile_audit": _profile_audit(output_properties),
         "warnings": [
@@ -654,8 +675,8 @@ def main() -> None:
     }
     _json_dump(hazard_metadata, constants.hazard_metadata_path)
     print(
-        f"Generated {len(output_rows)} routable features at "
-        f"{constants.routing_demo_path}, binary graph at "
+        f"Generated {len(output_rows)} routable features in "
+        f"{constants.routing_parquet_path}, binary graph at "
         f"{constants.routing_graph_path}, and {len(output_rows)} hazard "
         "features per profile."
     )

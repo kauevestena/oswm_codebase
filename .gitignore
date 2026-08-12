@@ -191,4 +191,6 @@ tests/*
 !tests/routing_worker.test.mjs
 !tests/test_hazard_analysis.py
 !tests/test_metadata_generation.py
+!tests/test_launch_readiness.py
+!tests/test_runner_integration.py
 tests.py

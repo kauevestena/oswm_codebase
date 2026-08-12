@@ -63,13 +63,15 @@ def _haversine_m(left: Sequence[float], right: Sequence[float]) -> float:
     return 2.0 * EARTH_RADIUS_M * math.asin(min(1.0, math.sqrt(value)))
 
 
-def _line_coordinates(geometry: Mapping[str, Any]) -> Iterable[list[Any]]:
-    geometry_type = geometry.get("type")
-    coordinates = geometry.get("coordinates") or []
+def _line_coordinates(geometry: Any) -> Iterable[Sequence[Any]]:
+    """Yield coordinate sequences from Shapely routing geometries."""
+
+    geometry_type = getattr(geometry, "geom_type", None)
     if geometry_type == "LineString":
-        yield coordinates
+        yield geometry.coords
     elif geometry_type == "MultiLineString":
-        yield from coordinates
+        for part in geometry.geoms:
+            yield part.coords
 
 
 def _profile_order(profile_payload: Mapping[str, Any]) -> list[str]:
@@ -161,7 +163,7 @@ def _cell_coordinate(
 
 
 def build_binary_graph(
-    feature_collection: Mapping[str, Any],
+    routing_rows: Sequence[Mapping[str, Any]],
     profile_payload: Mapping[str, Any],
     output_path: str | os.PathLike[str],
     *,
@@ -171,9 +173,8 @@ def build_binary_graph(
 
     if tolerance <= 0:
         raise ValueError("topology tolerance must be positive")
-    features = feature_collection.get("features")
-    if not isinstance(features, list) or not features:
-        raise ValueError("routing FeatureCollection must contain features")
+    if not routing_rows:
+        raise ValueError("routing rows must contain features")
 
     profile_order = _profile_order(profile_payload)
     profiles = profile_payload["profiles"]
@@ -210,10 +211,10 @@ def build_binary_graph(
     # PathFinder creates the complete rounded vertex table first, with the last
     # raw coordinate winning, and only then calculates edge weights. Use the
     # same two passes so migration cannot alter costs around near-equal nodes.
-    for feature in features:
-        if not isinstance(feature, Mapping):
+    for row in routing_rows:
+        if not isinstance(row, Mapping):
             continue
-        geometry = feature.get("geometry") or {}
+        geometry = row.get("geometry")
         for coordinates in _line_coordinates(geometry):
             for coordinate in coordinates:
                 node_id(coordinate)
@@ -226,11 +227,10 @@ def build_binary_graph(
         )
         return nodes[key]
 
-    for feature in features:
-        if not isinstance(feature, Mapping):
+    for row in routing_rows:
+        if not isinstance(row, Mapping):
             continue
-        geometry = feature.get("geometry") or {}
-        properties = feature.get("properties") or {}
+        geometry = row.get("geometry")
         for coordinates in _line_coordinates(geometry):
             if len(coordinates) < 2:
                 continue
@@ -248,7 +248,7 @@ def build_binary_graph(
                     _directional_weight(
                         profile_id,
                         profiles[profile_id],
-                        properties,
+                        row,
                         segment_m,
                         "forward",
                     )
@@ -258,7 +258,7 @@ def build_binary_graph(
                     _directional_weight(
                         profile_id,
                         profiles[profile_id],
-                        properties,
+                        row,
                         segment_m,
                         "backward",
                     )

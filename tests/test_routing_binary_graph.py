@@ -12,6 +12,13 @@ from routing.binary_graph import (
 )
 
 
+class LineString:
+    geom_type = "LineString"
+
+    def __init__(self, coordinates):
+        self.coords = coordinates
+
+
 def profile_payload():
     return {
         "distance_profile_id": "distance",
@@ -38,35 +45,29 @@ def profile_payload():
 
 def feature(coordinates, **properties):
     return {
-        "type": "Feature",
-        "geometry": {"type": "LineString", "coordinates": coordinates},
-        "properties": {
-            "edge_kind": "sidewalk",
-            "length_m": 111.2,
-            "wheelchair_allow_fwd": True,
-            "wheelchair_allow_bwd": True,
-            "wheelchair_grade_fwd": 90,
-            "wheelchair_grade_bwd": 20,
-            **properties,
-        },
+        "geometry": LineString(coordinates),
+        "edge_kind": "sidewalk",
+        "length_m": 111.2,
+        "wheelchair_allow_fwd": True,
+        "wheelchair_allow_bwd": True,
+        "wheelchair_grade_fwd": 90,
+        "wheelchair_grade_bwd": 20,
+        **properties,
     }
 
 
 class BinaryRoutingGraphTests(unittest.TestCase):
     def test_serializes_topology_profiles_and_spatial_index(self):
-        collection = {
-            "type": "FeatureCollection",
-            "features": [
-                feature([[0, 0], [0.001, 0]]),
-                feature(
-                    [[0.001000001, 0], [0.002, 0]],
-                    wheelchair_allow_bwd=False,
-                ),
-            ],
-        }
+        rows = [
+            feature([[0, 0], [0.001, 0]]),
+            feature(
+                [[0.001000001, 0], [0.002, 0]],
+                wheelchair_allow_bwd=False,
+            ),
+        ]
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "network.oswmg"
-            metadata = build_binary_graph(collection, profile_payload(), path)
+            metadata = build_binary_graph(rows, profile_payload(), path)
             header = read_graph_header(path)
             payload = path.read_bytes()
 
@@ -90,20 +91,17 @@ class BinaryRoutingGraphTests(unittest.TestCase):
         self.assertTrue(any(550 < value < 560 for value in accessibility_weights))
 
     def test_duplicate_edges_and_rounded_vertices_use_last_write(self):
-        collection = {
-            "type": "FeatureCollection",
-            "features": [
-                feature([[0, 0], [0.001, 0]], wheelchair_grade_fwd=20),
-                feature(
-                    [[0.000000001, 0], [0.001000001, 0]],
-                    wheelchair_grade_fwd=90,
-                    wheelchair_grade_bwd=90,
-                ),
-            ],
-        }
+        rows = [
+            feature([[0, 0], [0.001, 0]], wheelchair_grade_fwd=20),
+            feature(
+                [[0.000000001, 0], [0.001000001, 0]],
+                wheelchair_grade_fwd=90,
+                wheelchair_grade_bwd=90,
+            ),
+        ]
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "network.oswmg"
-            build_binary_graph(collection, profile_payload(), path)
+            build_binary_graph(rows, profile_payload(), path)
             header = read_graph_header(path)
             payload = path.read_bytes()
 
@@ -120,7 +118,7 @@ class BinaryRoutingGraphTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             with self.assertRaisesRegex(ValueError, "must contain features"):
                 build_binary_graph(
-                    {"type": "FeatureCollection", "features": []},
+                    [],
                     profile_payload(),
                     Path(directory) / "network.oswmg",
                 )

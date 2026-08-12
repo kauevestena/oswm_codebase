@@ -23,6 +23,8 @@ map_page_name = "map.html"
 readme_path = "README.md"
 node_home_path = "index.html"
 workflows_path = ".github/workflows"
+global_params_path = "global_params.json"
+MAX_TILE_FILESIZE_BYTES = 100 * 1024 * 1024  # 100 MB limit guard
 
 # data folderpaths:
 data_folderpath = "data"
@@ -50,7 +52,7 @@ boundaries_infos_path = os.path.join(boundaries_folderpath, "infos.json")
 boundaries_md_path = os.path.join(boundaries_folderpath, "metadata.json")
 updating_infos_path = os.path.join(updates_folderpath, "registry.json")
 data_updating_path = os.path.join(updates_folderpath, "index.html")
-routing_demo_path = os.path.join(routing_folderpath, "demo.geojson")
+routing_parquet_path = os.path.join(routing_folderpath, "network.parquet")
 routing_graph_path = os.path.join(routing_folderpath, "network.oswmg")
 routing_tiles_path = os.path.join(routing_folderpath, "network.pmtiles")
 routing_tiles_report_path = os.path.join(

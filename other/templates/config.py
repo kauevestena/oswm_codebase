@@ -22,6 +22,33 @@ CITY_NAME = "Curitiba"
 # simple name, spaces must be replaced by underscores, no special characters, all in lowercase
 CITY_SHORTNAME = "curitiba"
 
+# Prefer an exact OpenStreetMap administrative relation for repeatable node
+# boundaries.  Leave as None only when the node intentionally relies on the
+# ranked CITY_NAME search and BOUNDING_BOX fallback.
+OSM_RELATION_ID = None
+
+# Stagger these UTC schedules across nodes before fleet enrollment.  The
+# managed workflow synchronizer renders them into GitHub Actions workflows.
+NODE_DAILY_CRON = "30 7 * * *"
+NODE_WEEKLY_CRON = "5 8 * * 0"
+
+# Public-service requests are bounded and identify OSWM.  Large cities and
+# simultaneous cold starts should use controlled infrastructure instead.
+NOMINATIM_URL = "https://nominatim.openstreetmap.org"
+NOMINATIM_USER_AGENT = (
+    "OpenSidewalkMap/1.0 (https://github.com/kauevestena/oswm_codebase)"
+)
+NOMINATIM_TIMEOUT_SECONDS = 30
+NOMINATIM_ATTEMPTS = 3
+NOMINATIM_BACKOFF_SECONDS = 2
+
+OVERPASS_ENDPOINTS = (
+    "https://overpass-api.de/api",
+    "https://overpass.kumi.systems/api",
+)
+OVERPASS_ATTEMPTS_PER_ENDPOINT = 2
+OVERPASS_BACKOFF_SECONDS = 5
+
 # Metadata records are published in English ("en") by default. The timezone is
 # automatically determined from MID_LAT/MID_LGT (or BOUNDING_BOX).
 # METADATA_TIMEZONE = "America/Sao_Paulo"  # Optional manual override

@@ -9,8 +9,6 @@ from branding import branding_asset_url
 import csv
 import pandas as pd
 import requests
-import folium
-from folium.plugins import MarkerCluster
 
 # # # constants and setup:
 boundaries_infos = get_boundaries_infos()
@@ -57,24 +55,47 @@ for name in subfoldernames:
 
 
 # # # functions:
-def add_to_map_data(row_tuple, quality_category, category):
-    if not row_tuple.id in map_view_data:
-        rep_point = row_tuple.geometry.representative_point()
-        id = row_tuple.id
+def add_to_map_data(row_tuple, quality_category, category, issue_key=None, issue_val=None, issue_comment=None):
+    id = row_tuple.id
+    
+    def sanitize(v):
+        import math
+        if isinstance(v, float) and math.isnan(v):
+            return "N/A"
+        if v is None:
+            return ""
+        return str(v)
 
-        if not id in map_view_data:
-            map_view_data[id] = {
-                "id": row_tuple.id,
-                # Leaflet uses lat, lon instead of lon, lat
-                "point": (rep_point.y, rep_point.x),
-                # as a set:
-                "quality_category": {quality_category},
-                "category": {category},
-                "feat_type": row_tuple.element,
-            }
-        else:
-            map_view_data[id]["quality_category"].add(quality_category)
-            map_view_data[id]["category"].add(category)
+    issue_details = None
+    if issue_key is not None or issue_val is not None or issue_comment is not None:
+        issue_details = {
+            "category": sanitize(quality_category),
+            "key": sanitize(issue_key),
+            "value": sanitize(issue_val),
+            "comment": sanitize(issue_comment)
+        }
+
+    if id not in map_view_data:
+        rep_point = row_tuple.geometry.representative_point()
+        map_view_data[id] = {
+            "id": id,
+            # Leaflet uses lat, lon instead of lon, lat
+            "point": (rep_point.y, rep_point.x),
+            # as a set:
+            "quality_category": {quality_category},
+            "category": {category},
+            "feat_type": row_tuple.element,
+            "issues": [issue_details] if issue_details else []
+        }
+    else:
+        # Always update both sets so per-category filtering works correctly
+        map_view_data[id]["quality_category"].add(quality_category)
+        map_view_data[id]["category"].add(category)
+        if issue_details:
+            if "issues" not in map_view_data[id]:
+                map_view_data[id]["issues"] = []
+            if issue_details not in map_view_data[id]["issues"]:
+                map_view_data[id]["issues"].append(issue_details)
 
 
 def add_to_occurrences(curr, category, val_list, feature_id, feature_type):
@@ -453,9 +474,8 @@ def create_marker_cluster_html(
 ):
     logo_url = logo_url or branding_asset_url("logos.project", "../oswm_codebase")
     favicon_url = favicon_url or branding_asset_url("favicon", "../oswm_codebase")
-    m = folium.Map(location=centerpoint, zoom_start=z_level, tiles=tiles)
 
-    # "map_view_data" is the source of the data:
+    # Filter data:
     map_view_data_to_use = map_view_data
 
     if specific_q_category or specific_category:
@@ -467,83 +487,153 @@ def create_marker_cluster_html(
                 special_map_view_data[k] = v
         map_view_data_to_use = special_map_view_data
 
-    locations = [item["point"] for item in map_view_data_to_use.values()]
+    issues_registry = []
+    issue_to_id = {}
 
-    total_markers = max(1, len(locations))
+    features = []
+    for item in map_view_data_to_use.values():
+        lat, lon = item["point"][0], item["point"][1]
+        
+        issues = item.get("issues", [])
+        issue_ids = []
+        for issue in issues:
+            issue_key = (issue["category"], issue["key"], issue["value"], issue["comment"])
+            if issue_key not in issue_to_id:
+                issue_id = len(issues_registry)
+                issue_to_id[issue_key] = issue_id
+                issues_registry.append(issue)
+            else:
+                issue_id = issue_to_id[issue_key]
+            issue_ids.append(issue_id)
 
-    icon_create_function = f"""\
-    function(cluster) {{
-        var childCount = cluster.getChildCount();
-        var totalMarkers = {total_markers};
-        
-        var bgColor;
-        var shadowColor;
-        var textColor;
-        
-        if (childCount <= totalMarkers * 0.25) {{
-            bgColor = 'rgba(254, 240, 217, 0.9)'; // #fef0d9
-            shadowColor = 'rgba(254, 240, 217, 0.5)';
-            textColor = '#333333';
-        }} else if (childCount <= totalMarkers * 0.50) {{
-            bgColor = 'rgba(253, 204, 138, 0.9)'; // #fdcc8a
-            shadowColor = 'rgba(253, 204, 138, 0.5)';
-            textColor = '#333333';
-        }} else if (childCount <= totalMarkers * 0.75) {{
-            bgColor = 'rgba(252, 141, 89, 0.9)'; // #fc8d59
-            shadowColor = 'rgba(252, 141, 89, 0.5)';
-            textColor = '#ffffff';
-        }} else {{
-            bgColor = 'rgba(215, 48, 31, 0.9)'; // #d7301f
-            shadowColor = 'rgba(215, 48, 31, 0.5)';
-            textColor = '#ffffff';
-        }}
-        
-        var style = 'background-color: ' + bgColor + ';' +
-                    'border-radius: 50%;' +
-                    'width: 44px;' +
-                    'height: 44px;' +
-                    'display: flex;' +
-                    'align-items: center;' +
-                    'justify-content: center;' +
-                    'font-weight: bold;' +
-                    'color: ' + textColor + ';' +
-                    'box-shadow: 0 0 15px ' + shadowColor + ';' +
-                    'border: 2px solid rgba(255, 255, 255, 0.8);' +
-                    'font-family: Outfit, sans-serif;' +
-                    'font-size: 14px;';
-        
-        return L.divIcon({{
-            html: '<div style="' + style + '"><span>' + childCount + '</span></div>',
-            className: 'custom-marker-cluster',
-            iconSize: new L.Point(44, 44)
-        }});
-    }}"""
+        features.append({
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [lon, lat]
+            },
+            "properties": {
+                "id": item["id"],
+                "feat_type": item["feat_type"],
+                "quality_categories": ", ".join(sorted(list(item["quality_category"]))),
+                "issue_ids": json.dumps(issue_ids, ensure_ascii=False),
+                "osm_url": osm_feature_url(item["id"], item["feat_type"]),
+                "josm_url": f"http://127.0.0.1:8111/load_object?new_layer=false&objects={item['feat_type'][0]}{item['id']}",
+                "id_url": f"https://www.openstreetmap.org/edit?editor=id&{item['feat_type']}={item['id']}#map=20/{lat}/{lon}"
+            }
+        })
 
-    popup_mold = """
-    <div style="font-family: 'Outfit', sans-serif; min-width: 180px;">
-        <h4 style="margin: 0 0 5px 0; color: #0088aa; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px;">Feature: {0} {1}</h4>
-        <p style="margin: 0 0 12px 0; font-size: 13px; color: #444; line-height: 1.4;"><b>Categories:</b><br>{2}</p>
-        <div style="display: flex; flex-direction: column; gap: 6px;">
-            <a href="{3}" target="_blank" style="background: #4facfe; color: white; padding: 6px 10px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">↗ Open in OSM</a>
-            <a href="{4}" target="_blank" style="background: #10b981; color: white; padding: 6px 10px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">⚙ Open in JOSM</a>
-            <a href="{5}" target="_blank" style="background: #8b5cf6; color: white; padding: 6px 10px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">✎ Open in iD Editor</a>
+    geojson_dict = {
+        "type": "FeatureCollection",
+        "features": features
+    }
+
+    geojson_json_str = json.dumps(geojson_dict, ensure_ascii=False)
+
+    # Inline the city boundary polygon so no runtime fetch is needed
+    try:
+        _raw_polygon = read_json(boundaries_geojson_path)
+        _boundary_feature = {
+            "type": "Feature",
+            "geometry": _raw_polygon,
+            "properties": {}
+        }
+        boundary_geojson_str = json.dumps(_boundary_feature, ensure_ascii=False)
+    except Exception:
+        boundary_geojson_str = '{"type":"Feature","geometry":null,"properties":{}}'
+
+    center_lon = centerpoint[1]
+    center_lat = centerpoint[0]
+    issues_registry_json = json.dumps(issues_registry, ensure_ascii=False)
+
+    geojson_outpath = outpath.replace(".html", ".geojson")
+    registry_outpath = outpath.replace(".html", "_registry.json")
+    
+    with open(geojson_outpath, "w", encoding="utf-8") as f:
+        f.write(geojson_json_str)
+        
+    with open(registry_outpath, "w", encoding="utf-8") as f:
+        f.write(issues_registry_json)
+        
+    geojson_filename = os.path.basename(geojson_outpath)
+    registry_filename = os.path.basename(registry_outpath)
+
+    available_q_categories = set()
+    for item in map_view_data_to_use.values():
+        available_q_categories.update(item["quality_category"])
+    
+    checkboxes_html = ""
+    for cat in sorted(list(available_q_categories)):
+        checkboxes_html += f'''
+            <label style="display: block; margin-bottom: 5px; font-size: 0.85rem; cursor: pointer;">
+                <input type="checkbox" class="cat-filter-checkbox" value="{cat}" checked onchange="applyFilters()"> {cat}
+            </label>
+        '''
+        
+    filter_panel_html = ""
+    if checkboxes_html:
+        filter_panel_html = f'''
+        <div id="category-filter-panel" style="position: absolute; top: calc(var(--topbar-height) + 10px); left: 10px; z-index: 9998; background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(255,255,255,0.1); padding: 10px 15px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); max-height: calc(100vh - var(--topbar-height) - 40px); overflow-y: auto; color: #f8fafc;">
+            <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="const content = document.getElementById('filter-content'); content.style.display = content.style.display === 'none' ? 'block' : 'none'; const icon = document.getElementById('filter-icon'); icon.textContent = content.style.display === 'none' ? '▼' : '▲';">
+                <h4 style="margin: 0; font-size: 0.95rem; font-weight: 500; color: #00f2fe;">Filter Categories</h4>
+                <span id="filter-icon" style="font-size: 0.8em; margin-left: 15px; color: #94a3b8;">▼</span>
+            </div>
+            <div id="filter-content" style="display: none; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
+                {checkboxes_html}
+            </div>
         </div>
-    </div>
-    """
+        '''
 
-    popups = [
-        popup_mold.format(
-            item["feat_type"],
-            item["id"],
-            ", ".join(list(item["quality_category"])),
-            osm_feature_url(item["id"], item["feat_type"]),
-            f"http://127.0.0.1:8111/load_object?new_layer=false&objects={item['feat_type'][0]}{item['id']}",
-            f"https://www.openstreetmap.org/edit?editor=id&{item['feat_type']}={item['id']}#map=20/{item['point'][0]}/{item['point'][1]}"
-        )
-        for item in map_view_data_to_use.values()
-    ]
-
-    overlay_html = f"""
+    html_content = f"""<!--
+  Generated automatically by oswm_codebase/data_quality/dq_funcs.py
+  Do not edit this file directly.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{title}</title>
+    <link rel="icon" type="image/x-icon" href="{favicon_url}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
+    <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+    <style>
+        :root {{
+            --topbar-height: 57px;
+        }}
+        body {{
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            background-color: #0f172a;
+            font-family: 'Outfit', sans-serif;
+        }}
+        #map {{
+            position: absolute;
+            top: var(--topbar-height);
+            bottom: 0;
+            width: 100%;
+        }}
+        .maplibregl-ctrl-top-right {{
+            top: 10px;
+        }}
+        .custom-dq-popup {{
+            z-index: 1000 !important;
+        }}
+        .custom-dq-popup .maplibregl-popup-content {{
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            padding: 12px 16px;
+        }}
+    </style>
+</head>
+<body>
     <div style="position: absolute; top: 0; left: 0; width: 100%; z-index: 9999; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; font-family: 'Outfit', sans-serif; box-sizing: border-box; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
         <div style="flex: 1;">
             <a href="{back_url}" style="display: inline-block; background: rgba(255,255,255,0.05); border: 1px solid rgba(0,242,254,0.3); color: #00f2fe; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: background 0.2s;">{back_text}</a>
@@ -551,31 +641,279 @@ def create_marker_cluster_html(
         <h3 style="margin: 0; color: #f8fafc; font-size: 1.25rem; font-weight: 600; letter-spacing: 0.5px; flex: 1; text-align: center; text-shadow: 0 2px 4px rgba(0,0,0,0.3);"><img src="{logo_url}" alt="OSWM Logo" style="height: 1.5em; vertical-align: middle; margin-right: 15px;">{title}</h3>
         <div style="flex: 1;"></div>
     </div>
-    """
-    m.get_root().html.add_child(folium.Element(overlay_html))
 
-    if map_view_data_to_use:
-        marker_cluster = MarkerCluster(
-            locations=locations,
-            popups=popups,
-            name="OSWM DQ Markers (clustered)",
-            icon_create_function=icon_create_function,
-        )
-        marker_cluster.add_to(m)
+    {filter_panel_html}
 
-    m.save(outpath)
+    <div id="map"></div>
 
-    # Inject the HTML 'generated' comment at the very beginning of the file
-    try:
-        with open(outpath, "r", encoding="utf-8") as f:
-            content = f.read()
+    <script>
+        let issuesRegistry = [];
+        let geojsonData = null;
         
-        content = content.replace("<head>", f'<head>\\n    <link rel="icon" type="image/x-icon" href="{favicon_url}">')
-        
-        with open(outpath, "w", encoding="utf-8") as f:
-            f.write("<!--\\n  Generated automatically by oswm_codebase/data_quality/dq_funcs.py\\n  Do not edit this file directly.\\n-->\\n" + content)
-    except Exception as e:
-        print(f"Error appending notice to {{outpath}}: {{e}}")
+        fetch('{registry_filename}').then(r => r.json()).then(data => {{
+            issuesRegistry = data;
+        }}).catch(e => console.error("Could not load registry:", e));
+
+        fetch('{geojson_filename}').then(r => r.json()).then(data => {{
+            geojsonData = data;
+        }}).catch(e => console.error("Could not load geojson:", e));
+
+        function applyFilters() {{
+            if (!geojsonData || !map.getSource('dq-markers')) return;
+            const checkedCategories = Array.from(document.querySelectorAll('.cat-filter-checkbox:checked')).map(cb => cb.value);
+            
+            const filteredFeatures = geojsonData.features.filter(f => {{
+                const cats = f.properties.quality_categories.split(', ');
+                return cats.some(c => checkedCategories.includes(c));
+            }});
+            
+            map.getSource('dq-markers').setData({{
+                type: "FeatureCollection",
+                features: filteredFeatures
+            }});
+        }}
+
+        const map = new maplibregl.Map({{
+            container: 'map',
+            style: {{
+                version: 8,
+                sources: {{
+                    'carto-positron': {{
+                        type: 'raster',
+                        tiles: ['https://basemaps.cartocdn.com/rastertiles/light_all/{{z}}/{{x}}/{{y}}.png'],
+                        tileSize: 256,
+                        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                    }}
+                }},
+                layers: [{{
+                    id: 'carto-tiles',
+                    type: 'raster',
+                    source: 'carto-positron',
+                    minzoom: 0,
+                    maxzoom: 20
+                }}]
+            }},
+            center: [{center_lon}, {center_lat}],
+            zoom: {z_level}
+        }});
+
+        map.addControl(new maplibregl.NavigationControl(), 'top-right');
+        map.addControl(new maplibregl.ScaleControl({{ unit: 'metric' }}), 'bottom-right');
+
+        map.on('load', () => {{
+            // City boundary outline
+            map.addSource('city-boundary', {{
+                type: 'geojson',
+                data: {boundary_geojson_str}
+            }});
+            map.addLayer({{
+                id: 'city-boundary-line',
+                type: 'line',
+                source: 'city-boundary',
+                paint: {{
+                    'line-color': '#9ca3af',
+                    'line-width': 1.5,
+                    'line-opacity': 0.8
+                }}
+            }});
+
+            map.addSource('dq-markers', {{
+                type: 'geojson',
+                data: '{geojson_filename}',
+                cluster: true,
+                clusterMaxZoom: 14,
+                clusterRadius: 50,
+                generateId: true
+            }});
+
+            map.addLayer({{
+                id: 'clusters',
+                type: 'circle',
+                source: 'dq-markers',
+                filter: ['has', 'point_count'],
+                paint: {{
+                    'circle-color': [
+                        'step',
+                        ['get', 'point_count'],
+                        'rgba(254, 240, 217, 0.9)', 10,
+                        'rgba(253, 204, 138, 0.9)', 50,
+                        'rgba(252, 141, 89, 0.9)', 100,
+                        'rgba(215, 48, 31, 0.9)'
+                    ],
+                    'circle-radius': [
+                        'step',
+                        ['get', 'point_count'],
+                        18, 10,
+                        22, 50,
+                        26, 100,
+                        32
+                    ],
+                    'circle-stroke-width': ['case', ['boolean', ['feature-state', 'hover'], false], 4, 2],
+                    'circle-stroke-color': ['case', ['boolean', ['feature-state', 'hover'], false], '#ffffff', 'rgba(255,255,255,0.6)']
+                }}
+            }});
+
+            // Cluster count overlay — HTML divs positioned over each cluster circle.
+            // Avoids needing a glyph/font server which can block the map from loading.
+            const clusterLabels = new Map();
+            const mapCanvas = map.getCanvasContainer();
+
+            function formatCount(n) {{
+                if (n >= 1000) return (Math.round(n / 100) / 10) + 'k';
+                return String(n);
+            }}
+
+            function updateClusterLabels() {{
+                const features = map.queryRenderedFeatures({{ layers: ['clusters'] }});
+                const seen = new Set();
+
+                features.forEach(f => {{
+                    const id = f.properties.cluster_id;
+                    const count = f.properties.point_count;
+                    const pos = map.project(f.geometry.coordinates);
+                    seen.add(id);
+
+                    if (!clusterLabels.has(id)) {{
+                        const el = document.createElement('div');
+                        el.style.position = 'absolute';
+                        el.style.pointerEvents = 'none';
+                        el.style.fontFamily = 'Outfit, sans-serif';
+                        el.style.fontWeight = '700';
+                        el.style.fontSize = '12px';
+                        el.style.color = '#1e293b';
+                        el.style.transform = 'translate(-50%, -50%)';
+                        el.style.whiteSpace = 'nowrap';
+                        el.style.zIndex = '10';
+                        mapCanvas.appendChild(el);
+                        clusterLabels.set(id, el);
+                    }}
+
+                    const el = clusterLabels.get(id);
+                    el.textContent = formatCount(count);
+                    el.style.left = pos.x + 'px';
+                    el.style.top = pos.y + 'px';
+                    el.style.display = 'block';
+                }});
+
+                clusterLabels.forEach((el, id) => {{
+                    if (!seen.has(id)) el.style.display = 'none';
+                }});
+            }}
+
+            map.on('render', updateClusterLabels);
+
+            map.addLayer({{
+                id: 'unclustered-point',
+                type: 'circle',
+                source: 'dq-markers',
+                filter: ['!', ['has', 'point_count']],
+                paint: {{
+                    'circle-color': ['case', ['boolean', ['feature-state', 'hover'], false], '#475569', '#1e293b'],
+                    'circle-radius': 7,
+                    'circle-stroke-width': ['case', ['boolean', ['feature-state', 'hover'], false], 3, 1.5],
+                    'circle-stroke-color': ['case', ['boolean', ['feature-state', 'hover'], false], '#94a3b8', '#64748b']
+                }}
+            }});
+
+            map.on('click', 'clusters', (e) => {{
+                const features = map.queryRenderedFeatures(e.point, {{ layers: ['clusters'] }});
+                map.easeTo({{
+                    center: features[0].geometry.coordinates,
+                    zoom: map.getZoom() + 1,
+                    duration: 300
+                }});
+            }});
+
+            map.on('click', 'unclustered-point', (e) => {{
+                const coordinates = e.features[0].geometry.coordinates.slice();
+                const props = e.features[0].properties;
+
+                let issues_html = "";
+                if (props.issue_ids) {{
+                    let idsList;
+                    try {{
+                        idsList = typeof props.issue_ids === 'string' ? JSON.parse(props.issue_ids) : props.issue_ids;
+                    }} catch (err) {{
+                        idsList = [];
+                    }}
+                    idsList.forEach(issueId => {{
+                        const issue = issuesRegistry[issueId];
+                        if (issue) {{
+                            issues_html += `<div style='margin-bottom: 8px; font-size: 13px;'><strong style='color: #4facfe;'>${{issue.category}}</strong><br/><b>Key:</b> ${{issue.key}} | <b>Value:</b> ${{issue.value}}<br/><b>Comment:</b> ${{issue.comment}}</div>`;
+                        }}
+                    }});
+                }}
+
+                const popupHtml = `
+                    <div style="font-family: 'Outfit', sans-serif; min-width: 220px; max-width: 320px; max-height: 350px; display: flex; flex-direction: column;">
+                        <h4 style="margin: 0 0 5px 0; color: #0088aa; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px; flex-shrink: 0;">Feature: ${{props.feat_type}} ${{props.id}}</h4>
+                        <div style="overflow-y: auto; flex-grow: 1; margin: 10px 0; padding-right: 5px;">
+                            ${{issues_html ? issues_html : `<p style="margin: 0 0 12px 0; font-size: 13px; color: #444; line-height: 1.4;"><b>Categories:</b><br>${{props.quality_categories}}</p>`}}
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; padding-top: 5px; border-top: 1px solid #eee;">
+                            <a href="${{props.osm_url}}" target="_blank" style="background: #4facfe; color: white; padding: 6px 10px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">↗ Open in OSM</a>
+                            <a href="${{props.josm_url}}" target="_blank" style="background: #10b981; color: white; padding: 6px 10px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">⚙ Open in JOSM</a>
+                            <a href="${{props.id_url}}" target="_blank" style="background: #8b5cf6; color: white; padding: 6px 10px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">✎ Open in iD Editor</a>
+                        </div>
+                    </div>
+                `;
+
+                while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {{
+                    coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+                }}
+
+                new maplibregl.Popup({{ className: 'custom-dq-popup' }})
+                    .setLngLat(coordinates)
+                    .setHTML(popupHtml)
+                    .addTo(map);
+            }});
+
+            // Hover state tracking — clusters
+            let hoveredClusterId = null;
+            map.on('mousemove', 'clusters', (e) => {{
+                const newId = e.features[0].id;
+                if (newId !== hoveredClusterId) {{
+                    if (hoveredClusterId !== null)
+                        map.setFeatureState({{ source: 'dq-markers', id: hoveredClusterId }}, {{ hover: false }});
+                    hoveredClusterId = newId;
+                    map.setFeatureState({{ source: 'dq-markers', id: hoveredClusterId }}, {{ hover: true }});
+                }}
+                map.getCanvas().style.cursor = 'pointer';
+            }});
+            map.on('mouseleave', 'clusters', () => {{
+                if (hoveredClusterId !== null)
+                    map.setFeatureState({{ source: 'dq-markers', id: hoveredClusterId }}, {{ hover: false }});
+                hoveredClusterId = null;
+                map.getCanvas().style.cursor = '';
+            }});
+
+            // Hover state tracking — individual points
+            let hoveredPointId = null;
+            map.on('mousemove', 'unclustered-point', (e) => {{
+                const newId = e.features[0].id;
+                if (newId !== hoveredPointId) {{
+                    if (hoveredPointId !== null)
+                        map.setFeatureState({{ source: 'dq-markers', id: hoveredPointId }}, {{ hover: false }});
+                    hoveredPointId = newId;
+                    map.setFeatureState({{ source: 'dq-markers', id: hoveredPointId }}, {{ hover: true }});
+                }}
+                map.getCanvas().style.cursor = 'pointer';
+            }});
+            map.on('mouseleave', 'unclustered-point', () => {{
+                if (hoveredPointId !== null)
+                    map.setFeatureState({{ source: 'dq-markers', id: hoveredPointId }}, {{ hover: false }});
+                hoveredPointId = null;
+                map.getCanvas().style.cursor = '';
+            }});
+        }});
+    </script>
+</body>
+</html>
+"""
+
+    ensure_parent_folder(outpath)
+    with open(outpath, "w", encoding="utf-8") as f:
+        f.write(html_content)
 
 
 def gen_quality_report_page_and_files(
@@ -618,6 +956,7 @@ def gen_quality_report_page_and_files(
     op_nodes, op_ways, op_rels = [], [], []
 
     # the main iteration
+    os.makedirs(os.path.dirname(csvpath), exist_ok=True)
     with open(csvpath, "w+", encoding="utf-8") as file:
         writer = csv.writer(file, delimiter=",", quotechar='"')
         writer.writerow(["osm_id", "feat_type", "key", "value", "commentary"])

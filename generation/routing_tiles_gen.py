@@ -60,7 +60,7 @@ def _ogr_command(source_path: Path, output_path: Path) -> list[str]:
 
 
 def main() -> None:
-    source_path = Path(constants.routing_demo_path)
+    source_path = Path(constants.routing_parquet_path)
     output_path = Path(constants.routing_tiles_path)
     report_path = Path(constants.routing_tiles_report_path)
     temporary_path = output_path.with_name(
@@ -98,6 +98,7 @@ def main() -> None:
         os.replace(temporary_path, output_path)
         report = {
             "status": "ok",
+            "source": source_path.name,
             "source_layer": DISPLAY_LAYER,
             "input_features": feature_count,
             "filesize": output_path.stat().st_size,

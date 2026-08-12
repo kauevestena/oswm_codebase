@@ -1,75 +1,75 @@
 {
     "bounds": [
-        -49.38914,
-        -25.6435043,
-        -49.1843182,
-        -25.3449505
+        9.0408867,
+        45.3867381,
+        9.2781103,
+        45.5358482
     ],
     "zoom": 15,
     "center": [
-        -49.274,
-        -25.465
+        9.1594985,
+        45.46129315
     ],
     "basemap_url": "https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
     "node_homepage": "https://kauevestena.github.io/opensidewalkmap_beta/",
-    "sidewalks_url": "https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/sidewalks.pmtiles",
-    "crossings_url": "https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/crossings.pmtiles",
-    "kerbs_url": "https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/kerbs.pmtiles",
-    "stairways_url": "https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/stairways.pmtiles",
-    "main_footways_url": "https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/main_footways.pmtiles",
-    "potential_footways_url": "https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/potential_footways.pmtiles",
-    "informal_footways_url": "https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/informal_footways.pmtiles",
-    "pedestrian_areas_url": "https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/pedestrian_areas.pmtiles",
-    "boundaries_url": "https://kauevestena.github.io/opensidewalkmap_beta/data/boundaries/polygon.geojson",
+    "sidewalks_url": "data/tiles/sidewalks.pmtiles",
+    "crossings_url": "data/tiles/crossings.pmtiles",
+    "kerbs_url": "data/tiles/kerbs.pmtiles",
+    "stairways_url": "data/tiles/stairways.pmtiles",
+    "main_footways_url": "data/tiles/main_footways.pmtiles",
+    "potential_footways_url": "data/tiles/potential_footways.pmtiles",
+    "informal_footways_url": "data/tiles/informal_footways.pmtiles",
+    "pedestrian_areas_url": "data/tiles/pedestrian_areas.pmtiles",
+    "boundaries_url": "data/boundaries/polygon.geojson",
     "styles": {
         "footway_categories": {
             "version": 8,
             "sources": {
                 "oswm_pmtiles_sidewalks": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/sidewalks.pmtiles",
+                    "url": "pmtiles://data/tiles/sidewalks.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_crossings": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/crossings.pmtiles",
+                    "url": "pmtiles://data/tiles/crossings.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_kerbs": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/kerbs.pmtiles",
+                    "url": "pmtiles://data/tiles/kerbs.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_stairways": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/stairways.pmtiles",
+                    "url": "pmtiles://data/tiles/stairways.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_main_footways": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/main_footways.pmtiles",
+                    "url": "pmtiles://data/tiles/main_footways.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_potential_footways": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/potential_footways.pmtiles",
+                    "url": "pmtiles://data/tiles/potential_footways.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_informal_footways": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/informal_footways.pmtiles",
+                    "url": "pmtiles://data/tiles/informal_footways.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_pedestrian_areas": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/pedestrian_areas.pmtiles",
+                    "url": "pmtiles://data/tiles/pedestrian_areas.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
@@ -82,7 +82,7 @@
                 },
                 "boundaries": {
                     "type": "geojson",
-                    "data": "https://kauevestena.github.io/opensidewalkmap_beta/data/boundaries/polygon.geojson",
+                    "data": "data/boundaries/polygon.geojson",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 }
             },
@@ -294,49 +294,49 @@
             "sources": {
                 "oswm_pmtiles_sidewalks": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/sidewalks.pmtiles",
+                    "url": "pmtiles://data/tiles/sidewalks.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_crossings": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/crossings.pmtiles",
+                    "url": "pmtiles://data/tiles/crossings.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_kerbs": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/kerbs.pmtiles",
+                    "url": "pmtiles://data/tiles/kerbs.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_stairways": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/stairways.pmtiles",
+                    "url": "pmtiles://data/tiles/stairways.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_main_footways": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/main_footways.pmtiles",
+                    "url": "pmtiles://data/tiles/main_footways.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_potential_footways": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/potential_footways.pmtiles",
+                    "url": "pmtiles://data/tiles/potential_footways.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_informal_footways": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/informal_footways.pmtiles",
+                    "url": "pmtiles://data/tiles/informal_footways.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_pedestrian_areas": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/pedestrian_areas.pmtiles",
+                    "url": "pmtiles://data/tiles/pedestrian_areas.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
@@ -349,7 +349,7 @@
                 },
                 "boundaries": {
                     "type": "geojson",
-                    "data": "https://kauevestena.github.io/opensidewalkmap_beta/data/boundaries/polygon.geojson",
+                    "data": "data/boundaries/polygon.geojson",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 }
             },
@@ -680,49 +680,49 @@
             "sources": {
                 "oswm_pmtiles_sidewalks": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/sidewalks.pmtiles",
+                    "url": "pmtiles://data/tiles/sidewalks.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_crossings": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/crossings.pmtiles",
+                    "url": "pmtiles://data/tiles/crossings.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_kerbs": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/kerbs.pmtiles",
+                    "url": "pmtiles://data/tiles/kerbs.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_stairways": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/stairways.pmtiles",
+                    "url": "pmtiles://data/tiles/stairways.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_main_footways": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/main_footways.pmtiles",
+                    "url": "pmtiles://data/tiles/main_footways.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_potential_footways": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/potential_footways.pmtiles",
+                    "url": "pmtiles://data/tiles/potential_footways.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_informal_footways": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/informal_footways.pmtiles",
+                    "url": "pmtiles://data/tiles/informal_footways.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_pedestrian_areas": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/pedestrian_areas.pmtiles",
+                    "url": "pmtiles://data/tiles/pedestrian_areas.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
@@ -735,7 +735,7 @@
                 },
                 "boundaries": {
                     "type": "geojson",
-                    "data": "https://kauevestena.github.io/opensidewalkmap_beta/data/boundaries/polygon.geojson",
+                    "data": "data/boundaries/polygon.geojson",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 }
             },
@@ -2407,49 +2407,49 @@
             "sources": {
                 "oswm_pmtiles_sidewalks": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/sidewalks.pmtiles",
+                    "url": "pmtiles://data/tiles/sidewalks.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_crossings": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/crossings.pmtiles",
+                    "url": "pmtiles://data/tiles/crossings.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_kerbs": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/kerbs.pmtiles",
+                    "url": "pmtiles://data/tiles/kerbs.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_stairways": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/stairways.pmtiles",
+                    "url": "pmtiles://data/tiles/stairways.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_main_footways": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/main_footways.pmtiles",
+                    "url": "pmtiles://data/tiles/main_footways.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_potential_footways": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/potential_footways.pmtiles",
+                    "url": "pmtiles://data/tiles/potential_footways.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_informal_footways": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/informal_footways.pmtiles",
+                    "url": "pmtiles://data/tiles/informal_footways.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_pedestrian_areas": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/pedestrian_areas.pmtiles",
+                    "url": "pmtiles://data/tiles/pedestrian_areas.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
@@ -2462,7 +2462,7 @@
                 },
                 "boundaries": {
                     "type": "geojson",
-                    "data": "https://kauevestena.github.io/opensidewalkmap_beta/data/boundaries/polygon.geojson",
+                    "data": "data/boundaries/polygon.geojson",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 }
             },
@@ -3342,49 +3342,49 @@
             "sources": {
                 "oswm_pmtiles_sidewalks": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/sidewalks.pmtiles",
+                    "url": "pmtiles://data/tiles/sidewalks.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_crossings": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/crossings.pmtiles",
+                    "url": "pmtiles://data/tiles/crossings.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_kerbs": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/kerbs.pmtiles",
+                    "url": "pmtiles://data/tiles/kerbs.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_stairways": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/stairways.pmtiles",
+                    "url": "pmtiles://data/tiles/stairways.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_main_footways": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/main_footways.pmtiles",
+                    "url": "pmtiles://data/tiles/main_footways.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_potential_footways": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/potential_footways.pmtiles",
+                    "url": "pmtiles://data/tiles/potential_footways.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_informal_footways": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/informal_footways.pmtiles",
+                    "url": "pmtiles://data/tiles/informal_footways.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_pedestrian_areas": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/pedestrian_areas.pmtiles",
+                    "url": "pmtiles://data/tiles/pedestrian_areas.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
@@ -3397,7 +3397,7 @@
                 },
                 "boundaries": {
                     "type": "geojson",
-                    "data": "https://kauevestena.github.io/opensidewalkmap_beta/data/boundaries/polygon.geojson",
+                    "data": "data/boundaries/polygon.geojson",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 }
             },
@@ -3917,49 +3917,49 @@
             "sources": {
                 "oswm_pmtiles_sidewalks": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/sidewalks.pmtiles",
+                    "url": "pmtiles://data/tiles/sidewalks.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_crossings": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/crossings.pmtiles",
+                    "url": "pmtiles://data/tiles/crossings.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_kerbs": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/kerbs.pmtiles",
+                    "url": "pmtiles://data/tiles/kerbs.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_stairways": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/stairways.pmtiles",
+                    "url": "pmtiles://data/tiles/stairways.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_main_footways": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/main_footways.pmtiles",
+                    "url": "pmtiles://data/tiles/main_footways.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_potential_footways": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/potential_footways.pmtiles",
+                    "url": "pmtiles://data/tiles/potential_footways.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_informal_footways": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/informal_footways.pmtiles",
+                    "url": "pmtiles://data/tiles/informal_footways.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_pedestrian_areas": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/pedestrian_areas.pmtiles",
+                    "url": "pmtiles://data/tiles/pedestrian_areas.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
@@ -3972,7 +3972,7 @@
                 },
                 "boundaries": {
                     "type": "geojson",
-                    "data": "https://kauevestena.github.io/opensidewalkmap_beta/data/boundaries/polygon.geojson",
+                    "data": "data/boundaries/polygon.geojson",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 }
             },
@@ -4636,49 +4636,49 @@
             "sources": {
                 "oswm_pmtiles_sidewalks": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/sidewalks.pmtiles",
+                    "url": "pmtiles://data/tiles/sidewalks.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_crossings": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/crossings.pmtiles",
+                    "url": "pmtiles://data/tiles/crossings.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_kerbs": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/kerbs.pmtiles",
+                    "url": "pmtiles://data/tiles/kerbs.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_stairways": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/stairways.pmtiles",
+                    "url": "pmtiles://data/tiles/stairways.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_main_footways": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/main_footways.pmtiles",
+                    "url": "pmtiles://data/tiles/main_footways.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_potential_footways": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/potential_footways.pmtiles",
+                    "url": "pmtiles://data/tiles/potential_footways.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_informal_footways": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/informal_footways.pmtiles",
+                    "url": "pmtiles://data/tiles/informal_footways.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_pedestrian_areas": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/pedestrian_areas.pmtiles",
+                    "url": "pmtiles://data/tiles/pedestrian_areas.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
@@ -4691,7 +4691,7 @@
                 },
                 "boundaries": {
                     "type": "geojson",
-                    "data": "https://kauevestena.github.io/opensidewalkmap_beta/data/boundaries/polygon.geojson",
+                    "data": "data/boundaries/polygon.geojson",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 }
             },
@@ -5211,49 +5211,49 @@
             "sources": {
                 "oswm_pmtiles_sidewalks": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/sidewalks.pmtiles",
+                    "url": "pmtiles://data/tiles/sidewalks.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_crossings": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/crossings.pmtiles",
+                    "url": "pmtiles://data/tiles/crossings.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_kerbs": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/kerbs.pmtiles",
+                    "url": "pmtiles://data/tiles/kerbs.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_stairways": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/stairways.pmtiles",
+                    "url": "pmtiles://data/tiles/stairways.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_main_footways": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/main_footways.pmtiles",
+                    "url": "pmtiles://data/tiles/main_footways.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_potential_footways": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/potential_footways.pmtiles",
+                    "url": "pmtiles://data/tiles/potential_footways.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_informal_footways": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/informal_footways.pmtiles",
+                    "url": "pmtiles://data/tiles/informal_footways.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_pedestrian_areas": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/pedestrian_areas.pmtiles",
+                    "url": "pmtiles://data/tiles/pedestrian_areas.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
@@ -5266,7 +5266,7 @@
                 },
                 "boundaries": {
                     "type": "geojson",
-                    "data": "https://kauevestena.github.io/opensidewalkmap_beta/data/boundaries/polygon.geojson",
+                    "data": "data/boundaries/polygon.geojson",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 }
             },
@@ -5858,49 +5858,49 @@
             "sources": {
                 "oswm_pmtiles_sidewalks": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/sidewalks.pmtiles",
+                    "url": "pmtiles://data/tiles/sidewalks.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_crossings": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/crossings.pmtiles",
+                    "url": "pmtiles://data/tiles/crossings.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_kerbs": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/kerbs.pmtiles",
+                    "url": "pmtiles://data/tiles/kerbs.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_stairways": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/stairways.pmtiles",
+                    "url": "pmtiles://data/tiles/stairways.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_main_footways": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/main_footways.pmtiles",
+                    "url": "pmtiles://data/tiles/main_footways.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_potential_footways": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/potential_footways.pmtiles",
+                    "url": "pmtiles://data/tiles/potential_footways.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_informal_footways": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/informal_footways.pmtiles",
+                    "url": "pmtiles://data/tiles/informal_footways.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_pedestrian_areas": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/pedestrian_areas.pmtiles",
+                    "url": "pmtiles://data/tiles/pedestrian_areas.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
@@ -5913,7 +5913,7 @@
                 },
                 "boundaries": {
                     "type": "geojson",
-                    "data": "https://kauevestena.github.io/opensidewalkmap_beta/data/boundaries/polygon.geojson",
+                    "data": "data/boundaries/polygon.geojson",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 }
             },
@@ -6353,49 +6353,49 @@
             "sources": {
                 "oswm_pmtiles_sidewalks": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/sidewalks.pmtiles",
+                    "url": "pmtiles://data/tiles/sidewalks.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_crossings": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/crossings.pmtiles",
+                    "url": "pmtiles://data/tiles/crossings.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_kerbs": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/kerbs.pmtiles",
+                    "url": "pmtiles://data/tiles/kerbs.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_stairways": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/stairways.pmtiles",
+                    "url": "pmtiles://data/tiles/stairways.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_main_footways": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/main_footways.pmtiles",
+                    "url": "pmtiles://data/tiles/main_footways.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_potential_footways": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/potential_footways.pmtiles",
+                    "url": "pmtiles://data/tiles/potential_footways.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_informal_footways": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/informal_footways.pmtiles",
+                    "url": "pmtiles://data/tiles/informal_footways.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
                 "oswm_pmtiles_pedestrian_areas": {
                     "type": "vector",
-                    "url": "pmtiles://https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/pedestrian_areas.pmtiles",
+                    "url": "pmtiles://data/tiles/pedestrian_areas.pmtiles",
                     "promoteId": "id",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 },
@@ -6408,7 +6408,7 @@
                 },
                 "boundaries": {
                     "type": "geojson",
-                    "data": "https://kauevestena.github.io/opensidewalkmap_beta/data/boundaries/polygon.geojson",
+                    "data": "data/boundaries/polygon.geojson",
                     "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>"
                 }
             },
@@ -6886,5 +6886,657 @@
             "kerbs"
         ]
     },
-    "node_url": "https://kauevestena.github.io/opensidewalkmap_beta/"
+    "node_url": "https://kauevestena.github.io/opensidewalkmap_milan/",
+    "snapshot": {
+        "schema_version": 1,
+        "node_name": "Milan, Italy",
+        "summary_url": "data/snapshots/node_summary.json",
+        "default_scope": "node",
+        "themes": {
+            "footway_categories": {
+                "id": "footway_categories",
+                "kind": "categorical",
+                "chart": "bar",
+                "label": "Footway Categories",
+                "attribute": "__layer__",
+                "layers": [
+                    "sidewalks",
+                    "crossings",
+                    "kerbs",
+                    "stairways",
+                    "main_footways",
+                    "potential_footways",
+                    "informal_footways",
+                    "pedestrian_areas"
+                ],
+                "measure": "count",
+                "colors": {
+                    "sidewalks": "steelblue",
+                    "crossings": "steelblue",
+                    "kerbs": "steelblue",
+                    "stairways": "#8a7e2f",
+                    "main_footways": "#299077",
+                    "potential_footways": "#9569a4",
+                    "informal_footways": "#b0645a",
+                    "pedestrian_areas": "steelblue"
+                },
+                "unknown_value": "?",
+                "unknown_color": "#636363",
+                "other_color": "steelblue"
+            },
+            "crossings_and_kerbs": {
+                "id": "crossings_and_kerbs",
+                "kind": "multi",
+                "chart": "multi",
+                "label": "Crossings and Kerbs",
+                "panels": [
+                    {
+                        "id": "crossings",
+                        "kind": "categorical",
+                        "chart": "bar",
+                        "label": "Crossings",
+                        "attribute": "crossing",
+                        "layers": [
+                            "crossings"
+                        ],
+                        "measure": "length",
+                        "colors": {
+                            "traffic_signals": "#1f78b4",
+                            "marked": "#a6cee3",
+                            "zebra": "#a6cee3",
+                            "uncontrolled": "#a6cee3",
+                            "unmarked": "#ffff99",
+                            "no": "#e31a1c",
+                            "?": "gray"
+                        },
+                        "unknown_value": "?",
+                        "unknown_color": "gray",
+                        "other_color": "gray"
+                    },
+                    {
+                        "id": "kerbs",
+                        "kind": "categorical",
+                        "chart": "bar",
+                        "label": "Kerbs",
+                        "attribute": "kerb",
+                        "layers": [
+                            "kerbs"
+                        ],
+                        "measure": "count",
+                        "colors": {
+                            "flush": "#ffffff",
+                            "lowered": "#ffffff",
+                            "rolled": "#808080",
+                            "no": "#bebebe",
+                            "raised": "#000000",
+                            "?": "#d9d9d9"
+                        },
+                        "unknown_value": "?",
+                        "unknown_color": "#d9d9d9",
+                        "other_color": "gray"
+                    }
+                ]
+            },
+            "surface": {
+                "id": "surface",
+                "kind": "categorical",
+                "chart": "bar",
+                "label": "Surface",
+                "attribute": "surface",
+                "layers": [
+                    "sidewalks"
+                ],
+                "measure": "length",
+                "colors": {
+                    "asphalt": "#fb8072",
+                    "concrete": "#80b1d3",
+                    "concrete:plates": "#fccde5",
+                    "paving_stones": "#bebada",
+                    "sett": "#ffed6f",
+                    "cobblestone": "#ffed6f",
+                    "unhewn_cobblestone": "#ffffb3",
+                    "ground": "#fdb462",
+                    "dirt": "#fdb462",
+                    "earth": "#fdb462",
+                    "sand": "#fdb462",
+                    "grass": "#b3de69",
+                    "paved": "#ffffff",
+                    "unpaved": "#d9d9d9",
+                    "gravel": "#bc80bd",
+                    "compacted": "#bc80bd",
+                    "ceramic:tiles": "#bc80bd",
+                    "wood": "#bc80bd",
+                    "metal": "#bc80bd",
+                    "?": "#434343"
+                },
+                "unknown_value": "?",
+                "unknown_color": "#434343",
+                "other_color": "gray"
+            },
+            "smoothness": {
+                "id": "smoothness",
+                "kind": "categorical",
+                "chart": "bar",
+                "label": "Smoothness",
+                "attribute": "smoothness",
+                "layers": [
+                    "sidewalks"
+                ],
+                "measure": "length",
+                "colors": {
+                    "excellent": "#4575b4",
+                    "good": "#abd9e9",
+                    "intermediate": "#ffffbf",
+                    "bad": "#fdae61",
+                    "very_bad": "#fdae61",
+                    "horrible": "#f46d43",
+                    "very_horrible": "#f46d43",
+                    "impassable": "#a50026",
+                    "?": "#434343"
+                },
+                "unknown_value": "?",
+                "unknown_color": "#434343",
+                "other_color": "gray"
+            },
+            "tactile_paving": {
+                "id": "tactile_paving",
+                "kind": "categorical",
+                "chart": "bar",
+                "label": "Tactile Paving",
+                "attribute": "tactile_paving",
+                "layers": [
+                    "sidewalks"
+                ],
+                "measure": "length",
+                "colors": {
+                    "yes": "#6146d0",
+                    "contrasted": "#6146d0",
+                    "no": "#bd1006",
+                    "?": "#717171"
+                },
+                "unknown_value": "?",
+                "unknown_color": "#717171",
+                "other_color": "gray"
+            },
+            "lit": {
+                "id": "lit",
+                "kind": "categorical",
+                "chart": "bar",
+                "label": "Lighting",
+                "attribute": "lit",
+                "layers": [
+                    "sidewalks"
+                ],
+                "measure": "length",
+                "colors": {
+                    "yes": "#ffff99",
+                    "automatic": "#ffff99",
+                    "24/7": "#ffff99",
+                    "no": "#6a3d9a",
+                    "disused": "#6a3d9a",
+                    "?": "#434343"
+                },
+                "unknown_value": "?",
+                "unknown_color": "#434343",
+                "other_color": "gray"
+            },
+            "traffic_calming": {
+                "id": "traffic_calming",
+                "kind": "categorical",
+                "chart": "bar",
+                "label": "Traffic Calming",
+                "attribute": "traffic_calming",
+                "layers": [
+                    "crossings"
+                ],
+                "measure": "length",
+                "colors": {
+                    "table": "#ffff99",
+                    "bump": "#ffff99",
+                    "hump": "#ffff99",
+                    "?": "#63636399"
+                },
+                "unknown_value": "?",
+                "unknown_color": "#63636399",
+                "other_color": "#63636366"
+            },
+            "wheelchair": {
+                "id": "wheelchair",
+                "kind": "categorical",
+                "chart": "bar",
+                "label": "wheelchair=* tag",
+                "attribute": "wheelchair",
+                "layers": [
+                    "sidewalks"
+                ],
+                "measure": "length",
+                "colors": {
+                    "yes": "#91bfdb",
+                    "designated": "#91bfdb",
+                    "limited": "#ffffbf",
+                    "no": "#fc8d59",
+                    "?": "#434343"
+                },
+                "unknown_value": "?",
+                "unknown_color": "#434343",
+                "other_color": "gray"
+            },
+            "age": {
+                "id": "age",
+                "kind": "numeric",
+                "chart": "histogram",
+                "label": "DQ - Update Age (Y)",
+                "attribute": "age",
+                "layers": [
+                    "sidewalks",
+                    "crossings",
+                    "kerbs",
+                    "stairways",
+                    "main_footways",
+                    "potential_footways",
+                    "informal_footways",
+                    "pedestrian_areas"
+                ],
+                "measure": "count",
+                "breaks": [
+                    0.0,
+                    2.0,
+                    4.0,
+                    6.0,
+                    8.0,
+                    10.0
+                ],
+                "colors": [
+                    "#90d743",
+                    "#35b779",
+                    "#21918c",
+                    "#31688e",
+                    "#443983",
+                    "#440154"
+                ],
+                "unknown_value": "?",
+                "unknown_color": "#636363",
+                "invalid": {
+                    "operator": "<",
+                    "threshold": 0.0,
+                    "color": "#808080"
+                }
+            },
+            "n_revs": {
+                "id": "n_revs",
+                "kind": "numeric",
+                "chart": "histogram",
+                "label": "DQ - N. of Revs.",
+                "attribute": "n_revs",
+                "layers": [
+                    "sidewalks",
+                    "crossings",
+                    "kerbs",
+                    "stairways",
+                    "main_footways",
+                    "potential_footways",
+                    "informal_footways",
+                    "pedestrian_areas"
+                ],
+                "measure": "count",
+                "breaks": [
+                    0.0,
+                    5.0,
+                    10.0,
+                    15.0,
+                    20.0,
+                    25.0,
+                    30.0
+                ],
+                "colors": [
+                    "#1d1147",
+                    "#51127c",
+                    "#832681",
+                    "#b73779",
+                    "#e75263",
+                    "#fc8961",
+                    "#fec488"
+                ],
+                "unknown_value": "?",
+                "unknown_color": "#636363",
+                "invalid": {
+                    "operator": "<",
+                    "threshold": 0.0,
+                    "color": "#808080"
+                }
+            }
+        }
+    },
+    "theme_charts": {
+        "schema_version": 1,
+        "node_name": "Milan, Italy",
+        "summary_url": "data/snapshots/node_summary.json",
+        "default_scope": "node",
+        "themes": {
+            "footway_categories": {
+                "id": "footway_categories",
+                "kind": "categorical",
+                "chart": "bar",
+                "label": "Footway Categories",
+                "attribute": "__layer__",
+                "layers": [
+                    "sidewalks",
+                    "crossings",
+                    "kerbs",
+                    "stairways",
+                    "main_footways",
+                    "potential_footways",
+                    "informal_footways",
+                    "pedestrian_areas"
+                ],
+                "measure": "count",
+                "colors": {
+                    "sidewalks": "steelblue",
+                    "crossings": "steelblue",
+                    "kerbs": "steelblue",
+                    "stairways": "#8a7e2f",
+                    "main_footways": "#299077",
+                    "potential_footways": "#9569a4",
+                    "informal_footways": "#b0645a",
+                    "pedestrian_areas": "steelblue"
+                },
+                "unknown_value": "?",
+                "unknown_color": "#636363",
+                "other_color": "steelblue"
+            },
+            "crossings_and_kerbs": {
+                "id": "crossings_and_kerbs",
+                "kind": "multi",
+                "chart": "multi",
+                "label": "Crossings and Kerbs",
+                "panels": [
+                    {
+                        "id": "crossings",
+                        "kind": "categorical",
+                        "chart": "bar",
+                        "label": "Crossings",
+                        "attribute": "crossing",
+                        "layers": [
+                            "crossings"
+                        ],
+                        "measure": "length",
+                        "colors": {
+                            "traffic_signals": "#1f78b4",
+                            "marked": "#a6cee3",
+                            "zebra": "#a6cee3",
+                            "uncontrolled": "#a6cee3",
+                            "unmarked": "#ffff99",
+                            "no": "#e31a1c",
+                            "?": "gray"
+                        },
+                        "unknown_value": "?",
+                        "unknown_color": "gray",
+                        "other_color": "gray"
+                    },
+                    {
+                        "id": "kerbs",
+                        "kind": "categorical",
+                        "chart": "bar",
+                        "label": "Kerbs",
+                        "attribute": "kerb",
+                        "layers": [
+                            "kerbs"
+                        ],
+                        "measure": "count",
+                        "colors": {
+                            "flush": "#ffffff",
+                            "lowered": "#ffffff",
+                            "rolled": "#808080",
+                            "no": "#bebebe",
+                            "raised": "#000000",
+                            "?": "#d9d9d9"
+                        },
+                        "unknown_value": "?",
+                        "unknown_color": "#d9d9d9",
+                        "other_color": "gray"
+                    }
+                ]
+            },
+            "surface": {
+                "id": "surface",
+                "kind": "categorical",
+                "chart": "bar",
+                "label": "Surface",
+                "attribute": "surface",
+                "layers": [
+                    "sidewalks"
+                ],
+                "measure": "length",
+                "colors": {
+                    "asphalt": "#fb8072",
+                    "concrete": "#80b1d3",
+                    "concrete:plates": "#fccde5",
+                    "paving_stones": "#bebada",
+                    "sett": "#ffed6f",
+                    "cobblestone": "#ffed6f",
+                    "unhewn_cobblestone": "#ffffb3",
+                    "ground": "#fdb462",
+                    "dirt": "#fdb462",
+                    "earth": "#fdb462",
+                    "sand": "#fdb462",
+                    "grass": "#b3de69",
+                    "paved": "#ffffff",
+                    "unpaved": "#d9d9d9",
+                    "gravel": "#bc80bd",
+                    "compacted": "#bc80bd",
+                    "ceramic:tiles": "#bc80bd",
+                    "wood": "#bc80bd",
+                    "metal": "#bc80bd",
+                    "?": "#434343"
+                },
+                "unknown_value": "?",
+                "unknown_color": "#434343",
+                "other_color": "gray"
+            },
+            "smoothness": {
+                "id": "smoothness",
+                "kind": "categorical",
+                "chart": "bar",
+                "label": "Smoothness",
+                "attribute": "smoothness",
+                "layers": [
+                    "sidewalks"
+                ],
+                "measure": "length",
+                "colors": {
+                    "excellent": "#4575b4",
+                    "good": "#abd9e9",
+                    "intermediate": "#ffffbf",
+                    "bad": "#fdae61",
+                    "very_bad": "#fdae61",
+                    "horrible": "#f46d43",
+                    "very_horrible": "#f46d43",
+                    "impassable": "#a50026",
+                    "?": "#434343"
+                },
+                "unknown_value": "?",
+                "unknown_color": "#434343",
+                "other_color": "gray"
+            },
+            "tactile_paving": {
+                "id": "tactile_paving",
+                "kind": "categorical",
+                "chart": "bar",
+                "label": "Tactile Paving",
+                "attribute": "tactile_paving",
+                "layers": [
+                    "sidewalks"
+                ],
+                "measure": "length",
+                "colors": {
+                    "yes": "#6146d0",
+                    "contrasted": "#6146d0",
+                    "no": "#bd1006",
+                    "?": "#717171"
+                },
+                "unknown_value": "?",
+                "unknown_color": "#717171",
+                "other_color": "gray"
+            },
+            "lit": {
+                "id": "lit",
+                "kind": "categorical",
+                "chart": "bar",
+                "label": "Lighting",
+                "attribute": "lit",
+                "layers": [
+                    "sidewalks"
+                ],
+                "measure": "length",
+                "colors": {
+                    "yes": "#ffff99",
+                    "automatic": "#ffff99",
+                    "24/7": "#ffff99",
+                    "no": "#6a3d9a",
+                    "disused": "#6a3d9a",
+                    "?": "#434343"
+                },
+                "unknown_value": "?",
+                "unknown_color": "#434343",
+                "other_color": "gray"
+            },
+            "traffic_calming": {
+                "id": "traffic_calming",
+                "kind": "categorical",
+                "chart": "bar",
+                "label": "Traffic Calming",
+                "attribute": "traffic_calming",
+                "layers": [
+                    "crossings"
+                ],
+                "measure": "length",
+                "colors": {
+                    "table": "#ffff99",
+                    "bump": "#ffff99",
+                    "hump": "#ffff99",
+                    "?": "#63636399"
+                },
+                "unknown_value": "?",
+                "unknown_color": "#63636399",
+                "other_color": "#63636366"
+            },
+            "wheelchair": {
+                "id": "wheelchair",
+                "kind": "categorical",
+                "chart": "bar",
+                "label": "wheelchair=* tag",
+                "attribute": "wheelchair",
+                "layers": [
+                    "sidewalks"
+                ],
+                "measure": "length",
+                "colors": {
+                    "yes": "#91bfdb",
+                    "designated": "#91bfdb",
+                    "limited": "#ffffbf",
+                    "no": "#fc8d59",
+                    "?": "#434343"
+                },
+                "unknown_value": "?",
+                "unknown_color": "#434343",
+                "other_color": "gray"
+            },
+            "age": {
+                "id": "age",
+                "kind": "numeric",
+                "chart": "histogram",
+                "label": "DQ - Update Age (Y)",
+                "attribute": "age",
+                "layers": [
+                    "sidewalks",
+                    "crossings",
+                    "kerbs",
+                    "stairways",
+                    "main_footways",
+                    "potential_footways",
+                    "informal_footways",
+                    "pedestrian_areas"
+                ],
+                "measure": "count",
+                "breaks": [
+                    0.0,
+                    2.0,
+                    4.0,
+                    6.0,
+                    8.0,
+                    10.0
+                ],
+                "colors": [
+                    "#90d743",
+                    "#35b779",
+                    "#21918c",
+                    "#31688e",
+                    "#443983",
+                    "#440154"
+                ],
+                "unknown_value": "?",
+                "unknown_color": "#636363",
+                "invalid": {
+                    "operator": "<",
+                    "threshold": 0.0,
+                    "color": "#808080"
+                }
+            },
+            "n_revs": {
+                "id": "n_revs",
+                "kind": "numeric",
+                "chart": "histogram",
+                "label": "DQ - N. of Revs.",
+                "attribute": "n_revs",
+                "layers": [
+                    "sidewalks",
+                    "crossings",
+                    "kerbs",
+                    "stairways",
+                    "main_footways",
+                    "potential_footways",
+                    "informal_footways",
+                    "pedestrian_areas"
+                ],
+                "measure": "count",
+                "breaks": [
+                    0.0,
+                    5.0,
+                    10.0,
+                    15.0,
+                    20.0,
+                    25.0,
+                    30.0
+                ],
+                "colors": [
+                    "#1d1147",
+                    "#51127c",
+                    "#832681",
+                    "#b73779",
+                    "#e75263",
+                    "#fc8961",
+                    "#fec488"
+                ],
+                "unknown_value": "?",
+                "unknown_color": "#636363",
+                "invalid": {
+                    "operator": "<",
+                    "threshold": 0.0,
+                    "color": "#808080"
+                }
+            }
+        }
+    },
+    "legend_fragments": {
+        "footway_categories": "<!-- GENERATED FRAGMENT - auto-generated by StandaloneLegendHTML - DO NOT EDIT -->\n<div class=\"legend-title\">Legend</div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol patch\" style=\"background-color: steelblue; border-color: black;\"></span></div><span class=\"legend-text\">pedestrian_areas</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: steelblue; height: 8px;\"></span></div><span class=\"legend-text\">sidewalks</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: transparent; border-style: dashed; border-width: 7px 0; border-color: steelblue; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.85);\"></span></div><span class=\"legend-text\">crossings</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #8a7e2f; height: 8px;\"></span></div><span class=\"legend-text\">stairways</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #299077; height: 8px;\"></span></div><span class=\"legend-text\">main_footways</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #9569a4; height: 8px;\"></span></div><span class=\"legend-text\">potential_footways</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #b0645a; height: 8px;\"></span></div><span class=\"legend-text\">informal_footways</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol marker circle\" style=\"background-color: steelblue; height: 12px; width: 12px;\"></span></div><span class=\"legend-text\">kerbs</span></div>",
+        "crossings_and_kerbs": "<!-- GENERATED FRAGMENT - auto-generated by StandaloneLegendHTML - DO NOT EDIT -->\n<div class=\"legend-title\">Legend</div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #1f78b4; height: 8px;\"></span></div><span class=\"legend-text\">Crossings - traffic_signals</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #a6cee3; height: 8px;\"></span></div><span class=\"legend-text\">Crossings - marked</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #a6cee3; height: 8px;\"></span></div><span class=\"legend-text\">Crossings - zebra</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #a6cee3; height: 8px;\"></span></div><span class=\"legend-text\">Crossings - uncontrolled</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #ffff99; height: 8px;\"></span></div><span class=\"legend-text\">Crossings - unmarked</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #e31a1c; height: 8px;\"></span></div><span class=\"legend-text\">Crossings - no</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: gray; height: 8px;\"></span></div><span class=\"legend-text\">Crossings - ?</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #63636380; height: 8px;\"></span></div><span class=\"legend-text\">Crossings - other/none</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol marker circle\" style=\"background-color: #ffffff; border: 1px solid black; height: 12px; width: 12px;\"></span></div><span class=\"legend-text\">Kerbs - flush</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol marker circle\" style=\"background-color: #ffffff; border: 1px solid black; height: 12px; width: 12px;\"></span></div><span class=\"legend-text\">Kerbs - lowered</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol marker circle\" style=\"background-color: #808080; border: 1px solid black; height: 12px; width: 12px;\"></span></div><span class=\"legend-text\">Kerbs - rolled</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol marker circle\" style=\"background-color: #bebebe; border: 1px solid black; height: 12px; width: 12px;\"></span></div><span class=\"legend-text\">Kerbs - no</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol marker circle\" style=\"background-color: #000000; border: 1px solid black; height: 12px; width: 12px;\"></span></div><span class=\"legend-text\">Kerbs - raised</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol marker circle\" style=\"background-color: #d9d9d9; border: 1px solid black; height: 12px; width: 12px;\"></span></div><span class=\"legend-text\">Kerbs - ?</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol marker circle\" style=\"background-color: #63636380; border: 1px solid black; height: 12px; width: 12px;\"></span></div><span class=\"legend-text\">Kerbs - other/none</span></div>",
+        "surface": "<!-- GENERATED FRAGMENT - auto-generated by StandaloneLegendHTML - DO NOT EDIT -->\n<div class=\"legend-title\">Legend</div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #fb8072; height: 8px;\"></span></div><span class=\"legend-text\">asphalt</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #80b1d3; height: 8px;\"></span></div><span class=\"legend-text\">concrete</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #fccde5; height: 8px;\"></span></div><span class=\"legend-text\">concrete:plates</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #bebada; height: 8px;\"></span></div><span class=\"legend-text\">paving_stones</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #ffed6f; height: 8px;\"></span></div><span class=\"legend-text\">sett</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #ffed6f; height: 8px;\"></span></div><span class=\"legend-text\">cobblestone</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #ffffb3; height: 8px;\"></span></div><span class=\"legend-text\">unhewn_cobblestone</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #fdb462; height: 8px;\"></span></div><span class=\"legend-text\">ground</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #fdb462; height: 8px;\"></span></div><span class=\"legend-text\">dirt</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #fdb462; height: 8px;\"></span></div><span class=\"legend-text\">earth</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #fdb462; height: 8px;\"></span></div><span class=\"legend-text\">sand</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #b3de69; height: 8px;\"></span></div><span class=\"legend-text\">grass</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #ffffff; height: 8px;\"></span></div><span class=\"legend-text\">paved</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #d9d9d9; height: 8px;\"></span></div><span class=\"legend-text\">unpaved</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #bc80bd; height: 8px;\"></span></div><span class=\"legend-text\">gravel</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #bc80bd; height: 8px;\"></span></div><span class=\"legend-text\">compacted</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #bc80bd; height: 8px;\"></span></div><span class=\"legend-text\">ceramic:tiles</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #bc80bd; height: 8px;\"></span></div><span class=\"legend-text\">wood</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #bc80bd; height: 8px;\"></span></div><span class=\"legend-text\">metal</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #434343; height: 8px;\"></span></div><span class=\"legend-text\">?</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: gray; height: 8px;\"></span></div><span class=\"legend-text\">other</span></div>",
+        "smoothness": "<!-- GENERATED FRAGMENT - auto-generated by StandaloneLegendHTML - DO NOT EDIT -->\n<div class=\"legend-title\">Legend</div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #4575b4; height: 8px;\"></span></div><span class=\"legend-text\">excellent</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #abd9e9; height: 8px;\"></span></div><span class=\"legend-text\">good</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #ffffbf; height: 8px;\"></span></div><span class=\"legend-text\">intermediate</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #fdae61; height: 8px;\"></span></div><span class=\"legend-text\">bad</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #fdae61; height: 8px;\"></span></div><span class=\"legend-text\">very_bad</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #f46d43; height: 8px;\"></span></div><span class=\"legend-text\">horrible</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #f46d43; height: 8px;\"></span></div><span class=\"legend-text\">very_horrible</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #a50026; height: 8px;\"></span></div><span class=\"legend-text\">impassable</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #434343; height: 8px;\"></span></div><span class=\"legend-text\">?</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: gray; height: 8px;\"></span></div><span class=\"legend-text\">other</span></div>",
+        "tactile_paving": "<!-- GENERATED FRAGMENT - auto-generated by StandaloneLegendHTML - DO NOT EDIT -->\n<div class=\"legend-title\">Legend</div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #6146d0; height: 8px;\"></span></div><span class=\"legend-text\">yes</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #6146d0; height: 8px;\"></span></div><span class=\"legend-text\">contrasted</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #bd1006; height: 8px;\"></span></div><span class=\"legend-text\">no</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #717171; height: 8px;\"></span></div><span class=\"legend-text\">?</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: gray; height: 8px;\"></span></div><span class=\"legend-text\">other</span></div>",
+        "lit": "<!-- GENERATED FRAGMENT - auto-generated by StandaloneLegendHTML - DO NOT EDIT -->\n<div class=\"legend-title\">Legend</div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #ffff99; height: 8px;\"></span></div><span class=\"legend-text\">yes</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #ffff99; height: 8px;\"></span></div><span class=\"legend-text\">automatic</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #ffff99; height: 8px;\"></span></div><span class=\"legend-text\">24/7</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #6a3d9a; height: 8px;\"></span></div><span class=\"legend-text\">no</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #6a3d9a; height: 8px;\"></span></div><span class=\"legend-text\">disused</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #434343; height: 8px;\"></span></div><span class=\"legend-text\">?</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: gray; height: 8px;\"></span></div><span class=\"legend-text\">other</span></div>",
+        "traffic_calming": "<!-- GENERATED FRAGMENT - auto-generated by StandaloneLegendHTML - DO NOT EDIT -->\n<div class=\"legend-title\">Legend</div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #ffff99; height: 8px;\"></span></div><span class=\"legend-text\">table</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #ffff99; height: 8px;\"></span></div><span class=\"legend-text\">bump</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #ffff99; height: 8px;\"></span></div><span class=\"legend-text\">hump</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #63636399; height: 8px;\"></span></div><span class=\"legend-text\">?</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #63636366; height: 8px;\"></span></div><span class=\"legend-text\">other</span></div>",
+        "wheelchair": "<!-- GENERATED FRAGMENT - auto-generated by StandaloneLegendHTML - DO NOT EDIT -->\n<div class=\"legend-title\">Legend</div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #91bfdb; height: 8px;\"></span></div><span class=\"legend-text\">yes</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #91bfdb; height: 8px;\"></span></div><span class=\"legend-text\">designated</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #ffffbf; height: 8px;\"></span></div><span class=\"legend-text\">limited</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #fc8d59; height: 8px;\"></span></div><span class=\"legend-text\">no</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #434343; height: 8px;\"></span></div><span class=\"legend-text\">?</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: gray; height: 8px;\"></span></div><span class=\"legend-text\">other</span></div>",
+        "age": "<!-- GENERATED FRAGMENT - auto-generated by StandaloneLegendHTML - DO NOT EDIT -->\n<div class=\"legend-title\">Legend</div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #90d743; height: 8px;\"></span></div><span class=\"legend-text\"> 0  -  2</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #35b779; height: 8px;\"></span></div><span class=\"legend-text\"> 2  -  4</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #21918c; height: 8px;\"></span></div><span class=\"legend-text\"> 4  -  6</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #31688e; height: 8px;\"></span></div><span class=\"legend-text\"> 6  -  8</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #443983; height: 8px;\"></span></div><span class=\"legend-text\"> 8  - 10</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #440154; height: 8px;\"></span></div><span class=\"legend-text\">10 +</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #808080; height: 8px;\"></span></div><span class=\"legend-text\">n.a.</span></div>",
+        "n_revs": "<!-- GENERATED FRAGMENT - auto-generated by StandaloneLegendHTML - DO NOT EDIT -->\n<div class=\"legend-title\">Legend</div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #1d1147; height: 8px;\"></span></div><span class=\"legend-text\"> 0  -  5</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #51127c; height: 8px;\"></span></div><span class=\"legend-text\"> 5  - 10</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #832681; height: 8px;\"></span></div><span class=\"legend-text\">10 - 15</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #b73779; height: 8px;\"></span></div><span class=\"legend-text\">15 - 20</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #e75263; height: 8px;\"></span></div><span class=\"legend-text\">20 - 25</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #fc8961; height: 8px;\"></span></div><span class=\"legend-text\">25 - 30</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #fec488; height: 8px;\"></span></div><span class=\"legend-text\">30 +</span></div><div class=\"legend-item\"><div class=\"legend-symbol-container\"><span class=\"legend-symbol line\" style=\"background-color: #808080; height: 8px;\"></span></div><span class=\"legend-text\">n.a.</span></div>"
+    }
 }

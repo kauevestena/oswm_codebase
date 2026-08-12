@@ -99,8 +99,8 @@ Vector tile files in [PMTiles](https://protomaps.com/pmtiles) format. Requires a
 |---|---|---|
 | `data/routing/network.oswmg` | OSWM binary graph | Versioned topology, directional profile costs, and snapping index used by the routing worker |
 | `data/routing/network.pmtiles` | PMTiles | Lightweight network geometry used only for MapLibre rendering |
+| `data/routing/network.parquet` | GeoParquet | Downloadable routing geometry and directional grades for expert scrutiny |
 | `data/routing/profiles.json` | JSON | Routing labels, speeds, profile order, and graph/display contract |
-| `data/routing/demo.geojson` | GeoJSON | Analytical and debugging export; not loaded by the routing page |
 | `data/routing/metadata.json` | JSON | Ruleset provenance, graph checksum, counts, and grade audit |
 
 ---

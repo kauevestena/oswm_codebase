@@ -19,6 +19,35 @@ The responsibilities are intentionally separated:
 
 [`kauevestena/opensidewalkmap_beta`](https://github.com/kauevestena/opensidewalkmap_beta) is the current reference node. It is a working model, not a claim that every future node must be an exact copy.
 
+## Global-launch node contract
+
+The fleet-safe path is documented in
+[`GLOBAL_LAUNCH_READINESS.md`](GLOBAL_LAUNCH_READINESS.md). The key contracts
+are executable:
+
+- `node_outputs.py reset-node` inventories inherited generated state and
+  removes it only with `--apply`; `reset-derived` reconciles obsolete derived
+  products before a complete rebuild.
+- `config.py` may pin `OSM_RELATION_ID` and must assign per-node
+  `NODE_DAILY_CRON` and `NODE_WEEKLY_CRON` values. `special_updates.py` reads
+  those assignments without executing the config and renders them into the
+  managed workflow copies.
+- `special_updates.py` owns only the files declared in
+  `workflows/manifest.json`; node-specific workflows and `.gitignore` remain
+  untouched.
+- Writer workflows share one repository-wide concurrency group, stage only
+  declared products, reject staged files at 95 MiB, create normal commits,
+  rebase, and use a non-force push. Pages deployment is explicit and separate.
+- Scheduled jobs materialize the exact codebase gitlink committed by the node.
+  Moving to a new core revision is a deliberate operation that accepts an
+  exact main-reachable commit SHA.
+- Registry timestamps are UTC ISO-8601 values. Legacy local timestamps remain
+  readable using the node timezone and are migrated as jobs succeed.
+
+Runtime dependencies are locked for Python 3.12 in `requirements.txt` from
+the human-maintained `requirements.in`. Development and CI use the parallel
+`requirements-dev.in` / `requirements-dev.txt` pair.
+
 ## Webmap theme charts
 
 The MapLibre Webmap includes a lower-left analysis control for every theme in
@@ -35,7 +64,8 @@ plus wheelchair, blind/low-vision and elderly profiles, with optional
 side-by-side route comparison. Profile judgments are maintained as plain
 Python dictionaries and precomputed during node generation. The browser uses
 a compact typed-array graph in a Web Worker for routing and PMTiles for network
-rendering, leaving GeoJSON as an analytical export. See
+rendering. A compact GeoParquet network remains available for expert scrutiny
+without making GeoJSON part of the pipeline. See
 [`routing/README.md`](routing/README.md) for the architecture, slope-source
 hierarchy and calibration workflow.
 
@@ -87,7 +117,7 @@ Generators run from the node root. They import shared code through the `oswm_cod
 | Dashboard/statistics | Altair/Vega charts for individual pedestrian layers and aggregated data | Active |
 | Data quality | Tag-value checks, geometry checks, report tables, QA maps, and external-provider links | Active |
 | Completeness | Multi-scale and temporal footway/sidewalk-to-road completeness analysis | Active; computationally and API intensive |
-| Routing demo | Client-side route exploration over generated pedestrian geometries | Experimental |
+| Routing demo | Static route exploration & deprecated Streamlit prototype (`deprecated/streamlit_routing`) | Experimental / Deprecated |
 | Hazard Analysis | Profile-specific pedestrian hazard screening and global terrain context | Experimental |
 | Metadata catalogue | Deterministic ISO-aligned JSON catalogue and per-resource records in a sibling `metadata/` tree | Active |
 | Data hub and static API | Human-readable hub plus serverless metadata, JSON, GeoParquet, PMTiles, VRT, and chart-spec endpoints | Active |
@@ -174,7 +204,7 @@ sh oswm_codebase/runners/daily.sh
 sh oswm_codebase/runners/weekly.sh
 ```
 
-These pipelines can download data and rewrite many committed node outputs. Review the node diff before committing. `local_setup.sh` automates cloning the current reference node, updating its submodule, creating `.venv`, and installing `requirements.txt`; the explicit commands above are preferable when you need control over the pinned revision.
+These pipelines can download data and rewrite many committed node outputs. Review the node diff before committing. `local_setup.sh` automates cloning the current reference node, materializing its recorded submodule gitlink, creating `.venv`, and installing `requirements.txt`; the explicit commands above are preferable when you need control over the pinned revision.
 
 ## Testing and validation
 
