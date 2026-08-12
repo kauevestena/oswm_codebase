@@ -2,7 +2,6 @@ import { collectViewportStats } from "./snapshot_stats.js";
 import { renderSummaryChart } from "./snapshot_charts.js";
 import { createI18n, DEFAULT_LOCALE, SUPPORTED_LOCALES } from "./snapshot_i18n.js";
 import { qrcodeSvg } from "./snapshot_qrcode.js";
-import * as maplibregl from "https://unpkg.com/maplibre-gl@6/dist/maplibre-gl.mjs";
 import { brandingAssetUrl } from "../../assets/branding/branding.js";
 
 const EXPORT_WIDTH = 1500;
@@ -245,7 +244,10 @@ async function renderExportMap(maplibregl, style, bounds) {
     }
 }
 
-async function captureMap(map, bounds) {
+async function captureMap(map, bounds, maplibregl) {
+    if (!maplibregl?.Map) {
+        throw new Error("The MapLibre renderer was not supplied to the snapshot composer.");
+    }
     const style = JSON.parse(JSON.stringify(map.getStyle()));
     try {
         return await renderExportMap(maplibregl, style, bounds);
@@ -502,6 +504,7 @@ export class SnapshotComposer {
         this.map = map;
         this.params = params;
         this.getActiveStyleKey = options.getActiveStyleKey || (() => "footway_categories");
+        this.maplibregl = options.maplibregl || globalThis.maplibregl;
         this.root = null;
         this.summaryCache = null;
         this.logoDataUrl = null;
@@ -781,7 +784,7 @@ export class SnapshotComposer {
             } else {
                 summary = collectViewportStats(this.map, theme);
             }
-            const capture = await captureMap(this.map, bounds);
+            const capture = await captureMap(this.map, bounds, this.maplibregl);
             if (token !== this.renderToken) return;
             this.lastRenderContext = {
                 nodeName: this.params.snapshot?.node_name || "OSWM node",

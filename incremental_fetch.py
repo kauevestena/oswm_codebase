@@ -1,9 +1,8 @@
 import os
-import sys
 from datetime import datetime, timezone
 
 from constants import updating_infos_path, paths_dict, layer_tags_dict
-from functions import read_json, save_geoparquet, get_boundaries_bbox
+from functions import save_geoparquet
 import geopandas as gpd
 import requests
 import pandas as pd
@@ -91,7 +90,14 @@ def fetch_incremental_data(start_dt: datetime, end_dt: datetime = None, is_simul
             return False
 
     if end_dt is None:
-        end_dt = datetime.now(tz=timezone.utc)
+        end_dt = min(now_dt, max_ts) if max_ts else now_dt
+    elif end_dt.tzinfo is None:
+        end_dt = end_dt.replace(tzinfo=timezone.utc)
+    if start_dt.tzinfo is None:
+        start_dt = start_dt.replace(tzinfo=timezone.utc)
+    if end_dt <= start_dt:
+        print("[incremental] No provider watermark newer than the recorded timestamp.")
+        return True
         
     bboxes = get_ohsome_bboxes()
     if not bboxes:
@@ -104,7 +110,7 @@ def fetch_incremental_data(start_dt: datetime, end_dt: datetime = None, is_simul
     
     url = f"{OHSOME_API_BASE}/contributions/geometry"
     
-    success_all = True
+    pending_updates: dict[str, gpd.GeoDataFrame] = {}
     
     for layer, filter_str in OHSOME_FILTER_MAP.items():
         print(f"[incremental] Updating layer '{layer}' from {start_iso} to {end_iso}...")
@@ -175,8 +181,8 @@ def fetch_incremental_data(start_dt: datetime, end_dt: datetime = None, is_simul
             if not is_simulation:
                 raw_path = paths_dict["data_raw"][layer]
                 if not os.path.exists(raw_path):
-                    print(f"[incremental] Warning: {raw_path} not found. Skipping layer update.")
-                    continue
+                    print(f"[incremental] Required input {raw_path} is missing.")
+                    return False
                     
                 gdf = gpd.read_parquet(raw_path)
                 original_len = len(gdf)
@@ -194,25 +200,39 @@ def fetch_incremental_data(start_dt: datetime, end_dt: datetime = None, is_simul
                     if gdf.crs is None:
                         gdf.crs = "EPSG:4326"
                     
-                    gdf = pd.concat([gdf, new_gdf], ignore_index=True)
+                    gdf = gpd.GeoDataFrame(
+                        pd.concat([gdf, new_gdf], ignore_index=True),
+                        geometry="geometry",
+                        crs=gdf.crs or "EPSG:4326",
+                    )
+
+                if "element" in gdf.columns and "id" in gdf.columns:
+                    gdf = gdf.drop_duplicates(
+                        subset=["element", "id"], keep="last"
+                    )
                     
                 print(f"[incremental] Layer '{layer}': {original_len} -> {len(gdf)} features.")
-                save_geoparquet(gdf, raw_path)
+                pending_updates[layer] = gdf
             else:
                 print(f"[incremental] SIMULATION Layer '{layer}': would delete {len(set(to_delete_ids))} elements and append {len(new_features_list)} features.")
             
         except Exception as e:
             print(f"[incremental] Failed to fetch or process incremental data for '{layer}': {e}")
-            success_all = False
+            return False
             
-    if success_all and not is_simulation:
+    if not is_simulation:
         try:
+            for layer, gdf in pending_updates.items():
+                save_geoparquet(gdf, paths_dict["data_raw"][layer])
             from functions import record_datetime
-            record_datetime("Data Fetching")
-            print("[incremental] Updated Data Fetching timestamp.")
+            record_datetime("Data Fetching", value=end_dt)
+            print(
+                "[incremental] Recorded the successfully applied provider "
+                f"watermark {end_dt.isoformat()}."
+            )
         except Exception as e:
             print(f"[incremental] Failed to update registry timestamp: {e}")
-            
-    return success_all
+            return False
 
+    return True
 

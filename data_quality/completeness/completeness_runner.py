@@ -29,6 +29,7 @@ DATA_JSON_PATH = os.path.join(OUTPUT_DIR, "data.json")
 def main():
     parser = argparse.ArgumentParser(description="OSWM Completeness Analysis")
     parser.add_argument("--silent", action="store_true", help="Run in automated silent mode")
+    parser.add_argument("--offline", action="store_true", help="Run in offline mode without OHSOME queries")
     args = parser.parse_args()
 
     def p(msg):
@@ -63,6 +64,7 @@ def main():
         bounds,
         existing_data=existing_data,
         silent=args.silent,
+        offline=args.offline,
     )
 
     elapsed = time.time() - t0

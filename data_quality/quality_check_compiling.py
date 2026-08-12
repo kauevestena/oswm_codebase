@@ -1,4 +1,4 @@
-# import pandas as pd
+import pandas as pd
 from dq_funcs import *
 from quality_dicts import *
 from functions import *
@@ -54,7 +54,7 @@ def main():
                         for osmkey in curr["dict"][category]:
                             value = getattr(row, osmkey, None)
 
-                            if value:
+                            if pd.notna(value) and value != "":
                                 if not row.id in curr["occurrences"][category]:
                                     val_list = [
                                         row.id,
@@ -67,16 +67,20 @@ def main():
                                         curr, category, val_list, row.id, row.element
                                     )
 
-                                    add_to_map_data(row, quality_category, category)
+                                    add_to_map_data(row, quality_category, category, issue_key=val_list[1], issue_val=val_list[2], issue_comment=val_list[3])
 
                     if isinstance(curr["dict"], str):
-                        curr_ref_dict = read_json(curr["dict"])[category]
+                        curr_ref_dict = (
+                            read_json(curr["dict"]).get(category, {})
+                            if os.path.exists(curr["dict"])
+                            else {}
+                        )
 
                         for osmkey in curr_ref_dict:
 
                             value = getattr(row, osmkey, None)
 
-                            if value:
+                            if pd.notna(value) and value != "":
                                 if not row.id in curr["occurrences"][category]:
 
                                     val_list = [
@@ -90,7 +94,7 @@ def main():
                                         curr, category, val_list, row.id, row.element
                                     )
 
-                                    add_to_map_data(row, quality_category, category)
+                                    add_to_map_data(row, quality_category, category, issue_key=val_list[1], issue_val=val_list[2], issue_comment=val_list[3])
 
                 if curr["type"] == "values":
                     if isinstance(curr["dict"], dict):
@@ -114,16 +118,20 @@ def main():
                                             row.element,
                                         )
 
-                                        add_to_map_data(row, quality_category, category)
+                                        add_to_map_data(row, quality_category, category, issue_key=val_list[1], issue_val=val_list[2], issue_comment=val_list[3])
 
                     if isinstance(curr["dict"], str):
-                        curr_ref_dict = read_json(curr["dict"])[category]
+                        curr_ref_dict = (
+                            read_json(curr["dict"]).get(category, {})
+                            if os.path.exists(curr["dict"])
+                            else {}
+                        )
 
                         for osmkey in curr_ref_dict:
                             for osmvalue in curr_ref_dict[osmkey]:
                                 value = getattr(row, osmkey, None)
 
-                                if value:
+                                if pd.notna(value) and value != "":
                                     if value not in curr_ref_dict[osmkey]:
                                         if not row.id in curr["occurrences"][category]:
 
@@ -144,7 +152,7 @@ def main():
                                                 row.element,
                                             )
 
-                                            add_to_map_data(row, quality_category, category)
+                                            add_to_map_data(row, quality_category, category, issue_key=val_list[1], issue_val=val_list[2], issue_comment=val_list[3])
 
                 if curr["type"] == "tags":
 
@@ -165,9 +173,25 @@ def main():
                                         curr, category, val_list, row.id, row.element
                                     )
 
-                                    add_to_map_data(row, quality_category, category)
+                                    add_to_map_data(row, quality_category, category, issue_key=val_list[1], issue_val=val_list[2], issue_comment=val_list[3])
 
                                     break
+                if curr["type"] == "missing_keys":
+                    if isinstance(curr["dict"], dict) and category in curr["dict"]:
+                        for osmkey in curr["dict"][category]:
+                            value = getattr(row, osmkey, None)
+                            if pd.isna(value) or value == "":
+                                if not row.id in curr["occurrences"][category]:
+                                    val_list = [
+                                        row.id,
+                                        osmkey,
+                                        "MISSING",
+                                        curr["dict"][category][osmkey],
+                                    ]
+                                    add_to_occurrences(
+                                        curr, category, val_list, row.id, row.element
+                                    )
+                                    add_to_map_data(row, quality_category, category, issue_key=val_list[1], issue_val=val_list[2], issue_comment=val_list[3])
 
                 if curr["type"] == "age":
                     age_info = age_lookup.get(category, {}).get(row.id)
@@ -182,7 +206,7 @@ def main():
                         add_to_occurrences(
                             curr, category, val_list, row.id, row.element
                         )
-                        add_to_map_data(row, quality_category, category)
+                        add_to_map_data(row, quality_category, category, issue_key=val_list[1], issue_val=val_list[2], issue_comment=val_list[3])
 
     # add the  geometric categories, processed elsewhere:
     for quality_category in geom_dict_keys:
@@ -208,7 +232,7 @@ def main():
                 val_list = [row.id, *curr["dict"][data_category]["insertions"]]
 
                 add_to_occurrences(curr, data_category, val_list, row.id, row.element)
-                add_to_map_data(row, quality_category, data_category)
+                add_to_map_data(row, quality_category, data_category, issue_key=val_list[1], issue_val=val_list[2], issue_comment=val_list[3])
 
     # add the "geoms_dicts_keys" to "categories_dict_keys":
     for quality_category in geom_dict_keys:
@@ -289,6 +313,7 @@ def main():
     iso_badge_colors = {
         "Thematic Accuracy": ("#a78bfa", "rgba(167, 139, 250, 0.15)", "rgba(167, 139, 250, 0.3)"),
         "Logical Consistency": ("#00f2fe", "rgba(0, 242, 254, 0.15)", "rgba(0, 242, 254, 0.3)"),
+        "Completeness": ("#4ade80", "rgba(74, 222, 128, 0.15)", "rgba(74, 222, 128, 0.3)"),
     }
 
     def iso_badge_html(iso_info):
@@ -491,6 +516,7 @@ def main():
     dump_json(quality_categories_shortened, qc_categories_index_path)
 
     str_to_file(qcmainpage_txt, qc_mainpage_path)
+    str_to_file(qcmainpage_txt, os.path.join(dq_rootfolder, "index.html"))
 
     # AGING RECORDING PART:
 

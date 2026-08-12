@@ -33,6 +33,18 @@ if not use_docker and not has_local_ogr2ogr:
     )
 
 
+# Load existing global_params.json if present
+global_params = {}
+if os.path.exists(global_params_path):
+    try:
+        global_params = read_json(global_params_path)
+    except Exception:
+        global_params = {}
+
+if "tile_max_zoom" not in global_params:
+    global_params["tile_max_zoom"] = {}
+
+
 for layername in layers_dict:
 
     input_path = layers_dict[layername]
@@ -59,56 +71,78 @@ for layername in layers_dict:
         ogr_input = input_path
         input_features = None
 
-    # Build ogr2ogr command
-    if use_docker:
-        runstring = (
-            f"docker run --rm -v ./data:/data {docker_img} "
-            f"ogr2ogr -of PMTiles {outpath} {ogr_input} "
-            f"-nln {layername} "
-            f"-dsco MINZOOM={TILES_MIN_ZOOM} -dsco MAXZOOM={TILES_MAX_ZOOM} -progress"
-        )
-    else:
-        runstring = (
-            f"ogr2ogr -of PMTiles {outpath} {ogr_input} "
-            f"-nln {layername} "
-            f"-dsco MINZOOM={TILES_MIN_ZOOM} -dsco MAXZOOM={TILES_MAX_ZOOM} -progress"
-        )
+    # Start with saved max zoom level if available in global_params.json, else default to TILES_MAX_ZOOM
+    current_max_zoom = global_params["tile_max_zoom"].get(layername, TILES_MAX_ZOOM)
 
-    print(f"[{layername}] Generating PMTiles...")
-    result = subprocess.run(runstring, shell=True, capture_output=True, text=True)
-
-    if result.returncode != 0:
-        msg = f"ogr2ogr failed (exit {result.returncode}): {result.stderr.strip()}"
-        print(f"  ERROR generating tiles for '{layername}':")
-        print(f"  stderr: {result.stderr}")
-        print(f"  stdout: {result.stdout}")
-        tile_report[layername] = {"status": "error", "reason": msg}
-        has_errors = True
-    elif os.path.exists(outpath):
-        filesize = os.path.getsize(outpath)
-        if filesize < 1024:
-            msg = (
-                f"output file is only {filesize} bytes — tiles may be empty or corrupt"
+    while True:
+        # Build ogr2ogr command
+        if use_docker:
+            runstring = (
+                f"docker run --rm -v ./data:/data {docker_img} "
+                f"ogr2ogr -of PMTiles {outpath} {ogr_input} "
+                f"-nln {layername} "
+                f"-dsco MINZOOM={TILES_MIN_ZOOM} -dsco MAXZOOM={current_max_zoom} -progress"
             )
-            print(f"  WARNING: {msg}")
-            tile_report[layername] = {
-                "status": "warning",
-                "reason": msg,
-                "filesize": filesize,
-            }
-            has_errors = True
         else:
-            print(f"  OK: '{outpath}' generated ({filesize:,} bytes)")
-            tile_report[layername] = {
-                "status": "ok",
-                "filesize": filesize,
-                "input_features": input_features,
-            }
-    else:
-        msg = f"output file '{outpath}' was not created"
-        print(f"  ERROR: {msg}")
-        tile_report[layername] = {"status": "error", "reason": msg}
-        has_errors = True
+            runstring = (
+                f"ogr2ogr -of PMTiles {outpath} {ogr_input} "
+                f"-nln {layername} "
+                f"-dsco MINZOOM={TILES_MIN_ZOOM} -dsco MAXZOOM={current_max_zoom} -progress"
+            )
+
+        print(f"[{layername}] Generating PMTiles (MAXZOOM={current_max_zoom})...")
+        result = subprocess.run(runstring, shell=True, capture_output=True, text=True)
+
+        if result.returncode != 0:
+            msg = f"ogr2ogr failed (exit {result.returncode}): {result.stderr.strip()}"
+            print(f"  ERROR generating tiles for '{layername}':")
+            print(f"  stderr: {result.stderr}")
+            print(f"  stdout: {result.stdout}")
+            tile_report[layername] = {"status": "error", "reason": msg}
+            has_errors = True
+            break
+        elif os.path.exists(outpath):
+            filesize = os.path.getsize(outpath)
+            if filesize > MAX_TILE_FILESIZE_BYTES and current_max_zoom > TILES_MIN_ZOOM:
+                print(
+                    f"  WARNING: '{outpath}' generated size is {filesize:,} bytes (> 100 MB limit). "
+                    f"Stepping down MAXZOOM from {current_max_zoom} to {current_max_zoom - 1}..."
+                )
+                os.remove(outpath)
+                current_max_zoom -= 1
+                continue
+            elif filesize < 1024:
+                msg = (
+                    f"output file is only {filesize} bytes — tiles may be empty or corrupt"
+                )
+                print(f"  WARNING: {msg}")
+                tile_report[layername] = {
+                    "status": "warning",
+                    "reason": msg,
+                    "filesize": filesize,
+                    "max_zoom": current_max_zoom,
+                }
+                has_errors = True
+                break
+            else:
+                print(
+                    f"  OK: '{outpath}' generated ({filesize:,} bytes, MAXZOOM={current_max_zoom})"
+                )
+                tile_report[layername] = {
+                    "status": "ok",
+                    "filesize": filesize,
+                    "input_features": input_features,
+                    "max_zoom": current_max_zoom,
+                }
+                global_params["tile_max_zoom"][layername] = current_max_zoom
+                dump_json(global_params, global_params_path)
+                break
+        else:
+            msg = f"output file '{outpath}' was not created"
+            print(f"  ERROR: {msg}")
+            tile_report[layername] = {"status": "error", "reason": msg}
+            has_errors = True
+            break
 
     # Clean up intermediate GeoJSON
     if geojson_intermediate and os.path.exists(geojson_intermediate):

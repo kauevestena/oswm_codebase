@@ -52,8 +52,9 @@ OHSOME_FILTERS = {
 }
 
 OHSOME_BATCH_SIZE = 50
-MAX_RETRIES = 3
-RETRY_DELAY = 5
+MAX_RETRIES = 1
+RETRY_DELAY = 2
+OHSOME_TIMEOUT = 10
 
 ROADS_CACHE_PATH = os.path.join(processed_folderpath, "roads_for_completeness.parquet")
 
@@ -63,6 +64,15 @@ ROAD_HIGHWAY_TYPES = [
     "motorway_link", "trunk_link", "primary_link",
     "secondary_link", "tertiary_link",
 ]
+
+ATTRIBUTE_RULES = {
+    "surface": ["sidewalks", "main_footways", "informal_footways", "crossings", "stairways"],
+    "smoothness": ["sidewalks", "main_footways", "informal_footways", "crossings", "stairways"],
+    "width": ["sidewalks", "main_footways", "informal_footways", "crossings", "stairways"],
+    "tactile_paving": ["sidewalks", "main_footways", "informal_footways", "crossings", "stairways", "kerbs"],
+    "wheelchair": ["sidewalks", "main_footways", "informal_footways", "crossings", "stairways", "kerbs"],
+    "kerb": ["kerbs"]
+}
 
 
 # ---------------------------------------------------------------------------
@@ -102,36 +112,54 @@ def fetch_or_load_roads(bounds, cache_path=ROADS_CACHE_PATH, silent=False):
 def load_pedestrian_layers(silent=False):
     """
     Load pedestrian data layers from local GeoParquet.
-
-    Returns dict: {"footways": GeoDataFrame, "sidewalks": GeoDataFrame}
+    Returns dict containing full layers and geometry-only aggregates for lengths.
     """
     if not silent:
         print("[completeness] Loading pedestrian layers from GeoParquet...")
 
-    sidewalks = gpd.read_parquet(sidewalks_path)
+    res = {}
+    
+    # Load all required layers for attributes mode
+    layer_names = ["sidewalks", "kerbs"]
+    for l in layer_names:
+        p = os.path.join(processed_folderpath, f"{l}.parquet")
+        if os.path.exists(p):
+            res[l] = gpd.read_parquet(p)
+        else:
+            res[l] = gpd.GeoDataFrame()
 
-    # Footways = ALL highway=footway (sidewalks + non-sidewalk footways)
-    main_fw_path = os.path.join(
-        processed_folderpath, "other_footways", "main_footways.parquet"
-    )
-    if os.path.exists(main_fw_path):
-        main_fw = gpd.read_parquet(main_fw_path)
+    other_names = ["main_footways", "informal_footways", "crossings", "stairways"]
+    for l in other_names:
+        p = os.path.join(processed_folderpath, "other_footways", f"{l}.parquet")
+        if os.path.exists(p):
+            res[l] = gpd.read_parquet(p)
+        else:
+            res[l] = gpd.GeoDataFrame()
+
+    # Create footways layer for geometry logic
+    sidewalks = res.get("sidewalks", gpd.GeoDataFrame())
+    main_fw = res.get("main_footways", gpd.GeoDataFrame())
+    
+    if not main_fw.empty:
         fw_only = main_fw[main_fw.get("highway") == "footway"]
-        footways = pd.concat(
-            [sidewalks[["geometry"]], fw_only[["geometry"]]], ignore_index=True
-        )
-        footways = gpd.GeoDataFrame(footways, crs=sidewalks.crs)
+        if not sidewalks.empty:
+            footways = pd.concat(
+                [sidewalks[["geometry"]], fw_only[["geometry"]]], ignore_index=True
+            )
+            footways = gpd.GeoDataFrame(footways, crs=sidewalks.crs)
+        else:
+            footways = fw_only[["geometry"]].copy()
     else:
-        footways = sidewalks[["geometry"]].copy()
+        footways = sidewalks[["geometry"]].copy() if not sidewalks.empty else gpd.GeoDataFrame()
+
+    res["footways"] = footways[["geometry"]] if not footways.empty else gpd.GeoDataFrame()
+    res["sidewalks_geom"] = sidewalks[["geometry"]] if not sidewalks.empty else gpd.GeoDataFrame()
 
     if not silent:
         print(f"[completeness]   Sidewalks: {len(sidewalks)} features")
         print(f"[completeness]   Footways:  {len(footways)} features")
 
-    return {
-        "footways": footways[["geometry"]],
-        "sidewalks": sidewalks[["geometry"]],
-    }
+    return res
 
 
 # ---------------------------------------------------------------------------
@@ -368,7 +396,7 @@ def query_ohsome_z15(bboxes_z15, filter_str, timestamp, silent=False):
         data = None
         for attempt in range(MAX_RETRIES):
             try:
-                resp = requests.post(url, data=params, timeout=120)
+                resp = requests.post(url, data=params, timeout=OHSOME_TIMEOUT)
                 resp.raise_for_status()
                 data = resp.json()
                 break
@@ -507,7 +535,53 @@ def _init_results_structure(bounds, timestamps):
     return results
 
 
-def _add_timestamp_data(results, timestamp, z17_roads, z17_footways, z17_sidewalks, bounds):
+def compute_attribute_counts(ped_layers, bounds, silent=False):
+    """Compute tag counts per tile for all tiles from MIN_ZOOM to MAX_ZOOM."""
+    grids = []
+    for z in range(MIN_ZOOM, MAX_ZOOM + 1):
+        grids.append(_build_tile_grid(bounds, z))
+    all_grids = pd.concat(grids, ignore_index=True)
+    
+    results = {tag: {tid: {"total": 0, "tagged": 0} for tid in all_grids["tile_id"]} for tag in ATTRIBUTE_RULES}
+
+    for tag, layer_names in tqdm(ATTRIBUTE_RULES.items(), desc="  Attributes", leave=False, disable=silent):
+        for lname in layer_names:
+            gdf = ped_layers.get(lname)
+            if gdf is None or gdf.empty:
+                continue
+
+            gdf_reset = gdf.reset_index(drop=True)
+            joined = gpd.sjoin(
+                gdf_reset,
+                all_grids,
+                how="inner",
+                predicate="intersects",
+            )
+            
+            if tag in joined.columns:
+                # '?' is the pipeline fill value for missing tags — treat as untagged
+                has_tag = joined[tag].notna() & (joined[tag] != "") & (joined[tag] != "?")
+            else:
+                has_tag = pd.Series(False, index=joined.index)
+
+            df_to_agg = pd.DataFrame({
+                "tile_id": joined["tile_id"],
+                "has_tag": has_tag
+            })
+            
+            agg = df_to_agg.groupby("tile_id").agg(
+                total=("has_tag", "count"),
+                tagged=("has_tag", "sum")
+            )
+            
+            for tid, row in agg.iterrows():
+                results[tag][tid]["total"] += row["total"]
+                results[tag][tid]["tagged"] += row["tagged"]
+                
+    return results
+
+
+def _add_timestamp_data(results, timestamp, z17_roads, z17_footways, z17_sidewalks, bounds, attr_counts=None):
     """
     Add one timestamp's worth of data to the results structure.
     Computes ratios at Z17, then aggregates upward.
@@ -531,14 +605,24 @@ def _add_timestamp_data(results, timestamp, z17_roads, z17_footways, z17_sidewal
             fr = (foot_len / road_len) if road_len > 0 else None
             sr = (side_len / road_len) if road_len > 0 else None
 
-            results["zoom_levels"][z_str]["tiles"][tile_id]["data"].append({
+            entry = {
                 "timestamp": timestamp,
                 "road_length": round(road_len, 1),
                 "footway_length": round(foot_len, 1),
                 "sidewalk_length": round(side_len, 1),
                 "footway_ratio": round(fr, 4) if fr is not None else None,
                 "sidewalk_ratio": round(sr, 4) if sr is not None else None,
-            })
+            }
+
+            if attr_counts is not None:
+                for tag in ATTRIBUTE_RULES:
+                    counts = attr_counts.get(tag, {}).get(tile_id, {"total": 0, "tagged": 0})
+                    tot = counts["total"]
+                    tgd = counts["tagged"]
+                    ratio = (tgd / tot) if tot > 0 else None
+                    entry[f"{tag}_ratio"] = round(ratio, 4) if ratio is not None else None
+
+            results["zoom_levels"][z_str]["tiles"][tile_id]["data"].append(entry)
 
 
 # ---------------------------------------------------------------------------
@@ -550,8 +634,13 @@ def compute_local_snapshot(bounds, silent=False):
     Compute current lengths using local data.
     Returns (z17_roads, z17_footways, z17_sidewalks) dicts.
     """
-    roads = fetch_or_load_roads(bounds, silent=silent)
     ped = load_pedestrian_layers(silent=silent)
+    
+    if not silent:
+        print(f"\n[completeness] Computing attribute counts...")
+    attr_counts = compute_attribute_counts(ped, bounds, silent=silent)
+    
+    roads = fetch_or_load_roads(bounds, silent=silent)
     utm_crs = roads.estimate_utm_crs()
 
     if not silent:
@@ -565,7 +654,7 @@ def compute_local_snapshot(bounds, silent=False):
     if not silent:
         print(f"\n[completeness] Step 1: Computing lengths at Z{QUERY_ZOOM}...")
 
-    layers = {"roads": roads, "footways": ped["footways"], "sidewalks": ped["sidewalks"]}
+    layers = {"roads": roads, "footways": ped["footways"], "sidewalks": ped["sidewalks_geom"]}
     z15 = {}
     for name, gdf in layers.items():
         if not silent:
@@ -582,7 +671,7 @@ def compute_local_snapshot(bounds, silent=False):
             gdf, z15[name], tile_grid_z15, MAX_ZOOM, utm_crs, label=name, silent=silent
         )
 
-    return z17["roads"], z17["footways"], z17["sidewalks"]
+    return z17["roads"], z17["footways"], z17["sidewalks"], attr_counts
 
 
 def compute_ohsome_historical(bounds, timestamps, local_z17, silent=False):
@@ -630,19 +719,21 @@ def run_completeness_analysis(
     bounds,
     existing_data=None,
     silent=False,
+    offline=False,
 ):
     """
     Main entry point for the completeness analysis.
 
     If existing_data is None (first run):
-      - OHSOME kickstart for 3 prior months
+      - OHSOME kickstart for 3 prior months (unless offline)
       - Local snapshot for current month
 
     If existing_data is provided (incremental):
       - Local snapshot for current month
-      - OHSOME for one more historical month
+      - OHSOME for one more historical month (unless offline)
     """
     current_ts = get_current_timestamp()
+    is_offline = offline or bool(os.environ.get("OSWM_OFFLINE"))
 
     # Step 1: Local snapshot (always)
     if not silent:
@@ -650,16 +741,22 @@ def run_completeness_analysis(
         print("[completeness] Computing local snapshot...")
         print("=" * 60)
 
-    z17_roads, z17_footways, z17_sidewalks = compute_local_snapshot(bounds, silent=silent)
+    z17_roads, z17_footways, z17_sidewalks, attr_counts = compute_local_snapshot(bounds, silent=silent)
     local_z17 = {"roads": z17_roads, "footways": z17_footways, "sidewalks": z17_sidewalks}
 
     # Step 2: Determine OHSOME timestamps
-    if existing_data is None:
+    existing_ts = existing_data.get("timestamps", []) if existing_data else []
+    
+    if is_offline:
+        ohsome_timestamps = []
+        all_timestamps = list(existing_ts)
+        if current_ts not in all_timestamps:
+            all_timestamps.append(current_ts)
+    elif existing_data is None:
         # First run: kickstart with 3 prior months
         ohsome_timestamps = generate_kickstart_timestamps(n_months=3)
         all_timestamps = ohsome_timestamps + [current_ts]
     else:
-        existing_ts = existing_data.get("timestamps", [])
         all_timestamps = list(existing_ts)
         if current_ts not in all_timestamps:
             all_timestamps.append(current_ts)
@@ -696,10 +793,10 @@ def run_completeness_analysis(
 
     # Add OHSOME historical data
     for ts, z17_r, z17_f, z17_s in ohsome_results:
-        _add_timestamp_data(results, ts, z17_r, z17_f, z17_s, bounds)
+        _add_timestamp_data(results, ts, z17_r, z17_f, z17_s, bounds, attr_counts=None)
 
     # Add local current snapshot
-    _add_timestamp_data(results, current_ts, z17_roads, z17_footways, z17_sidewalks, bounds)
+    _add_timestamp_data(results, current_ts, z17_roads, z17_footways, z17_sidewalks, bounds, attr_counts=attr_counts)
 
     # If merging, carry forward existing data for timestamps we didn't recompute
     if existing_data:
@@ -770,6 +867,11 @@ def generate_completeness_map(data, output_dir, silent=False):
                 props[f"sidewalk_length{suffix}"] = entry.get("sidewalk_length", 0)
                 props[f"footway_ratio{suffix}"] = entry.get("footway_ratio")
                 props[f"sidewalk_ratio{suffix}"] = entry.get("sidewalk_ratio")
+                
+                for tag in ATTRIBUTE_RULES:
+                    key = f"{tag}_ratio"
+                    if key in entry:
+                        props[f"{key}{suffix}"] = entry.get(key)
 
             feature = {
                 "type": "Feature",
@@ -800,6 +902,7 @@ def generate_completeness_map(data, output_dir, silent=False):
         city_name=city_name,
         timestamps_js=timestamp_labels_js,
         n_timestamps=len(timestamps),
+        attribute_rules_js=json.dumps(ATTRIBUTE_RULES),
     )
 
     outpath = os.path.join(output_dir, "index.html")
@@ -810,7 +913,7 @@ def generate_completeness_map(data, output_dir, silent=False):
         print(f"[completeness] Map written to {outpath}")
 
 
-def _build_map_html(geojson_str, boundary_geojson_str, center_lon, center_lat, city_name, timestamps_js, n_timestamps):
+def _build_map_html(geojson_str, boundary_geojson_str, center_lon, center_lat, city_name, timestamps_js, n_timestamps, attribute_rules_js):
     """Build the standalone MapLibre GL HTML string."""
 
     last_idx = n_timestamps - 1
@@ -833,6 +936,7 @@ def _build_map_html(geojson_str, boundary_geojson_str, center_lon, center_lat, c
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
+<script src="https://unpkg.com/pmtiles@3.0.6/dist/pmtiles.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://unpkg.com/@sgratzl/chartjs-chart-boxplot@4.3.1/build/index.umd.min.js"></script>
 <style>
@@ -841,25 +945,51 @@ def _build_map_html(geojson_str, boundary_geojson_str, center_lon, center_lat, c
   #map {{ position: absolute; top: 0; left: 0; width: 100%; height: 100%; }}
 
   .top-bar {{
-    position: absolute; top: 0; left: 0; width: 100%; z-index: 10;
+    position: absolute; top: 0; left: 0; width: 100%; z-index: 20;
     background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(12px);
     border-bottom: 1px solid rgba(255,255,255,0.1);
-    padding: 10px 20px; display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 200px 10px 20px; display: flex; align-items: center; justify-content: flex-start;
+    flex-wrap: wrap; gap: 10px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  }}
+  .top-bar .header-left {{
+    display: flex; align-items: center; gap: 16px; flex: 1 1 auto; overflow: hidden;
   }}
   .top-bar a.back-btn {{
     background: rgba(255,255,255,0.05); border: 1px solid rgba(0,242,254,0.3);
     color: #00f2fe; padding: 6px 12px; border-radius: 6px; text-decoration: none;
-    font-size: 0.9rem; font-weight: 500;
+    font-size: 0.9rem; font-weight: 500; transition: 0.2s; white-space: nowrap;
+  }}
+  .top-bar a.back-btn:hover {{
+    background: rgba(0,242,254,0.15);
   }}
   .top-bar h3 {{
     color: #f8fafc; font-size: 1.15rem; font-weight: 600; letter-spacing: 0.5px;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3); display: flex; align-items: center;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }}
   .top-bar h3 img {{ height: 1.5em; vertical-align: middle; margin-right: 10px; }}
 
+  .mode-switch {{
+    position: absolute; right: 20px; top: 10px;
+    display: flex; background: rgba(15, 23, 42, 0.92); border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    flex-shrink: 0;
+  }}
+  .mode-switch button {{
+    padding: 6px 16px; font-family: 'Outfit', sans-serif; font-size: 0.85rem; font-weight: 500;
+    cursor: pointer; transition: all 0.2s ease; border: none; outline: none;
+    background: transparent; color: #cbd5e1;
+  }}
+  .mode-switch button.active {{
+    background: rgba(0, 242, 254, 0.15); color: #00f2fe; font-weight: 600;
+  }}
+  .mode-switch button:hover:not(.active) {{
+    color: #f8fafc; background: rgba(255, 255, 255, 0.05);
+  }}
+
   .controls {{
-    position: absolute; top: 62px; right: 12px; z-index: 10;
+    position: absolute; top: 64px; right: 12px; z-index: 10;
     background: rgba(15, 23, 42, 0.92); backdrop-filter: blur(14px);
     border: 1px solid rgba(255,255,255,0.1); border-radius: 10px;
     padding: 14px 16px; min-width: 220px;
@@ -871,7 +1001,7 @@ def _build_map_html(geojson_str, boundary_geojson_str, center_lon, center_lat, c
     padding: 4px 0; font-size: 0.85rem; color: #cbd5e1;
   }}
   .controls label:hover {{ color: #f8fafc; }}
-  .controls input[type="radio"] {{ accent-color: #00f2fe; }}
+  .controls input[type="radio"], .controls input[type="checkbox"] {{ accent-color: #00f2fe; }}
   .controls .divider {{
     border-top: 1px solid rgba(255,255,255,0.08); margin: 10px 0;
   }}
@@ -893,7 +1023,7 @@ def _build_map_html(geojson_str, boundary_geojson_str, center_lon, center_lat, c
   .legend h4 {{ color: #00f2fe; font-size: 0.8rem; margin-bottom: 8px; font-weight: 600; }}
   .legend .bar {{
     width: 180px; height: 14px; border-radius: 4px;
-    background: linear-gradient(to right, #d73027, #fc8d59, #fee08b, #d9ef8b, #66bd63, #1a9850);
+    background: linear-gradient(to right, #00204d, #00336f, #414d6b, #7c7b78, #bca35f, #ffea46);
   }}
   .legend .labels {{
     display: flex; justify-content: space-between; font-size: 0.7rem;
@@ -913,19 +1043,38 @@ def _build_map_html(geojson_str, boundary_geojson_str, center_lon, center_lat, c
 <div id="map"></div>
 
 <div class="top-bar">
-  <a class="back-btn" href="../oswm_qc_main.html">← Back to QC Main</a>
-  <h3>
-    <img src="{project_logo_url}" alt="OSWM">
-    Pedestrian Network Completeness — {city_name}
-  </h3>
-  <div style="width:120px"></div>
+  <div class="header-left">
+    <a class="back-btn" href="../oswm_qc_main.html">← Back to QC Main</a>
+    <h3>
+      <img src="{project_logo_url}" alt="OSWM">
+      Pedestrian Network Completeness — {city_name}
+    </h3>
+  </div>
+  <div class="mode-switch">
+    <button id="mode-geometry" class="active">Geometry</button>
+    <button id="mode-attributes">Attributes</button>
+  </div>
 </div>
 
 <div class="controls">
-  <h4>Ratio Layer</h4>
-  <label><input type="radio" name="metric" value="footway" checked> Footway / Road</label>
-  <label><input type="radio" name="metric" value="sidewalk"> Sidewalk / Road</label>
-  <div class="divider"></div>
+  <div id="controls-geometry">
+    <h4>Geometry Layer</h4>
+    <label><input type="radio" name="metric_geom" value="footway" checked> Footway / Road</label>
+    <label><input type="radio" name="metric_geom" value="sidewalk"> Sidewalk / Road</label>
+  </div>
+  <div id="controls-attributes" style="display:none;">
+    <h4>Attribute Tag</h4>
+    <label><input type="radio" name="metric_attr" value="surface" checked> Surface</label>
+    <label><input type="radio" name="metric_attr" value="smoothness"> Smoothness</label>
+    <label><input type="radio" name="metric_attr" value="width"> Width</label>
+    <label><input type="radio" name="metric_attr" value="tactile_paving"> Tactile Paving</label>
+    <label><input type="radio" name="metric_attr" value="wheelchair"> Wheelchair</label>
+    <label><input type="radio" name="metric_attr" value="kerb"> Kerb</label>
+    
+    <div class="divider"></div>
+    <label style="color:#00f2fe; font-weight:600;"><input type="checkbox" id="show-features-cb"> Show Features</label>
+  </div>
+  <div class="divider" id="time-divider" style="display:{{'block' if n_timestamps > 1 else 'none'}}"></div>
   <div class="slider-group" id="time-slider-group" style="display:{{'block' if n_timestamps > 1 else 'none'}}">
     <div class="label-row">
       <span>Timestamp</span>
@@ -959,8 +1108,14 @@ def _build_map_html(geojson_str, boundary_geojson_str, center_lon, center_lat, c
 <div class="legend">
   <h4 id="legend-title">Footway / Road Ratio</h4>
   <div class="bar"></div>
-  <div class="labels"><span>0</span><span>0.25</span><span>0.5</span><span>0.75</span><span>1.0+</span></div>
-  <div class="no-data"><div class="swatch"></div><span>No road data</span></div>
+  <div class="labels">
+    <span id="legend-lbl-0">0</span>
+    <span id="legend-lbl-1">0.25</span>
+    <span id="legend-lbl-2">0.5</span>
+    <span id="legend-lbl-3">0.75</span>
+    <span id="legend-lbl-4">1.0+</span>
+  </div>
+  <div class="no-data"><div class="swatch"></div><span id="legend-no-data-text">No road data</span></div>
 
   <div style="border-top: 1px solid rgba(255,255,255,0.08); margin: 12px 0 8px;"></div>
   <label style="display:flex; align-items:center; gap:8px; font-size:0.8rem; color:#cbd5e1; cursor:pointer;">
@@ -976,9 +1131,13 @@ def _build_map_html(geojson_str, boundary_geojson_str, center_lon, center_lat, c
 </div>
 
 <script>
+let protocol = new pmtiles.Protocol();
+maplibregl.addProtocol("pmtiles", protocol.tile);
+
 const TIMESTAMPS = {timestamps_js};
 const GEOJSON = {geojson_str};
 const BOUNDARY_GEOJSON = {boundary_geojson_str};
+const ATTRIBUTE_RULES = {attribute_rules_js};
 
 const map = new maplibregl.Map({{
   container: 'map',
@@ -1003,20 +1162,22 @@ const map = new maplibregl.Map({{
 map.addControl(new maplibregl.NavigationControl(), 'bottom-right');
 map.addControl(new maplibregl.ScaleControl({{ unit: 'metric' }}), 'bottom-right');
 
-let currentMetric = 'footway';
+let currentMode = 'geometry';
+let currentMetricGeom = 'footway';
+let currentMetricAttr = 'surface';
+let showFeatures = false;
 let currentTsIdx = {last_idx};
 
-// Color stops for ratio: 0 -> red, 0.25 -> orange, 0.5 -> yellow, 0.75 -> light green, 1.0 -> green
 function ratioToColor(ratio) {{
   if (ratio === null || ratio === undefined) return 'rgba(71, 85, 105, 0.5)';
   const r = Math.min(ratio, 1.0);
   const stops = [
-    [0.0, [215, 48, 39]],
-    [0.15, [252, 141, 89]],
-    [0.3, [254, 224, 139]],
-    [0.5, [217, 239, 139]],
-    [0.75, [102, 189, 99]],
-    [1.0, [26, 152, 80]]
+    [0.0, [0, 32, 77]],
+    [0.15, [0, 51, 111]],
+    [0.3, [65, 77, 107]],
+    [0.5, [124, 123, 120]],
+    [0.75, [188, 163, 95]],
+    [1.0, [255, 234, 70]]
   ];
   let lower = stops[0], upper = stops[stops.length - 1];
   for (let i = 0; i < stops.length - 1; i++) {{
@@ -1030,8 +1191,9 @@ function ratioToColor(ratio) {{
 }}
 
 function updateFeatureColors() {{
-  const suffix = '_t' + currentTsIdx;
-  const prop = currentMetric === 'footway' ? 'footway_ratio' : 'sidewalk_ratio';
+  const isAttr = (currentMode === 'attributes');
+  const suffix = isAttr ? '_t' + {last_idx} : '_t' + currentTsIdx;
+  const prop = isAttr ? (currentMetricAttr + '_ratio') : (currentMetricGeom === 'footway' ? 'footway_ratio' : 'sidewalk_ratio');
   const key = prop + suffix;
 
   GEOJSON.features.forEach(f => {{
@@ -1042,8 +1204,86 @@ function updateFeatureColors() {{
     map.getSource('tiles').setData(GEOJSON);
   }}
 
-  document.getElementById('legend-title').textContent =
-    currentMetric === 'footway' ? 'Footway / Road Ratio' : 'Sidewalk / Road Ratio';
+  const fillOp = (isAttr && showFeatures) ? 0.0 : 0.7;
+  for (let z = {MIN_ZOOM}; z <= {MAX_ZOOM}; z++) {{
+    const layerId = 'tiles-z' + z;
+    if (map.getLayer(layerId)) {{
+      map.setPaintProperty(layerId, 'fill-opacity', fillOp);
+    }}
+  }}
+
+  if (isAttr) {{
+    const titles = {{ surface: 'Surface', smoothness: 'Smoothness', width: 'Width', tactile_paving: 'Tactile Paving', wheelchair: 'Wheelchair', kerb: 'Kerb' }};
+    document.getElementById('legend-title').textContent = titles[currentMetricAttr] + ' Completeness';
+  }} else {{
+    document.getElementById('legend-title').textContent = currentMetricGeom === 'footway' ? 'Footway / Road Ratio' : 'Sidewalk / Road Ratio';
+  }}
+}}
+
+function updateFeatureLayers() {{
+  if (!map.getStyle()) return;
+
+  const existingLayers = map.getStyle().layers.filter(l => l.id.startsWith('feature-layer-'));
+  existingLayers.forEach(l => map.removeLayer(l.id));
+  const existingSources = Object.keys(map.getStyle().sources).filter(s => s.startsWith('pmtiles-'));
+  existingSources.forEach(s => map.removeSource(s));
+
+  if (currentMode === 'attributes' && showFeatures) {{
+    const layersToLoad = ATTRIBUTE_RULES[currentMetricAttr] || [];
+    layersToLoad.forEach(lname => {{
+      const sourceId = 'pmtiles-' + lname;
+      map.addSource(sourceId, {{
+        type: 'vector',
+        url: 'pmtiles://../../data/tiles/' + lname + '.pmtiles',
+        promoteId: '@id'
+      }});
+      
+      const filterMissing = [
+        'any',
+        ['!', ['has', currentMetricAttr]],
+        ['==', ['get', currentMetricAttr], null],
+        ['==', ['get', currentMetricAttr], '?']
+      ];
+
+      map.addLayer({{
+        id: 'feature-layer-line-' + lname,
+        type: 'line',
+        source: sourceId,
+        'source-layer': lname,
+        paint: {{
+          'line-color': '#d73027',
+          'line-width': ['case', ['boolean', ['feature-state', 'hover'], false], 5.0, 2.5]
+        }},
+        filter: ['all', ['==', ['geometry-type'], 'LineString'], filterMissing]
+      }});
+
+      map.addLayer({{
+        id: 'feature-layer-circle-' + lname,
+        type: 'circle',
+        source: sourceId,
+        'source-layer': lname,
+        paint: {{
+          'circle-color': '#d73027',
+          'circle-radius': ['case', ['boolean', ['feature-state', 'hover'], false], 6.0, 3.5],
+          'circle-stroke-width': 1,
+          'circle-stroke-color': '#0f172a'
+        }},
+        filter: ['all', ['any', ['==', ['geometry-type'], 'Point'], ['==', ['geometry-type'], 'MultiPoint']], filterMissing]
+      }});
+      
+      map.addLayer({{
+        id: 'feature-layer-fill-' + lname,
+        type: 'fill',
+        source: sourceId,
+        'source-layer': lname,
+        paint: {{
+          'fill-color': '#d73027',
+          'fill-opacity': ['case', ['boolean', ['feature-state', 'hover'], false], 1.5, 0.5]
+        }},
+        filter: ['all', ['any', ['==', ['geometry-type'], 'Polygon'], ['==', ['geometry-type'], 'MultiPolygon']], filterMissing]
+      }});
+    }});
+  }}
 }}
 
 function updateTimestampLabel() {{
@@ -1079,9 +1319,11 @@ let boxChart = null;
 
 function renderStatsCharts() {{
   if (document.getElementById('stats-modal').style.display === 'none') return;
-
   const activeZ = getActiveZoomLevel();
-  const metricProp = (currentMetric === 'footway' ? 'footway_ratio' : 'sidewalk_ratio') + '_t' + currentTsIdx;
+  const isAttr = (currentMode === 'attributes');
+  const suffix = isAttr ? '_t' + {last_idx} : '_t' + currentTsIdx;
+  const prop = isAttr ? (currentMetricAttr + '_ratio') : (currentMetricGeom === 'footway' ? 'footway_ratio' : 'sidewalk_ratio');
+  const metricProp = prop + suffix;
   
   const ratios = [];
   GEOJSON.features.forEach(f => {{
@@ -1170,6 +1412,7 @@ map.on('zoom', () => {{
 map.on('load', () => {{
   updateFeatureColors();
   updateTimestampLabel();
+  updateFeatureLayers();
 
   map.addSource('tiles', {{ type: 'geojson', data: GEOJSON }});
   map.addSource('boundary', {{ type: 'geojson', data: BOUNDARY_GEOJSON }});
@@ -1186,7 +1429,6 @@ map.on('load', () => {{
     }}
   }});
 
-  // One layer per zoom level for zoom-dependent visibility
   for (let z = {MIN_ZOOM}; z <= {MAX_ZOOM}; z++) {{
     map.addLayer({{
       id: 'tiles-z' + z,
@@ -1203,24 +1445,15 @@ map.on('load', () => {{
 
   updateLayerVisibility();
 
-  // Popup on click
   for (let z = {MIN_ZOOM}; z <= {MAX_ZOOM}; z++) {{
     map.on('click', 'tiles-z' + z, (e) => {{
+      const isAttr = (currentMode === 'attributes');
+      if (isAttr && showFeatures) return; // Disable tile click when showing vector features
+
       const f = e.features[0];
       const p = f.properties;
-      const suffix = '_t' + currentTsIdx;
-      const roadLen = (p['road_length' + suffix] || 0).toFixed(0);
-      const footLen = (p['footway_length' + suffix] || 0).toFixed(0);
-      const swLen = (p['sidewalk_length' + suffix] || 0).toFixed(0);
-      const fRatio = p['footway_ratio' + suffix];
-      const sRatio = p['sidewalk_ratio' + suffix];
-
-      const chartData = [];
-      for (let i = 0; i < TIMESTAMPS.length; i++) {{
-        const r = p[(currentMetric === 'footway' ? 'footway_ratio' : 'sidewalk_ratio') + '_t' + i];
-        chartData.push(r !== null && r !== undefined ? (r * 100).toFixed(1) : null);
-      }}
-
+      const suffix = isAttr ? '_t' + {last_idx} : '_t' + currentTsIdx;
+      
       const bStr = `${{p.bbox[0]}},${{p.bbox[1]}},${{p.bbox[2]}},${{p.bbox[3]}}`;
       const centerLat = (p.bbox[1] + p.bbox[3]) / 2;
       const centerLon = (p.bbox[0] + p.bbox[2]) / 2;
@@ -1230,82 +1463,229 @@ map.on('load', () => {{
         osmLinks += `<a href="https://www.openstreetmap.org/edit#map=17/${{centerLat}}/${{centerLon}}" target="_blank" style="color:#00f2fe;text-decoration:none;font-size:11px;border:1px solid rgba(0,242,254,0.3);padding:2px 6px;border-radius:4px;">Edit on OSM</a>`;
       }}
 
-      const html = `
-        <div style="font-family:Outfit,sans-serif;width:100%;">
-          <h4 style="margin:0 0 6px;color:#00f2fe;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:4px;display:flex;justify-content:space-between;align-items:center;">
-            Tile ${{p.tile_id}}
-            <button onclick="navigator.clipboard.writeText('${{bStr}}')" style="background:none;border:none;color:#94a3b8;cursor:pointer;font-size:11px;text-decoration:underline;">Copy BBox</button>
-          </h4>
-          <div style="font-size:12px;color:#cbd5e1;line-height:1.6">
-            <b>Roads:</b> ${{Number(roadLen).toLocaleString()}} m<br>
-            <b>Footways:</b> ${{Number(footLen).toLocaleString()}} m<br>
-            <b>Sidewalks:</b> ${{Number(swLen).toLocaleString()}} m<br>
-            <b>Footway ratio:</b> ${{fRatio != null ? (fRatio * 100).toFixed(1) + '%' : 'N/A'}}<br>
-            <b>Sidewalk ratio:</b> ${{sRatio != null ? (sRatio * 100).toFixed(1) + '%' : 'N/A'}}
-          </div>
-          <div style="margin-top:8px;">
-            ${{osmLinks}}
-          </div>
-          <div style="margin-top:12px; height:120px; width:100%; position:relative;">
-            <canvas></canvas>
-          </div>
-        </div>`;
-      
+      let html = '';
+      if (isAttr) {{
+        const tgdRatio = p[currentMetricAttr + '_ratio' + suffix];
+        const tgdStr = tgdRatio !== null && tgdRatio !== undefined ? (tgdRatio * 100).toFixed(1) + '%' : 'N/A';
+        html = `
+          <div style="font-family:Outfit,sans-serif;width:100%;">
+            <h4 style="margin:0 0 6px;color:#00f2fe;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:4px;display:flex;justify-content:space-between;align-items:center;">
+              Tile ${{p.tile_id}}
+              <button onclick="navigator.clipboard.writeText('${{bStr}}')" style="background:none;border:none;color:#94a3b8;cursor:pointer;font-size:11px;text-decoration:underline;">Copy BBox</button>
+            </h4>
+            <div style="font-size:12px;color:#cbd5e1;line-height:1.6">
+              <b>Tag Completeness:</b> ${{tgdStr}}<br>
+            </div>
+            <div style="margin-top:8px;">${{osmLinks}}</div>
+          </div>`;
+      }} else {{
+        const roadLen = (p['road_length' + suffix] || 0).toFixed(0);
+        const footLen = (p['footway_length' + suffix] || 0).toFixed(0);
+        const swLen = (p['sidewalk_length' + suffix] || 0).toFixed(0);
+        const fRatio = p['footway_ratio' + suffix];
+        const sRatio = p['sidewalk_ratio' + suffix];
+
+        html = `
+          <div style="font-family:Outfit,sans-serif;width:100%;">
+            <h4 style="margin:0 0 6px;color:#00f2fe;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:4px;display:flex;justify-content:space-between;align-items:center;">
+              Tile ${{p.tile_id}}
+              <button onclick="navigator.clipboard.writeText('${{bStr}}')" style="background:none;border:none;color:#94a3b8;cursor:pointer;font-size:11px;text-decoration:underline;">Copy BBox</button>
+            </h4>
+            <div style="font-size:12px;color:#cbd5e1;line-height:1.6">
+              <b>Roads:</b> ${{Number(roadLen).toLocaleString()}} m<br>
+              <b>Footways:</b> ${{Number(footLen).toLocaleString()}} m<br>
+              <b>Sidewalks:</b> ${{Number(swLen).toLocaleString()}} m<br>
+              <b>Footway ratio:</b> ${{fRatio != null ? (fRatio * 100).toFixed(1) + '%' : 'N/A'}}<br>
+              <b>Sidewalk ratio:</b> ${{sRatio != null ? (sRatio * 100).toFixed(1) + '%' : 'N/A'}}
+            </div>
+            <div style="margin-top:8px;">${{osmLinks}}</div>
+            <div style="margin-top:12px; height:120px; width:100%; position:relative;">
+              <canvas id="popup-chart"></canvas>
+            </div>
+          </div>`;
+      }}
+
       const popup = new maplibregl.Popup({{ className: 'dark-popup' }})
         .setLngLat(e.lngLat).setHTML(html).addTo(map);
 
-      const canvas = popup.getElement().querySelector('canvas');
-      if (canvas) {{
-        const ctx = canvas.getContext('2d');
-        new Chart(ctx, {{
-          type: 'line',
-          data: {{
-            labels: TIMESTAMPS,
-            datasets: [{{
-              label: currentMetric === 'footway' ? 'Footway Ratio (%)' : 'Sidewalk Ratio (%)',
-              data: chartData,
-              borderColor: '#00f2fe',
-              backgroundColor: 'rgba(0, 242, 254, 0.1)',
-              borderWidth: 2,
-              pointBackgroundColor: '#0f172a',
-              pointBorderColor: '#00f2fe',
-              pointRadius: 3,
-              fill: true,
-              tension: 0.2
-            }}]
-          }},
-          options: {{
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {{
-              legend: {{ display: false }},
-              tooltip: {{
-                backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                titleColor: '#00f2fe',
-                bodyColor: '#f8fafc',
-                borderColor: 'rgba(255,255,255,0.1)',
-                borderWidth: 1
-              }}
+      if (!isAttr) {{
+        const canvas = popup.getElement().querySelector('#popup-chart');
+        if (canvas) {{
+          const chartData = [];
+          for (let i = 0; i < TIMESTAMPS.length; i++) {{
+            const r = p[(currentMetricGeom === 'footway' ? 'footway_ratio' : 'sidewalk_ratio') + '_t' + i];
+            chartData.push(r !== null && r !== undefined ? (r * 100).toFixed(1) : null);
+          }}
+          const ctx = canvas.getContext('2d');
+          new Chart(ctx, {{
+            type: 'line',
+            data: {{
+              labels: TIMESTAMPS,
+              datasets: [{{
+                label: currentMetricGeom === 'footway' ? 'Footway Ratio (%)' : 'Sidewalk Ratio (%)',
+                data: chartData,
+                borderColor: '#00f2fe',
+                backgroundColor: 'rgba(0, 242, 254, 0.1)',
+                borderWidth: 2,
+                pointBackgroundColor: '#0f172a',
+                pointBorderColor: '#00f2fe',
+                pointRadius: 3,
+                fill: true,
+                tension: 0.2
+              }}]
             }},
-            scales: {{
-              x: {{
-                ticks: {{ color: '#94a3b8', font: {{ size: 9 }}, maxRotation: 45, minRotation: 45 }},
-                grid: {{ color: 'rgba(255,255,255,0.05)' }}
+            options: {{
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {{
+                legend: {{ display: false }},
+                tooltip: {{
+                  backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                  titleColor: '#00f2fe',
+                  bodyColor: '#f8fafc',
+                  borderColor: 'rgba(255,255,255,0.1)',
+                  borderWidth: 1
+                }}
               }},
-              y: {{
-                beginAtZero: true,
-                ticks: {{ color: '#94a3b8', font: {{ size: 9 }} }},
-                grid: {{ color: 'rgba(255,255,255,0.05)' }}
+              scales: {{
+                x: {{
+                  ticks: {{ color: '#94a3b8', font: {{ size: 9 }}, maxRotation: 45, minRotation: 45 }},
+                  grid: {{ color: 'rgba(255,255,255,0.05)' }}
+                }},
+                y: {{
+                  beginAtZero: true,
+                  ticks: {{ color: '#94a3b8', font: {{ size: 9 }} }},
+                  grid: {{ color: 'rgba(255,255,255,0.05)' }}
+                }}
               }}
             }}
-          }}
-        }});
+          }});
+        }}
       }}
     }});
 
-    map.on('mouseenter', 'tiles-z' + z, () => {{ map.getCanvas().style.cursor = 'pointer'; }});
+    map.on('mouseenter', 'tiles-z' + z, () => {{ if (!(currentMode === 'attributes' && showFeatures)) map.getCanvas().style.cursor = 'pointer'; }});
     map.on('mouseleave', 'tiles-z' + z, () => {{ map.getCanvas().style.cursor = ''; }});
   }}
+
+  let hoveredFeature = null;
+
+  map.on('mousemove', (e) => {{
+    if (currentMode !== 'attributes' || !showFeatures) return;
+    if (!map.getStyle()) return;
+    const layers = map.getStyle().layers.filter(l => l.id.startsWith('feature-layer-')).map(l => l.id);
+    if (!layers.length) return;
+    const features = map.queryRenderedFeatures(e.point, {{ layers }});
+    
+    if (features.length) {{
+      map.getCanvas().style.cursor = 'pointer';
+      const f = features[0];
+      if (hoveredFeature && (hoveredFeature.id !== f.id || hoveredFeature.source !== f.source)) {{
+        map.setFeatureState(hoveredFeature, {{ hover: false }});
+      }}
+      if (f.id !== undefined) {{
+        hoveredFeature = {{ source: f.source, sourceLayer: f.sourceLayer, id: f.id }};
+        map.setFeatureState(hoveredFeature, {{ hover: true }});
+      }}
+    }} else {{
+      map.getCanvas().style.cursor = '';
+      if (hoveredFeature) {{
+        map.setFeatureState(hoveredFeature, {{ hover: false }});
+        hoveredFeature = null;
+      }}
+    }}
+  }});
+
+  map.on('click', (e) => {{
+    if (currentMode !== 'attributes' || !showFeatures) return;
+    if (!map.getStyle()) return;
+    const layers = map.getStyle().layers.filter(l => l.id.startsWith('feature-layer-')).map(l => l.id);
+    if (!layers.length) return;
+    const features = map.queryRenderedFeatures(e.point, {{ layers }});
+    
+    if (features.length) {{
+      const f = features[0];
+      const props = f.properties;
+      let osmId = props['@id'] || props.id || props.osm_id || f.id || 'Unknown';
+      let featType = 'node';
+      
+      if (f.geometry.type === 'LineString' || f.geometry.type === 'MultiLineString' || f.geometry.type === 'Polygon' || f.geometry.type === 'MultiPolygon') {{
+        featType = 'way';
+      }}
+
+      if (osmId.toString().includes('/')) {{
+        const parts = osmId.toString().split('/');
+        featType = parts[0];
+        osmId = parts[1];
+      }}
+      
+      const numericId = osmId.toString().replace(/[^0-9]/g, '');
+      const osmUrl = `https://www.openstreetmap.org/${{featType}}/${{numericId}}`;
+      
+      const titles = {{ surface: 'Surface', smoothness: 'Smoothness', width: 'Width', tactile_paving: 'Tactile Paving', wheelchair: 'Wheelchair', kerb: 'Kerb' }};
+      
+      const popupHtml = `
+        <div style="font-family: 'Outfit', sans-serif; min-width: 180px;">
+            <h4 style="margin: 0 0 10px 0; color: #00f2fe; font-size: 14px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">Missing Tag: ${{titles[currentMetricAttr]}}</h4>
+            <p style="margin: 0 0 12px 0; font-size: 13px; color: #cbd5e1;"><b>OSM ID:</b> ${{osmId}}</p>
+            <a href="${{osmUrl}}" target="_blank" style="display: block; background: #4facfe; color: white; padding: 6px 10px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">↗ Open in OSM</a>
+        </div>
+      `;
+      
+      new maplibregl.Popup({{ className: 'dark-popup' }})
+        .setLngLat(e.lngLat)
+        .setHTML(popupHtml)
+        .addTo(map);
+    }}
+  }});
+}});
+
+document.getElementById('mode-geometry').addEventListener('click', () => {{
+  currentMode = 'geometry';
+  document.getElementById('mode-geometry').classList.add('active');
+  document.getElementById('mode-attributes').classList.remove('active');
+  
+  document.getElementById('controls-geometry').style.display = 'block';
+  document.getElementById('controls-attributes').style.display = 'none';
+  
+  if (TIMESTAMPS.length > 1) {{
+    document.getElementById('time-slider-group').style.display = 'block';
+    document.getElementById('time-divider').style.display = 'block';
+  }}
+  
+  updateFeatureColors();
+  updateFeatureLayers();
+  renderStatsCharts();
+  // Reset legend labels for geometry mode
+  document.getElementById('legend-lbl-0').textContent = '0';
+  document.getElementById('legend-lbl-1').textContent = '0.25';
+  document.getElementById('legend-lbl-2').textContent = '0.5';
+  document.getElementById('legend-lbl-3').textContent = '0.75';
+  document.getElementById('legend-lbl-4').textContent = '1.0+';
+  document.getElementById('legend-no-data-text').textContent = 'No road data';
+}});
+
+document.getElementById('mode-attributes').addEventListener('click', () => {{
+  currentMode = 'attributes';
+  document.getElementById('mode-attributes').classList.add('active');
+  document.getElementById('mode-geometry').classList.remove('active');
+  
+  document.getElementById('controls-geometry').style.display = 'none';
+  document.getElementById('controls-attributes').style.display = 'block';
+  
+  document.getElementById('time-slider-group').style.display = 'none';
+  document.getElementById('time-divider').style.display = 'none';
+  
+  updateFeatureColors();
+  updateFeatureLayers();
+  renderStatsCharts();
+  // Update legend labels for attributes mode (percentage completeness)
+  document.getElementById('legend-lbl-0').textContent = '0%';
+  document.getElementById('legend-lbl-1').textContent = '25%';
+  document.getElementById('legend-lbl-2').textContent = '50%';
+  document.getElementById('legend-lbl-3').textContent = '75%';
+  document.getElementById('legend-lbl-4').textContent = '100%';
+  document.getElementById('legend-no-data-text').textContent = 'No Geometries';
 }});
 
 document.getElementById('auto-scale-cb').addEventListener('change', (e) => {{
@@ -1322,12 +1702,30 @@ document.getElementById('manual-zoom-slider').addEventListener('input', (e) => {
   renderStatsCharts();
 }});
 
-document.querySelectorAll('input[name="metric"]').forEach(radio => {{
+document.querySelectorAll('input[name="metric_geom"]').forEach(radio => {{
   radio.addEventListener('change', (e) => {{
-    currentMetric = e.target.value;
+    currentMetricGeom = e.target.value;
     updateFeatureColors();
     renderStatsCharts();
   }});
+}});
+
+document.querySelectorAll('input[name="metric_attr"]').forEach(radio => {{
+  radio.addEventListener('change', (e) => {{
+    currentMetricAttr = e.target.value;
+    updateFeatureColors();
+    updateFeatureLayers();
+    renderStatsCharts();
+  }});
+}});
+
+document.getElementById('show-features-cb').addEventListener('change', (e) => {{
+  showFeatures = e.target.checked;
+  if (showFeatures && window.location.protocol === 'file:') {{
+    alert("Warning: Vector features cannot be loaded via file:// protocol due to MapLibre/PMTiles restrictions. Please run a local web server (e.g., 'python3 -m http.server') and access via localhost to view them.");
+  }}
+  updateFeatureColors();
+  updateFeatureLayers();
 }});
 
 document.getElementById('ts-slider').addEventListener('input', (e) => {{
@@ -1363,3 +1761,4 @@ document.getElementById('close-stats').addEventListener('click', () => {{
 </body>
 </html>
 """
+

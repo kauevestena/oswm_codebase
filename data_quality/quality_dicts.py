@@ -77,6 +77,11 @@ iso_19157_classification = {
         "sub_element": "Topological Consistency",
         "iso_reference": "ISO 19157:2013 §D.2.4",
     },
+    "missing_tags": {
+        "element": "Completeness",
+        "sub_element": "Omission (missing data)",
+        "iso_reference": "ISO 19157:2013",
+    },
 }
 
 # Internal definition dicts for the functional part of categories:
@@ -218,6 +223,19 @@ kerb_on_top_of_non_crossing_dict = {
 
 # The dict for orchestration for the categories that are processed in the main pipeline:
 
+missing_tags = {
+    "sidewalks": {
+        "surface": "Surface tag is recommended to assess accessibility",
+    },
+    "crossings": {
+        "surface": "Surface tag is recommended to assess accessibility",
+    },
+    "kerbs": {},
+    "other_footways": {
+        "surface": "Surface tag is recommended to assess accessibility",
+    },
+}
+
 categories_dict_keys = {
     "improper_keys": {
         "about": "Keys that (almost certainly) shouldn't be used at that feature type",
@@ -339,6 +357,25 @@ categories_dict_keys = {
         "type": "age",
         "invert_geomtype": False,
         "iso_19157": iso_19157_classification["older_than_five_years"],
+        "occurrences": {
+            "sidewalks": {},
+            "crossings": {},
+            "kerbs": {},
+            "other_footways": {},
+        },
+        "occ_count": {
+            "sidewalks": 0,
+            "crossings": 0,
+            "kerbs": 0,
+            "other_footways": 0,
+        },
+    },
+    "missing_tags": {
+        "about": "Features that are missing important tags",
+        "dict": missing_tags,
+        "type": "missing_keys",
+        "invert_geomtype": False,
+        "iso_19157": iso_19157_classification["missing_tags"],
         "occurrences": {
             "sidewalks": {},
             "crossings": {},

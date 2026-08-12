@@ -2,6 +2,7 @@ from constants import *
 from oswm_codebase.functions import *
 from time import sleep, time
 import osmnx as ox
+from overpass_acquisition import features_from_polygon_with_failover
 
 
 
@@ -28,7 +29,10 @@ def main():
         since_dt = None
         
     # 3. Attempt incremental if we have data and a timestamp
-    if all_data_exists and since_dt:
+    force_full_fetch = os.environ.get("OSWM_FORCE_FULL_FETCH", "").lower() in {
+        "1", "true", "yes", "on"
+    }
+    if all_data_exists and since_dt and not force_full_fetch:
         print("[getting_data] Existing data found. Attempting incremental update...")
         try:
             import oswm_codebase.incremental_fetch as incremental_fetch
@@ -62,7 +66,11 @@ def main():
 
             # if it's a polygon, save it as geoparquet:
             save_geoparquet(boundaries_gdf, boundaries_path)
-        except:
+        except Exception as exc:
+            print(
+                "[getting_data] Boundary lookup failed; using the configured "
+                f"fallback bounding box: {exc}"
+            )
             # if there's no polygon, use the bounding box as input polygon:
             boundaries_gdf = bbox_geodataframe(BOUNDING_BOX)
             boundaries_gdf.to_file(boundaries_geojson_path)
@@ -98,8 +106,19 @@ def main():
     print("downloading all data")
 
     t1 = time()
-    as_gdf = ox.features_from_polygon(
-        boundary_polygon, merge_list_of_dictionaries(layer_tags_dict.values())
+    as_gdf = features_from_polygon_with_failover(
+        ox,
+        boundary_polygon,
+        merge_list_of_dictionaries(layer_tags_dict.values()),
+        endpoints=globals().get(
+            "OVERPASS_ENDPOINTS",
+            (
+                "https://overpass-api.de/api",
+                "https://overpass.kumi.systems/api",
+            ),
+        ),
+        attempts_per_endpoint=globals().get("OVERPASS_ATTEMPTS_PER_ENDPOINT", 2),
+        backoff_seconds=globals().get("OVERPASS_BACKOFF_SECONDS", 5),
     )
     print(f"    took {time()-t1:.2f} seconds, with {len(as_gdf)} features")
 

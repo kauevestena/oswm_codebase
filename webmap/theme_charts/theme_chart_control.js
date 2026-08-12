@@ -297,7 +297,7 @@ export class ThemeChartControl {
 
         if (this.echarts?.init) {
             chartsToInit.forEach(({ chartElement, summary, theme, reducedMotion }) => {
-                const chart = this.echarts.init(chartElement);
+                const chart = this.echarts.init(chartElement, null, { renderer: "svg" });
                 chart.setOption(buildThemeChartOption(summary, theme, { reducedMotion }));
                 this.charts.push(chart);
                 
