@@ -16,11 +16,24 @@ dh_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if dh_dir not in sys.path:
     sys.path.insert(0, dh_dir)
 
+import config as node_config  # noqa: E402
 from config import CITY_NAME, USERNAME, REPO_NAME  # noqa: E402
 from constants import node_homepage_url, api_folder  # noqa: E402
 from functions import ensure_parent_folder  # noqa: E402
 from branding import branding_asset_url  # noqa: E402
 from metadata.metadata_generation import metadata_relative_path_for_data  # noqa: E402
+try:  # noqa: E402
+    from .resource_examples import (
+        capabilities_for_resource,
+        resource_format,
+        square_bbox,
+    )
+except ImportError:  # Direct execution from a node checkout.
+    from resource_examples import (  # noqa: E402
+        capabilities_for_resource,
+        resource_format,
+        square_bbox,
+    )
 
 
 # Ensure standard libraries are available
@@ -363,20 +376,54 @@ def generate_data_index():
         json.dump(data_idx, f, indent=4, ensure_ascii=False)
     print(f"Main index successfully written to {index_json_path}")
 
+def endpoint_record(category, path, format_name, description, deliverable, metadata_path=None):
+    return {
+        "category": category,
+        "path": path,
+        "format": format_name,
+        "description": description,
+        "capabilities": capabilities_for_resource(format_name, path),
+        "deliverable": deliverable,
+        "metadata_path": metadata_path,
+    }
+
+
+def api_example_area():
+    """Build the configured example area, falling back to the node map centre."""
+    center_lat = float(
+        getattr(node_config, "API_EXAMPLE_CENTER_LAT", node_config.MID_LAT)
+    )
+    center_lon = float(
+        getattr(node_config, "API_EXAMPLE_CENTER_LON", node_config.MID_LGT)
+    )
+    size_m = float(getattr(node_config, "API_EXAMPLE_BBOX_SIZE_M", 1000))
+    label = str(
+        getattr(
+            node_config,
+            "API_EXAMPLE_AREA_LABEL",
+            f"{CITY_NAME} map centre",
+        )
+    )
+    return {
+        "label": label,
+        "center": {"lat": center_lat, "lon": center_lon},
+        "size_m": size_m,
+        "bbox": square_bbox(center_lat, center_lon, size_m),
+    }
+
+
 def collect_endpoints():
     endpoints = []
     
     # 1. Map Data
     if os.path.exists("webmap_params.json"):
-        endpoints.append({
-            "category": "Boundaries & Config",
-            "path": "webmap_params.json",
-            "format": "JSON",
-            "description": "Full configuration for the webmap, including center coordinates, initial zoom level, layers, MapLibre GL styles, and configurations.",
-            "playground": True,
-            "deliverable": "map_data",
-            "metadata_path": None,
-        })
+        endpoints.append(endpoint_record(
+            "Boundaries & Config",
+            "webmap_params.json",
+            "JSON",
+            "Full configuration for the webmap, including center coordinates, initial zoom level, layers, MapLibre GL styles, and configurations.",
+            "map_data",
+        ))
         
     for root, dirs, files in os.walk("data"):
         for f in files:
@@ -386,39 +433,25 @@ def collect_endpoints():
             rel_path = os.path.relpath(file_path, ".").replace("\\", "/")
             
             ext = os.path.splitext(f)[1].lower()
-            fmt = "JSON"
-            if ext == ".geojson":
-                fmt = "GeoJSON"
-            elif ext == ".parquet":
-                fmt = "GeoParquet"
-            elif ext == ".pmtiles":
-                fmt = "PMTiles"
-            elif ext == ".oswmg":
-                fmt = "OSWM Binary Graph"
-            elif ext == ".vrt":
-                fmt = "XML/VRT"
-            elif ext == ".png":
-                fmt = "PNG"
-            elif ext == ".html":
+            if ext == ".html":
                 continue # Skip HTML files like updating status page
+            fmt = "PNG" if ext == ".png" else resource_format(f)
                 
             deliv = "hazard_analysis" if "hazard_analysis" in rel_path else "map_data"
             category = get_endpoint_category(rel_path, deliv)
             description = get_endpoint_description(rel_path, f, deliv)
-            playground = fmt in ["JSON", "GeoJSON", "XML/VRT"]
             metadata_path = metadata_relative_path_for_data(rel_path)
             if not os.path.exists(metadata_path):
                 metadata_path = None
             
-            endpoints.append({
-                "category": category,
-                "path": rel_path,
-                "format": fmt,
-                "description": description,
-                "playground": playground,
-                "deliverable": deliv,
-                "metadata_path": metadata_path,
-            })
+            endpoints.append(endpoint_record(
+                category,
+                rel_path,
+                fmt,
+                description,
+                deliv,
+                metadata_path,
+            ))
             
     # 2. Data Quality
     for root, dirs, files in os.walk("quality_check"):
@@ -432,15 +465,14 @@ def collect_endpoints():
             category = get_endpoint_category(rel_path, "data_quality")
             description = get_endpoint_description(rel_path, f, "data_quality")
             
-            endpoints.append({
-                "category": category,
-                "path": rel_path,
-                "format": "JSON",
-                "description": description,
-                "playground": True,
-                "deliverable": "data_quality",
-                "metadata_path": None,
-            })
+            fmt = resource_format(f)
+            endpoints.append(endpoint_record(
+                category,
+                rel_path,
+                fmt,
+                description,
+                "data_quality",
+            ))
             
     # 3. Vega Specs
     for root, dirs, files in os.walk("statistics_specs"):
@@ -453,15 +485,14 @@ def collect_endpoints():
             category = get_endpoint_category(rel_path, "vega_specs")
             description = get_endpoint_description(rel_path, f, "vega_specs")
             
-            endpoints.append({
-                "category": category,
-                "path": rel_path,
-                "format": "JSON",
-                "description": description,
-                "playground": True,
-                "deliverable": "vega_specs",
-                "metadata_path": None,
-            })
+            fmt = resource_format(f)
+            endpoints.append(endpoint_record(
+                category,
+                rel_path,
+                fmt,
+                description,
+                "vega_specs",
+            ))
 
     # 4. ISO-aligned OSWM metadata records
     if os.path.isdir("metadata"):
@@ -476,8 +507,10 @@ def collect_endpoints():
                     "category": get_endpoint_category(rel_path, "metadata"),
                     "path": rel_path,
                     "format": "JSON",
-                    "description": get_endpoint_description(rel_path, filename, "metadata"),
-                    "playground": True,
+                    "description": get_endpoint_description(
+                        rel_path, filename, "metadata"
+                    ),
+                    "capabilities": capabilities_for_resource("JSON", rel_path),
                     "deliverable": "metadata",
                     "metadata_path": None,
                 })
@@ -496,6 +529,7 @@ def generate_api_html(endpoints):
     print("Generating hub/API/index.html...")
     
     endpoints_js = json.dumps(endpoints, indent=2)
+    example_area_js = json.dumps(api_example_area(), indent=2)
     
     html_template = """<!--
   Generated automatically by oswm_codebase/datahub/API/generate_api.py
@@ -1102,6 +1136,11 @@ def generate_api_html(endpoints):
             display: block;
         }
 
+        .tab-header[hidden],
+        .tab-content[hidden] {
+            display: none;
+        }
+
         .snippet-box {
             position: relative;
             border-radius: 8px;
@@ -1215,12 +1254,12 @@ def generate_api_html(endpoints):
 
         <!-- Main Panel -->
         <div class="main-content">
-            <!-- Playground -->
+            <!-- Format-aware resource explorer -->
             <div class="glass-panel playground-panel">
                 <div class="playground-header">
                     <div class="playground-title-desc">
                         <h2 id="pl-title">Select an Endpoint</h2>
-                        <p id="pl-desc">Select an API endpoint from the sidebar list to inspect properties, read code examples, and perform playground requests.</p>
+                        <p id="pl-desc">Select an API endpoint to inspect it and see examples suited to its format.</p>
                     </div>
                     <div>
                         <span class="badge badge-format" id="pl-format-badge">JSON</span>
@@ -1234,7 +1273,7 @@ def generate_api_html(endpoints):
                 </div>
 
                 <div style="display: flex; gap: 1rem;">
-                    <button class="btn btn-primary" id="btn-try" onclick="executePlaygroundRequest()">Try It Out</button>
+                    <button class="btn btn-primary" id="btn-action" onclick="executeResourceAction()">Preview Resource</button>
                     <button class="btn btn-secondary" id="btn-dl" onclick="downloadEndpointFile()">Download File</button>
                     <a class="btn btn-secondary" id="btn-metadata" href="#" target="_blank" rel="noopener" style="display: none;">View Metadata</a>
                 </div>
@@ -1242,7 +1281,7 @@ def generate_api_html(endpoints):
                 <!-- Response Viewer -->
                 <div class="response-viewer">
                     <div class="response-header-bar">
-                        <span>Response Body</span>
+                        <span id="response-title">Resource Preview</span>
                         <div class="response-status">
                             <span class="status-dot idle" id="status-dot"></span>
                             <span id="status-text">No request sent</span>
@@ -1250,7 +1289,7 @@ def generate_api_html(endpoints):
                     </div>
                     <div class="response-body">
                         <div class="spinner" id="spinner"></div>
-                        <div class="placeholder-text" id="placeholder-text">Click "Try It Out" to send a request to the serverless endpoint.</div>
+                        <div class="placeholder-text" id="placeholder-text">Choose an endpoint to see the available resource action.</div>
                         <pre class="code-pre" id="response-pre" style="display: none;"></pre>
                     </div>
                 </div>
@@ -1258,16 +1297,16 @@ def generate_api_html(endpoints):
 
             <!-- Code snippets -->
             <div class="glass-panel snippets-card">
-                <h3>Request Snippet Examples</h3>
+                <h3>Usage Examples</h3>
                 <div class="tab-headers">
-                    <div class="tab-header active" onclick="switchSnippetTab('tab-js')">JavaScript</div>
-                    <div class="tab-header" onclick="switchSnippetTab('tab-python')">Python</div>
-                    <div class="tab-header" onclick="switchSnippetTab('tab-gdal')">GDAL/OGR</div>
-                    <div class="tab-header" onclick="switchSnippetTab('tab-curl')">cURL</div>
+                    <div class="tab-header active" data-snippet="javascript" data-target="tab-js" onclick="switchSnippetTab('tab-js')">JavaScript</div>
+                    <div class="tab-header" data-snippet="python" data-target="tab-python" onclick="switchSnippetTab('tab-python')">Python</div>
+                    <div class="tab-header" data-snippet="gdal" data-target="tab-gdal" onclick="switchSnippetTab('tab-gdal')">GDAL/OGR</div>
+                    <div class="tab-header" data-snippet="curl" data-target="tab-curl" onclick="switchSnippetTab('tab-curl')">cURL</div>
                 </div>
 
                 <!-- JS Tab -->
-                <div class="tab-content active" id="tab-js">
+                <div class="tab-content active" id="tab-js" data-snippet="javascript">
                     <div class="snippet-box">
                         <button class="btn-copy" onclick="copySnippet('code-js')">Copy</button>
                         <pre id="code-js">fetch('https://...')
@@ -1277,7 +1316,7 @@ def generate_api_html(endpoints):
                 </div>
 
                 <!-- Python Tab -->
-                <div class="tab-content" id="tab-python">
+                <div class="tab-content" id="tab-python" data-snippet="python">
                     <div class="snippet-box">
                         <button class="btn-copy" onclick="copySnippet('code-py')">Copy</button>
                         <pre id="code-py">import requests
@@ -1290,7 +1329,7 @@ print(data)</pre>
                 </div>
 
                 <!-- GDAL Tab -->
-                <div class="tab-content" id="tab-gdal">
+                <div class="tab-content" id="tab-gdal" data-snippet="gdal">
                     <div class="snippet-box">
                         <button class="btn-copy" onclick="copySnippet('code-gdal')">Copy</button>
                         <pre id="code-gdal">ogrinfo -ro -al "/vsicurl/https://..."</pre>
@@ -1298,7 +1337,7 @@ print(data)</pre>
                 </div>
 
                 <!-- cURL Tab -->
-                <div class="tab-content" id="tab-curl">
+                <div class="tab-content" id="tab-curl" data-snippet="curl">
                     <div class="snippet-box">
                         <button class="btn-copy" onclick="copySnippet('code-curl')">Copy</button>
                         <pre id="code-curl">curl -L -X GET "https://..."</pre>
@@ -1323,6 +1362,7 @@ print(data)</pre>
 
         // Endpoints configuration parsed from Python
         const endpoints = [endpoints_js];
+        const exampleArea = [example_area_js];
 
         let selectedEndpoint = null;
         let currentDeliverable = 'map_data';
@@ -1349,7 +1389,9 @@ print(data)</pre>
                     }
                 }, 50);
             } else {
-                resetPlayground();
+                selectedEndpoint = null;
+                document.getElementById('btn-action').disabled = true;
+                resetResourceExplorer();
             }
         }
 
@@ -1416,16 +1458,63 @@ print(data)</pre>
             }
         }
 
-        // Handle Endpoint Selection
+        function formatDistance(metres) {
+            const numericMetres = Number(metres);
+            if (numericMetres >= 1000 && numericMetres % 1000 === 0) {
+                return (numericMetres / 1000) + ' km';
+            }
+            return numericMetres + ' m';
+        }
+
+        function endpointOutputStem(path) {
+            const filename = path.split('/').pop() || 'oswm-data';
+            return filename
+                .replace(/\\.[^.]+$/, '')
+                .replace(/[^a-z0-9_-]+/gi, '-')
+                .replace(/^-+|-+$/g, '') || 'oswm-data';
+        }
+
+        function endpointFilename(path) {
+            return path.split('/').pop() || 'oswm-download';
+        }
+
+        function vsiCurlSource(url) {
+            return '"/vsicurl/' + url + '"';
+        }
+
+        function spatialExtractCommand(url, ep) {
+            const bbox = exampleArea.bbox.map(value => Number(value).toFixed(6)).join(' ');
+            const sizeSlug = Math.round(Number(exampleArea.size_m)) + 'm';
+            const output = endpointOutputStem(ep.path) + '-example-' + sizeSlug + '.geojson';
+            return 'ogr2ogr -f GeoJSON -spat ' + bbox
+                + ' -spat_srs OGC:CRS84 "' + output + '" '
+                + vsiCurlSource(url);
+        }
+
+        function attributeExtractCommand(url, ep) {
+            const output = endpointOutputStem(ep.path) + '-filtered.geojson';
+            const filter = ep.capabilities.attribute_filter || 'id IS NOT NULL';
+            return 'ogr2ogr -f GeoJSON -where "' + filter + '" "' + output + '" '
+                + vsiCurlSource(url);
+        }
+
+        function resourceFetchUrl() {
+            const requestUrl = document.getElementById('request-url-input').value;
+            const isLocal = window.location.protocol === 'file:'
+                || window.location.hostname === 'localhost'
+                || window.location.hostname === '127.0.0.1';
+            if (isLocal && requestUrl.startsWith(baseUrl)) {
+                return '../../' + selectedEndpoint.path;
+            }
+            return requestUrl;
+        }
+
+        // Handle endpoint selection and configure actions for its actual format.
         function selectEndpoint(ep, element) {
-            // Remove active classes
             document.querySelectorAll('.endpoint-item').forEach(el => el.classList.remove('active'));
-            
-            // Set active class
             element.classList.add('active');
             selectedEndpoint = ep;
 
-            // Update details
             document.getElementById('pl-title').textContent = '/' + ep.path;
             document.getElementById('pl-desc').textContent = ep.description;
             document.getElementById('pl-format-badge').textContent = ep.format;
@@ -1442,171 +1531,392 @@ print(data)</pre>
                 metadataButton.style.display = 'none';
             }
 
-            // Reset playground response window
-            resetPlayground();
+            const actionButton = document.getElementById('btn-action');
+            actionButton.disabled = false;
+            actionButton.textContent = ep.capabilities.action === 'copy-spatial-extract'
+                ? 'Copy ' + formatDistance(exampleArea.size_m) + ' Extract'
+                : ep.capabilities.action_label;
 
-            // Toggle try/download buttons based on playability
-            const btnTry = document.getElementById('btn-try');
-            if (ep.playground) {
-                btnTry.disabled = false;
-                btnTry.style.opacity = '1';
-                btnTry.style.cursor = 'pointer';
-            } else {
-                btnTry.disabled = true;
-                btnTry.style.opacity = '0.5';
-                btnTry.style.cursor = 'not-allowed';
-            }
-
-            // Update code snippets
-            updateSnippets(fullUrl, ep.format);
+            updateSnippets(fullUrl, ep);
+            updateSnippetVisibility(ep);
+            resetResourceExplorer();
         }
 
-        function resetPlayground() {
+        function responseContext() {
+            if (!selectedEndpoint) {
+                return {
+                    title: 'Resource Preview',
+                    placeholder: 'Choose an endpoint to see the available resource action.',
+                };
+            }
+            const action = selectedEndpoint.capabilities.action;
+            if (action === 'inspect-pmtiles') {
+                return {
+                    title: 'Archive Header & Metadata',
+                    placeholder: 'Inspect the PMTiles header and metadata without downloading the full archive.',
+                };
+            }
+            if (action === 'copy-spatial-extract') {
+                return {
+                    title: 'GDAL Spatial Extract',
+                    placeholder: 'Generate a working ogr2ogr command for the configured example area.',
+                };
+            }
+            if (action === 'open-resource') {
+                return {
+                    title: 'Resource Viewer',
+                    placeholder: 'Open this resource in a new browser tab.',
+                };
+            }
+            if (action === 'download-resource') {
+                return {
+                    title: 'Resource Download',
+                    placeholder: 'Download this resource for use with its native client.',
+                };
+            }
+            return {
+                title: 'Resource Preview',
+                placeholder: 'Preview this text-based static resource.',
+            };
+        }
+
+        function resetResourceExplorer() {
+            const context = responseContext();
+            document.getElementById('response-title').textContent = context.title;
             document.getElementById('response-pre').style.display = 'none';
             document.getElementById('placeholder-text').style.display = 'block';
-            document.getElementById('placeholder-text').textContent = 'Click "Try It Out" to send a request to the serverless endpoint.';
+            document.getElementById('placeholder-text').textContent = context.placeholder;
             document.getElementById('spinner').style.display = 'none';
             
             const dot = document.getElementById('status-dot');
             dot.className = 'status-dot idle';
-            document.getElementById('status-text').textContent = 'No request sent';
+            document.getElementById('status-text').textContent = selectedEndpoint ? 'Ready' : 'No endpoint selected';
         }
 
-        // Execute playground AJAX request
-        async function executePlaygroundRequest() {
-            if (!selectedEndpoint) return;
-
-            const requestUrl = document.getElementById('request-url-input').value;
-            
-            // Adjust URL to relative path if running locally to avoid CORS / missing files issues
-            let fetchUrl = requestUrl;
-            const isLocal = window.location.protocol === 'file:' || 
-                            window.location.hostname === 'localhost' || 
-                            window.location.hostname === '127.0.0.1';
-
-            if (isLocal && requestUrl.startsWith(baseUrl)) {
-                // API page is located inside hub/API/index.html
-                // So relative paths to data files are two directories up
-                fetchUrl = '../../' + selectedEndpoint.path;
-            }
-
-            // Update states
+        function beginResourceAction(title, status) {
+            document.getElementById('response-title').textContent = title;
             document.getElementById('placeholder-text').style.display = 'none';
             document.getElementById('response-pre').style.display = 'none';
             document.getElementById('spinner').style.display = 'block';
-            
-            const dot = document.getElementById('status-dot');
-            dot.className = 'status-dot loading';
-            document.getElementById('status-text').textContent = 'Fetching data...';
+            document.getElementById('status-dot').className = 'status-dot loading';
+            document.getElementById('status-text').textContent = status;
+        }
 
+        function showResourceResult(title, status, state, content) {
+            document.getElementById('response-title').textContent = title;
+            document.getElementById('spinner').style.display = 'none';
+            document.getElementById('placeholder-text').style.display = 'none';
+            document.getElementById('status-dot').className = 'status-dot ' + state;
+            document.getElementById('status-text').textContent = status;
+            const pre = document.getElementById('response-pre');
+            pre.style.display = 'block';
+            pre.textContent = content;
+        }
+
+        function limitedPreview(content) {
+            const limit = 200000;
+            if (content.length <= limit) return content;
+            return content.slice(0, limit)
+                + '\\n\\n[Preview truncated after ' + limit.toLocaleString()
+                + ' characters. Download the resource for the complete content.]';
+        }
+
+        async function previewResource(asJson) {
+            beginResourceAction('Resource Preview', 'Fetching data...');
+            const response = await fetch(resourceFetchUrl());
+            if (!response.ok) {
+                throw new Error('HTTP ' + response.status + ' ' + response.statusText);
+            }
+            const content = asJson
+                ? JSON.stringify(await response.json(), null, 2)
+                : await response.text();
+            showResourceResult(
+                'Resource Preview',
+                response.status + ' ' + response.statusText,
+                'success',
+                limitedPreview(content)
+            );
+        }
+
+        async function inspectPmtiles() {
+            beginResourceAction('Archive Header & Metadata', 'Reading byte ranges...');
+            const { PMTiles } = await import('https://cdn.jsdelivr.net/npm/pmtiles@4/+esm');
+            const archive = new PMTiles(resourceFetchUrl());
+            const [header, metadata] = await Promise.all([
+                archive.getHeader(),
+                archive.getMetadata(),
+            ]);
+            const content = JSON.stringify(
+                { header, metadata },
+                (key, value) => typeof value === 'bigint' ? value.toString() : value,
+                2
+            );
+            showResourceResult(
+                'Archive Header & Metadata',
+                'Archive metadata loaded',
+                'success',
+                content
+            );
+        }
+
+        async function copyText(text) {
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(text);
+                return true;
+            }
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.focus();
+            textarea.select();
+            const copied = document.execCommand('copy');
+            textarea.remove();
+            return copied;
+        }
+
+        async function executeResourceAction() {
+            if (!selectedEndpoint) return;
+            const action = selectedEndpoint.capabilities.action;
             try {
-                const response = await fetch(fetchUrl);
-                document.getElementById('spinner').style.display = 'none';
-                
-                if (response.ok) {
-                    dot.className = 'status-dot success';
-                    document.getElementById('status-text').textContent = response.status + ' ' + response.statusText;
-                    
-                    const contentType = response.headers.get('content-type');
-                    
-                    let dataText = '';
-                    if (selectedEndpoint.format === 'JSON' || selectedEndpoint.format === 'GeoJSON') {
-                        const json = await response.json();
-                        dataText = JSON.stringify(json, null, 2);
-                    } else {
-                        dataText = await response.text();
-                    }
-
-                    const pre = document.getElementById('response-pre');
-                    pre.style.display = 'block';
-                    pre.textContent = dataText;
+                if (action === 'preview-json') {
+                    await previewResource(true);
+                } else if (action === 'preview-text') {
+                    await previewResource(false);
+                } else if (action === 'inspect-pmtiles') {
+                    await inspectPmtiles();
+                } else if (action === 'copy-spatial-extract') {
+                    const command = spatialExtractCommand(
+                        document.getElementById('request-url-input').value,
+                        selectedEndpoint
+                    );
+                    const copied = await copyText(command);
+                    showResourceResult(
+                        'GDAL Spatial Extract',
+                        copied ? 'Command copied' : 'Command ready',
+                        'success',
+                        command + '\\n\\nThe bbox is a '
+                            + formatDistance(exampleArea.size_m) + ' × '
+                            + formatDistance(exampleArea.size_m) + ' square around '
+                            + exampleArea.label + '.'
+                    );
+                } else if (action === 'open-resource') {
+                    window.open(document.getElementById('request-url-input').value, '_blank');
+                    showResourceResult(
+                        'Resource Viewer',
+                        'Opened in a new tab',
+                        'success',
+                        document.getElementById('request-url-input').value
+                    );
                 } else {
-                    dot.className = 'status-dot error';
-                    document.getElementById('status-text').textContent = response.status + ' ' + response.statusText;
-                    
-                    const pre = document.getElementById('response-pre');
-                    pre.style.display = 'block';
-                    pre.textContent = 'Error details: Request returned a non-200 status code.\\n\\nURL Attempted: ' + fetchUrl + '\\nHTTP Status: ' + response.status + ' - ' + response.statusText;
+                    downloadEndpointFile();
+                    showResourceResult(
+                        'Resource Download',
+                        'Download opened',
+                        'success',
+                        document.getElementById('request-url-input').value
+                    );
                 }
             } catch (err) {
-                document.getElementById('spinner').style.display = 'none';
-                dot.className = 'status-dot error';
-                document.getElementById('status-text').textContent = 'Network Error';
-                
-                const pre = document.getElementById('response-pre');
-                pre.style.display = 'block';
-                pre.textContent = 'Fetch Failed: ' + err.message + '\\n\\nThis could be due to a CORS policy restriction or because the file does not exist locally yet. If running locally, make sure to generate the data folder contents.';
+                showResourceResult(
+                    responseContext().title,
+                    'Action failed',
+                    'error',
+                    err.message
+                        + '\\n\\nCheck network access, CORS headers, and format-specific client requirements.'
+                );
             }
         }
 
         function downloadEndpointFile() {
             if (!selectedEndpoint) return;
-            const requestUrl = document.getElementById('request-url-input').value;
-            window.open(requestUrl, '_blank');
+            window.open(document.getElementById('request-url-input').value, '_blank');
         }
 
-        function copyRequestUrl() {
+        async function copyRequestUrl() {
             const input = document.getElementById('request-url-input');
-            if (input.value) {
-                navigator.clipboard.writeText(input.value);
+            if (input.value && await copyText(input.value)) {
                 alert('Copied request URL to clipboard!');
             }
         }
 
-        function updateSnippets(url, format) {
-            // JS
-            let jsCode = 'fetch(\\'' + url + '\\')\\n  .then(response => response.json())\\n  .then(data => console.log(data));';
-            if (format === 'PMTiles') {
-                jsCode = '// Read vector tiles efficiently in JS\\nimport { PMTiles } from \\'pmtiles\\';\\n\\nconst tilesUrl = \\'' + url + '\\';\\nconst p = new PMTiles(tilesUrl);\\n// Add to maplibre or leaflet...';
-            } else if (format === 'GeoParquet') {
-                jsCode = '// Reading GeoParquet in JS requires specialized libraries like @loaders.gl/parquet\\n// See: https://loaders.gl/docs/specifications/category-gis';
+        function updateSnippetVisibility(ep) {
+            const enabledSnippets = new Set(ep.capabilities.snippets);
+            document.querySelectorAll('.tab-header[data-snippet]').forEach(element => {
+                element.hidden = !enabledSnippets.has(element.dataset.snippet);
+                element.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-content[data-snippet]').forEach(element => {
+                element.hidden = !enabledSnippets.has(element.dataset.snippet);
+                element.classList.remove('active');
+            });
+            const firstHeader = Array.from(
+                document.querySelectorAll('.tab-header[data-snippet]')
+            ).find(element => !element.hidden);
+            if (firstHeader) switchSnippetTab(firstHeader.dataset.target);
+        }
+
+        function updateSnippets(url, ep) {
+            const format = ep.format;
+            const filename = endpointFilename(ep.path);
+            const stem = endpointOutputStem(ep.path);
+
+            let jsCode = [
+                'const response = await fetch(\\'' + url + '\\');',
+                'if (!response.ok) throw new Error("HTTP " + response.status);',
+                'const data = await response.json();',
+                'console.log(data);',
+            ].join('\\n');
+            if (format === 'CSV') {
+                jsCode = [
+                    'const response = await fetch(\\'' + url + '\\');',
+                    'if (!response.ok) throw new Error("HTTP " + response.status);',
+                    'console.log(await response.text());',
+                ].join('\\n');
+            } else if (format === 'PMTiles') {
+                jsCode = [
+                    "import { PMTiles } from 'pmtiles';",
+                    '',
+                    "const archive = new PMTiles('" + url + "');",
+                    'const [header, metadata] = await Promise.all([',
+                    '  archive.getHeader(),',
+                    '  archive.getMetadata(),',
+                    ']);',
+                    'console.log({ header, metadata });',
+                ].join('\\n');
             } else if (format === 'OSWM Binary Graph') {
-                jsCode = 'fetch(\\'' + url + '\\')\\n  .then(response => response.arrayBuffer())\\n  .then(graphBuffer => console.log(graphBuffer.byteLength));';
+                jsCode = [
+                    'const response = await fetch(\\'' + url + '\\');',
+                    'if (!response.ok) throw new Error("HTTP " + response.status);',
+                    'const graphBuffer = await response.arrayBuffer();',
+                    'console.log(graphBuffer.byteLength);',
+                ].join('\\n');
             }
             document.getElementById('code-js').textContent = jsCode;
 
-            // Python
-            let pyCode = 'import requests\\n\\nurl = "' + url + '"\\nresponse = requests.get(url)\\ndata = response.json()\\nprint(data)';
+            let pyCode = [
+                'import requests',
+                '',
+                'url = "' + url + '"',
+                'response = requests.get(url, timeout=60)',
+                'response.raise_for_status()',
+                'print(response.json())',
+            ].join('\\n');
             if (format === 'GeoParquet') {
-                pyCode = 'import geopandas as gpd\\n\\n# Open GeoParquet directly via HTTP/s URL\\nurl = "' + url + '"\\ngdf = gpd.read_parquet(url)\\nprint(gdf.head())';
+                pyCode = [
+                    'from io import BytesIO',
+                    '',
+                    'import geopandas as gpd',
+                    'import requests',
+                    '',
+                    'url = "' + url + '"',
+                    'response = requests.get(url, timeout=120)',
+                    'response.raise_for_status()',
+                    'gdf = gpd.read_parquet(BytesIO(response.content))',
+                    'print(gdf.head())',
+                ].join('\\n');
             } else if (format === 'GeoJSON') {
-                pyCode = 'import geopandas as gpd\\n\\n# Open GeoJSON directly via HTTP/s URL\\nurl = "' + url + '"\\ngdf = gpd.read_file(url)\\nprint(gdf.head())';
-            } else if (format === 'PMTiles') {
-                pyCode = 'from pmtiles.reader import Reader\\nimport urllib.request\\n\\n# Read pmtiles headers\\nurl = "' + url + '"\\n# Open stream and read...';
+                pyCode = [
+                    'import geopandas as gpd',
+                    '',
+                    'url = "' + url + '"',
+                    'gdf = gpd.read_file(url)',
+                    'print(gdf.head())',
+                ].join('\\n');
+            } else if (format === 'CSV') {
+                pyCode = [
+                    'import requests',
+                    '',
+                    'url = "' + url + '"',
+                    'response = requests.get(url, timeout=60)',
+                    'response.raise_for_status()',
+                    'print(response.text)',
+                ].join('\\n');
             } else if (format === 'OSWM Binary Graph') {
-                pyCode = 'import requests\\n\\nurl = "' + url + '"\\ngraph_bytes = requests.get(url).content\\nprint(len(graph_bytes))';
+                pyCode = [
+                    'import requests',
+                    '',
+                    'url = "' + url + '"',
+                    'response = requests.get(url, timeout=120)',
+                    'response.raise_for_status()',
+                    'graph_bytes = response.content',
+                    'print(len(graph_bytes))',
+                ].join('\\n');
             }
             document.getElementById('code-py').textContent = pyCode;
 
-            // GDAL
-            let gdalCode = 'ogrinfo -ro -al "/vsicurl/' + url + '"';
-            if (format === 'PMTiles') {
-                gdalCode = '# GDAL support for PMTiles starting from version 3.8.0\\nogrinfo -ro -al "/vsipmtiles/vsicurl/' + url + '"';
-            } else if (format === 'OSWM Binary Graph') {
-                gdalCode = '# Custom OSWM routing graph; consume it with routing/routing_worker.js';
+            let gdalCode = '';
+            if (format === 'GeoParquet') {
+                gdalCode = [
+                    '# Requires GDAL 3.8+ built with the Parquet/Arrow driver.',
+                    '# Inspect the schema without reading every feature.',
+                    'ogrinfo -ro -al -so ' + vsiCurlSource(url),
+                    '',
+                    '# Convert the complete dataset.',
+                    'ogr2ogr -f GeoJSON "' + stem + '.geojson" ' + vsiCurlSource(url),
+                    '',
+                    '# Extract a ' + formatDistance(exampleArea.size_m) + ' × '
+                        + formatDistance(exampleArea.size_m) + ' square around '
+                        + exampleArea.label + '.',
+                    spatialExtractCommand(url, ep),
+                    '',
+                    '# Attribute filter example.',
+                    attributeExtractCommand(url, ep),
+                ].join('\\n');
+            } else if (format === 'GeoJSON') {
+                gdalCode = [
+                    '# Inspect the layer.',
+                    'ogrinfo -ro -al -so ' + vsiCurlSource(url),
+                    '',
+                    '# Convert to GeoPackage.',
+                    'ogr2ogr -f GPKG "' + stem + '.gpkg" ' + vsiCurlSource(url),
+                    '',
+                    '# Spatial and attribute filters.',
+                    spatialExtractCommand(url, ep),
+                    attributeExtractCommand(url, ep),
+                ].join('\\n');
+            } else if (format === 'PMTiles') {
+                gdalCode = [
+                    '# Requires GDAL 3.8+ with the PMTiles vector driver.',
+                    'ogrinfo -ro -al -so ' + vsiCurlSource(url),
+                    '',
+                    '# Export all vector layers to a GeoPackage.',
+                    'ogr2ogr -f GPKG "' + stem + '.gpkg" ' + vsiCurlSource(url),
+                ].join('\\n');
+            } else if (format === 'XML/VRT') {
+                gdalCode = [
+                    '# Inspect the VRT layers.',
+                    'ogrinfo -ro -al -so ' + vsiCurlSource(url),
+                    '',
+                    '# Materialize the virtual layers in a GeoPackage.',
+                    'ogr2ogr -f GPKG "' + stem + '.gpkg" ' + vsiCurlSource(url),
+                ].join('\\n');
             }
             document.getElementById('code-gdal').textContent = gdalCode;
 
-            // cURL
-            const curlCode = 'curl -L -X GET "' + url + '"';
+            const isText = ['JSON', 'GeoJSON', 'CSV', 'XML/VRT'].includes(format);
+            const curlCode = isText
+                ? 'curl -fsSL "' + url + '"'
+                : 'curl -fL --retry 3 -o "' + filename + '" "' + url + '"';
             document.getElementById('code-curl').textContent = curlCode;
         }
 
         function switchSnippetTab(tabId) {
+            const tabContent = document.getElementById(tabId);
+            if (!tabContent || tabContent.hidden) return;
             document.querySelectorAll('.tab-header').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
 
-            const activeTabHeader = Array.from(document.querySelectorAll('.tab-header')).find(el => el.getAttribute('onclick').includes(tabId));
+            const activeTabHeader = Array.from(document.querySelectorAll('.tab-header'))
+                .find(el => el.dataset.target === tabId);
             if (activeTabHeader) activeTabHeader.classList.add('active');
-
-            const tabContent = document.getElementById(tabId);
-            if (tabContent) tabContent.classList.add('active');
+            tabContent.classList.add('active');
         }
 
-        function copySnippet(elementId) {
+        async function copySnippet(elementId) {
             const code = document.getElementById(elementId).textContent;
-            navigator.clipboard.writeText(code);
-            alert('Code snippet copied to clipboard!');
+            if (await copyText(code)) alert('Code snippet copied to clipboard!');
         }
 
         // Initialize Page
@@ -1623,7 +1933,8 @@ print(data)</pre>
                       .replace("[REPO_NAME]", REPO_NAME)
                       .replace("[node_homepage_url]", node_homepage_url)
                       .replace("[PROJECT_LOGO_URL]", branding_asset_url("logos.project_100px", "../../oswm_codebase"))
-                      .replace("[endpoints_js]", endpoints_js))
+                      .replace("[endpoints_js]", endpoints_js)
+                      .replace("[example_area_js]", example_area_js))
 
     # Save the output file
     api_html_path = os.path.join(api_folder, "index.html")
