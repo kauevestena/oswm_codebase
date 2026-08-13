@@ -16,6 +16,28 @@ All paths below are relative to this base URL.
 
 ---
 
+## Format-aware Resource Explorer
+
+The generated API page adapts its primary action and usage tabs to each file
+format instead of treating every static file like a JSON request:
+
+| Format | Primary action | Usage tabs |
+|---|---|---|
+| JSON | Preview JSON | JavaScript, Python, cURL |
+| CSV | Preview text | JavaScript, Python, cURL |
+| GeoJSON | Preview GeoJSON | JavaScript, Python, GDAL/OGR, cURL |
+| GeoParquet | Copy the configured spatial-extract command | Python, GDAL/OGR, cURL |
+| PMTiles | Inspect archive header and metadata with byte-range requests | JavaScript, GDAL/OGR, cURL |
+| VRT | Preview the descriptor | GDAL/OGR, cURL |
+| PNG | View the image | cURL |
+| OSWM binary graph | Download the graph | JavaScript, Python, cURL |
+
+Non-spatial JSON and CSV resources deliberately do not show a GDAL panel.
+GeoParquet examples include schema inspection, full conversion, spatial
+extraction, and attribute filtering.
+
+---
+
 ## Metadata Catalogue
 
 Every node publishes a metadata catalogue at:
@@ -78,7 +100,7 @@ the ISO 19115-3 XML encoding.
 
 ## Pedestrian Data Tiles
 
-Vector tile files in [PMTiles](https://protomaps.com/pmtiles) format. Requires a PMTiles-capable client (e.g. MapLibre GL + `pmtiles.js`, GDAL ≥ 3.6, or the `pmtiles` CLI).
+Vector tile files in [PMTiles](https://protomaps.com/pmtiles) format. Requires a PMTiles-capable client (e.g. MapLibre GL + `pmtiles.js`, GDAL ≥ 3.8, or the `pmtiles` CLI).
 
 | URL path | Description |
 |---|---|
@@ -183,9 +205,11 @@ infos    = requests.get(BASE + "data/boundaries/infos.json").json()
 ### Fetch a tile layer (JavaScript / MapLibre GL)
 
 ```js
-import { PMTiles, leafletRasterLayer } from "pmtiles";
+import { Protocol } from "pmtiles";
 
 const tilesBase = "https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/";
+const protocol = new Protocol();
+maplibregl.addProtocol("pmtiles", protocol.tile);
 
 // Add to a MapLibre map source:
 map.addSource("sidewalks", {
@@ -194,10 +218,59 @@ map.addSource("sidewalks", {
 });
 ```
 
-### Open with GDAL/OGR
+### Inspect and convert a remote GeoParquet file
 
 ```bash
-ogrinfo /vsicurl/https://kauevestena.github.io/opensidewalkmap_beta/data/vrts/data.vrt
+QA_URL="https://kauevestena.github.io/opensidewalkmap_beta/data/data_quality/crossings_lacking_kerbs/crossings_lacking_kerbs.parquet"
+
+ogrinfo -ro -al -so "/vsicurl/${QA_URL}"
+ogr2ogr -f GeoJSON crossings_lacking_kerbs.geojson "/vsicurl/${QA_URL}"
+```
+
+Use exactly one shell-quoting layer around the `/vsicurl/` datasource. A form
+such as `'"/vsicurl/https://…"'` passes the double-quote characters to GDAL as
+part of the filename and therefore fails even when the remote file exists.
+
+GeoParquet support requires GDAL 3.8+ built with the Parquet/Arrow driver. Check
+the installed drivers with `ogrinfo --formats` if a valid URL still cannot be
+opened.
+
+### Extract a 1 km downtown square
+
+The template node configures Praça Tiradentes as Curitiba's downtown example.
+The box is 1 km × 1 km (approximately 500 m from the centre in each direction)
+and is passed in longitude/latitude order through `OGC:CRS84`:
+
+```bash
+SIDEWALKS_URL="https://kauevestena.github.io/opensidewalkmap_beta/data/processed/sidewalks.parquet"
+
+ogr2ogr -f GeoJSON \
+  -spat -49.276933 -25.434222 -49.266987 -25.425238 \
+  -spat_srs OGC:CRS84 \
+  sidewalks-downtown-1km.geojson \
+  "/vsicurl/${SIDEWALKS_URL}"
+```
+
+Nodes can set `API_EXAMPLE_CENTER_LAT`, `API_EXAMPLE_CENTER_LON`,
+`API_EXAMPLE_AREA_LABEL`, and `API_EXAMPLE_BBOX_SIZE_M`. Older configs fall
+back to the node's map centre and a 1,000 m square.
+
+### Filter by an attribute
+
+```bash
+ogr2ogr -f GeoJSON \
+  -where "surface = 'asphalt'" \
+  sidewalks-asphalt.geojson \
+  "/vsicurl/${SIDEWALKS_URL}"
+```
+
+### Inspect and convert PMTiles
+
+```bash
+PMTILES_URL="https://kauevestena.github.io/opensidewalkmap_beta/data/tiles/sidewalks.pmtiles"
+
+ogrinfo -ro -al -so "/vsicurl/${PMTILES_URL}"
+ogr2ogr -f GPKG sidewalks-tiles.gpkg "/vsicurl/${PMTILES_URL}"
 ```
 
 ---
@@ -205,5 +278,6 @@ ogrinfo /vsicurl/https://kauevestena.github.io/opensidewalkmap_beta/data/vrts/da
 ## Notes
 
 - All responses are static files served by GitHub Pages; there is no query-string filtering or server-side logic.
+- Spatial and attribute filters in the examples run in GDAL on the client and write a local extract.
 - PMTiles tiles can be read byte-range–efficiently without downloading the full file.
 - The data is refreshed periodically; check `data/updates/registry.json` for the current timestamp.
