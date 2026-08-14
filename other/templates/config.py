@@ -76,6 +76,13 @@ MID_LAT = -25.46075
 MID_LGT = -49.26135
 INITIAL_Z_LEVEL = 19
 
+# API usage examples use a 1 km x 1 km square centred on downtown. Nodes may
+# choose a representative civic centre independently from the initial map view.
+API_EXAMPLE_AREA_LABEL = "Curitiba downtown (Praça Tiradentes)"
+API_EXAMPLE_CENTER_LAT = -25.42973
+API_EXAMPLE_CENTER_LON = -49.27196
+API_EXAMPLE_BBOX_SIZE_M = 1000
+
 # MIN AND MAX ZOOM LEVELS FOR TILE GENERATION:
 # (since there's the 100MB file size limit, for big datasets might be better to stay at 19 or even 18)
 TILES_MIN_ZOOM = 9
