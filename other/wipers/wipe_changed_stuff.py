@@ -1,17 +1,28 @@
-import sys, shutil
-import os
+#!/usr/bin/env python3
+"""Remove legacy node outputs that predate the current directory layout."""
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from functions import *
+from __future__ import annotations
 
-# remove old top-level geojson leftovers; nested geojson files can be products
-for filename in os.listdir(data_folderpath):
-    filepath = os.path.join(data_folderpath, filename)
-    if os.path.isfile(filepath) and filename.endswith(".geojson"):
-        os.remove(filepath)
+import shutil
+from pathlib import Path
 
-# moving the versioning, they now got a subfolder just for them:
-create_folder_if_not_exists(versioning_folderpath)
-for filename in os.listdir(data_folderpath):
-    if filename.endswith("_versioning.json"):
-        shutil.move(os.path.join(data_folderpath, filename), versioning_folderpath)
+
+def wipe_changed_stuff(root: Path) -> None:
+    """Remove top-level GeoJSON leftovers and migrate versioning records."""
+
+    data = root / "data"
+    if not data.is_dir():
+        return
+
+    for path in data.iterdir():
+        if path.is_file() and path.suffix == ".geojson":
+            path.unlink()
+
+    versioning = data / "updates" / "versioning"
+    versioning.mkdir(parents=True, exist_ok=True)
+    for path in data.glob("*_versioning.json"):
+        shutil.move(str(path), versioning / path.name)
+
+
+if __name__ == "__main__":
+    wipe_changed_stuff(Path.cwd())
