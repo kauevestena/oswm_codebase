@@ -262,6 +262,21 @@ def test_workflow_contracts_are_parseable_scoped_and_serialized():
     assert "workflows/deploy_pages.yml" in manifest["retired"]
 
 
+def test_tile_generation_limit_matches_managed_workflow_guard():
+    assert "MAX_TILE_FILESIZE_BYTES = 95 * 1024 * 1024" in (
+        ROOT / "constants.py"
+    ).read_text()
+    for name in (
+        "setup.yml",
+        "data_daily_updating.yml",
+        "weekly.yml",
+        "customizable.yml",
+    ):
+        assert "validate-sizes --max-mib 95" in (
+            ROOT / "workflows" / name
+        ).read_text()
+
+
 def test_runtime_lock_is_exact_and_reproducible():
     requirements = [
         line.strip()
