@@ -3,6 +3,7 @@ from dq_funcs import *
 from quality_dicts import *
 from functions import *
 from branding import branding_asset_url
+from temporal_lookup import build_temporal_lookup, temporal_attributes
 
 
 
@@ -16,8 +17,7 @@ def main():
     gdf_dict_processed = get_gdfs_dict(raw_data=False)
     age_lookup = {}
     for cat, p_df in gdf_dict_processed.items():
-        if not p_df.empty and 'age' in p_df.columns and 'last_update' in p_df.columns:
-            age_lookup[cat] = p_df.set_index('id')[['age', 'last_update']].to_dict('index')
+        age_lookup[cat] = build_temporal_lookup(p_df)
 
 
     type_dict = geom_type_dict.copy()
@@ -194,7 +194,7 @@ def main():
                                     add_to_map_data(row, quality_category, category, issue_key=val_list[1], issue_val=val_list[2], issue_comment=val_list[3])
 
                 if curr["type"] == "age":
-                    age_info = age_lookup.get(category, {}).get(row.id)
+                    age_info = temporal_attributes(age_lookup.get(category, {}), row)
                     if age_info and age_info['age'] >= 5:
                         comment = "Feature has not been updated in 5 years or more"
                         val_list = [

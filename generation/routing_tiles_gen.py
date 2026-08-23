@@ -9,6 +9,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import geopandas as gpd
+
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import constants
@@ -16,6 +18,24 @@ import constants
 
 DOCKER_IMAGE = "ghcr.io/osgeo/gdal:alpine-normal-latest"
 DISPLAY_LAYER = "routing"
+
+
+def _flatgeobuf_source(source_path: Path, staging_path: Path) -> Path:
+    """Create a GDAL-portable routing source for PMTiles generation.
+
+    Distribution GDAL builds commonly include the PMTiles and FlatGeobuf
+    drivers but omit the optional Parquet driver.  GeoPandas can still read the
+    GeoParquet through pyarrow, so stage only the rendered fields as FlatGeobuf
+    before invoking ogr2ogr.
+    """
+
+    frame = gpd.read_parquet(source_path, columns=["edge_kind", "geometry"])
+    if frame.empty:
+        raise RuntimeError(f"Routing source contains no features: {source_path}")
+    if staging_path.exists():
+        staging_path.unlink()
+    frame.to_file(staging_path, driver="FlatGeobuf", index=False)
+    return staging_path
 
 
 def _ogr_command(source_path: Path, output_path: Path) -> list[str]:
@@ -66,6 +86,9 @@ def main() -> None:
     temporary_path = output_path.with_name(
         f".{output_path.stem}.tmp.{os.getpid()}{output_path.suffix}"
     )
+    staging_path = output_path.with_name(
+        f".{output_path.stem}.source.{os.getpid()}.fgb"
+    )
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     if not source_path.is_file():
@@ -79,8 +102,9 @@ def main() -> None:
             feature_count = int(json.load(source)["feature_count"])
         if temporary_path.exists():
             temporary_path.unlink()
+        ogr_source = _flatgeobuf_source(source_path, staging_path)
         result = subprocess.run(
-            _ogr_command(source_path, temporary_path),
+            _ogr_command(ogr_source, temporary_path),
             capture_output=True,
             text=True,
             check=False,
@@ -113,6 +137,8 @@ def main() -> None:
     finally:
         if temporary_path.exists():
             temporary_path.unlink()
+        if staging_path.exists():
+            staging_path.unlink()
         report_path.write_text(
             json.dumps(report, indent=2) + "\n", encoding="utf-8"
         )
