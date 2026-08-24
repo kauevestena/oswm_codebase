@@ -46,6 +46,13 @@ DERIVED_RESET_PATHS = (
 
 PRESERVED_DURING_DERIVED_RESET = ("quality_check/keys_without_wiki.json",)
 
+VERSIONING_OUTPUTS = (
+    "data/updates/versioning/sidewalks_versioning.json",
+    "data/updates/versioning/crossings_versioning.json",
+    "data/updates/versioning/kerbs_versioning.json",
+    "data/updates/versioning/other_footways_versioning.json",
+)
+
 REQUIRED_DATA_OUTPUTS = (
     "data/index.json",
     "data/boundaries/infos.json",
@@ -137,10 +144,14 @@ STAGE_PROFILES = {
         "global_params.json",
     ),
     "weekly": (
+        "data/processed",
+        "data/data_quality",
         "data/updates",
         "metadata",
         "hub",
-        "quality_check/keys_without_wiki.json",
+        "quality_check",
+        "statistics",
+        "statistics_specs",
         "index.html",
     ),
     "special": (".github/workflows", ".oswm-managed-files.json"),
@@ -245,6 +256,15 @@ def missing_required(root: Path) -> list[str]:
     ]
 
 
+def missing_versioning(root: Path) -> list[str]:
+    """Return missing or empty per-layer feature-versioning products."""
+    return [
+        relative
+        for relative in VERSIONING_OUTPUTS
+        if not (root / relative).is_file() or (root / relative).stat().st_size == 0
+    ]
+
+
 def _git(root: Path, *args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         ["git", *args], cwd=root, text=True, capture_output=True, check=check
@@ -297,6 +317,7 @@ def main(argv: list[str] | None = None) -> int:
     subparsers.add_parser("reset-derived")
     subparsers.add_parser("manifest")
     subparsers.add_parser("require")
+    subparsers.add_parser("require-versioning")
     stage = subparsers.add_parser("stage")
     stage.add_argument("profile", choices=sorted(STAGE_PROFILES))
     sizes = subparsers.add_parser("validate-sizes")
@@ -315,6 +336,18 @@ def main(argv: list[str] | None = None) -> int:
             json.dumps(
                 {
                     "required_outputs": list(required_outputs(args.root)),
+                    "missing": missing,
+                },
+                indent=2,
+            )
+        )
+        return 1 if missing else 0
+    elif args.command == "require-versioning":
+        missing = missing_versioning(args.root)
+        print(
+            json.dumps(
+                {
+                    "required_versioning_outputs": list(VERSIONING_OUTPUTS),
                     "missing": missing,
                 },
                 indent=2,
