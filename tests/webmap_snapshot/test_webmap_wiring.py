@@ -13,6 +13,10 @@ class WebmapWiringTests(unittest.TestCase):
         self.assertIn("assets/branding/branding.js", template)
         self.assertIn('data-oswm-branding="favicon"', template)
         self.assertIn('data-oswm-branding="logos.page_dark_clean"', template)
+        self.assertIn('<a href="index.html" id="node_link">', template)
+        self.assertNotIn(
+            "kauevestena.github.io/opensidewalkmap_beta", template
+        )
         self.assertIn("import('./oswm_codebase/webmap/snapshot/snapshot_control.js')", template)
         self.assertIn("installSnapshotControl", template)
 
