@@ -15,6 +15,8 @@ from boundary_acquisition import BoundaryAcquisitionError, resolve_boundary
 from node_outputs import (
     REQUIRED_OUTPUTS,
     REQUIRED_PUBLIC_PAGES,
+    VERSIONING_OUTPUTS,
+    missing_versioning,
     required_outputs,
     reset_derived,
     reset_initialization,
@@ -65,6 +67,15 @@ def test_generated_output_manifest_includes_all_public_entry_pages():
         "hub/watcher/changesets.xml",
         "hub/acquisition/results.json",
     } <= set(REQUIRED_OUTPUTS)
+
+
+def test_versioning_manifest_requires_every_layer_product(tmp_path):
+    assert missing_versioning(tmp_path) == list(VERSIONING_OUTPUTS)
+    for relative in VERSIONING_OUTPUTS:
+        path = tmp_path / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("{}\n")
+    assert missing_versioning(tmp_path) == []
 
 
 def test_generated_output_manifest_expands_statistics_specs(tmp_path):
