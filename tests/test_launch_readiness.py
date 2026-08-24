@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import subprocess
+import sys
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -24,6 +26,27 @@ from time_utils import isoformat_utc, parse_timestamp
 
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def test_legacy_output_wiper_runs_from_node_root(tmp_path):
+    data = tmp_path / "data"
+    nested = data / "nested"
+    nested.mkdir(parents=True)
+    (data / "obsolete.geojson").write_text("{}\n")
+    (nested / "product.geojson").write_text("{}\n")
+    (data / "sidewalks_versioning.json").write_text("{}\n")
+
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "other/wipers/wipe_changed_stuff.py")],
+        cwd=tmp_path,
+        text=True,
+        capture_output=True,
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert not (data / "obsolete.geojson").exists()
+    assert (nested / "product.geojson").is_file()
+    assert (data / "updates/versioning/sidewalks_versioning.json").is_file()
 
 
 def test_generated_output_manifest_includes_all_public_entry_pages():
@@ -237,6 +260,21 @@ def test_workflow_contracts_are_parseable_scoped_and_serialized():
     ).read_text()
     manifest = json.loads((ROOT / "workflows/manifest.json").read_text())
     assert "workflows/deploy_pages.yml" in manifest["retired"]
+
+
+def test_tile_generation_limit_matches_managed_workflow_guard():
+    assert "MAX_TILE_FILESIZE_BYTES = 95 * 1024 * 1024" in (
+        ROOT / "constants.py"
+    ).read_text()
+    for name in (
+        "setup.yml",
+        "data_daily_updating.yml",
+        "weekly.yml",
+        "customizable.yml",
+    ):
+        assert "validate-sizes --max-mib 95" in (
+            ROOT / "workflows" / name
+        ).read_text()
 
 
 def test_runtime_lock_is_exact_and_reproducible():

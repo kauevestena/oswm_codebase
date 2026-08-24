@@ -24,7 +24,9 @@ readme_path = "README.md"
 node_home_path = "index.html"
 workflows_path = ".github/workflows"
 global_params_path = "global_params.json"
-MAX_TILE_FILESIZE_BYTES = 100 * 1024 * 1024  # 100 MB limit guard
+# Keep generated archives below the stricter limit enforced by every managed
+# workflow.  This also leaves headroom below GitHub's hard 100 MiB file limit.
+MAX_TILE_FILESIZE_BYTES = 95 * 1024 * 1024
 
 # data folderpaths:
 data_folderpath = "data"

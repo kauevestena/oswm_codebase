@@ -105,7 +105,8 @@ for layername in layers_dict:
             filesize = os.path.getsize(outpath)
             if filesize > MAX_TILE_FILESIZE_BYTES and current_max_zoom > TILES_MIN_ZOOM:
                 print(
-                    f"  WARNING: '{outpath}' generated size is {filesize:,} bytes (> 100 MB limit). "
+                f"  WARNING: '{outpath}' generated size is {filesize:,} bytes "
+                f"(> {MAX_TILE_FILESIZE_BYTES / (1024 * 1024):g} MiB limit). "
                     f"Stepping down MAXZOOM from {current_max_zoom} to {current_max_zoom - 1}..."
                 )
                 os.remove(outpath)
