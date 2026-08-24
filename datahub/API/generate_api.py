@@ -1219,8 +1219,8 @@ def generate_api_html(endpoints):
                 <h1>OpenSidewalkMap API <span style="font-weight: 300; opacity: 0.8; color: var(--text-main)">| [CITY_NAME]</span></h1>
             </div>
             <div class="nav-buttons">
-                <a href="../../../index.html" class="btn btn-secondary">Node Home</a>
-                <a href="../../../map.html" class="btn btn-primary">Open Webmap</a>
+                <a href="../../index.html" class="btn btn-secondary">Node Home</a>
+                <a href="../../map.html" class="btn btn-primary">Open Webmap</a>
             </div>
         </div>
     </header>
