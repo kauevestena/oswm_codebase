@@ -85,6 +85,16 @@ class RoutingClientWiringTests(unittest.TestCase):
         self.assertNotIn("routing_demo_path", self.tiles_generator)
         self.assertIn("DISPLAY_LAYER = \"routing\"", self.tiles_generator)
 
+    def test_map_fits_authoritative_boundary_before_graph_is_ready(self):
+        boundary = self.html.index("const boundaryPromise = initializeNodeBoundary()")
+        display = self.html.index("addMapDisplayLayers();")
+        graph = self.html.index("const graphInfo = await graphPromise;")
+        self.assertLess(boundary, display)
+        self.assertLess(display, graph)
+        self.assertIn("map.fitBounds(bounds", self.html)
+        self.assertIn("boundary.coordinates || boundary.geometry?.coordinates", self.html)
+        self.assertNotIn("map.fitBounds([[minLon, minLat]", self.html)
+
     def test_daily_workflow_caches_elevation_tiles(self):
         self.assertIn("actions/cache@v4", self.daily_workflow)
         self.assertIn(".cache/oswm/elevation", self.daily_workflow)
