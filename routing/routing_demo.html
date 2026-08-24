@@ -263,6 +263,7 @@
             <label for="profileSelect">Optimization</label>
             <select id="profileSelect"></select>
             <p id="profileDescription">Loading routing profiles…</p>
+            <p id="routingStatus" role="status" aria-live="polite">Loading node map…</p>
 
             <div id="compareOption" hidden>
                 <label class="compare-label" for="compareDistance">
@@ -352,6 +353,7 @@
 
         const profileSelect = document.getElementById('profileSelect');
         const profileDescription = document.getElementById('profileDescription');
+        const routingStatus = document.getElementById('routingStatus');
         const compareOption = document.getElementById('compareOption');
         const compareDistance = document.getElementById('compareDistance');
         const comparisonInfo = document.getElementById('comparisonInfo');
@@ -405,34 +407,41 @@
             return url.href;
         }
 
-        async function initializeRouting() {
-            profilePayload = await fetch(
-                '../../data/routing/profiles.json',
+        function extendCoordinateBounds(bounds, coordinates) {
+            if (!Array.isArray(coordinates)) return;
+            if (
+                coordinates.length >= 2
+                && Number.isFinite(Number(coordinates[0]))
+                && Number.isFinite(Number(coordinates[1]))
+            ) {
+                bounds.extend([Number(coordinates[0]), Number(coordinates[1])]);
+                return;
+            }
+            for (const child of coordinates) extendCoordinateBounds(bounds, child);
+        }
+
+        async function initializeNodeBoundary() {
+            const boundary = await fetch(
+                '../../data/boundaries/polygon.geojson',
                 { cache: 'no-cache' }
             )
                 .then(requireOk)
                 .then(response => response.json());
-            distanceProfileId = profilePayload.distance_profile_id;
-            if (
-                !distanceProfileId
-                || profilePayload.profiles[distanceProfileId]?.routing_mode !== 'distance'
-            ) {
-                throw new Error('No distance-only routing profile was provided.');
-            }
-            populateProfiles();
-            updateProfileControls();
-            const profileOrder = profilePayload.graph_profile_order;
-            if (!Array.isArray(profileOrder) || !profilePayload.graph_filename) {
-                throw new Error('Routing profile metadata does not identify a binary graph.');
-            }
-            const graphPromise = workerRequest('init', {
-                graphUrl: versionedRoutingUrl(profilePayload.graph_filename),
-                profileOrder,
-                profileHeuristicScales: profileOrder.map(profileHeuristicScale)
-            });
             await mapLoaded();
-            const graphInfo = await graphPromise;
+            map.addSource('boundaries', { type: 'geojson', data: boundary });
+            map.addLayer({
+                id: 'boundary-layer',
+                type: 'line',
+                source: 'boundaries',
+                paint: { 'line-color': '#000', 'line-width': .3 }
+            });
+            const bounds = new maplibregl.LngLatBounds();
+            extendCoordinateBounds(bounds, boundary.coordinates || boundary.geometry?.coordinates);
+            if (bounds.isEmpty()) throw new Error('Node boundary contains no coordinates.');
+            map.fitBounds(bounds, { padding: 35, animate: false });
+        }
 
+        function addMapDisplayLayers() {
             map.addSource('aws-terrain', {
                 type: 'raster-dem',
                 tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
@@ -474,19 +483,6 @@
                 }
             });
 
-            map.addSource('boundaries', {
-                type: 'geojson',
-                data: '../../data/boundaries/polygon.geojson'
-            });
-            map.addLayer({
-                id: 'boundary-layer',
-                type: 'line',
-                source: 'boundaries',
-                paint: { 'line-color': '#000', 'line-width': .3 }
-            });
-
-            const [minLon, minLat, maxLon, maxLat] = graphInfo.bounds;
-            map.fitBounds([[minLon, minLat], [maxLon, maxLat]], { padding: 35 });
             map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }));
             map.addControl(new maplibregl.TerrainControl({ source: 'aws-terrain', exaggeration: 1.2 }));
             map.addControl(new maplibregl.FullscreenControl());
@@ -495,12 +491,50 @@
                 positionOptions: { enableHighAccuracy: true },
                 trackUserLocation: true
             }));
+        }
+
+        async function initializeRouting() {
+            const boundaryPromise = initializeNodeBoundary().catch(error => {
+                console.error(error);
+                routingStatus.textContent = `Node boundary could not be loaded: ${error.message}`;
+            });
+            profilePayload = await fetch(
+                '../../data/routing/profiles.json',
+                { cache: 'no-cache' }
+            )
+                .then(requireOk)
+                .then(response => response.json());
+            distanceProfileId = profilePayload.distance_profile_id;
+            if (
+                !distanceProfileId
+                || profilePayload.profiles[distanceProfileId]?.routing_mode !== 'distance'
+            ) {
+                throw new Error('No distance-only routing profile was provided.');
+            }
+            populateProfiles();
+            updateProfileControls();
+            const profileOrder = profilePayload.graph_profile_order;
+            if (!Array.isArray(profileOrder) || !profilePayload.graph_filename) {
+                throw new Error('Routing profile metadata does not identify a binary graph.');
+            }
+            const graphPromise = workerRequest('init', {
+                graphUrl: versionedRoutingUrl(profilePayload.graph_filename),
+                profileOrder,
+                profileHeuristicScales: profileOrder.map(profileHeuristicScale)
+            });
+            await mapLoaded();
+            addMapDisplayLayers();
+            await boundaryPromise;
+            routingStatus.textContent = 'Loading routing graph…';
+            const graphInfo = await graphPromise;
             routerReady = true;
+            routingStatus.textContent = `Routing ready (${graphInfo.nodeCount.toLocaleString()} nodes).`;
             showWelcomeModal();
         }
 
         initializeRouting().catch(error => {
             console.error(error);
+            routingStatus.textContent = `Routing graph unavailable: ${error.message}`;
             showNoRoute(`Routing data could not be loaded: ${error.message}`);
         });
 
