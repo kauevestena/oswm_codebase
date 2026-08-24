@@ -40,6 +40,12 @@ class RoutingClientWiringTests(unittest.TestCase):
         self.assertNotIn("@turf", self.html)
         self.assertNotIn("demo.geojson", self.html)
 
+    def test_banner_returns_to_the_current_node(self):
+        self.assertIn('<a href="../../index.html" id="node_link">', self.html)
+        self.assertNotIn(
+            "kauevestena.github.io/opensidewalkmap_beta", self.html
+        )
+
     def test_worker_has_indexed_snapping_and_astar(self):
         self.assertIn("graph.cellOffsets", self.worker)
         self.assertIn("graph.cellSegments", self.worker)

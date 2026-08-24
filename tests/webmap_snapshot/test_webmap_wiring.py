@@ -13,6 +13,10 @@ class WebmapWiringTests(unittest.TestCase):
         self.assertIn("assets/branding/branding.js", template)
         self.assertIn('data-oswm-branding="favicon"', template)
         self.assertIn('data-oswm-branding="logos.page_dark_clean"', template)
+        self.assertIn('<a href="index.html" id="node_link">', template)
+        self.assertNotIn(
+            "kauevestena.github.io/opensidewalkmap_beta", template
+        )
         self.assertIn("import('./oswm_codebase/webmap/snapshot/snapshot_control.js')", template)
         self.assertIn("installSnapshotControl", template)
 
@@ -45,6 +49,8 @@ class WebmapWiringTests(unittest.TestCase):
     def test_generator_emits_snapshot_contract(self):
         generator = (ROOT / "webmap/create_webmap_new.py").read_text(encoding="utf8")
 
+        self.assertIn('params["node_homepage"] = "index.html"', generator)
+        self.assertIn('params["node_url"] = node_homepage_url', generator)
         self.assertIn('params["snapshot"]', generator)
         self.assertIn("get_webmap_theme_definitions()", generator)
         self.assertIn("webmap_theme_summary_path", generator)

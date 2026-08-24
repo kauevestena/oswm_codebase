@@ -26,6 +26,7 @@ params["center"] = [
 ]
 
 # updating the node's url:
+params["node_homepage"] = "index.html"
 params["node_url"] = node_homepage_url
 
 webmap_themes = get_webmap_theme_definitions()
