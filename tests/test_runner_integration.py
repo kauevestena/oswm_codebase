@@ -65,7 +65,10 @@ if relative == "filtering_adapting_data.py":
     for item in %r:
         path = root / item
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text("ready\\n")
+        if item == "data/hazard_analysis/terrain.json":
+            path.write_text('{"available": false}\\n')
+        else:
+            path.write_text("ready\\n")
 ''' % (
         (
             "data/raw/sidewalks.parquet", "data/raw/crossings.parquet",
@@ -83,7 +86,10 @@ if relative == "filtering_adapting_data.py":
         for relative in REQUIRED_OUTPUTS:
             path = root / relative
             path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text("ready\n")
+            if relative == "data/hazard_analysis/terrain.json":
+                path.write_text('{"available": false}\n')
+            else:
+                path.write_text("ready\n")
     registry = root / "data/updates/registry.json"
     registry.parent.mkdir(parents=True, exist_ok=True)
     registry.write_text(
