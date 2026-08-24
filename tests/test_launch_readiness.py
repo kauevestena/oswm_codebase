@@ -15,9 +15,11 @@ from boundary_acquisition import BoundaryAcquisitionError, resolve_boundary
 from node_outputs import (
     REQUIRED_OUTPUTS,
     REQUIRED_PUBLIC_PAGES,
+    missing_required,
     required_outputs,
     reset_derived,
     reset_initialization,
+    stage_profile,
 )
 from overpass_acquisition import features_from_polygon_with_failover
 from pipeline_decision import CODEBASE_REVISION_KEY, decide
@@ -72,6 +74,52 @@ def test_generated_output_manifest_expands_statistics_specs(tmp_path):
     spec.parent.mkdir(parents=True)
     spec.write_text("{}\n")
     assert "statistics/sidewalks/width.html" in required_outputs(tmp_path)
+
+
+def test_available_terrain_rasters_are_required(tmp_path):
+    terrain = tmp_path / "data/hazard_analysis"
+    terrain.mkdir(parents=True)
+    (terrain / "terrain.json").write_text(json.dumps({
+        "available": True,
+        "profiles": {
+            "wheelchair": {
+                "path": "data/hazard_analysis/terrain_wheelchair.png"
+            }
+        },
+    }))
+
+    assert "data/hazard_analysis/terrain_wheelchair.png" in required_outputs(tmp_path)
+    assert "data/hazard_analysis/terrain_wheelchair.png" in missing_required(tmp_path)
+
+
+def test_daily_stage_forces_declared_terrain_rasters(tmp_path):
+    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    (tmp_path / ".gitignore").write_text(
+        "data/hazard_analysis/terrain_*.png\n", encoding="utf-8"
+    )
+    terrain = tmp_path / "data/hazard_analysis"
+    terrain.mkdir(parents=True)
+    (terrain / "terrain_wheelchair.png").write_bytes(b"png")
+    (terrain / "terrain.json").write_text(json.dumps({
+        "available": True,
+        "profiles": {
+            "wheelchair": {
+                "path": "data/hazard_analysis/terrain_wheelchair.png"
+            }
+        },
+    }))
+
+    stage_profile(tmp_path, "daily")
+
+    staged = subprocess.run(
+        ["git", "diff", "--cached", "--name-only"],
+        cwd=tmp_path,
+        check=True,
+        text=True,
+        capture_output=True,
+    ).stdout.splitlines()
+    assert "data/hazard_analysis/terrain.json" in staged
+    assert "data/hazard_analysis/terrain_wheelchair.png" in staged
 
 
 class FakeResponse:
@@ -212,7 +260,10 @@ def _make_complete_node(root: Path, revision: str) -> None:
     for relative in REQUIRED_OUTPUTS:
         path = root / relative
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text("ready\n")
+        if relative == "data/hazard_analysis/terrain.json":
+            path.write_text(json.dumps({"available": False}))
+        else:
+            path.write_text("ready\n")
     registry = root / "data/updates/registry.json"
     registry.parent.mkdir(parents=True, exist_ok=True)
     registry.write_text(json.dumps({CODEBASE_REVISION_KEY: revision}))

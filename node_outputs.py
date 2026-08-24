@@ -71,6 +71,7 @@ REQUIRED_DATA_OUTPUTS = (
     "data/routing/tile_generation_report.json",
     "data/hazard_analysis/profiles.json",
     "data/hazard_analysis/metadata.json",
+    "data/hazard_analysis/terrain.json",
     "data/hazard_analysis/hazard.pmtiles",
     "data/snapshots/node_summary.json",
     "data/updates/index.html",
@@ -222,9 +223,38 @@ def reset_derived(root: Path) -> list[str]:
     return removed
 
 
+def terrain_raster_outputs(root: Path) -> tuple[str, ...]:
+    """Return safe raster paths declared by an available terrain manifest."""
+
+    manifest_path = root / "data/hazard_analysis/terrain.json"
+    if not manifest_path.is_file():
+        return ()
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise RuntimeError(f"Invalid terrain manifest: {manifest_path}") from exc
+    if manifest.get("available") is not True:
+        return ()
+    profiles = manifest.get("profiles")
+    if not isinstance(profiles, dict) or not profiles:
+        raise RuntimeError("Available terrain manifest has no profiles")
+
+    outputs: list[str] = []
+    for profile_id, details in sorted(profiles.items()):
+        relative = details.get("path") if isinstance(details, dict) else None
+        expected = f"data/hazard_analysis/terrain_{profile_id}.png"
+        if relative != expected:
+            raise RuntimeError(
+                f"Invalid terrain raster path for profile {profile_id!r}: {relative!r}"
+            )
+        outputs.append(relative)
+    return tuple(outputs)
+
+
 def required_outputs(root: Path) -> tuple[str, ...]:
-    """Return the fixed manifest plus chart pages declared by generated specs."""
+    """Return fixed, terrain, and chart outputs required after generation."""
     outputs = list(REQUIRED_OUTPUTS)
+    outputs.extend(terrain_raster_outputs(root))
     specs_root = root / "statistics_specs"
     if specs_root.is_dir():
         for spec in sorted(specs_root.rglob("*.json")):
@@ -263,6 +293,17 @@ def stage_profile(root: Path, profile: str) -> list[str]:
             selected.append(relative)
     if selected:
         _git(root, "add", "--", *selected)
+    if profile in {"daily", "custom"}:
+        terrain_rasters = [
+            relative
+            for relative in terrain_raster_outputs(root)
+            if (root / relative).is_file()
+        ]
+        if terrain_rasters:
+            # Node templates intentionally ignore generated rasters by default;
+            # an available terrain layer is a declared deployable exception.
+            _git(root, "add", "-f", "--", *terrain_rasters)
+            selected.extend(terrain_rasters)
     return selected
 
 
