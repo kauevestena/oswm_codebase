@@ -117,12 +117,26 @@ def _run(root: Path, *, revision: str, watcher_exit: int = 0, force: bool = Fals
 
 def test_cold_runner_fetches_then_generates_complete_contract(tmp_path):
     _prepare_fixture(tmp_path, complete=False, recorded_revision=None)
+    versioning = tmp_path / "data/updates/versioning"
+    versioning.mkdir(parents=True)
+    (versioning / "index.json").write_text("{}\n")
     result = _run(tmp_path, revision="new", watcher_exit=1)
     assert result.returncode == 0, result.stdout + result.stderr
     events = (tmp_path / "events.log").read_text()
     assert "getting_data.py" in events
+    assert "getting_feature_versioning_data.py" in events
     assert "filtering_adapting_data.py" in events
     assert events.count("datahub/watcher/watcher_lib.py") == 2
+
+
+def test_weekly_runner_regenerates_versioning_consumers():
+    weekly = (ROOT / "runners/weekly.sh").read_text()
+    versioning = weekly.index("getting_feature_versioning_data.py")
+    filtering = weekly.index("filtering_adapting_data.py")
+    quality = weekly.index("quality_check_compiling.py")
+    statistics = weekly.index("statistics_generation.py")
+    metadata = weekly.index("metadata_generation.py")
+    assert versioning < filtering < quality < statistics < metadata
 
 
 def test_no_change_runner_skips_osm_dependent_generation(tmp_path):

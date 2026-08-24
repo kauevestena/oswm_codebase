@@ -7,6 +7,9 @@ if ! command -v "$PYTHON_BIN" >/dev/null 2>&1; then
 fi
 
 "$PYTHON_BIN" oswm_codebase/getting_feature_versioning_data.py
+"$PYTHON_BIN" oswm_codebase/filtering_adapting_data.py
+"$PYTHON_BIN" oswm_codebase/data_quality/quality_check_compiling.py
+"$PYTHON_BIN" oswm_codebase/dashboard/statistics_generation.py
 "$PYTHON_BIN" oswm_codebase/data_quality/check_wiki_keys.py
 "$PYTHON_BIN" oswm_codebase/metadata/metadata_generation.py
 "$PYTHON_BIN" oswm_codebase/datahub/API/generate_api.py
