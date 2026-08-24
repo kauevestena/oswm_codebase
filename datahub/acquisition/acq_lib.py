@@ -1,5 +1,6 @@
 import os
 import sys
+import math
 import requests
 
 # Ensure the parent `datahub` directory is on sys.path so `dh_lib` can be imported
@@ -324,6 +325,76 @@ def check_pic4review_online(instance_url, timeout=10):
         return False
 
 
+def _geojson_bbox(value):
+    """Return ``[west, south, east, north]`` for a GeoJSON-like value."""
+    points = []
+
+    def visit(candidate):
+        if isinstance(candidate, dict):
+            bbox = candidate.get("bbox")
+            if isinstance(bbox, (list, tuple)) and len(bbox) >= 4:
+                try:
+                    west, south, east, north = map(float, bbox[:4])
+                    if all(math.isfinite(item) for item in (west, south, east, north)):
+                        points.extend(((west, south), (east, north)))
+                        return
+                except (TypeError, ValueError):
+                    pass
+            for key in ("coordinates", "geometry", "features"):
+                if key in candidate:
+                    visit(candidate[key])
+        elif isinstance(candidate, (list, tuple)):
+            if (
+                len(candidate) >= 2
+                and not isinstance(candidate[0], (dict, list, tuple, bool))
+                and not isinstance(candidate[1], (dict, list, tuple, bool))
+            ):
+                try:
+                    lon, lat = float(candidate[0]), float(candidate[1])
+                    if math.isfinite(lon) and math.isfinite(lat):
+                        points.append((lon, lat))
+                        return
+                except (TypeError, ValueError):
+                    pass
+            for child in candidate:
+                visit(child)
+
+    visit(value)
+    if not points:
+        return None
+    longitudes, latitudes = zip(*points)
+    return [min(longitudes), min(latitudes), max(longitudes), max(latitudes)]
+
+
+def _pic4review_spatial_fields(item):
+    """Normalize Pic4Review's mission AOI and embedded feature collection."""
+    mission_geometry = item.get("geom")
+    mission_bbox = _geojson_bbox(mission_geometry)
+    if isinstance(mission_geometry, dict) and mission_bbox:
+        return {
+            "geometry": mission_geometry,
+            "bbox": mission_bbox,
+            "spatial_status": "available",
+            "spatial_source": "geom",
+        }
+
+    data_options = item.get("dataoptions")
+    embedded_geojson = (
+        data_options.get("geojson") if isinstance(data_options, dict) else None
+    )
+    embedded_bbox = _geojson_bbox(embedded_geojson)
+    if embedded_bbox:
+        # Do not duplicate a potentially large feature collection in the public
+        # project index; the bbox is sufficient for the node polygon filter.
+        return {
+            "bbox": embedded_bbox,
+            "spatial_status": "available",
+            "spatial_source": "dataoptions.geojson",
+        }
+
+    return {"spatial_status": "unknown", "spatial_source": None}
+
+
 def parse_pic4review_results(raw_results, instance_url):
     """
     Normalize Pic4Review API results into the standard project format.
@@ -357,6 +428,7 @@ def parse_pic4review_results(raw_results, instance_url):
             "url": f"{url_base}/#/mission/{m_id}",
             "status": item.get("status", "online"),
             "description": item.get("fulldesc") or item.get("shortdesc", ""),
+            **_pic4review_spatial_fields(item),
         }
         projects.append(project)
     return projects
