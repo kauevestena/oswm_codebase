@@ -352,12 +352,16 @@ def get_changeset_activity(bboxes: str, end_dt: datetime) -> dict:
                 
                 # Only include changesets that actually affected OSWM features
                 if counts["additions"] > 0 or counts["modifications"] > 0 or counts["deletions"] > 0:
+                    oswm_changes_count = sum(counts.values())
                     yesterday_changesets.append({
                         "id": cs_id,
                         "user": user,
                         "uid": uid,
                         "comment": comment,
                         "created_at": created_at,
+                        "changeset_changes_count": changes_count,
+                        "oswm_changes_count": oswm_changes_count,
+                        # Retain the original field for existing API consumers.
                         "changes_count": changes_count,
                         "additions": counts["additions"],
                         "modifications": counts["modifications"],
@@ -742,8 +746,8 @@ def generate_watcher_page(history: dict, results: dict, activity: dict):
                         <th>Changeset ID</th>
                         <th>User</th>
                         <th>Comment</th>
-                        <th>Changes</th>
-                        <th>Edits (Add/Mod/Del)</th>
+                        <th title="All elements changed anywhere in the OSM changeset">Whole changeset</th>
+                        <th title="OSWM-interest elements inside this node">OSWM edits in node (Add/Mod/Del)</th>
                         <th>Links</th>
                     </tr>
                 </thead>
@@ -758,8 +762,9 @@ def generate_watcher_page(history: dict, results: dict, activity: dict):
                     <td><code>{cs["id"]}</code></td>
                     <td><a href="https://www.openstreetmap.org/user/{user}" target="_blank" style="color: var(--text-main); text-decoration: none; font-weight: 500;">{user}</a></td>
                     <td><div class="comment-text" title="{comment}">{comment}</div></td>
-                    <td>{cs["changes_count"]}</td>
+                    <td>{cs.get("changeset_changes_count", cs["changes_count"])}</td>
                     <td>
+                        <strong>{cs.get("oswm_changes_count", cs["additions"] + cs["modifications"] + cs["deletions"])}</strong>
                         <span class="badge badge-add">+{cs["additions"]}</span>
                         <span class="badge badge-mod">~{cs["modifications"]}</span>
                         <span class="badge badge-del">-{cs["deletions"]}</span>
@@ -789,7 +794,7 @@ def generate_watcher_page(history: dict, results: dict, activity: dict):
                         <th>User</th>
                         <th>Comment</th>
                         <th>Date</th>
-                        <th>Changes</th>
+                        <th title="All elements changed anywhere in the OSM changeset">Whole changeset</th>
                         <th>OSWM Deletions</th>
                         <th>Links</th>
                     </tr>
@@ -1216,8 +1221,32 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="render from the saved watcher decision without repeating the update check",
     )
+    parser.add_argument(
+        "--render-current",
+        action="store_true",
+        help="render an all-current decision after a successful data refresh",
+    )
     args = parser.parse_args(argv)
     decision_path = os.path.join(os.path.dirname(updating_infos_path), "watcher_decision.json")
+
+    if args.render_only and args.render_current:
+        parser.error("--render-only and --render-current are mutually exclusive")
+
+    if args.render_current:
+        results = {layer: False for layer in OHSOME_FILTER_MAP}
+        if not render_watcher_outputs(results):
+            return 2
+        dump_json(
+            {
+                "schema_version": 1,
+                "checked_at": isoformat_utc(),
+                "needs_update": False,
+                "layers": results,
+                "source": "successful_pipeline_refresh",
+            },
+            decision_path,
+        )
+        return 0
 
     if args.render_only:
         decision = read_json(decision_path) if os.path.exists(decision_path) else {}

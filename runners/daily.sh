@@ -65,9 +65,6 @@ else
     run_step oswm_codebase/generation/routing_demo_gen.py "routing_demo_gen"
     run_step oswm_codebase/generation/routing_tiles_gen.py "routing_tiles_gen"
     run_step oswm_codebase/generation/hazard_tiles_gen.py "hazard_tiles_gen"
-    # reset-derived removes hub/, including the dashboard made by the initial
-    # update check. Render it again after boundaries and derived data exist.
-    run_step oswm_codebase/datahub/watcher/watcher_lib.py "watcher_render" --render-only
     run_step oswm_codebase/datahub/acquisition/generate_acquisition.py "generate_acquisition"
     run_step oswm_codebase/metadata/metadata_generation.py "metadata_generation"
     run_step oswm_codebase/datahub/API/generate_api.py "generate_api"
@@ -79,6 +76,12 @@ if [ "${#FAILED_STEPS[@]}" -ne 0 ]; then
     printf '%s\n' "${FAILED_STEPS[@]}" > data/updates/pipeline_failures.txt
     printf 'Pipeline failed in: %s\n' "${FAILED_STEPS[*]}" >&2
     exit 1
+fi
+
+if [ "$MODE" != "skip" ]; then
+    # The initial watcher decision predates this refresh. Publish a new
+    # all-current decision only after every generation step has succeeded.
+    "$PYTHON_BIN" oswm_codebase/datahub/watcher/watcher_lib.py --render-current || exit 1
 fi
 
 "$PYTHON_BIN" oswm_codebase/node_outputs.py --root . require

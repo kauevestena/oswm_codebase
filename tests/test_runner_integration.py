@@ -53,7 +53,7 @@ relative = Path(__file__).resolve().relative_to(root / "oswm_codebase").as_posix
 with (root / "events.log").open("a") as handle:
     handle.write(relative + "\\n")
 if relative == "datahub/watcher/watcher_lib.py":
-    if "--render-only" in sys.argv:
+    if "--render-only" in sys.argv or "--render-current" in sys.argv:
         raise SystemExit(0)
     raise SystemExit(int(os.environ.get("WATCHER_EXIT", "0")))
 if relative == "getting_data.py":
@@ -154,3 +154,19 @@ def test_codebase_change_rebuilds_derived_products_without_redownload(tmp_path):
     assert events.count("datahub/watcher/watcher_lib.py") == 2
     registry = json.loads((tmp_path / "data/updates/registry.json").read_text())
     assert registry[CODEBASE_REVISION_KEY] == "new"
+
+
+def test_refresh_renders_current_watcher_only_after_step_failure_guard():
+    daily = (ROOT / "runners/daily.sh").read_text()
+    failure_guard = daily.index('if [ "${#FAILED_STEPS[@]}" -ne 0 ]')
+    render_current = daily.index("watcher_lib.py --render-current")
+    require = daily.index("node_outputs.py --root . require", render_current)
+    assert failure_guard < render_current < require
+
+
+def test_watcher_exposes_comparable_changeset_scopes():
+    watcher = (ROOT / "datahub/watcher/watcher_lib.py").read_text()
+    assert '"changeset_changes_count": changes_count' in watcher
+    assert '"oswm_changes_count": oswm_changes_count' in watcher
+    assert "Whole changeset" in watcher
+    assert "OSWM edits in node (Add/Mod/Del)" in watcher
