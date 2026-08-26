@@ -38,6 +38,9 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git commit -m "chore: initialize OSWM node"
+          # The setup allowlist intentionally leaves non-publishable tracked
+          # artifacts unstaged. Discard those changes before rebasing.
+          git reset --hard HEAD
           git fetch origin "$GITHUB_REF_NAME"
           git rebase "origin/$GITHUB_REF_NAME"
           git push origin "HEAD:$GITHUB_REF_NAME"
