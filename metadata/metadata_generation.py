@@ -97,6 +97,12 @@ FOLDER_PROFILES: dict[str, dict[str, Any]] = {
         "process": "Derived from processed OSWM pedestrian-network layers.",
         "sources": ["data/processed"],
     },
+    "basemaps": {
+        "title": "Node raster basemaps",
+        "abstract": "Light and dark PMTiles context basemaps covering the node area.",
+        "process": "Rendered per zoom from OpenFreeMap OpenMapTiles vector data and packaged as static raster PMTiles.",
+        "sources": ["OpenFreeMap", "OpenMapTiles", "OpenStreetMap"],
+    },
     "updates": {
         "title": "Update and version history",
         "abstract": "Refresh status, OSM changeset monitoring, and feature-version history.",

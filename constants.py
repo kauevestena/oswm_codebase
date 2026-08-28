@@ -38,6 +38,7 @@ updates_folderpath = os.path.join(data_folderpath, "updates")
 routing_folderpath = os.path.join(data_folderpath, "routing")
 hazard_analysis_folderpath = os.path.join(data_folderpath, "hazard_analysis")
 snapshots_folderpath = os.path.join(data_folderpath, "snapshots")
+basemap_folderpath = os.path.join(data_folderpath, "basemaps")
 
 improper_geoms_folderpath = os.path.join(data_quality_folderpath, "improper_geoms")
 disjointed_folderpath = os.path.join(data_quality_folderpath, "disjointed")
@@ -78,6 +79,9 @@ hazard_terrain_metadata_path = os.path.join(
 
 
 hazard_tiles_path = os.path.join(hazard_analysis_folderpath, "hazard.pmtiles")
+basemap_light_path = os.path.join(basemap_folderpath, "light.pmtiles")
+basemap_dark_path = os.path.join(basemap_folderpath, "dark.pmtiles")
+basemap_report_path = os.path.join(basemap_folderpath, "generation_report.json")
 
 
 def hazard_profile_features_path(profile_id):

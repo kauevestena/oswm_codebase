@@ -17,4 +17,6 @@ tqdm
 osmapi
 mercantile
 Pillow
+mapbox-vector-tile
+pmtiles
 timezonefinder

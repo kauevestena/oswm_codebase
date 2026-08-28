@@ -21,6 +21,7 @@ RUNNER_SCRIPTS = (
     "getting_feature_versioning_data.py",
     "filtering_adapting_data.py",
     "generation/vec_tiles_gen.py",
+    "generation/raster_basemap_gen.py",
     "generation/vrt.py",
     "webmap/snapshot/generate_snapshot_summary.py",
     "webmap/create_webmap_new.py",

@@ -69,6 +69,34 @@ def test_generated_output_manifest_includes_all_public_entry_pages():
         "hub/watcher/changesets.xml",
         "hub/acquisition/results.json",
     } <= set(REQUIRED_OUTPUTS)
+    assert {
+        "data/basemaps/light.pmtiles",
+        "data/basemaps/dark.pmtiles",
+        "data/basemaps/generation_report.json",
+    } <= set(REQUIRED_OUTPUTS)
+
+
+def test_daily_stage_forces_raster_basemap_archives(tmp_path):
+    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    (tmp_path / ".gitignore").write_text("data/basemaps/*.pmtiles\n")
+    basemaps = tmp_path / "data/basemaps"
+    basemaps.mkdir(parents=True)
+    (basemaps / "light.pmtiles").write_bytes(b"light")
+    (basemaps / "dark.pmtiles").write_bytes(b"dark")
+    (basemaps / "generation_report.json").write_text("{}\n")
+
+    stage_profile(tmp_path, "daily")
+
+    staged = subprocess.run(
+        ["git", "diff", "--cached", "--name-only"],
+        cwd=tmp_path,
+        check=True,
+        text=True,
+        capture_output=True,
+    ).stdout.splitlines()
+    assert "data/basemaps/light.pmtiles" in staged
+    assert "data/basemaps/dark.pmtiles" in staged
+    assert "data/basemaps/generation_report.json" in staged
 
 
 def test_versioning_manifest_requires_every_layer_product(tmp_path):
@@ -218,12 +246,15 @@ def test_derived_reset_removes_stale_products_but_preserves_weekly_dictionary(tm
     (tmp_path / "oswm_codebase").mkdir()
     (tmp_path / "data/tiles").mkdir(parents=True)
     (tmp_path / "data/tiles/obsolete.pmtiles").write_text("old")
+    (tmp_path / "data/basemaps").mkdir(parents=True)
+    (tmp_path / "data/basemaps/light.pmtiles").write_text("preserved")
     (tmp_path / "quality_check").mkdir()
     (tmp_path / "quality_check/index.json").write_text("old")
     (tmp_path / "quality_check/keys_without_wiki.json").write_text("{}\n")
     removed = reset_derived(tmp_path)
     assert "data/tiles" in removed
     assert not (tmp_path / "data/tiles/obsolete.pmtiles").exists()
+    assert (tmp_path / "data/basemaps/light.pmtiles").read_text() == "preserved"
     assert not (tmp_path / "quality_check/index.json").exists()
     assert (tmp_path / "quality_check/keys_without_wiki.json").read_text() == "{}\n"
 
