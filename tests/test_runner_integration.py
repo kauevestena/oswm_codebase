@@ -151,6 +151,28 @@ def test_no_change_runner_skips_osm_dependent_generation(tmp_path):
     assert events.count("datahub/watcher/watcher_lib.py") == 1
 
 
+def test_missing_basemaps_force_rebuild_during_no_change_cycle(tmp_path):
+    _prepare_fixture(tmp_path, complete=True, recorded_revision="same")
+    for relative in (
+        "data/basemaps/light.pmtiles",
+        "data/basemaps/dark.pmtiles",
+        "data/basemaps/generation_report.json",
+    ):
+        (tmp_path / relative).unlink()
+
+    result = _run(tmp_path, revision="same", watcher_exit=0)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    decision = json.loads(
+        (tmp_path / "data/updates/pipeline_decision.json").read_text()
+    )
+    events = (tmp_path / "events.log").read_text()
+    assert decision["mode"] == "rebuild"
+    assert decision["reason"] == "derived_outputs_missing"
+    assert "generation/raster_basemap_gen.py" in events
+    assert "webmap/create_webmap_new.py" in events
+
+
 def test_codebase_change_rebuilds_derived_products_without_redownload(tmp_path):
     _prepare_fixture(tmp_path, complete=True, recorded_revision="old")
     result = _run(tmp_path, revision="new", watcher_exit=0)
