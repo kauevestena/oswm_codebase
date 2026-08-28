@@ -544,6 +544,11 @@ def generate_dashboard_html(projects, service_status, bbox, output_path):
 
 <script type="module">
 import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.0.0/dist/maplibre-gl.mjs';
+import {{ Protocol as PmtilesProtocol }} from 'https://cdn.jsdelivr.net/npm/pmtiles@4/+esm';
+
+const pmtilesProtocol = new PmtilesProtocol();
+maplibregl.addProtocol('pmtiles', pmtilesProtocol.tile);
+const BASEMAP_URL = new URL('../../data/basemaps/light.pmtiles', import.meta.url).href;
 
 const PROJECTS = {projects_js};
 const SERVICE_STATUS = {status_js};
@@ -697,7 +702,18 @@ function initMap() {{
     
     mapObj = new maplibregl.Map({{
         container: 'map',
-        style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
+        style: {{
+            version: 8,
+            sources: {{
+                'oswm-basemap': {{
+                    type: 'raster',
+                    url: `pmtiles://${{BASEMAP_URL}}`,
+                    tileSize: 256,
+                    attribution: 'Basemap © OpenFreeMap, © OpenMapTiles; data © OpenStreetMap contributors'
+                }}
+            }},
+            layers: [{{ id: 'oswm-basemap-tiles', type: 'raster', source: 'oswm-basemap' }}]
+        }},
         bounds: bounds,
         fitBoundsOptions: {{ padding: 40 }}
     }});

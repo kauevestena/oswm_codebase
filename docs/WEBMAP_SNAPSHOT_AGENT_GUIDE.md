@@ -307,7 +307,7 @@ Stop and test this slice before adding further themes.
 
 - Handle style changes while the composer is open.
 - Disable printing while a new style is loading.
-- Add timeout/error states for tiles and external raster sources.
+- Add timeout/error states for raster tile sources.
 - Restore document title after printing.
 - Clean up temporary maps, event handlers and Vega views.
 - Verify that repeated opens do not leak WebGL contexts.
@@ -480,7 +480,7 @@ Check:
 8. The map snapshot is not transparent, black or blank.
 9. Legend colors match the map and chart.
 10. The page prints as exactly one A4 landscape page.
-11. OSM/CARTO attribution remains legible.
+11. OpenStreetMap, OpenFreeMap and OpenMapTiles attribution remains legible.
 12. Repeating the export several times does not trigger WebGL-context warnings.
 13. An empty viewport produces a useful message.
 14. A deliberately blocked basemap produces a visible error/fallback.

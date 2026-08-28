@@ -1138,20 +1138,21 @@ const TIMESTAMPS = {timestamps_js};
 const GEOJSON = {geojson_str};
 const BOUNDARY_GEOJSON = {boundary_geojson_str};
 const ATTRIBUTE_RULES = {attribute_rules_js};
+const BASEMAP_URL = new URL('../../data/basemaps/dark.pmtiles', window.location.href).href;
 
 const map = new maplibregl.Map({{
   container: 'map',
   style: {{
     version: 8,
     sources: {{
-      'carto': {{
+      'oswm-basemap': {{
         type: 'raster',
-        tiles: ['https://{{s}}.basemaps.cartocdn.com/dark_all/{{z}}/{{x}}/{{y}}@2x.png'.replace('{{s}}', 'a')],
+        url: `pmtiles://${{BASEMAP_URL}}`,
         tileSize: 256,
-        attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
+        attribution: 'Basemap &copy; <a href="https://openfreemap.org">OpenFreeMap</a>, &copy; <a href="https://openmaptiles.org">OpenMapTiles</a>; data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'
       }}
     }},
-    layers: [{{ id: 'carto-tiles', type: 'raster', source: 'carto' }}]
+    layers: [{{ id: 'oswm-basemap-tiles', type: 'raster', source: 'oswm-basemap' }}]
   }},
   center: [{center_lon}, {center_lat}],
   zoom: 12,
@@ -1761,4 +1762,3 @@ document.getElementById('close-stats').addEventListener('click', () => {{
 </body>
 </html>
 """
-

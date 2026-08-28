@@ -322,6 +322,7 @@
         const pmtilesProtocol = new PmtilesProtocol();
         maplibregl.addProtocol('pmtiles', pmtilesProtocol.tile);
         const routingRoot = new URL('../../data/routing/', import.meta.url);
+        const basemapUrl = new URL('../../data/basemaps/light.pmtiles', import.meta.url).href;
         const routingWorker = new Worker(
             new URL('./routing_worker.js', import.meta.url),
             { type: 'module' }
@@ -382,7 +383,18 @@
 
         const map = new maplibregl.Map({
             container: 'map',
-            style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json'
+            style: {
+                version: 8,
+                sources: {
+                    'oswm-basemap': {
+                        type: 'raster',
+                        url: `pmtiles://${basemapUrl}`,
+                        tileSize: 256,
+                        attribution: 'Basemap © OpenFreeMap, © OpenMapTiles; data © OpenStreetMap contributors'
+                    }
+                },
+                layers: [{ id: 'oswm-basemap-tiles', type: 'raster', source: 'oswm-basemap' }]
+            }
         });
 
         function mapLoaded() {
