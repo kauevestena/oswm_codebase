@@ -31,6 +31,8 @@ OSM_RELATION_ID = None
 # managed workflow synchronizer renders them into GitHub Actions workflows.
 NODE_DAILY_CRON = "30 7 * * *"
 NODE_WEEKLY_CRON = "5 8 * * 0"
+# The managed codebase-sync workflow runs two hours before NODE_DAILY_CRON.
+# Set NODE_CODEBASE_SYNC_CRON only when an explicit override is necessary.
 
 # Public-service requests are bounded and identify OSWM.  Large cities and
 # simultaneous cold starts should use controlled infrastructure instead.
