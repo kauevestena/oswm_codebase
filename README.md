@@ -29,7 +29,9 @@ are executable:
   removes it only with `--apply`; `reset-derived` reconciles obsolete derived
   products before a complete rebuild.
 - `config.py` may pin `OSM_RELATION_ID` and must assign per-node
-  `NODE_DAILY_CRON` and `NODE_WEEKLY_CRON` values. `special_updates.py` reads
+  `NODE_DAILY_CRON` and `NODE_WEEKLY_CRON` values. Codebase synchronization is
+  derived automatically as two hours before `NODE_DAILY_CRON`; an optional
+  `NODE_CODEBASE_SYNC_CRON` value overrides it. `special_updates.py` reads
   those assignments without executing the config and renders them into the
   managed workflow copies.
 - `special_updates.py` owns only the files declared in
