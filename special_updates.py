@@ -48,6 +48,32 @@ def validate_cron(value: object, setting: str) -> str:
     return " ".join(fields)
 
 
+def codebase_sync_cron(config: dict[str, Any]) -> str:
+    """Return an explicit sync cron or derive daily minus two hours."""
+
+    explicit = config.get("NODE_CODEBASE_SYNC_CRON")
+    if explicit is not None:
+        return validate_cron(explicit, "NODE_CODEBASE_SYNC_CRON")
+
+    daily = validate_cron(
+        config.get("NODE_DAILY_CRON", "30 7 * * *"), "NODE_DAILY_CRON"
+    )
+    minute, hour, day, month, weekday = daily.split()
+    if not minute.isdigit() or not hour.isdigit() or (day, month, weekday) != (
+        "*",
+        "*",
+        "*",
+    ):
+        raise ValueError(
+            "NODE_DAILY_CRON must be a fixed daily UTC time to derive the "
+            "codebase synchronization schedule; set NODE_CODEBASE_SYNC_CRON "
+            "explicitly for another cron shape"
+        )
+    if not 0 <= int(minute) <= 59 or not 0 <= int(hour) <= 23:
+        raise ValueError("NODE_DAILY_CRON contains an invalid UTC time")
+    return f"{int(minute)} {(int(hour) - 2) % 24} * * *"
+
+
 def render_managed_file(source: str, config: dict[str, Any]) -> str:
     rendered = source
     for token, (setting, default) in CRON_TOKENS.items():
