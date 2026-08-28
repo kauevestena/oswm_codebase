@@ -146,6 +146,7 @@
         // Resolve the PMTiles and data URLs relative to this HTML file
         const HAZARD_ROOT = new URL("../../data/hazard_analysis/", import.meta.url);
         const PMTILES_URL = new URL("hazard.pmtiles", HAZARD_ROOT).href;
+        const BASEMAP_URL = new URL("../../data/basemaps/light.pmtiles", import.meta.url).href;
 
         // Register PMTiles protocol
         const protocol = new PmtilesProtocol();
@@ -153,7 +154,18 @@
 
         const map = new maplibregl.Map({
             container: "map",
-            style: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
+            style: {
+                version: 8,
+                sources: {
+                    "oswm-basemap": {
+                        type: "raster",
+                        url: `pmtiles://${BASEMAP_URL}`,
+                        tileSize: 256,
+                        attribution: "Basemap © OpenFreeMap, © OpenMapTiles; data © OpenStreetMap contributors"
+                    }
+                },
+                layers: [{ id: "oswm-basemap-tiles", type: "raster", source: "oswm-basemap" }]
+            },
             center: [0, 0], zoom: 2
         });
         map.addControl(new maplibregl.NavigationControl(), "top-right");

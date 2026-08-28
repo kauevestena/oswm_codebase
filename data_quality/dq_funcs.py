@@ -470,7 +470,7 @@ def write_dq_topbar(active_index=1):
 
 
 def create_marker_cluster_html(
-    outpath, centerpoint, z_level, tiles="Cartodb Positron", specific_q_category=None, specific_category=None, title="OSWM Quality Assurance Map", back_url="oswm_qc_main.html", back_text="← Back to QC Homepage", logo_url=None, favicon_url=None
+    outpath, centerpoint, z_level, specific_q_category=None, specific_category=None, title="OSWM Quality Assurance Map", back_url="oswm_qc_main.html", back_text="← Back to QC Homepage", logo_url=None, favicon_url=None
 ):
     logo_url = logo_url or branding_asset_url("logos.project", "../oswm_codebase")
     favicon_url = favicon_url or branding_asset_url("favicon", "../oswm_codebase")
@@ -557,6 +557,9 @@ def create_marker_cluster_html(
         
     geojson_filename = os.path.basename(geojson_outpath)
     registry_filename = os.path.basename(registry_outpath)
+    basemap_url = os.path.relpath(
+        "data/basemaps/light.pmtiles", os.path.dirname(outpath)
+    ).replace(os.sep, "/")
 
     available_q_categories = set()
     for item in map_view_data_to_use.values():
@@ -600,6 +603,7 @@ def create_marker_cluster_html(
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
     <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+    <script src="https://unpkg.com/pmtiles@3.0.6/dist/pmtiles.js"></script>
     <style>
         :root {{
             --topbar-height: 57px;
@@ -673,22 +677,26 @@ def create_marker_cluster_html(
             }});
         }}
 
+        const pmtilesProtocol = new pmtiles.Protocol();
+        maplibregl.addProtocol('pmtiles', pmtilesProtocol.tile);
+        const basemapUrl = new URL('{basemap_url}', window.location.href).href;
+
         const map = new maplibregl.Map({{
             container: 'map',
             style: {{
                 version: 8,
                 sources: {{
-                    'carto-positron': {{
+                    'oswm-basemap': {{
                         type: 'raster',
-                        tiles: ['https://basemaps.cartocdn.com/rastertiles/light_all/{{z}}/{{x}}/{{y}}.png'],
+                        url: `pmtiles://${{basemapUrl}}`,
                         tileSize: 256,
-                        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                        attribution: 'Basemap &copy; <a href="https://openfreemap.org">OpenFreeMap</a>, &copy; <a href="https://openmaptiles.org">OpenMapTiles</a>; data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'
                     }}
                 }},
                 layers: [{{
-                    id: 'carto-tiles',
+                    id: 'oswm-basemap-tiles',
                     type: 'raster',
-                    source: 'carto-positron',
+                    source: 'oswm-basemap',
                     minzoom: 0,
                     maxzoom: 20
                 }}]
