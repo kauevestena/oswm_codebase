@@ -70,6 +70,9 @@ REQUIRED_DATA_OUTPUTS = (
     "data/tiles/crossings.pmtiles",
     "data/tiles/kerbs.pmtiles",
     "data/tiles/tile_generation_report.json",
+    "data/basemaps/light.pmtiles",
+    "data/basemaps/dark.pmtiles",
+    "data/basemaps/generation_report.json",
     "data/routing/network.parquet",
     "data/routing/network.oswmg",
     "data/routing/network.pmtiles",
@@ -314,6 +317,20 @@ def stage_profile(root: Path, profile: str) -> list[str]:
     if selected:
         _git(root, "add", "--", *selected)
     if profile in {"daily", "custom"}:
+        basemap_outputs = [
+            relative
+            for relative in (
+                "data/basemaps/light.pmtiles",
+                "data/basemaps/dark.pmtiles",
+                "data/basemaps/generation_report.json",
+            )
+            if (root / relative).is_file()
+        ]
+        if basemap_outputs:
+            # Node templates may ignore generated binary data by default. These
+            # size-validated archives and their report are public Webmap assets.
+            _git(root, "add", "-f", "--", *basemap_outputs)
+            selected.extend(basemap_outputs)
         terrain_rasters = [
             relative
             for relative in terrain_raster_outputs(root)

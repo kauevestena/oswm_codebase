@@ -24,6 +24,20 @@ params["center"] = [
     (bounds[0] + bounds[2]) / 2.0,
     (bounds[1] + bounds[3]) / 2.0,
 ]
+params["basemaps"] = {
+    "default": DEFAULT_BASEMAP,
+    "options": {
+        "light": {
+            "name": "Light basemap",
+            "url": BASEMAP_URLS["light"],
+        },
+        "dark": {
+            "name": "Dark basemap",
+            "url": BASEMAP_URLS["dark"],
+        },
+    },
+}
+params["basemap_url"] = BASEMAP_URLS[DEFAULT_BASEMAP]
 
 # updating the node's url:
 params["node_homepage"] = "index.html"

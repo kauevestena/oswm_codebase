@@ -10,7 +10,7 @@
         9.1594985,
         45.46129315
     ],
-    "basemap_url": "https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
+    "basemap_url": "pmtiles://data/basemaps/dark.pmtiles",
     "node_homepage": "https://kauevestena.github.io/opensidewalkmap_beta/",
     "sidewalks_url": "data/tiles/sidewalks.pmtiles",
     "crossings_url": "data/tiles/crossings.pmtiles",
@@ -75,10 +75,9 @@
                 },
                 "osm": {
                     "type": "raster",
-                    "tiles": [
-                        "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"
-                    ],
-                    "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>; basemap by <a href=\"https://carto.com/attribution\">CARTO</a>"
+                    "url": "pmtiles://data/basemaps/dark.pmtiles",
+                    "tileSize": 256,
+                    "attribution": "Basemap © <a href=\"https://openfreemap.org\">OpenFreeMap</a>, © <a href=\"https://openmaptiles.org\">OpenMapTiles</a>; data © <a href=\"https://openstreetmap.org\">OpenStreetMap contributors</a>"
                 },
                 "boundaries": {
                     "type": "geojson",
@@ -342,10 +341,9 @@
                 },
                 "osm": {
                     "type": "raster",
-                    "tiles": [
-                        "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"
-                    ],
-                    "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>; basemap by <a href=\"https://carto.com/attribution\">CARTO</a>"
+                    "url": "pmtiles://data/basemaps/dark.pmtiles",
+                    "tileSize": 256,
+                    "attribution": "Basemap © <a href=\"https://openfreemap.org\">OpenFreeMap</a>, © <a href=\"https://openmaptiles.org\">OpenMapTiles</a>; data © <a href=\"https://openstreetmap.org\">OpenStreetMap contributors</a>"
                 },
                 "boundaries": {
                     "type": "geojson",
@@ -728,10 +726,9 @@
                 },
                 "osm": {
                     "type": "raster",
-                    "tiles": [
-                        "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"
-                    ],
-                    "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>; basemap by <a href=\"https://carto.com/attribution\">CARTO</a>"
+                    "url": "pmtiles://data/basemaps/dark.pmtiles",
+                    "tileSize": 256,
+                    "attribution": "Basemap © <a href=\"https://openfreemap.org\">OpenFreeMap</a>, © <a href=\"https://openmaptiles.org\">OpenMapTiles</a>; data © <a href=\"https://openstreetmap.org\">OpenStreetMap contributors</a>"
                 },
                 "boundaries": {
                     "type": "geojson",
@@ -2455,10 +2452,9 @@
                 },
                 "osm": {
                     "type": "raster",
-                    "tiles": [
-                        "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"
-                    ],
-                    "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>; basemap by <a href=\"https://carto.com/attribution\">CARTO</a>"
+                    "url": "pmtiles://data/basemaps/dark.pmtiles",
+                    "tileSize": 256,
+                    "attribution": "Basemap © <a href=\"https://openfreemap.org\">OpenFreeMap</a>, © <a href=\"https://openmaptiles.org\">OpenMapTiles</a>; data © <a href=\"https://openstreetmap.org\">OpenStreetMap contributors</a>"
                 },
                 "boundaries": {
                     "type": "geojson",
@@ -3390,10 +3386,9 @@
                 },
                 "osm": {
                     "type": "raster",
-                    "tiles": [
-                        "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"
-                    ],
-                    "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>; basemap by <a href=\"https://carto.com/attribution\">CARTO</a>"
+                    "url": "pmtiles://data/basemaps/dark.pmtiles",
+                    "tileSize": 256,
+                    "attribution": "Basemap © <a href=\"https://openfreemap.org\">OpenFreeMap</a>, © <a href=\"https://openmaptiles.org\">OpenMapTiles</a>; data © <a href=\"https://openstreetmap.org\">OpenStreetMap contributors</a>"
                 },
                 "boundaries": {
                     "type": "geojson",
@@ -3965,10 +3960,9 @@
                 },
                 "osm": {
                     "type": "raster",
-                    "tiles": [
-                        "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"
-                    ],
-                    "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>; basemap by <a href=\"https://carto.com/attribution\">CARTO</a>"
+                    "url": "pmtiles://data/basemaps/dark.pmtiles",
+                    "tileSize": 256,
+                    "attribution": "Basemap © <a href=\"https://openfreemap.org\">OpenFreeMap</a>, © <a href=\"https://openmaptiles.org\">OpenMapTiles</a>; data © <a href=\"https://openstreetmap.org\">OpenStreetMap contributors</a>"
                 },
                 "boundaries": {
                     "type": "geojson",
@@ -4684,10 +4678,9 @@
                 },
                 "osm": {
                     "type": "raster",
-                    "tiles": [
-                        "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"
-                    ],
-                    "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>; basemap by <a href=\"https://carto.com/attribution\">CARTO</a>"
+                    "url": "pmtiles://data/basemaps/dark.pmtiles",
+                    "tileSize": 256,
+                    "attribution": "Basemap © <a href=\"https://openfreemap.org\">OpenFreeMap</a>, © <a href=\"https://openmaptiles.org\">OpenMapTiles</a>; data © <a href=\"https://openstreetmap.org\">OpenStreetMap contributors</a>"
                 },
                 "boundaries": {
                     "type": "geojson",
@@ -5259,10 +5252,9 @@
                 },
                 "osm": {
                     "type": "raster",
-                    "tiles": [
-                        "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"
-                    ],
-                    "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>; basemap by <a href=\"https://carto.com/attribution\">CARTO</a>"
+                    "url": "pmtiles://data/basemaps/dark.pmtiles",
+                    "tileSize": 256,
+                    "attribution": "Basemap © <a href=\"https://openfreemap.org\">OpenFreeMap</a>, © <a href=\"https://openmaptiles.org\">OpenMapTiles</a>; data © <a href=\"https://openstreetmap.org\">OpenStreetMap contributors</a>"
                 },
                 "boundaries": {
                     "type": "geojson",
@@ -5906,10 +5898,9 @@
                 },
                 "osm": {
                     "type": "raster",
-                    "tiles": [
-                        "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"
-                    ],
-                    "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>; basemap by <a href=\"https://carto.com/attribution\">CARTO</a>"
+                    "url": "pmtiles://data/basemaps/dark.pmtiles",
+                    "tileSize": 256,
+                    "attribution": "Basemap © <a href=\"https://openfreemap.org\">OpenFreeMap</a>, © <a href=\"https://openmaptiles.org\">OpenMapTiles</a>; data © <a href=\"https://openstreetmap.org\">OpenStreetMap contributors</a>"
                 },
                 "boundaries": {
                     "type": "geojson",
@@ -6401,10 +6392,9 @@
                 },
                 "osm": {
                     "type": "raster",
-                    "tiles": [
-                        "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"
-                    ],
-                    "attribution": "© <a href=\"https://openstreetmap.org\">OpenStreetMap Contributors</a>; basemap by <a href=\"https://carto.com/attribution\">CARTO</a>"
+                    "url": "pmtiles://data/basemaps/dark.pmtiles",
+                    "tileSize": 256,
+                    "attribution": "Basemap © <a href=\"https://openfreemap.org\">OpenFreeMap</a>, © <a href=\"https://openmaptiles.org\">OpenMapTiles</a>; data © <a href=\"https://openstreetmap.org\">OpenStreetMap contributors</a>"
                 },
                 "boundaries": {
                     "type": "geojson",

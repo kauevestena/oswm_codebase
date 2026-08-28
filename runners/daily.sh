@@ -54,6 +54,7 @@ else
 
     run_step oswm_codebase/filtering_adapting_data.py "filtering_adapting_data"
     run_step oswm_codebase/generation/vec_tiles_gen.py "vec_tiles_gen"
+    run_step oswm_codebase/generation/raster_basemap_gen.py "raster_basemap_gen"
     run_step oswm_codebase/generation/vrt.py "vrt"
     run_step oswm_codebase/webmap/snapshot/generate_snapshot_summary.py "generate_snapshot_summary"
     run_step oswm_codebase/webmap/create_webmap_new.py "create_webmap_new"

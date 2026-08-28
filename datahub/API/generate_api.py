@@ -158,6 +158,9 @@ def get_endpoint_description(path, filename, deliverable):
             "data/tiles/potential_footways.pmtiles": "Vector tile package containing potential footways.",
             "data/tiles/informal_footways.pmtiles": "Vector tile package containing informal footways.",
             "data/tiles/pedestrian_areas.pmtiles": "Vector tile package containing pedestrian areas.",
+            "data/basemaps/light.pmtiles": "Node-scoped light raster basemap in PMTiles format, rendered from OpenFreeMap vector tiles.",
+            "data/basemaps/dark.pmtiles": "Node-scoped dark raster basemap in PMTiles format, rendered from OpenFreeMap vector tiles.",
+            "data/basemaps/generation_report.json": "Raster basemap source provenance, zoom range, tile count, and size validation report.",
             "data/updates/versioning/sidewalks_versioning.json": "Detailed modification dates, changeset stats, and age metrics for sidewalks.",
             "data/updates/versioning/crossings_versioning.json": "Detailed age tracking metrics for crossing features.",
             "data/updates/versioning/kerbs_versioning.json": "Detailed age tracking metrics for kerb features.",
@@ -287,6 +290,10 @@ def generate_data_index():
             "description": "Pedestrian network layers packaged as vector tiles in PMTiles format.",
             "path": "data/tiles"
         },
+        "basemaps": {
+            "description": "Light and dark node-scoped raster basemaps packaged as PMTiles.",
+            "path": "data/basemaps"
+        },
         "updates": {
             "description": "Data update logs, registry status, and historical version tracking.",
             "path": "data/updates"
@@ -327,6 +334,8 @@ def generate_data_index():
                 files = ["sidewalks.parquet", "crossings.parquet", "kerbs.parquet", "other_footways.parquet"]
             elif key == "tiles":
                 files = ["sidewalks.pmtiles", "crossings.pmtiles", "kerbs.pmtiles", "stairways.pmtiles", "main_footways.pmtiles", "potential_footways.pmtiles", "informal_footways.pmtiles", "pedestrian_areas.pmtiles"]
+            elif key == "basemaps":
+                files = ["light.pmtiles", "dark.pmtiles", "generation_report.json"]
             elif key == "updates":
                 files = ["registry.json", "index.html", "watcher_history.json", "changeset_cache.json", "yesterday.json", "versioning/sidewalks_versioning.json", "versioning/crossings_versioning.json", "versioning/kerbs_versioning.json", "versioning/other_footways_versioning.json"]
             elif key == "vrts":

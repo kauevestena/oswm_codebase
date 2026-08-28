@@ -39,7 +39,11 @@ SNAPSHOT_ATTRIBUTE_LAYERS = WEBMAP_THEME_ATTRIBUTE_LAYERS
 SNAPSHOT_ELSE_COLORS = WEBMAP_THEME_ELSE_COLORS
 
 # webmap stuff:
-BASEMAP_URL = "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"
+DEFAULT_BASEMAP = "dark"
+BASEMAP_URLS = {
+    "light": f"pmtiles://{basemap_light_path}",
+    "dark": f"pmtiles://{basemap_dark_path}",
+}
 webmap_params_original_path = "oswm_codebase/webmap/webmap_params.json"
 webmap_params_path = "webmap_params.json"
 webmap_base_path = "oswm_codebase/webmap/webmap_base.html"
@@ -182,8 +186,9 @@ def get_sources(terrain_url=None, only_urls=False, use_relative=True):
     # basemap:
     ret["sources"]["osm"] = {
         "type": "raster",
-        "tiles": [BASEMAP_URL],
-        "attribution": r'© <a href="https://openstreetmap.org">OpenStreetMap Contributors</a>; basemap by <a href="https://carto.com/attribution">CARTO</a>',
+        "url": BASEMAP_URLS[DEFAULT_BASEMAP],
+        "tileSize": 256,
+        "attribution": r'Basemap © <a href="https://openfreemap.org">OpenFreeMap</a>, © <a href="https://openmaptiles.org">OpenMapTiles</a>; data © <a href="https://openstreetmap.org">OpenStreetMap contributors</a>',
     }
 
     # boundaries:

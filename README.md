@@ -48,6 +48,21 @@ Runtime dependencies are locked for Python 3.12 in `requirements.txt` from
 the human-maintained `requirements.in`. Development and CI use the parallel
 `requirements-dev.in` / `requirements-dev.txt` pair.
 
+## Node-scoped raster basemaps
+
+Each complete node build renders light and dark context maps from OpenFreeMap's
+OpenMapTiles source and publishes them as `data/basemaps/light.pmtiles` and
+`data/basemaps/dark.pmtiles`. The Webmap reads only these static, byte-range
+addressable archives, avoiding client-side API keys and third-party basemap
+requests. Every zoom is rendered separately for appropriate multiscale labels.
+Generation starts at z16 and automatically steps down until both files satisfy
+the fleet-wide 95 MiB safety limit; the chosen zoom and pinned source URL are
+recorded in `data/basemaps/generation_report.json`.
+Valid archives are preserved across ordinary daily derived-data resets to avoid
+adding tens of megabytes of unchanged binaries to Git history. They regenerate
+when the node boundary or renderer contract changes, when an archive is
+missing or invalid, or explicitly with `OSWM_FORCE_BASEMAP_REGEN=true`.
+
 ## Webmap theme charts
 
 The MapLibre Webmap includes a lower-left analysis control for every theme in
