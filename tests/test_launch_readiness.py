@@ -277,10 +277,17 @@ def test_special_update_renders_crons_and_preserves_node_workflows(tmp_path):
     (core / "workflows").mkdir(parents=True)
     (node / ".github/workflows").mkdir(parents=True)
     (core / "workflows/manifest.json").write_text(json.dumps({
-        "managed": ["workflows/data_daily_updating.yml", "workflows/weekly.yml"],
+        "managed": [
+            "workflows/data_daily_updating.yml",
+            "workflows/update_codebase.yml",
+            "workflows/weekly.yml",
+        ],
         "retired": ["workflows/manual_stash.yml"],
     }))
     (core / "workflows/data_daily_updating.yml").write_text('cron: "__OSWM_DAILY_CRON__"\n')
+    (core / "workflows/update_codebase.yml").write_text(
+        'cron: "__OSWM_CODEBASE_SYNC_CRON__"\n'
+    )
     (core / "workflows/weekly.yml").write_text('cron: "__OSWM_WEEKLY_CRON__"\n')
     (node / "config.py").write_text(
         'NODE_DAILY_CRON = "17 3 * * *"\nNODE_WEEKLY_CRON = "43 4 * * 0"\n'
@@ -291,9 +298,32 @@ def test_special_update_renders_crons_and_preserves_node_workflows(tmp_path):
     retired.write_text("old\n")
     synchronize(node, core)
     assert "17 3 * * *" in (node / ".github/workflows/data_daily_updating.yml").read_text()
+    assert "17 1 * * *" in (node / ".github/workflows/update_codebase.yml").read_text()
     assert "43 4 * * 0" in (node / ".github/workflows/weekly.yml").read_text()
     assert custom.read_text() == "custom\n"
     assert not retired.exists()
+
+
+def test_special_update_accepts_explicit_codebase_sync_cron(tmp_path):
+    core = tmp_path / "core"
+    node = tmp_path / "node"
+    (core / "workflows").mkdir(parents=True)
+    (node / ".github/workflows").mkdir(parents=True)
+    (core / "workflows/manifest.json").write_text(json.dumps({
+        "managed": ["workflows/update_codebase.yml"],
+        "retired": [],
+    }))
+    (core / "workflows/update_codebase.yml").write_text(
+        'cron: "__OSWM_CODEBASE_SYNC_CRON__"\n'
+    )
+    (node / "config.py").write_text(
+        'NODE_DAILY_CRON = "17 3 * * 1-5"\n'
+        'NODE_CODEBASE_SYNC_CRON = "47 0 * * 1-5"\n'
+    )
+    synchronize(node, core)
+    assert "47 0 * * 1-5" in (
+        node / ".github/workflows/update_codebase.yml"
+    ).read_text()
 
 
 def _make_complete_node(root: Path, revision: str) -> None:
