@@ -5,7 +5,7 @@ on:
     inputs:
       revision:
         description: Exact oswm_codebase commit SHA already tested on main
-        required: true
+        required: false
         type: string
 
 permissions:
@@ -28,7 +28,7 @@ jobs:
           python-version: "3.12"
       - name: Check out the exact main-reachable core revision
         env:
-          REVISION: ${{ inputs.revision }}
+          REVISION: ${{ steps.core.outputs.revision }}
         run: |
           test -n "$REVISION"
           rm -rf oswm_codebase
@@ -36,7 +36,7 @@ jobs:
           git -C oswm_codebase fetch origin main
           git -C oswm_codebase cat-file -e "$REVISION^{commit}"
           git -C oswm_codebase merge-base --is-ancestor "$REVISION" origin/main
-          git -C oswm_codebase checkout --detach "$REVISION"
+          git -C oswm_codebase checkout --detach "$REVISION"\n          REVISION="$(git -C oswm_codebase rev-parse HEAD)"\n          echo "revision=$REVISION" >> "$GITHUB_OUTPUT"
       - run: python oswm_codebase/special_updates.py
       - name: Commit the exact tested gitlink
         run: |
