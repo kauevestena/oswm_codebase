@@ -55,6 +55,10 @@ def render_managed_file(source: str, config: dict[str, Any]) -> str:
             rendered = rendered.replace(
                 token, validate_cron(config.get(setting, default), setting)
             )
+    if "__OSWM_CODEBASE_SYNC_CRON__" in rendered:
+        rendered = rendered.replace(
+            "__OSWM_CODEBASE_SYNC_CRON__", codebase_sync_cron(config)
+        )
     return rendered
 
 
