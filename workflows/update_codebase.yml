@@ -12,6 +12,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: oswm-node-writer-${{ github.repository }}
@@ -46,7 +47,9 @@ jobs:
           echo "revision=$REVISION" >> "$GITHUB_OUTPUT"
       - run: python oswm_codebase/special_updates.py
       - name: Commit the exact tested gitlink
+        id: commit
         run: |
+          echo "changed=false" >> "$GITHUB_OUTPUT"
           git add -- oswm_codebase .github/workflows .oswm-managed-files.json
           if git diff --cached --quiet; then exit 0; fi
           git config user.name "github-actions[bot]"
@@ -55,3 +58,9 @@ jobs:
           git fetch origin "$GITHUB_REF_NAME"
           git rebase "origin/$GITHUB_REF_NAME"
           git push origin "HEAD:$GITHUB_REF_NAME"
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+      - name: Deploy published changes
+        if: steps.commit.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run pages.yml --ref "$GITHUB_REF_NAME"
