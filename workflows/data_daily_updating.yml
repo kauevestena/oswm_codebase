@@ -13,6 +13,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: oswm-node-writer-${{ github.repository }}
@@ -49,7 +50,9 @@ jobs:
       - name: Validate every generated PMTiles layer
         run: python oswm_codebase/other/auxiliary_scripts/validate_tiles.py
       - name: Commit generated data
+        id: commit
         run: |
+          echo "changed=false" >> "$GITHUB_OUTPUT"
           python oswm_codebase/node_outputs.py --root . stage daily
           python oswm_codebase/node_outputs.py --root . validate-sizes --max-mib 95
           if git diff --cached --quiet; then exit 0; fi
@@ -59,3 +62,9 @@ jobs:
           git fetch origin "$GITHUB_REF_NAME"
           git rebase "origin/$GITHUB_REF_NAME"
           git push origin "HEAD:$GITHUB_REF_NAME"
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+      - name: Deploy published changes
+        if: steps.commit.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run pages.yml --ref "$GITHUB_REF_NAME"
