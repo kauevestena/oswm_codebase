@@ -57,6 +57,9 @@ OpenMapTiles source and publishes them as `data/basemaps/light.pmtiles` and
 `data/basemaps/dark.pmtiles`. The Webmap reads only these static, byte-range
 addressable archives, avoiding client-side API keys and third-party basemap
 requests. Every zoom is rendered separately for appropriate multiscale labels.
+Labels use glyph-aware font selection with Noto Sans CJK as the Japanese,
+Chinese, and Korean fallback, so names are rasterized as real glyphs rather
+than missing-character boxes.
 Generation starts at z16 and automatically steps down until both files satisfy
 the fleet-wide 95 MiB safety limit; the chosen zoom and pinned source URL are
 recorded in `data/basemaps/generation_report.json`.
@@ -180,6 +183,8 @@ The identical `assets/homepage/favicon_homepage.png` and the non-clean `assets/p
 - Python 3 and `venv`/`pip`;
 - the Python packages in `requirements.txt`;
 - GDAL command-line tools, including `ogr2ogr`, for tile/VRT and full pipeline work;
+- Noto CJK fonts (`fonts-noto-cjk` on Debian/Ubuntu) for Japanese, Chinese,
+  and Korean raster-basemap labels;
 - Node.js for the dependency-free JavaScript snapshot and Webmap-chart tests;
 - a local HTTP server for browser smoke tests (Python's standard library is sufficient).
 

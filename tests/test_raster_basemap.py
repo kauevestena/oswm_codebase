@@ -6,6 +6,7 @@ import types
 from pathlib import Path
 
 import mapbox_vector_tile
+import pytest
 from PIL import Image
 from pmtiles.reader import MmapSource, Reader
 
@@ -45,6 +46,47 @@ def test_zoom_jobs_are_sorted_and_overzoom_from_z14(tmp_path, monkeypatch):
     _, _, x, y = next(job for job in jobs if job[1] == 16)
     assert module.source_coordinate(16, x, y) == (14, x >> 2, y >> 2)
     assert {job[1] for job in jobs} == {14, 15, 16}
+
+
+def test_japanese_labels_use_real_supported_glyphs(tmp_path, monkeypatch):
+    module = load_generator(tmp_path, monkeypatch)
+    label = "広島駅"
+    path, font_number = module._font_face_for_text(label, bold=True)
+    cmap = module._font_codepoints(path, font_number)
+
+    assert {ord(character) for character in label} <= cmap
+    assert "NotoSans" in Path(path).name
+
+    decoded = {
+        "place": {
+            "extent": 4096,
+            "features": [
+                {
+                    "geometry": {"type": "Point", "coordinates": [2048, 2048]},
+                    "properties": {"class": "city", "name": label},
+                }
+            ],
+        }
+    }
+    image = module.render_parent(decoded, "light", 14, 14)
+    assert any(low != high for low, high in image.getextrema())
+
+
+def test_missing_japanese_font_fails_instead_of_rendering_boxes(tmp_path, monkeypatch):
+    module = load_generator(tmp_path, monkeypatch)
+    dejavu = Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf")
+    monkeypatch.setattr(module, "_candidate_font_paths", lambda _bold: (str(dejavu),))
+
+    with pytest.raises(RuntimeError, match="fonts-noto-cjk"):
+        module._font(14, "広島")
+
+
+def test_raster_workflows_install_cjk_font_dependency():
+    for relative in (
+        ".github/workflows/ci.yml",
+        "workflows/data_daily_updating.yml",
+    ):
+        assert "fonts-noto-cjk" in (ROOT / relative).read_text()
 
 
 def test_builds_valid_light_and_dark_raster_pmtiles(tmp_path, monkeypatch):

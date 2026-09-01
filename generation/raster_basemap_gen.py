@@ -23,6 +23,7 @@ from pathlib import Path
 
 import mapbox_vector_tile
 import requests
+from fontTools.ttLib import TTFont, TTLibError
 from PIL import Image, ImageDraw, ImageFont
 from pmtiles.reader import MmapSource, Reader
 from pmtiles.tile import Compression, TileType, zxy_to_tileid
@@ -52,7 +53,12 @@ TILE_SIZE = 256
 ATTRIBUTION = (
     "Basemap © OpenFreeMap, © OpenMapTiles; data © OpenStreetMap contributors"
 )
-RENDERER_VERSION = 1
+RENDERER_VERSION = 2
+LABEL_FONT_PATHS_ENV = "OSWM_LABEL_FONT_PATHS"
+FONT_ROOTS = (
+    Path("/usr/share/fonts"),
+    Path("/usr/local/share/fonts"),
+)
 
 PALETTES = {
     "light": {
@@ -173,13 +179,88 @@ def tile_bounds_lonlat(
     )
 
 
-def _font(size: int, bold: bool = False) -> ImageFont.ImageFont:
+@lru_cache(maxsize=2)
+def _candidate_font_paths(bold: bool) -> tuple[str, ...]:
+    """Return label fonts in visual-preference then fallback order.
+
+    DejaVu preserves the existing Latin rendering. Noto Sans CJK is the
+    fleet-wide fallback for Japanese, Chinese, and Korean labels. An explicit
+    path list is supported for non-Debian local environments and tests.
+    """
+
+    candidates: list[Path] = []
+    candidates.extend(
+        Path(value)
+        for value in os.environ.get(LABEL_FONT_PATHS_ENV, "").split(os.pathsep)
+        if value
+    )
     filename = "DejaVuSans-Bold.ttf" if bold else "DejaVuSans.ttf"
-    for parent in ("/usr/share/fonts/truetype/dejavu", "/usr/local/share/fonts"):
-        candidate = Path(parent) / filename
-        if candidate.is_file():
-            return ImageFont.truetype(str(candidate), size=size)
-    return ImageFont.load_default(size=size)
+    candidates.extend(
+        (
+            Path("/usr/share/fonts/truetype/dejavu") / filename,
+            Path("/usr/local/share/fonts") / filename,
+        )
+    )
+    weight = "Bold" if bold else "Regular"
+    patterns = (
+        f"NotoSansCJK-{weight}.ttc",
+        f"NotoSansCJK*{weight}*.otf",
+        f"NotoSansJP*{weight}*.otf",
+        "NotoSansJP*wght*.ttf",
+        "NotoSansJP*.ttf",
+    )
+    for root in FONT_ROOTS:
+        if root.is_dir():
+            for pattern in patterns:
+                candidates.extend(sorted(root.rglob(pattern)))
+
+    unique = []
+    seen = set()
+    for candidate in candidates:
+        rendered = str(candidate.resolve())
+        if candidate.is_file() and rendered not in seen:
+            unique.append(rendered)
+            seen.add(rendered)
+    return tuple(unique)
+
+
+@lru_cache(maxsize=16)
+def _font_codepoints(path: str, font_number: int = 0) -> frozenset[int]:
+    try:
+        font = TTFont(path, fontNumber=font_number, lazy=True)
+        try:
+            return frozenset((font.getBestCmap() or {}).keys())
+        finally:
+            font.close()
+    except (OSError, TTLibError):
+        return frozenset()
+
+
+def _font_face_for_text(text: str, bold: bool = False) -> tuple[str, int]:
+    required = frozenset(
+        ord(character) for character in text if not character.isspace()
+    )
+    for path in _candidate_font_paths(bold):
+        font_number = 0
+        if required <= _font_codepoints(path, font_number):
+            return path, font_number
+
+    missing = " ".join(f"U+{codepoint:04X}" for codepoint in sorted(required))
+    raise RuntimeError(
+        "No installed OSWM label font covers this map label "
+        f"({text!r}; {missing}). Install the fonts-noto-cjk system package or "
+        f"set {LABEL_FONT_PATHS_ENV} to a suitable font file."
+    )
+
+
+@lru_cache(maxsize=32)
+def _load_font(path: str, font_number: int, size: int) -> ImageFont.FreeTypeFont:
+    return ImageFont.truetype(path, size=size, index=font_number)
+
+
+def _font(size: int, text: str, bold: bool = False) -> ImageFont.FreeTypeFont:
+    path, font_number = _font_face_for_text(text, bold)
+    return _load_font(path, font_number, size)
 
 
 def _scaled_point(point: list[float], extent: int, scale: int) -> tuple[float, float]:
@@ -304,13 +385,14 @@ def _line_midpoint(line, extent, scale):
 
 def _draw_labels(draw, decoded, palette, scale, target_zoom) -> None:
     size_offset = max(-2, target_zoom - SOURCE_MAX_ZOOM)
-    road_font = _font(max(8, 11 + 5 * size_offset))
-    place_font = _font(max(9, 14 + 6 * size_offset), bold=True)
-    city_font = _font(max(10, 18 + 7 * size_offset), bold=True)
+    road_font_size = max(8, 11 + 5 * size_offset)
+    place_font_size = max(9, 14 + 6 * size_offset)
+    city_font_size = max(10, 18 + 7 * size_offset)
     occupied: list[tuple[int, int, int, int]] = []
     canvas_size = TILE_SIZE * scale
 
-    def place_label(point, text, font, stroke_width) -> bool:
+    def place_label(point, text, font_size, bold, stroke_width) -> bool:
+        font = _font(font_size, text, bold=bold)
         bbox = draw.textbbox(
             point,
             text,
@@ -368,7 +450,8 @@ def _draw_labels(draw, decoded, palette, scale, target_zoom) -> None:
         if place_label(
             _scaled_point(points[0], place_extent, scale),
             str(name),
-            city_font if klass in {"city", "town"} else place_font,
+            city_font_size if klass in {"city", "town"} else place_font_size,
+            True,
             3,
         ):
             seen_places.add(name)
@@ -385,7 +468,7 @@ def _draw_labels(draw, decoded, palette, scale, target_zoom) -> None:
         if not name or name in seen_roads or not parts:
             continue
         point = _line_midpoint(max(parts, key=len), road_extent, scale)
-        if point and place_label(point, str(name), road_font, 2):
+        if point and place_label(point, str(name), road_font_size, False, 2):
             seen_roads.add(name)
 
 
