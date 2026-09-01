@@ -39,7 +39,9 @@ cycler==0.12.1
 flatbuffers==25.12.19
     # via timezonefinder
 fonttools==4.63.0
-    # via matplotlib
+    # via
+    #   -r requirements.in
+    #   matplotlib
 geopandas==1.1.4
     # via
     #   -r requirements.in

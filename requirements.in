@@ -6,6 +6,7 @@ beautifulsoup4
 pandas
 osm2geojson
 requests
+fonttools
 rasterio
 pyproj
 shapely
