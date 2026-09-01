@@ -214,7 +214,7 @@ test("snapshot locales are explicit, English-first and safely fall back to Engli
     assert.equal(DEFAULT_LOCALE, "en");
     assert.deepEqual(
         SUPPORTED_LOCALES.map((locale) => locale.code),
-        ["en", "pt-BR", "es", "it", "fr", "de", "zh-CN", "ar"],
+        ["en", "pt-BR", "es", "it", "fr", "de", "zh-CN", "ja", "ar"],
     );
     assert.equal(resolveLocale("unsupported"), "en");
     assert.equal(createI18n("unsupported").t("language"), "Language");
@@ -224,6 +224,12 @@ test("translations include localized theme labels and Arabic RTL metadata", () =
     const portuguese = createI18n("pt-BR");
     assert.equal(portuguese.t("scrutinyFacts"), "Fatos para escrutínio");
     assert.equal(portuguese.themeLabel("surface", "Surface"), "Revestimento");
+
+    const japanese = createI18n("ja");
+    assert.equal(japanese.locale, "ja");
+    assert.equal(japanese.direction, "ltr");
+    assert.equal(japanese.t("scrutinyFacts"), "精査情報");
+    assert.equal(japanese.themeLabel("surface", "Surface"), "路面材質");
 
     const arabic = createI18n("ar");
     assert.equal(arabic.locale, "ar");
