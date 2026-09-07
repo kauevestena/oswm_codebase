@@ -10,7 +10,7 @@ const workerSource = readFileSync(
 );
 
 
-function fixtureGraph() {
+function fixtureGraph(accessibleWeights = [111.2, 111.2, Infinity, 111.2]) {
     const nodeCount = 3;
     const edgeCount = 4;
     const profileCount = 2;
@@ -22,7 +22,7 @@ function fixtureGraph() {
         new Uint32Array([1, 0, 2, 1]),
         new Float32Array([
             111.2, 111.2, 111.2, 111.2,
-            111.2, 111.2, Infinity, 111.2
+            ...accessibleWeights
         ]),
         new Uint32Array([0, 1]),
         new Uint32Array([1, 2]),
@@ -102,6 +102,35 @@ function createWorkerHarness(buffer) {
 }
 
 
+function geometryRings(geometry) {
+    const polygons = geometry.type === 'Polygon'
+        ? [geometry.coordinates]
+        : geometry.coordinates;
+    return polygons.flat();
+}
+
+
+function signedRingArea(ring) {
+    let area = 0;
+    for (let index = 0; index < ring.length - 1; index += 1) {
+        area += ring[index][0] * ring[index + 1][1]
+            - ring[index + 1][0] * ring[index][1];
+    }
+    return area / 2;
+}
+
+
+function geometryArea(geometry) {
+    const polygons = geometry.type === 'Polygon'
+        ? [geometry.coordinates]
+        : geometry.coordinates;
+    return polygons.reduce((total, polygon) => (
+        total + signedRingArea(polygon[0])
+        + polygon.slice(1).reduce((holes, ring) => holes + signedRingArea(ring), 0)
+    ), 0);
+}
+
+
 test('worker snaps through the grid and routes over typed arrays', async () => {
     const request = createWorkerHarness(fixtureGraph());
     const graph = await request('init', {
@@ -149,4 +178,133 @@ test('worker preserves directional barriers and computes a fallback baseline', a
     });
     assert.equal(result.primary, null);
     assert.ok(result.comparison);
+});
+
+
+test('worker builds nested accessibility-adjusted isochrone polygons', async () => {
+    const request = createWorkerHarness(fixtureGraph());
+    await request('init', {
+        graphUrl: 'fixture.oswmg',
+        profileOrder: ['distance', 'accessible'],
+        profileHeuristicScales: [1, 1]
+    });
+    const origin = await request('snap', { coordinates: [0.0002, 0] });
+    const result = await request('isochrone', {
+        origin,
+        profileId: 'distance',
+        speedKmh: 5,
+        cutoffsMinutes: [1, 2, 3]
+    });
+
+    assert.equal(result.type, 'FeatureCollection');
+    assert.deepEqual(
+        Array.from(result.features, feature => feature.properties.minutes),
+        [1, 2, 3]
+    );
+    assert.equal(result.metadata.time_semantics, 'accessibility_adjusted');
+    assert.equal(result.metadata.direction, 'outbound');
+    assert.equal(result.metadata.polygonization.method, 'rasterized_reachable_network_buffer');
+    const areas = [];
+    for (const feature of result.features) {
+        assert.ok(['Polygon', 'MultiPolygon'].includes(feature.geometry.type));
+        assert.equal(feature.properties.approximate, true);
+        for (const ring of geometryRings(feature.geometry)) {
+            assert.ok(ring.length >= 4);
+            assert.deepEqual(Array.from(ring[0]), Array.from(ring[ring.length - 1]));
+            assert.equal(
+                new Set(ring.slice(0, -1).map(coordinates => coordinates.join(','))).size,
+                ring.length - 1,
+                'polygon rings do not repeat a vertex'
+            );
+            for (const coordinates of ring) {
+                assert.ok(Array.from(coordinates).every(Number.isFinite));
+            }
+        }
+        areas.push(geometryArea(feature.geometry));
+    }
+    assert.ok(areas.every((area, index) => index === 0 || area >= areas[index - 1]));
+});
+
+
+test('isochrone search honors directional profile barriers', async () => {
+    const request = createWorkerHarness(fixtureGraph());
+    await request('init', {
+        graphUrl: 'fixture.oswmg',
+        profileOrder: ['distance', 'accessible'],
+        profileHeuristicScales: [1, 1]
+    });
+    const origin = await request('snap', { coordinates: [0.0002, 0] });
+    const distance = await request('isochrone', {
+        origin,
+        profileId: 'distance',
+        speedKmh: 5,
+        cutoffsMinutes: [3]
+    });
+    const accessible = await request('isochrone', {
+        origin,
+        profileId: 'accessible',
+        speedKmh: 5,
+        cutoffsMinutes: [3]
+    });
+
+    assert.ok(distance.features.length);
+    assert.ok(accessible.features.length);
+    assert.ok(distance.metadata.visited_nodes > accessible.metadata.visited_nodes);
+});
+
+
+test('higher accessibility resistance consumes more of the time budget', async () => {
+    const request = createWorkerHarness(fixtureGraph([556, 556, 556, 556]));
+    await request('init', {
+        graphUrl: 'fixture.oswmg',
+        profileOrder: ['distance', 'accessible'],
+        profileHeuristicScales: [1, 0]
+    });
+    const origin = await request('snap', { coordinates: [0.0002, 0] });
+    const distance = await request('isochrone', {
+        origin,
+        profileId: 'distance',
+        speedKmh: 5,
+        cutoffsMinutes: [3]
+    });
+    const accessible = await request('isochrone', {
+        origin,
+        profileId: 'accessible',
+        speedKmh: 5,
+        cutoffsMinutes: [3]
+    });
+
+    assert.ok(
+        geometryArea(distance.features[0].geometry)
+        > geometryArea(accessible.features[0].geometry)
+    );
+    assert.ok(distance.metadata.visited_nodes > accessible.metadata.visited_nodes);
+});
+
+
+test('polygon tracing separates corner-touching rings', () => {
+    const context = {
+        self: { addEventListener() {}, postMessage() {} },
+        TextDecoder,
+        console
+    };
+    vm.runInNewContext(workerSource, context, { filename: 'routing_worker.js' });
+    const selfTouchingRing = [
+        [0, 0], [4, 0], [4, 4], [2, 4],
+        [2, 3], [1, 3], [1, 4], [2, 4],
+        [0, 4], [0, 0]
+    ];
+    const rings = context.splitRingAtRepeatedVertices(selfTouchingRing);
+
+    assert.equal(rings.length, 2);
+    assert.deepEqual(
+        Array.from(rings, ring => signedRingArea(ring)).sort((left, right) => left - right),
+        [-1, 16]
+    );
+    for (const ring of rings) {
+        assert.equal(
+            new Set(Array.from(ring).slice(0, -1).map(point => point.join(','))).size,
+            ring.length - 1
+        );
+    }
 });

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OSWM Accessible Routing</title>
+    <title>OSWM Accessible Routing and Reachability</title>
     <!-- maplibre-gl v6 -->
     <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6/dist/maplibre-gl.css" />
     <script type="module" src="../assets/branding/branding.js"></script>
@@ -37,7 +37,7 @@
             position: absolute;
             top: 18px;
             right: 50px;
-            width: min(300px, calc(100vw - 90px));
+            width: min(330px, calc(100vw - 90px));
             z-index: 5;
             padding: 14px 16px;
             border-radius: 10px;
@@ -87,6 +87,33 @@
             letter-spacing: .04em;
         }
 
+        .mode-switch {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px;
+            margin-bottom: 12px;
+            padding: 3px;
+            border-radius: 8px;
+            background: #e7eaed;
+        }
+
+        .mode-switch button {
+            padding: 7px 8px;
+            border: 0;
+            border-radius: 6px;
+            color: #444b52;
+            background: transparent;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .mode-switch button.active {
+            color: #123b70;
+            background: white;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, .16);
+        }
+
         #profileSelect {
             width: 100%;
             padding: 8px;
@@ -108,6 +135,11 @@
         }
 
         #compareOption[hidden] {
+            display: none;
+        }
+
+        #routeOptions[hidden],
+        #isochroneOptions[hidden] {
             display: none;
         }
 
@@ -137,6 +169,77 @@
 
         #routeInfo.hidden {
             display: none;
+        }
+
+        #isochroneOptions {
+            margin-top: 11px;
+            padding-top: 10px;
+            border-top: 1px solid #d7dadd;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        #isochroneOptions p {
+            margin: 0 0 9px;
+        }
+
+        .isochrone-legend {
+            display: flex;
+            gap: 12px;
+            margin: 8px 0 11px;
+            font-weight: 700;
+        }
+
+        .isochrone-legend span {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .isochrone-swatch {
+            width: 13px;
+            height: 13px;
+            border: 1px solid rgba(15, 55, 85, .72);
+            border-radius: 2px;
+        }
+
+        .isochrone-swatch.five {
+            background: #225ea8;
+        }
+
+        .isochrone-swatch.ten {
+            background: #41b6c4;
+        }
+
+        .isochrone-swatch.fifteen {
+            background: #a1dab4;
+        }
+
+        .action-button {
+            width: 100%;
+            padding: 8px 10px;
+            border: 0;
+            border-radius: 6px;
+            color: white;
+            background: #245f8f;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .action-button:disabled {
+            color: #6c737a;
+            background: #d9dde0;
+            cursor: not-allowed;
+        }
+
+        #isochroneInfo {
+            margin-top: 8px;
+            color: #40474e;
+        }
+
+        #isochroneInfo.error {
+            color: #9d1d20;
+            font-weight: 700;
         }
 
         #routeInfo .no-route {
@@ -256,45 +359,67 @@
 
     <section id="routingPanel" aria-label="Routing options">
         <h2 id="routingPanelHeader" title="Click to collapse/expand panel">
-            <span>Route profile</span>
+            <span>Accessible routing</span>
             <button id="panelToggleBtn" aria-label="Toggle panel" aria-expanded="true">▼</button>
         </h2>
         <div id="routingPanelContent">
-            <label for="profileSelect">Optimization</label>
+            <div class="mode-switch" role="group" aria-label="Routing mode">
+                <button type="button" id="routeModeBtn" class="active" aria-pressed="true">Route</button>
+                <button type="button" id="isochroneModeBtn" aria-pressed="false">Reachability</button>
+            </div>
+
+            <label for="profileSelect">Profile</label>
             <select id="profileSelect"></select>
             <p id="profileDescription">Loading routing profiles…</p>
             <p id="routingStatus" role="status" aria-live="polite">Loading node map…</p>
 
-            <div id="compareOption" hidden>
-                <label class="compare-label" for="compareDistance">
-                    <input type="checkbox" id="compareDistance">
-                    Compare with distance-only
-                </label>
+            <div id="routeOptions">
+                <div id="compareOption" hidden>
+                    <label class="compare-label" for="compareDistance">
+                        <input type="checkbox" id="compareDistance">
+                        Compare with distance-only
+                    </label>
+                </div>
+
+                <div id="routeInfo" class="hidden" aria-live="polite">
+                    <div class="route-result">
+                        <div>Distance: <strong><span id="distanceVal">-</span> km</strong></div>
+                        <div><span id="timeLabel">Accessibility-adjusted time</span>:
+                            <strong><span id="timeVal">-</span> min</strong>
+                        </div>
+                        <div>
+                            <span class="route-swatch selected"></span>
+                            Profile: <strong><span id="profileVal">-</span></strong>
+                        </div>
+                        <div class="experimental" id="experimentalNote"></div>
+                    </div>
+                    <div class="no-route" hidden>No route was found for this profile.</div>
+                    <div id="comparisonInfo" hidden>
+                        <div class="comparison-title">
+                            <span class="route-swatch distance"></span>
+                            Distance-only comparison
+                        </div>
+                        <div>
+                            Shortest route:
+                            <strong><span id="comparisonDistanceVal">-</span> km</strong>,
+                            <span id="comparisonTimeVal">-</span> min
+                        </div>
+                        <div id="comparisonDelta"></div>
+                    </div>
+                </div>
             </div>
 
-            <div id="routeInfo" class="hidden" aria-live="polite">
-                <div class="route-result">
-                    <div>Distance: <strong><span id="distanceVal">-</span> km</strong></div>
-                    <div>Estimated time: <strong><span id="timeVal">-</span> min</strong></div>
-                    <div>
-                        <span class="route-swatch selected"></span>
-                        Profile: <strong><span id="profileVal">-</span></strong>
-                    </div>
-                    <div class="experimental" id="experimentalNote"></div>
+            <div id="isochroneOptions" hidden>
+                <p>Click one origin to calculate outward, accessibility-adjusted reachability.</p>
+                <div class="isochrone-legend" aria-label="Reachability bands">
+                    <span><i class="isochrone-swatch five"></i>5 min</span>
+                    <span><i class="isochrone-swatch ten"></i>10 min</span>
+                    <span><i class="isochrone-swatch fifteen"></i>15 min</span>
                 </div>
-                <div class="no-route" hidden>No route was found for this profile.</div>
-                <div id="comparisonInfo" hidden>
-                    <div class="comparison-title">
-                        <span class="route-swatch distance"></span>
-                        Distance-only comparison
-                    </div>
-                    <div>
-                        Shortest route:
-                        <strong><span id="comparisonDistanceVal">-</span> km</strong>,
-                        <span id="comparisonTimeVal">-</span> min
-                    </div>
-                    <div id="comparisonDelta"></div>
-                </div>
+                <button type="button" id="downloadIsochrone" class="action-button" disabled>
+                    Download GeoJSON
+                </button>
+                <div id="isochroneInfo" aria-live="polite"></div>
             </div>
         </div>
     </section>
@@ -302,15 +427,15 @@
     <div class="modal-overlay visible" id="welcomeModalOverlay">
         <div class="modal">
             <h2>OSWM accessible routing</h2>
-            <p>This experimental router uses mapped OpenStreetMap accessibility information and estimated terrain slope.</p>
+            <p>This experimental tool uses mapped OpenStreetMap accessibility information and estimated terrain slope.</p>
             <ol>
+                <li>Choose Route or Reachability.</li>
                 <li>Select a routing profile.</li>
-                <li>Optionally compare an accessibility profile with the distance-only route.</li>
-                <li>Click a route origin.</li>
-                <li>Click a destination.</li>
-                <li>A third click starts a new route.</li>
+                <li>For a route, click an origin and destination.</li>
+                <li>For reachability, click one origin to create 5, 10 and 15-minute polygons.</li>
+                <li>Export calculated reachability polygons as GeoJSON when needed.</li>
             </ol>
-            <p>Missing data can affect the result. Profile grades are provisional and are not a guarantee that a route is accessible.</p>
+            <p>Accessibility-adjusted times and polygons are approximate. Missing data can affect the result, and provisional profiles do not guarantee accessibility.</p>
             <button id="modalOkBtn">Continue</button>
         </div>
     </div>
@@ -321,6 +446,12 @@
 
         const pmtilesProtocol = new PmtilesProtocol();
         maplibregl.addProtocol('pmtiles', pmtilesProtocol.tile);
+        const ISOCHRONE_CUTOFFS_MINUTES = [5, 10, 15];
+        const ISOCHRONE_BANDS = [
+            { minutes: 15, color: '#a1dab4' },
+            { minutes: 10, color: '#41b6c4' },
+            { minutes: 5, color: '#225ea8' }
+        ];
         const routingRoot = new URL('../../data/routing/', import.meta.url);
         const basemapUrl = new URL('../../data/basemaps/light.pmtiles', import.meta.url).href;
         const routingWorker = new Worker(
@@ -355,10 +486,16 @@
         const profileSelect = document.getElementById('profileSelect');
         const profileDescription = document.getElementById('profileDescription');
         const routingStatus = document.getElementById('routingStatus');
+        const routeOptions = document.getElementById('routeOptions');
+        const isochroneOptions = document.getElementById('isochroneOptions');
+        const routeModeButton = document.getElementById('routeModeBtn');
+        const isochroneModeButton = document.getElementById('isochroneModeBtn');
         const compareOption = document.getElementById('compareOption');
         const compareDistance = document.getElementById('compareDistance');
         const comparisonInfo = document.getElementById('comparisonInfo');
         const routeInfo = document.getElementById('routeInfo');
+        const isochroneInfo = document.getElementById('isochroneInfo');
+        const downloadIsochroneButton = document.getElementById('downloadIsochrone');
         const routingPanel = document.getElementById('routingPanel');
         const routingPanelHeader = document.getElementById('routingPanelHeader');
         const panelToggleBtn = document.getElementById('panelToggleBtn');
@@ -370,15 +507,44 @@
 
         routingPanelHeader.addEventListener('click', toggleRoutingPanel);
 
+        function updateReadyStatus() {
+            if (!routerReady) return;
+            const nodeCount = graphNodeCount.toLocaleString();
+            routingStatus.textContent = interactionMode === 'route'
+                ? `Routing ready (${nodeCount} nodes). Click an origin, then a destination.`
+                : `Reachability ready (${nodeCount} nodes). Click one origin.`;
+        }
+
+        function setInteractionMode(mode) {
+            if (!['route', 'isochrone'].includes(mode) || mode === interactionMode) return;
+            interactionMode = mode;
+            routeModeButton.classList.toggle('active', mode === 'route');
+            isochroneModeButton.classList.toggle('active', mode === 'isochrone');
+            routeModeButton.setAttribute('aria-pressed', mode === 'route');
+            isochroneModeButton.setAttribute('aria-pressed', mode === 'isochrone');
+            routeOptions.hidden = mode !== 'route';
+            isochroneOptions.hidden = mode !== 'isochrone';
+            resetPath();
+            updateProfileControls();
+            updateReadyStatus();
+        }
+
+        routeModeButton.addEventListener('click', () => setInteractionMode('route'));
+        isochroneModeButton.addEventListener('click', () => setInteractionMode('isochrone'));
+
         let profilePayload = null;
         let distanceProfileId = null;
         let routerReady = false;
+        let graphNodeCount = 0;
+        let interactionMode = 'route';
         let routeGeneration = 0;
+        let isochroneGeneration = 0;
         let snapGeneration = 0;
         let start = null;
         let end = null;
         let bestPath = null;
         let comparisonPath = null;
+        let isochroneData = null;
         let markers = [];
 
         const map = new maplibregl.Map({
@@ -539,15 +705,20 @@
             await boundaryPromise;
             routingStatus.textContent = 'Loading routing graph…';
             const graphInfo = await graphPromise;
+            graphNodeCount = graphInfo.nodeCount;
             routerReady = true;
-            routingStatus.textContent = `Routing ready (${graphInfo.nodeCount.toLocaleString()} nodes).`;
+            updateReadyStatus();
             showWelcomeModal();
         }
 
         initializeRouting().catch(error => {
             console.error(error);
             routingStatus.textContent = `Routing graph unavailable: ${error.message}`;
-            showNoRoute(`Routing data could not be loaded: ${error.message}`);
+            if (interactionMode === 'isochrone') {
+                showIsochroneMessage(`Routing data could not be loaded: ${error.message}`, true);
+            } else {
+                showNoRoute(`Routing data could not be loaded: ${error.message}`);
+            }
         });
 
         function requireOk(response) {
@@ -587,11 +758,15 @@
         }
 
         function updateProfileControls() {
+            if (!profilePayload) return;
             const profile = selectedProfile();
             const isDistanceOnly = profile.routing_mode === 'distance';
             profileDescription.textContent = profile.description;
-            compareOption.hidden = isDistanceOnly;
-            compareDistance.disabled = isDistanceOnly;
+            compareOption.hidden = interactionMode !== 'route' || isDistanceOnly;
+            compareDistance.disabled = interactionMode !== 'route' || isDistanceOnly;
+            document.getElementById('timeLabel').textContent = isDistanceOnly
+                ? 'Estimated time'
+                : 'Accessibility-adjusted time';
             if (isDistanceOnly) {
                 compareDistance.checked = false;
                 if (comparisonPath) removeComparisonPath();
@@ -601,7 +776,9 @@
 
         profileSelect.addEventListener('change', () => {
             updateProfileControls();
-            if (start && end) {
+            if (interactionMode === 'isochrone' && start) {
+                calculateIsochrone();
+            } else if (start && end) {
                 calculateRoute();
             }
         });
@@ -624,6 +801,14 @@
                 });
                 if (requestGeneration !== snapGeneration) return;
 
+                if (interactionMode === 'isochrone') {
+                    resetPath();
+                    start = snapped;
+                    addMarker(snapped.coordinates, '#0f5128');
+                    calculateIsochrone();
+                    return;
+                }
+
                 if (!start) {
                     start = snapped;
                     addMarker(snapped.coordinates, '#0f5128');
@@ -639,7 +824,14 @@
                 }
             } catch (error) {
                 console.error(error);
-                showNoRoute(`Could not snap to the routing network: ${error.message}`);
+                if (interactionMode === 'isochrone') {
+                    showIsochroneMessage(
+                        `Could not snap to the routing network: ${error.message}`,
+                        true
+                    );
+                } else {
+                    showNoRoute(`Could not snap to the routing network: ${error.message}`);
+                }
             }
         });
 
@@ -652,6 +844,11 @@
 
         function hasUsablePath(pathResult) {
             return Boolean(pathResult?.path && pathResult.path.length >= 2);
+        }
+
+        function pathTimeMinutes(pathResult, profile) {
+            const equivalentDistanceKm = pathResult.weight / 1000;
+            return Math.max(1, Math.round(equivalentDistanceKm / profile.speed_kmh * 60));
         }
 
         function setRouteLayer(pathResult, sourceId, layerId, paint) {
@@ -676,6 +873,171 @@
                 paint
             });
         }
+
+        function removeIsochroneLayers() {
+            for (const band of [...ISOCHRONE_BANDS].reverse()) {
+                const lineLayerId = `isochrone-line-${band.minutes}`;
+                const fillLayerId = `isochrone-fill-${band.minutes}`;
+                if (map.getLayer(lineLayerId)) map.removeLayer(lineLayerId);
+                if (map.getLayer(fillLayerId)) map.removeLayer(fillLayerId);
+            }
+            if (map.getSource('isochrone-polygons')) {
+                map.removeSource('isochrone-polygons');
+            }
+        }
+
+        function setIsochroneLayers(data) {
+            const displayData = {
+                type: 'FeatureCollection',
+                features: data.features
+            };
+            const existingSource = map.getSource('isochrone-polygons');
+            if (existingSource) {
+                existingSource.setData(displayData);
+                return;
+            }
+            map.addSource('isochrone-polygons', {
+                type: 'geojson',
+                data: displayData
+            });
+            const beforeLayer = map.getLayer('line-layer') ? 'line-layer' : undefined;
+            for (const band of ISOCHRONE_BANDS) {
+                map.addLayer({
+                    id: `isochrone-fill-${band.minutes}`,
+                    type: 'fill',
+                    source: 'isochrone-polygons',
+                    filter: ['==', ['get', 'minutes'], band.minutes],
+                    paint: {
+                        'fill-color': band.color,
+                        'fill-opacity': .52
+                    }
+                }, beforeLayer);
+            }
+            for (const band of ISOCHRONE_BANDS) {
+                map.addLayer({
+                    id: `isochrone-line-${band.minutes}`,
+                    type: 'line',
+                    source: 'isochrone-polygons',
+                    filter: ['==', ['get', 'minutes'], band.minutes],
+                    layout: { 'line-join': 'round' },
+                    paint: {
+                        'line-color': band.color,
+                        'line-width': 2,
+                        'line-opacity': .95
+                    }
+                }, beforeLayer);
+            }
+        }
+
+        function enrichIsochroneGeoJSON(result, profileId, profile) {
+            const generatedAt = new Date().toISOString();
+            const commonProperties = {
+                profile_id: profileId,
+                profile_label: profile.label,
+                profile_provisional: Boolean(profile.provisional),
+                ruleset_version: profilePayload.ruleset_version,
+                ruleset_hash: profilePayload.ruleset_hash,
+                graph_sha256: profilePayload.graph_sha256
+            };
+            return {
+                type: 'FeatureCollection',
+                name: 'OSWM accessibility-adjusted isochrones',
+                features: result.features.map(feature => ({
+                    ...feature,
+                    properties: {
+                        ...feature.properties,
+                        ...commonProperties
+                    }
+                })),
+                metadata: {
+                    ...result.metadata,
+                    ...commonProperties,
+                    generated_at: generatedAt,
+                    coordinate_reference_system: 'OGC:CRS84',
+                    disclaimer: (
+                        'Accessibility-adjusted times and polygon boundaries are approximate. '
+                        + 'Missing mapped data can affect the result and accessibility is not guaranteed.'
+                    )
+                }
+            };
+        }
+
+        function showIsochroneMessage(message, isError = false) {
+            isochroneInfo.textContent = message;
+            isochroneInfo.classList.toggle('error', isError);
+        }
+
+        async function calculateIsochrone() {
+            const requestGeneration = ++isochroneGeneration;
+            const profileId = profileSelect.value;
+            const profile = selectedProfile();
+            isochroneData = null;
+            downloadIsochroneButton.disabled = true;
+            removeIsochroneLayers();
+            showIsochroneMessage('Calculating 5, 10 and 15-minute polygons…');
+            try {
+                const result = await workerRequest('isochrone', {
+                    origin: start,
+                    profileId,
+                    speedKmh: profile.speed_kmh,
+                    cutoffsMinutes: ISOCHRONE_CUTOFFS_MINUTES
+                });
+                if (
+                    requestGeneration !== isochroneGeneration
+                    || interactionMode !== 'isochrone'
+                ) return;
+                if (!result.features.length) {
+                    removeIsochroneLayers();
+                    showIsochroneMessage(
+                        `No outward area is reachable for ${profile.label} from this origin.`,
+                        true
+                    );
+                    return;
+                }
+                isochroneData = enrichIsochroneGeoJSON(result, profileId, profile);
+                setIsochroneLayers(isochroneData);
+                downloadIsochroneButton.disabled = false;
+                const visitedNodes = result.metadata.visited_nodes.toLocaleString();
+                showIsochroneMessage(
+                    `${profile.label}: approximate outward polygons generated `
+                    + `after visiting ${visitedNodes} network nodes.`
+                );
+                const bounds = new maplibregl.LngLatBounds();
+                for (const feature of isochroneData.features) {
+                    extendCoordinateBounds(bounds, feature.geometry.coordinates);
+                }
+                if (!bounds.isEmpty()) {
+                    map.fitBounds(bounds, { padding: 55, maxZoom: 16 });
+                }
+            } catch (error) {
+                if (requestGeneration !== isochroneGeneration) return;
+                console.error(error);
+                removeIsochroneLayers();
+                showIsochroneMessage(`Reachability failed: ${error.message}`, true);
+            }
+        }
+
+        function downloadIsochroneGeoJSON() {
+            if (!isochroneData) return;
+            const blob = new Blob(
+                [JSON.stringify(isochroneData, null, 2)],
+                { type: 'application/geo+json' }
+            );
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            const timestamp = isochroneData.metadata.generated_at
+                .replace(/[:.]/g, '-')
+                .replace('T', '_')
+                .replace('Z', '');
+            link.href = url;
+            link.download = `oswm-isochrones-${isochroneData.metadata.profile_id}-${timestamp}.geojson`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 0);
+        }
+
+        downloadIsochroneButton.addEventListener('click', downloadIsochroneGeoJSON);
 
         async function calculateRoute() {
             const requestGeneration = ++routeGeneration;
@@ -740,10 +1102,7 @@
                 }
 
                 const distanceKm = bestPath.distanceM / 1000;
-                const timeMinutes = Math.max(
-                    1,
-                    Math.round(distanceKm / profile.speed_kmh * 60)
-                );
+                const timeMinutes = pathTimeMinutes(bestPath, profile);
                 document.getElementById('distanceVal').textContent = distanceKm.toFixed(2);
                 document.getElementById('timeVal').textContent = timeMinutes;
                 document.getElementById('profileVal').textContent = selectedProfileLabel();
@@ -770,10 +1129,7 @@
 
             const distanceKm = distancePath.distanceM / 1000;
             const distanceProfile = profilePayload.profiles[distanceProfileId];
-            const timeMinutes = Math.max(
-                1,
-                Math.round(distanceKm / distanceProfile.speed_kmh * 60)
-            );
+            const timeMinutes = pathTimeMinutes(distancePath, distanceProfile);
             document.getElementById('comparisonDistanceVal').textContent =
                 distanceKm.toFixed(2);
             document.getElementById('comparisonTimeVal').textContent = timeMinutes;
@@ -837,14 +1193,20 @@
 
         function resetPath() {
             routeGeneration += 1;
+            isochroneGeneration += 1;
+            snapGeneration += 1;
             start = null;
             end = null;
             bestPath = null;
             comparisonPath = null;
+            isochroneData = null;
             markers.forEach(marker => marker.remove());
             markers = [];
             removeDisplayedPaths();
+            removeIsochroneLayers();
             comparisonInfo.hidden = true;
+            downloadIsochroneButton.disabled = true;
+            showIsochroneMessage('');
             hideRouteInfo();
         }
 
