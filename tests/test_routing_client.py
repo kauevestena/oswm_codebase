@@ -53,6 +53,24 @@ class RoutingClientWiringTests(unittest.TestCase):
         self.assertIn("candidate + heuristic(target)", self.worker)
         self.assertIn("sanitizeSnap", self.worker)
 
+    def test_accessibility_adjusted_isochrones_are_wired(self):
+        self.assertIn('id="isochroneModeBtn"', self.html)
+        self.assertIn('id="downloadIsochrone"', self.html)
+        self.assertIn("workerRequest('isochrone'", self.html)
+        self.assertIn("ISOCHRONE_CUTOFFS_MINUTES = [5, 10, 15]", self.html)
+        self.assertIn("type: 'FeatureCollection'", self.html)
+        self.assertIn("application/geo+json", self.html)
+        self.assertIn("graph_sha256: profilePayload.graph_sha256", self.html)
+        self.assertIn("time_semantics: 'accessibility_adjusted'", self.worker)
+        self.assertIn("boundedDistancesFromOrigin", self.worker)
+        self.assertIn("rasterized_reachable_network_buffer", self.worker)
+        self.assertNotIn("reachable-network-layer", self.html)
+
+    def test_route_time_uses_accessibility_adjusted_weight(self):
+        self.assertIn("pathResult.weight / 1000", self.html)
+        self.assertIn("Accessibility-adjusted time", self.html)
+        self.assertNotIn("Math.round(distanceKm / profile.speed_kmh", self.html)
+
     def test_profile_selector_and_directional_grades_are_wired(self):
         self.assertIn('id="profileSelect"', self.html)
         self.assertIn("graph_profile_order", self.generator)

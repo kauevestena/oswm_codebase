@@ -4,6 +4,9 @@ const HEADER_BYTES = 192;
 const UINT32_MAX = 0xffffffff;
 const EARTH_RADIUS_M = 6371008.8;
 const DEG_TO_RAD = Math.PI / 180;
+const ISOCHRONE_CELL_SIZE_M = 20;
+const ISOCHRONE_BUFFER_M = 50;
+const ISOCHRONE_MAX_CELLS = 250000;
 
 let graph = null;
 let profileIndexes = new Map();
@@ -18,6 +21,7 @@ self.addEventListener('message', async event => {
         if (type === 'init') result = await initialize(payload);
         else if (type === 'snap') result = snapToNetwork(payload.coordinates);
         else if (type === 'route') result = routeRequest(payload);
+        else if (type === 'isochrone') result = isochroneRequest(payload);
         else throw new Error(`Unknown routing worker request: ${type}`);
         self.postMessage({ id, ok: true, result });
     } catch (error) {
@@ -480,5 +484,500 @@ function routeRequest({
     return {
         primary,
         comparison
+    };
+}
+
+function normalizeIsochroneCutoffs(cutoffsMinutes) {
+    if (!Array.isArray(cutoffsMinutes) || cutoffsMinutes.length === 0) {
+        throw new Error('Isochrone cutoffs must be a non-empty array of minutes.');
+    }
+    const cutoffs = [...new Set(cutoffsMinutes.map(Number))].sort((a, b) => a - b);
+    if (
+        cutoffs.some(value => !Number.isFinite(value) || value <= 0 || value > 120)
+    ) {
+        throw new Error('Isochrone cutoffs must be greater than 0 and no more than 120 minutes.');
+    }
+    return cutoffs;
+}
+
+function boundedDistancesFromOrigin(rawOrigin, profileIndex, maximumWeight) {
+    const origin = sanitizeSnap(rawOrigin);
+    const distances = new Float64Array(graph.nodeCount);
+    distances.fill(Infinity);
+    const queue = new MinHeap();
+    const originAb = edgeWeight(profileIndex, directedEdge(origin.a, origin.b));
+    const originBa = edgeWeight(profileIndex, directedEdge(origin.b, origin.a));
+    const addOriginEndpoint = (node, weight) => {
+        if (weight <= maximumWeight && weight < distances[node]) {
+            distances[node] = weight;
+            queue.push(weight, node);
+        }
+    };
+    addOriginEndpoint(origin.a, partialWeight(originBa, origin.t));
+    addOriginEndpoint(origin.b, partialWeight(originAb, 1 - origin.t));
+
+    let visitedNodes = 0;
+    while (queue.size) {
+        const node = queue.pop();
+        const currentDistance = queue.lastPriority;
+        if (currentDistance > distances[node] + 1e-7) continue;
+        if (currentDistance > maximumWeight) break;
+        visitedNodes += 1;
+        for (
+            let edgeId = graph.adjacencyOffsets[node];
+            edgeId < graph.adjacencyOffsets[node + 1];
+            edgeId += 1
+        ) {
+            const weight = edgeWeight(profileIndex, edgeId);
+            if (!Number.isFinite(weight)) continue;
+            const target = graph.targets[edgeId];
+            const candidate = currentDistance + weight;
+            if (candidate <= maximumWeight && candidate < distances[target]) {
+                distances[target] = candidate;
+                queue.push(candidate, target);
+            }
+        }
+    }
+    return { origin, originAb, originBa, distances, visitedNodes };
+}
+
+function interpolateSegment(a, b, fraction) {
+    return [
+        graph.longitudes[a] + fraction * (graph.longitudes[b] - graph.longitudes[a]),
+        graph.latitudes[a] + fraction * (graph.latitudes[b] - graph.latitudes[a])
+    ];
+}
+
+function addReachablePart(parts, from, to) {
+    const start = clamp(from, 0, 1);
+    const end = clamp(to, 0, 1);
+    if (end - start > 1e-10) parts.push([start, end]);
+}
+
+function mergedReachableParts(parts) {
+    if (!parts.length) return [];
+    parts.sort((left, right) => left[0] - right[0] || left[1] - right[1]);
+    const merged = [parts[0].slice()];
+    for (let index = 1; index < parts.length; index += 1) {
+        const current = parts[index];
+        const previous = merged[merged.length - 1];
+        if (current[0] <= previous[1] + 1e-10) {
+            previous[1] = Math.max(previous[1], current[1]);
+        } else {
+            merged.push(current.slice());
+        }
+    }
+    return merged;
+}
+
+function reachableIntervals(search, profileIndex, budget) {
+    const intervals = [];
+    for (let segmentId = 0; segmentId < graph.segmentCount; segmentId += 1) {
+        const a = graph.segmentA[segmentId];
+        const b = graph.segmentB[segmentId];
+        const weightAb = edgeWeight(profileIndex, directedEdge(a, b));
+        const weightBa = edgeWeight(profileIndex, directedEdge(b, a));
+        const parts = [];
+
+        if (search.distances[a] < budget && Number.isFinite(weightAb) && weightAb > 0) {
+            addReachablePart(parts, 0, (budget - search.distances[a]) / weightAb);
+        }
+        if (search.distances[b] < budget && Number.isFinite(weightBa) && weightBa > 0) {
+            addReachablePart(parts, 1 - (budget - search.distances[b]) / weightBa, 1);
+        }
+
+        if (segmentId === search.origin.segmentId) {
+            if (Number.isFinite(search.originAb) && search.originAb > 0) {
+                addReachablePart(
+                    parts,
+                    search.origin.t,
+                    search.origin.t + budget / search.originAb
+                );
+            }
+            if (Number.isFinite(search.originBa) && search.originBa > 0) {
+                addReachablePart(
+                    parts,
+                    search.origin.t - budget / search.originBa,
+                    search.origin.t
+                );
+            }
+        }
+
+        for (const [from, to] of mergedReachableParts(parts)) {
+            intervals.push([
+                interpolateSegment(a, b, from),
+                interpolateSegment(a, b, to)
+            ]);
+        }
+    }
+    return intervals;
+}
+
+function projectCoordinate(coordinates, reference) {
+    return [
+        (coordinates[0] - reference.longitude) * reference.scaleX,
+        (coordinates[1] - reference.latitude) * reference.scaleY
+    ];
+}
+
+function unprojectCoordinate(coordinates, reference) {
+    return [
+        reference.longitude + coordinates[0] / reference.scaleX,
+        reference.latitude + coordinates[1] / reference.scaleY
+    ];
+}
+
+function isochroneGrid(intervals, originCoordinates) {
+    const reference = {
+        longitude: originCoordinates[0],
+        latitude: originCoordinates[1],
+        scaleX: DEG_TO_RAD * EARTH_RADIUS_M
+            * Math.max(1e-6, Math.cos(originCoordinates[1] * DEG_TO_RAD)),
+        scaleY: DEG_TO_RAD * EARTH_RADIUS_M
+    };
+    let coordinateMinX = 0;
+    let coordinateMinY = 0;
+    let coordinateMaxX = 0;
+    let coordinateMaxY = 0;
+    for (const interval of intervals) {
+        for (const coordinates of interval) {
+            const [x, y] = projectCoordinate(coordinates, reference);
+            coordinateMinX = Math.min(coordinateMinX, x);
+            coordinateMinY = Math.min(coordinateMinY, y);
+            coordinateMaxX = Math.max(coordinateMaxX, x);
+            coordinateMaxY = Math.max(coordinateMaxY, y);
+        }
+    }
+
+    let cellSizeM = ISOCHRONE_CELL_SIZE_M;
+    for (let attempt = 0; attempt < 12; attempt += 1) {
+        const marginM = ISOCHRONE_BUFFER_M + cellSizeM * 2;
+        const minX = Math.floor((coordinateMinX - marginM) / cellSizeM) * cellSizeM;
+        const minY = Math.floor((coordinateMinY - marginM) / cellSizeM) * cellSizeM;
+        const maxX = Math.ceil((coordinateMaxX + marginM) / cellSizeM) * cellSizeM;
+        const maxY = Math.ceil((coordinateMaxY + marginM) / cellSizeM) * cellSizeM;
+        const columns = Math.max(1, Math.round((maxX - minX) / cellSizeM));
+        const rows = Math.max(1, Math.round((maxY - minY) / cellSizeM));
+        const cellCount = columns * rows;
+        if (cellCount <= ISOCHRONE_MAX_CELLS) {
+            return {
+                reference,
+                minX,
+                minY,
+                maxX,
+                maxY,
+                columns,
+                rows,
+                cellSizeM
+            };
+        }
+        cellSizeM *= Math.sqrt(cellCount / ISOCHRONE_MAX_CELLS) * 1.02;
+    }
+    throw new Error('Unable to fit isochrone raster within the cell limit');
+}
+
+function gridIndex(grid, x, y) {
+    const column = clamp(Math.floor((x - grid.minX) / grid.cellSizeM), 0, grid.columns - 1);
+    const row = clamp(Math.floor((y - grid.minY) / grid.cellSizeM), 0, grid.rows - 1);
+    return row * grid.columns + column;
+}
+
+function rasterizeIntervals(intervals, grid) {
+    const lineMask = new Uint8Array(grid.columns * grid.rows);
+    for (const interval of intervals) {
+        const [start, end] = interval.map(
+            coordinates => projectCoordinate(coordinates, grid.reference)
+        );
+        const length = Math.hypot(end[0] - start[0], end[1] - start[1]);
+        const steps = Math.max(1, Math.ceil(length / (grid.cellSizeM * 0.45)));
+        for (let step = 0; step <= steps; step += 1) {
+            const fraction = step / steps;
+            const x = start[0] + fraction * (end[0] - start[0]);
+            const y = start[1] + fraction * (end[1] - start[1]);
+            lineMask[gridIndex(grid, x, y)] = 1;
+        }
+    }
+
+    const result = new Uint8Array(lineMask.length);
+    const radius = Math.max(1, Math.ceil(ISOCHRONE_BUFFER_M / grid.cellSizeM));
+    const radiusSquared = (ISOCHRONE_BUFFER_M + grid.cellSizeM * 0.5) ** 2;
+    for (let row = 0; row < grid.rows; row += 1) {
+        for (let column = 0; column < grid.columns; column += 1) {
+            if (!lineMask[row * grid.columns + column]) continue;
+            for (let dy = -radius; dy <= radius; dy += 1) {
+                const targetRow = row + dy;
+                if (targetRow < 0 || targetRow >= grid.rows) continue;
+                for (let dx = -radius; dx <= radius; dx += 1) {
+                    const targetColumn = column + dx;
+                    if (targetColumn < 0 || targetColumn >= grid.columns) continue;
+                    if ((dx * grid.cellSizeM) ** 2 + (dy * grid.cellSizeM) ** 2 > radiusSquared) {
+                        continue;
+                    }
+                    result[targetRow * grid.columns + targetColumn] = 1;
+                }
+            }
+        }
+    }
+    return result;
+}
+
+function edgeKey(point) {
+    return `${point[0]},${point[1]}`;
+}
+
+function ringArea(ring) {
+    let area = 0;
+    for (let index = 0; index < ring.length - 1; index += 1) {
+        area += ring[index][0] * ring[index + 1][1]
+            - ring[index + 1][0] * ring[index][1];
+    }
+    return area / 2;
+}
+
+function simplifyOrthogonalRing(ring) {
+    if (ring.length <= 4) return ring;
+    const open = ring.slice(0, -1);
+    const simplified = [];
+    for (let index = 0; index < open.length; index += 1) {
+        const previous = open[(index + open.length - 1) % open.length];
+        const current = open[index];
+        const next = open[(index + 1) % open.length];
+        const firstX = current[0] - previous[0];
+        const firstY = current[1] - previous[1];
+        const secondX = next[0] - current[0];
+        const secondY = next[1] - current[1];
+        if (firstX * secondY !== firstY * secondX) simplified.push(current);
+    }
+    if (simplified.length < 3) return ring;
+    simplified.push(simplified[0]);
+    return simplified;
+}
+
+function splitRingAtRepeatedVertices(ring) {
+    const pending = [ring];
+    const result = [];
+    while (pending.length) {
+        const candidate = pending.pop();
+        const firstIndexes = new Map();
+        let split = false;
+        for (let index = 0; index < candidate.length - 1; index += 1) {
+            const key = edgeKey(candidate[index]);
+            if (!firstIndexes.has(key)) {
+                firstIndexes.set(key, index);
+                continue;
+            }
+            const firstIndex = firstIndexes.get(key);
+            const firstRing = candidate.slice(firstIndex, index + 1);
+            const secondRing = candidate
+                .slice(0, firstIndex + 1)
+                .concat(candidate.slice(index + 1));
+            for (const part of [firstRing, secondRing]) {
+                if (part.length >= 4 && Math.abs(ringArea(part)) > 0) {
+                    pending.push(simplifyOrthogonalRing(part));
+                }
+            }
+            split = true;
+            break;
+        }
+        if (!split) result.push(candidate);
+    }
+    return result;
+}
+
+function pointInRing(point, ring) {
+    let inside = false;
+    for (let index = 0, previous = ring.length - 1; index < ring.length; previous = index++) {
+        const currentPoint = ring[index];
+        const previousPoint = ring[previous];
+        const intersects = (
+            (currentPoint[1] > point[1]) !== (previousPoint[1] > point[1])
+            && point[0] < (previousPoint[0] - currentPoint[0])
+                * (point[1] - currentPoint[1])
+                / (previousPoint[1] - currentPoint[1]) + currentPoint[0]
+        );
+        if (intersects) inside = !inside;
+    }
+    return inside;
+}
+
+function traceMaskRings(mask, grid) {
+    const edges = [];
+    const outgoing = new Map();
+    const addEdge = (start, end) => {
+        const edgeId = edges.length;
+        edges.push({ start, end });
+        const key = edgeKey(start);
+        if (!outgoing.has(key)) outgoing.set(key, []);
+        outgoing.get(key).push(edgeId);
+    };
+    const occupied = (column, row) => (
+        column >= 0 && column < grid.columns
+        && row >= 0 && row < grid.rows
+        && Boolean(mask[row * grid.columns + column])
+    );
+    for (let row = 0; row < grid.rows; row += 1) {
+        for (let column = 0; column < grid.columns; column += 1) {
+            if (!occupied(column, row)) continue;
+            if (!occupied(column, row - 1)) addEdge([column, row], [column + 1, row]);
+            if (!occupied(column + 1, row)) addEdge([column + 1, row], [column + 1, row + 1]);
+            if (!occupied(column, row + 1)) addEdge([column + 1, row + 1], [column, row + 1]);
+            if (!occupied(column - 1, row)) addEdge([column, row + 1], [column, row]);
+        }
+    }
+
+    const used = new Uint8Array(edges.length);
+    const rings = [];
+    for (let firstEdgeId = 0; firstEdgeId < edges.length; firstEdgeId += 1) {
+        if (used[firstEdgeId]) continue;
+        let edgeId = firstEdgeId;
+        const ring = [edges[edgeId].start];
+        while (!used[edgeId]) {
+            used[edgeId] = 1;
+            const edge = edges[edgeId];
+            ring.push(edge.end);
+            if (edgeKey(edge.end) === edgeKey(ring[0])) break;
+            const candidates = (outgoing.get(edgeKey(edge.end)) || []).filter(
+                candidate => !used[candidate]
+            );
+            if (!candidates.length) break;
+            const incomingX = edge.end[0] - edge.start[0];
+            const incomingY = edge.end[1] - edge.start[1];
+            edgeId = candidates.reduce((best, candidate) => {
+                const candidateEdge = edges[candidate];
+                const candidateX = candidateEdge.end[0] - candidateEdge.start[0];
+                const candidateY = candidateEdge.end[1] - candidateEdge.start[1];
+                const turn = Math.atan2(
+                    incomingX * candidateY - incomingY * candidateX,
+                    incomingX * candidateX + incomingY * candidateY
+                );
+                return turn > best.turn ? { edgeId: candidate, turn } : best;
+            }, { edgeId: candidates[0], turn: -Infinity }).edgeId;
+        }
+        if (
+            ring.length >= 4
+            && edgeKey(ring[0]) === edgeKey(ring[ring.length - 1])
+        ) {
+            rings.push(...splitRingAtRepeatedVertices(simplifyOrthogonalRing(ring)));
+        }
+    }
+    return rings;
+}
+
+function maskToGeometry(mask, grid) {
+    const rings = traceMaskRings(mask, grid);
+    const outers = rings
+        .filter(ring => ringArea(ring) > 0)
+        .map(ring => ({ ring, holes: [], area: ringArea(ring) }));
+    const holes = rings.filter(ring => ringArea(ring) < 0);
+    for (const hole of holes) {
+        const start = hole[0];
+        const end = hole[1];
+        const dx = end[0] - start[0];
+        const dy = end[1] - start[1];
+        const length = Math.hypot(dx, dy);
+        // Hole rings are clockwise. A small offset to the right of one edge is
+        // guaranteed to lie in the empty cell, unlike a concave ring's centroid.
+        const point = [
+            (start[0] + end[0]) / 2 + dy / length * 0.25,
+            (start[1] + end[1]) / 2 - dx / length * 0.25
+        ];
+        const container = outers
+            .filter(outer => pointInRing(point, outer.ring))
+            .sort((left, right) => left.area - right.area)[0];
+        if (container) container.holes.push(hole);
+    }
+    const convertRing = ring => ring.map(([column, row]) => unprojectCoordinate([
+        grid.minX + column * grid.cellSizeM,
+        grid.minY + row * grid.cellSizeM
+    ], grid.reference));
+    const polygons = outers.map(outer => [
+        convertRing(outer.ring),
+        ...outer.holes.map(convertRing)
+    ]);
+    if (!polygons.length) return null;
+    return polygons.length === 1
+        ? { type: 'Polygon', coordinates: polygons[0] }
+        : { type: 'MultiPolygon', coordinates: polygons };
+}
+
+function isochroneRequest({ origin: rawOrigin, profileId, speedKmh, cutoffsMinutes }) {
+    requireGraph();
+    const profileIndex = profileIndexes.get(profileId);
+    if (profileIndex === undefined) throw new Error(`Unknown routing profile: ${profileId}`);
+    const speed = Number(speedKmh);
+    if (!Number.isFinite(speed) || speed <= 0) {
+        throw new Error('Isochrone profile speed must be positive.');
+    }
+    const cutoffs = normalizeIsochroneCutoffs(cutoffsMinutes);
+    const equivalentMetersPerMinute = speed * 1000 / 60;
+    const maximumWeight = cutoffs[cutoffs.length - 1] * equivalentMetersPerMinute;
+    const search = boundedDistancesFromOrigin(rawOrigin, profileIndex, maximumWeight);
+    const intervalsByCutoff = cutoffs.map(minutes => reachableIntervals(
+        search,
+        profileIndex,
+        minutes * equivalentMetersPerMinute
+    ));
+    const outerIntervals = intervalsByCutoff[intervalsByCutoff.length - 1];
+    if (!outerIntervals.length) {
+        return {
+            type: 'FeatureCollection',
+            features: [],
+            metadata: {
+                origin: search.origin.coordinates,
+                profile_id: profileId,
+                speed_kmh: speed,
+                cutoffs_minutes: cutoffs,
+                time_semantics: 'accessibility_adjusted',
+                direction: 'outbound',
+                visited_nodes: search.visitedNodes
+            }
+        };
+    }
+
+    const grid = isochroneGrid(outerIntervals, search.origin.coordinates);
+    let previousMask = null;
+    const features = [];
+    for (let index = 0; index < cutoffs.length; index += 1) {
+        const minutes = cutoffs[index];
+        const mask = rasterizeIntervals(intervalsByCutoff[index], grid);
+        if (previousMask) {
+            for (let cell = 0; cell < mask.length; cell += 1) {
+                if (previousMask[cell]) mask[cell] = 1;
+            }
+        }
+        previousMask = mask;
+        const geometry = maskToGeometry(mask, grid);
+        if (!geometry) continue;
+        features.push({
+            type: 'Feature',
+            properties: {
+                minutes,
+                profile_id: profileId,
+                speed_kmh: speed,
+                time_semantics: 'accessibility_adjusted',
+                direction: 'outbound',
+                budget_equivalent_m: Math.round(minutes * equivalentMetersPerMinute * 100) / 100,
+                approximate: true
+            },
+            geometry
+        });
+    }
+    return {
+        type: 'FeatureCollection',
+        features,
+        metadata: {
+            origin: search.origin.coordinates,
+            profile_id: profileId,
+            speed_kmh: speed,
+            cutoffs_minutes: cutoffs,
+            time_semantics: 'accessibility_adjusted',
+            direction: 'outbound',
+            visited_nodes: search.visitedNodes,
+            polygonization: {
+                method: 'rasterized_reachable_network_buffer',
+                cell_size_m: Math.round(grid.cellSizeM * 100) / 100,
+                buffer_m: ISOCHRONE_BUFFER_M
+            }
+        }
     };
 }

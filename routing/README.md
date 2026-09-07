@@ -21,8 +21,8 @@ with users and accessibility specialists.
 | `grading.py` | Attribute normalization and grade calculation |
 | `elevation.py` | Elevation-provider hierarchy and slope cache |
 | `binary_graph.py` | Versioned typed-array graph serializer and spatial index |
-| `routing_worker.js` | Indexed snapping and A* routing off the browser main thread |
-| `routing_demo.html` | Static MapLibre client with PMTiles network rendering |
+| `routing_worker.js` | Indexed snapping, A* routing and bounded isochrone search off the browser main thread |
+| `routing_demo.html` | Static MapLibre client with PMTiles network rendering and reachability controls |
 | `../generation/routing_demo_gen.py` | Offline routing-data generation |
 | `../generation/routing_tiles_gen.py` | Lightweight display PMTiles generation |
 
@@ -70,6 +70,13 @@ runs A* in a Web Worker. Network drawing is intentionally separate: MapLibre
 streams the much smaller `network.pmtiles` archive and never downloads the
 analytical GeoParquet to calculate a route.
 
+Displayed travel time is **accessibility-adjusted** for accessibility profiles.
+The accumulated generalized resistance (length multiplied by the profile's
+grade multiplier, plus event penalties) is divided by the profile speed. A
+poor surface or difficult crossing therefore consumes more of the time budget
+than the same physical distance under good conditions. These provisional
+values describe comparative reachability; they are not measured journey times.
+
 ## Route comparison
 
 When an accessibility profile is selected, the browser offers **Compare with
@@ -77,6 +84,27 @@ distance-only**. It calculates a second shortest-distance route between the
 same snapped points, draws it as an offset orange dashed line, and reports its
 distance plus the selected route's absolute and percentage difference. The
 option is hidden when distance-only is already selected.
+
+## Accessibility-adjusted isochrones
+
+The routing page also has a **Reachability** mode. One origin click runs a
+bounded Dijkstra search over the same directional typed-array graph and creates
+cumulative 5, 10 and 15-minute polygons for the selected profile. Impassable
+edges remain unreachable and poor conditions consume the budget according to
+the profile's existing generalized costs.
+
+Polygon boundaries are approximate. The worker rasterizes the reachable
+portion of each network segment on a local metric grid, applies a small access
+buffer and traces the resulting cells into Polygon or MultiPolygon geometries.
+Using a shared grid guarantees that successive bands remain nested, preserves
+disconnected components and holes, and avoids adding a server or a large
+client-side geometry dependency.
+
+The user can download the cumulative polygons as a GeoJSON FeatureCollection.
+The export records the origin, outbound direction, cutoff, profile and speed,
+ruleset identifiers, graph checksum, polygonization settings, generation time
+and provisional-data disclaimer. This small, ephemeral client result does not
+restore GeoJSON as a generated routing-network artifact.
 
 ## Slope source hierarchy
 
@@ -114,7 +142,8 @@ need to be sampled again.
 
 `network.parquet` is the expert-facing scrutiny dataset and the direct source
 for PMTiles generation. GeoJSON is not generated anywhere in the routing
-pipeline.
+pipeline; an isochrone GeoJSON exists only when a user calculates and exports
+that derived result in the browser.
 
 ## Safely changing a profile
 
