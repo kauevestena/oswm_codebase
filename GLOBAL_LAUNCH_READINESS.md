@@ -180,8 +180,10 @@ Priority 0 before many nodes:
   cold starts;
 - test concurrent core synchronization and scheduled updates across multiple
   pilot repositories;
-- introduce fleet observability for node/core SHA, last successful stage,
-  duration, sizes, provider failures, and deployment status;
+- validate the new fleet status report against hosted node runs, then extend
+  the machine report with stage duration, output sizes, and provider failures;
+- install the fleet GitHub App on every registered owner/repository and enable
+  exact-SHA rollout after its owner-scoped token path has been exercised;
 - decide whether generated deployment artifacts should remain in permanent Git
   history or move to a bounded artifact/publication store.
 

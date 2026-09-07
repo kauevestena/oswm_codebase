@@ -1,0 +1,54 @@
+schema_version = 1
+
+[policy]
+# A run is only marked stale after its scheduled time plus this grace period.
+# In-progress and queued runs are reported separately as "updating".
+schedule_grace_minutes = 180
+workflow_history = 100
+api_timeout_seconds = 20
+page_timeout_seconds = 20
+
+[[nodes]]
+id = "curitiba"
+repository = "kauevestena/opensidewalkmap_beta"
+branch = "main"
+role = "reference"
+enabled = true
+rollout_wave = 0
+pages_url = "https://kauevestena.github.io/opensidewalkmap_beta/"
+
+[[nodes]]
+id = "hiroshima"
+repository = "opensidewalkmap/hiroshima"
+branch = "main"
+role = "production"
+enabled = true
+rollout_wave = 1
+pages_url = "https://opensidewalkmap.github.io/hiroshima/"
+
+[[nodes]]
+id = "lima"
+repository = "opensidewalkmap/lima"
+branch = "main"
+role = "production"
+enabled = true
+rollout_wave = 1
+pages_url = "https://opensidewalkmap.github.io/lima/"
+
+[[nodes]]
+id = "milan"
+repository = "opensidewalkmap/milan"
+branch = "main"
+role = "production"
+enabled = true
+rollout_wave = 1
+pages_url = "https://opensidewalkmap.github.io/milan/"
+
+[[nodes]]
+id = "oslo"
+repository = "opensidewalkmap/oslo"
+branch = "main"
+role = "production"
+enabled = true
+rollout_wave = 1
+pages_url = "https://opensidewalkmap.github.io/oslo/"
