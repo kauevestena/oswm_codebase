@@ -378,6 +378,11 @@ def test_workflow_contracts_are_parseable_scoped_and_serialized():
             ROOT / "workflows" / name
         ).read_text()
     assert "actions/deploy-pages@v4" in (ROOT / "workflows/pages.yml").read_text()
+    updater = (ROOT / "workflows/update_codebase.yml").read_text()
+    assert "python oswm_codebase/special_updates.py" not in updater
+    assert "actions/setup-python" not in updater
+    assert "git add -- oswm_codebase\n" in updater
+    assert "git add -- oswm_codebase .github/workflows" not in updater
     for name in (
         "setup.yml", "data_daily_updating.yml", "weekly.yml",
         "special_updates.yml", "customizable.yml", "update_codebase.yml",
