@@ -1,1 +1,1 @@
-"""Fleet inventory, observation, and rollout helpers for OSWM nodes."""
+"""Fleet inventory and observation helpers for OSWM nodes."""

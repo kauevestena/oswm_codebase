@@ -68,24 +68,22 @@ python -m fleet.reconcile \
   --output fleet/status.json
 ```
 
-The separate `Fleet rollout` workflow dispatches each node's existing
-`update_codebase.yml` with the exact core SHA that passed `core_ci`. Processing
-and commits remain node-local. It waits until the reference node actually pins
-that SHA before dispatching the production wave; the pre-existing staggered
-daily schedules remain the fallback. Rollout is disabled until all of these
-are configured in `kauevestena/oswm_codebase`:
+Fleet rollout is pull-based and requires no PAT, GitHub App, repository secret,
+or cross-organization credential. Each node's scheduled
+`update_codebase.yml` wrapper calls the public reusable
+`.github/workflows/node_codebase_sync.yml` workflow from core. The called job
+runs in the node's context and uses only GitHub's short-lived, automatically
+issued `GITHUB_TOKEN` to update that same node. It accepts either an exact
+main-reachable SHA for manual recovery or the latest `oswm_codebase/main` SHA
+for scheduled convergence.
 
-- repository variable `OSWM_FLEET_ENABLED=true`;
-- repository variable `OSWM_FLEET_APP_CLIENT_ID`;
-- repository secret `OSWM_FLEET_APP_PRIVATE_KEY`;
-- the same GitHub App installed on `kauevestena/opensidewalkmap_beta` and the
-  registered repositories owned by `opensidewalkmap`, with Actions write and
-  Contents read permissions (plus the mandatory Metadata read permission).
-
-The workflow creates a separate installation token for each repository owner;
-no personal access token is required. It updates only the node gitlink. Changes
-under `.github/workflows` remain an explicit managed-workflow migration because
-they require elevated Workflows write permission.
+The node schedule remains the rollout control: it is derived two hours before
+that node's daily processing unless explicitly overridden. The reference node
+can therefore remain the first observation wave and production nodes can use
+later staggered schedules. Core `main` is the promotion channel, so its branch
+protection must require `core_ci` before merge. Changes to node wrapper files
+remain an explicit managed-workflow migration, but future updater logic changes
+take effect centrally through the reusable workflow.
 
 Runtime dependencies are locked for Python 3.12 in `requirements.txt` from
 the human-maintained `requirements.in`. Development and CI use the parallel

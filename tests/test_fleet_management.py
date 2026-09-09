@@ -10,7 +10,6 @@ import yaml
 
 from fleet.reconcile import markdown_summary, previous_scheduled_time, reconcile
 from fleet.registry import load_registry
-from fleet.rollout import rollout
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -21,19 +20,12 @@ class FakeClient:
     def __init__(self, snapshots, pages=None):
         self.snapshots = snapshots
         self.pages = pages or {}
-        self.dispatches = []
 
     def node_snapshot(self, repository, branch, history):
         return self.snapshots[repository]
 
     def probe_url(self, url):
         return self.pages.get(url, {"ok": True, "status": 200, "url": url})
-
-    def dispatch_workflow(self, repository, workflow, branch, inputs):
-        self.dispatches.append((repository, workflow, branch, inputs))
-
-    def get_submodule_sha(self, repository, path, branch):
-        return REVISION
 
 
 def _registry(tmp_path, *, enabled=True):
@@ -185,42 +177,6 @@ def test_reconcile_marks_in_progress_runs_without_calling_them_stale(tmp_path):
     assert report["nodes"][0]["status"] == "updating"
 
 
-def test_rollout_is_owner_scoped_ordered_and_exact(tmp_path):
-    registry = _registry(tmp_path)
-    client = FakeClient({})
-    results = rollout(
-        registry,
-        client,
-        owner="example",
-        revision=REVISION,
-    )
-    assert results[0]["status"] == "dispatched"
-    assert client.dispatches == [
-        (
-            "example/test-node",
-            "update_codebase.yml",
-            "main",
-            {"revision": REVISION},
-        )
-    ]
-
-
-def test_rollout_can_gate_a_wave_on_observed_gitlinks(tmp_path):
-    registry = _registry(tmp_path)
-    client = FakeClient({})
-    results = rollout(
-        registry,
-        client,
-        owner="example",
-        wave=1,
-        revision=REVISION,
-        wait_seconds=1,
-        poll_seconds=1,
-    )
-    assert results[0]["status"] == "deployed"
-    assert results[0]["observed_revision"] == REVISION
-
-
 def test_registry_rejects_duplicate_repositories(tmp_path):
     registry = tmp_path / "registry.toml"
     registry.write_text(
@@ -249,17 +205,23 @@ pages_url = "https://example.github.io/second/"
         load_registry(registry)
 
 
-def test_fleet_workflows_are_parseable_and_rollout_is_opt_in():
+def test_fleet_workflows_are_parseable_and_secretless():
     status_source = (ROOT / ".github/workflows/fleet_status.yml").read_text()
-    rollout_source = (ROOT / ".github/workflows/fleet_rollout.yml").read_text()
+    reusable_source = (
+        ROOT / ".github/workflows/node_codebase_sync.yml"
+    ).read_text()
+    wrapper_source = (ROOT / "workflows/update_codebase.yml").read_text()
     assert yaml.safe_load(status_source) is not None
-    assert yaml.safe_load(rollout_source) is not None
-    assert "vars.OSWM_FLEET_ENABLED == 'true'" in rollout_source
-    assert "actions/create-github-app-token@v3" in rollout_source
-    assert "secrets.OSWM_FLEET_APP_PRIVATE_KEY" in rollout_source
-    assert "github.event.workflow_run.event == 'push'" in rollout_source
-    assert "github.event.workflow_run.head_repository.full_name == github.repository" in rollout_source
-    assert "permission-actions: write" in rollout_source
+    assert yaml.safe_load(reusable_source) is not None
+    assert yaml.safe_load(wrapper_source) is not None
+    assert "workflow_call:" in reusable_source
+    assert '[[ ! "$REVISION" =~ ^[0-9a-f]{40}$ ]]' in reusable_source
+    assert "git add -- oswm_codebase\n" in reusable_source
+    assert "uses: kauevestena/oswm_codebase/.github/workflows/node_codebase_sync.yml@main" in wrapper_source
+    assert "contents: write" in wrapper_source
+    assert "actions: write" in wrapper_source
+    assert "create-github-app-token" not in reusable_source + wrapper_source
+    assert "${{ secrets" not in reusable_source + wrapper_source
     assert "${{ secrets" not in status_source
 
 
