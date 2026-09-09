@@ -182,8 +182,8 @@ Priority 0 before many nodes:
   pilot repositories;
 - validate the new fleet status report against hosted node runs, then extend
   the machine report with stage duration, output sizes, and provider failures;
-- install the fleet GitHub App on every registered owner/repository and enable
-  exact-SHA rollout after its owner-scoped token path has been exercised;
+- migrate every registered node to the secretless reusable sync wrapper and
+  validate the reference-first stagger before enrolling more nodes;
 - decide whether generated deployment artifacts should remain in permanent Git
   history or move to a bounded artifact/publication store.
 

@@ -384,18 +384,25 @@ def test_workflow_contracts_are_parseable_scoped_and_serialized():
         ).read_text()
     assert "actions/deploy-pages@v4" in (ROOT / "workflows/pages.yml").read_text()
     updater = (ROOT / "workflows/update_codebase.yml").read_text()
+    reusable_updater = (
+        ROOT / ".github/workflows/node_codebase_sync.yml"
+    ).read_text()
     assert "python oswm_codebase/special_updates.py" not in updater
     assert "actions/setup-python" not in updater
-    assert "git add -- oswm_codebase\n" in updater
-    assert "git add -- oswm_codebase .github/workflows" not in updater
+    assert "node_codebase_sync.yml@main" in updater
+    assert "git add -- oswm_codebase\n" in reusable_updater
+    assert "git add -- oswm_codebase .github/workflows" not in reusable_updater
     for name in (
         "setup.yml", "data_daily_updating.yml", "weekly.yml",
-        "special_updates.yml", "customizable.yml", "update_codebase.yml",
+        "special_updates.yml", "customizable.yml",
     ):
         writer = (ROOT / "workflows" / name).read_text()
         assert "actions: write" in writer
         assert "gh workflow run pages.yml" in writer
         assert 'echo "changed=true" >> "$GITHUB_OUTPUT"' in writer
+    assert "actions: write" in updater
+    assert "gh workflow run pages.yml" in reusable_updater
+    assert 'echo "changed=true" >> "$GITHUB_OUTPUT"' in reusable_updater
     assert "other/auxiliary_scripts/validate_tiles.py" in (
         ROOT / "workflows/data_daily_updating.yml"
     ).read_text()

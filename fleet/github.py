@@ -1,9 +1,4 @@
-"""Small GitHub REST client used by the fleet workflows.
-
-The read-only reconciler deliberately works without authentication for the
-public OSWM fleet. Mutating operations require an installation token supplied
-through ``GH_TOKEN`` by the rollout workflow.
-"""
+"""Read-only GitHub REST client used by fleet observation workflows."""
 
 from __future__ import annotations
 
@@ -109,13 +104,6 @@ class GitHubClient:
             "runs": runs.get("workflow_runs", []) if isinstance(runs, dict) else [],
         }
 
-    def get_submodule_sha(self, repository: str, path: str, branch: str) -> str | None:
-        """Return the commit currently pinned by a repository gitlink."""
-
-        payload = self.get_content(repository, path, branch)
-        sha = payload.get("sha")
-        return sha if isinstance(sha, str) else None
-
     def probe_url(self, url: str) -> dict[str, Any]:
         started = time.monotonic()
         request = urllib.request.Request(
@@ -148,20 +136,3 @@ class GitHubClient:
                 "url": url,
                 "error": str(error),
             }
-
-    def dispatch_workflow(
-        self,
-        repository: str,
-        workflow: str,
-        branch: str,
-        inputs: dict[str, str] | None = None,
-    ) -> None:
-        encoded_workflow = urllib.parse.quote(workflow, safe="")
-        payload: dict[str, Any] = {"ref": branch}
-        if inputs:
-            payload["inputs"] = inputs
-        self.request_json(
-            "POST",
-            f"repos/{repository}/actions/workflows/{encoded_workflow}/dispatches",
-            payload,
-        )
