@@ -46,6 +46,47 @@ are executable:
 - Registry timestamps are UTC ISO-8601 values. Legacy local timestamps remain
   readable using the node timezone and are migrated as jobs succeed.
 
+## Fleet management
+
+`fleet/registry.toml` is the authoritative allowlist for active OSWM nodes.
+Node schedules remain in each node's `config.py`; the fleet registry adds only
+control-plane properties such as role, enabled state, rollout wave, branch,
+and Pages URL.
+
+The `Fleet status` workflow runs independently of node writers. It compares
+the registered nodes with the current core revision, reads their managed-file
+state, checks required workflow state and recent runs, evaluates the literal
+daily and weekly schedules with a grace period, probes GitHub Pages, and
+uploads `fleet/status.json` as an Actions artifact. It is intentionally
+read-only and can inspect the current public fleet without a cross-repository
+credential:
+
+```bash
+python -m fleet.reconcile \
+  --registry fleet/registry.toml \
+  --desired-sha "$(git rev-parse HEAD)" \
+  --output fleet/status.json
+```
+
+The separate `Fleet rollout` workflow dispatches each node's existing
+`update_codebase.yml` with the exact core SHA that passed `core_ci`. Processing
+and commits remain node-local. It waits until the reference node actually pins
+that SHA before dispatching the production wave; the pre-existing staggered
+daily schedules remain the fallback. Rollout is disabled until all of these
+are configured in `kauevestena/oswm_codebase`:
+
+- repository variable `OSWM_FLEET_ENABLED=true`;
+- repository variable `OSWM_FLEET_APP_CLIENT_ID`;
+- repository secret `OSWM_FLEET_APP_PRIVATE_KEY`;
+- the same GitHub App installed on `kauevestena/opensidewalkmap_beta` and the
+  registered repositories owned by `opensidewalkmap`, with Actions write and
+  Contents read permissions (plus the mandatory Metadata read permission).
+
+The workflow creates a separate installation token for each repository owner;
+no personal access token is required. It updates only the node gitlink. Changes
+under `.github/workflows` remain an explicit managed-workflow migration because
+they require elevated Workflows write permission.
+
 Runtime dependencies are locked for Python 3.12 in `requirements.txt` from
 the human-maintained `requirements.in`. Development and CI use the parallel
 `requirements-dev.in` / `requirements-dev.txt` pair.

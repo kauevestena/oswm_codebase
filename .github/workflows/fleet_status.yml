@@ -1,0 +1,39 @@
+name: Fleet status
+
+on:
+  schedule:
+    # Avoid the beginning of the hour, when scheduled Actions are most delayed.
+    - cron: "23 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: oswm-fleet-status
+  cancel-in-progress: true
+
+jobs:
+  observe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Inspect registered public nodes
+        run: |
+          python -m fleet.reconcile \
+            --registry fleet/registry.toml \
+            --desired-sha "$GITHUB_SHA" \
+            --output fleet/status.json \
+            --summary "$GITHUB_STEP_SUMMARY" \
+            --fail-on-status stale \
+            --fail-on-status unreachable
+      - name: Preserve the machine-readable snapshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oswm-fleet-status
+          path: fleet/status.json
+          retention-days: 30

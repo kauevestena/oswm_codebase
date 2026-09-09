@@ -118,6 +118,13 @@ def synchronize(node_root: Path, codebase_root: Path) -> dict[str, Any]:
     manifest = _load_json(manifest_path, None)
     if not isinstance(manifest, dict):
         raise RuntimeError(f"Invalid managed workflow manifest: {manifest_path}")
+    managed_revision = manifest.get("revision")
+    if (
+        isinstance(managed_revision, bool)
+        or not isinstance(managed_revision, int)
+        or managed_revision <= 0
+    ):
+        raise RuntimeError("Managed workflow manifest revision must be a positive integer")
     managed = manifest.get("managed", [])
     retired = manifest.get("retired", [])
     if not all(isinstance(item, str) for item in (*managed, *retired)):
@@ -154,7 +161,8 @@ def synchronize(node_root: Path, codebase_root: Path) -> dict[str, Any]:
             removed.append(relative)
 
     state = {
-        "schema_version": 1,
+        "schema_version": 2,
+        "managed_revision": managed_revision,
         "source_revision": _revision(codebase_root),
         "managed_files": sorted(written),
     }

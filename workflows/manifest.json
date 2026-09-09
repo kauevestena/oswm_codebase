@@ -1,5 +1,6 @@
 {
   "schema_version": 1,
+  "revision": 2,
   "managed": [
     "workflows/customizable.yml",
     "workflows/data_daily_updating.yml",

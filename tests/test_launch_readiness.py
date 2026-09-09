@@ -277,6 +277,7 @@ def test_special_update_renders_crons_and_preserves_node_workflows(tmp_path):
     (core / "workflows").mkdir(parents=True)
     (node / ".github/workflows").mkdir(parents=True)
     (core / "workflows/manifest.json").write_text(json.dumps({
+        "revision": 1,
         "managed": [
             "workflows/data_daily_updating.yml",
             "workflows/update_codebase.yml",
@@ -302,6 +303,9 @@ def test_special_update_renders_crons_and_preserves_node_workflows(tmp_path):
     assert "43 4 * * 0" in (node / ".github/workflows/weekly.yml").read_text()
     assert custom.read_text() == "custom\n"
     assert not retired.exists()
+    state = json.loads((node / ".oswm-managed-files.json").read_text())
+    assert state["schema_version"] == 2
+    assert state["managed_revision"] == 1
 
 
 def test_special_update_accepts_explicit_codebase_sync_cron(tmp_path):
@@ -310,6 +314,7 @@ def test_special_update_accepts_explicit_codebase_sync_cron(tmp_path):
     (core / "workflows").mkdir(parents=True)
     (node / ".github/workflows").mkdir(parents=True)
     (core / "workflows/manifest.json").write_text(json.dumps({
+        "revision": 1,
         "managed": ["workflows/update_codebase.yml"],
         "retired": [],
     }))
@@ -395,6 +400,7 @@ def test_workflow_contracts_are_parseable_scoped_and_serialized():
         ROOT / "workflows/data_daily_updating.yml"
     ).read_text()
     manifest = json.loads((ROOT / "workflows/manifest.json").read_text())
+    assert isinstance(manifest["revision"], int) and manifest["revision"] > 0
     assert "workflows/deploy_pages.yml" in manifest["retired"]
 
 
