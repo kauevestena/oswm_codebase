@@ -1,9 +1,11 @@
 schema_version = 1
 
 [policy]
-# A run is only marked stale after its scheduled time plus this grace period.
-# In-progress and queued runs are reported separately as "updating".
-schedule_grace_minutes = 180
+# GitHub-hosted scheduled runs can start several hours late. Surface the lag as
+# degraded after three hours, but reserve a failing stale status for a missed
+# seven-hour SLA. In-progress and queued runs remain "updating".
+schedule_warning_minutes = 180
+schedule_grace_minutes = 420
 workflow_history = 100
 api_timeout_seconds = 20
 page_timeout_seconds = 20

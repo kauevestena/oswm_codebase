@@ -202,6 +202,7 @@ def inspect_node(
     }
     active_run = False
     stale = False
+    warning_delay = timedelta(minutes=policy.schedule_warning_minutes)
     grace = timedelta(minutes=policy.schedule_grace_minutes)
 
     for kind, filename in EXPECTED_WORKFLOWS.items():
@@ -264,18 +265,24 @@ def inspect_node(
             and latest_time
             and latest_time >= expected
         )
-        if (
-            now > expected + grace
-            and not current_cycle_running
-            and (success_time is None or success_time < expected)
-        ):
-            _issue(
-                issues,
-                "error",
-                f"{kind}_overdue",
-                f"no successful {kind} run after {expected.isoformat().replace('+00:00', 'Z')}",
-            )
-            stale = True
+        current_cycle_succeeded = success_time is not None and success_time >= expected
+        if not current_cycle_running and not current_cycle_succeeded:
+            expected_text = expected.isoformat().replace("+00:00", "Z")
+            if now > expected + grace:
+                _issue(
+                    issues,
+                    "error",
+                    f"{kind}_overdue",
+                    f"no successful {kind} run after {expected_text}",
+                )
+                stale = True
+            elif now > expected + warning_delay:
+                _issue(
+                    issues,
+                    "warning",
+                    f"{kind}_delayed",
+                    f"no successful {kind} run after {expected_text}; within grace period",
+                )
 
     pages = client.probe_url(node.pages_url)
     result["pages"] = pages

@@ -14,7 +14,8 @@ REPOSITORY = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
 
 @dataclass(frozen=True)
 class FleetPolicy:
-    schedule_grace_minutes: int = 180
+    schedule_warning_minutes: int = 180
+    schedule_grace_minutes: int = 420
     workflow_history: int = 100
     api_timeout_seconds: int = 20
     page_timeout_seconds: int = 20
@@ -103,11 +104,23 @@ def load_registry(path: str | Path) -> FleetRegistry:
     raw_policy = data.get("policy", {})
     if not isinstance(raw_policy, dict):
         raise ValueError("fleet registry policy must be a table")
+    schedule_grace_minutes = _positive_integer(
+        raw_policy.get("schedule_grace_minutes", 420),
+        "policy.schedule_grace_minutes",
+    )
+    default_warning_minutes = min(180, max(1, schedule_grace_minutes // 2))
+    schedule_warning_minutes = _positive_integer(
+        raw_policy.get("schedule_warning_minutes", default_warning_minutes),
+        "policy.schedule_warning_minutes",
+    )
+    if schedule_warning_minutes >= schedule_grace_minutes:
+        raise ValueError(
+            "policy.schedule_warning_minutes must be less than "
+            "policy.schedule_grace_minutes"
+        )
     policy = FleetPolicy(
-        schedule_grace_minutes=_positive_integer(
-            raw_policy.get("schedule_grace_minutes", 180),
-            "policy.schedule_grace_minutes",
-        ),
+        schedule_warning_minutes=schedule_warning_minutes,
+        schedule_grace_minutes=schedule_grace_minutes,
         workflow_history=_positive_integer(
             raw_policy.get("workflow_history", 100),
             "policy.workflow_history",

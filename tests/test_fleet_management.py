@@ -33,6 +33,7 @@ def _registry(tmp_path, *, enabled=True):
     path.write_text(
         f'''schema_version = 1
 [policy]
+schedule_warning_minutes = 30
 schedule_grace_minutes = 60
 workflow_history = 20
 api_timeout_seconds = 5
@@ -100,6 +101,8 @@ def test_canonical_registry_is_valid_and_covers_current_fleet():
     }
     assert registry.nodes[0].role == "reference"
     assert all(node.enabled for node in registry.nodes)
+    assert registry.policy.schedule_warning_minutes == 180
+    assert registry.policy.schedule_grace_minutes == 420
 
 
 def test_previous_scheduled_time_supports_daily_and_weekly_crons():
@@ -153,6 +156,43 @@ def test_reconcile_separates_core_drift_from_overdue_runs(tmp_path):
         "managed_workflows_behind",
         "daily_overdue",
     }
+
+
+def test_reconcile_warns_about_scheduler_lag_before_failing(tmp_path):
+    registry = _registry(tmp_path)
+    snapshot = _healthy_snapshot()
+    snapshot["runs"][0] = _run(
+        "data_daily_updating.yml", "2026-09-06T08:00:00Z"
+    )
+    report = reconcile(
+        registry,
+        FakeClient({"example/test-node": snapshot}),
+        now=datetime(2026, 9, 7, 8, 15, tzinfo=timezone.utc),
+        desired_sha=REVISION,
+        desired_managed_revision=2,
+    )
+    node = report["nodes"][0]
+    assert node["status"] == "degraded"
+    assert {issue["code"] for issue in node["issues"]} == {"daily_delayed"}
+
+
+def test_registry_rejects_warning_threshold_at_or_after_grace(tmp_path):
+    registry = _registry(tmp_path)
+    source = registry.read_text(encoding="utf-8").replace(
+        "schedule_warning_minutes = 30", "schedule_warning_minutes = 60"
+    )
+    registry.write_text(source, encoding="utf-8")
+    with pytest.raises(ValueError, match="must be less than"):
+        load_registry(registry)
+
+
+def test_registry_derives_warning_threshold_for_legacy_policy(tmp_path):
+    registry = _registry(tmp_path)
+    source = registry.read_text(encoding="utf-8").replace(
+        "schedule_warning_minutes = 30\n", ""
+    )
+    registry.write_text(source, encoding="utf-8")
+    assert load_registry(registry).policy.schedule_warning_minutes == 30
 
 
 def test_reconcile_marks_in_progress_runs_without_calling_them_stale(tmp_path):
