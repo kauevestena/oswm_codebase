@@ -89,7 +89,13 @@ option is hidden when distance-only is already selected.
 
 The routing page also has a **Reachability** mode. One origin click runs a
 bounded Dijkstra search over the same directional typed-array graph and creates
-cumulative 5, 10 and 15-minute polygons for the selected profile. Impassable
+cumulative polygons for the selected profile. Users choose the starting time,
+increment in minutes and number of increments **after** the starting band.
+The defaults (5, 5, 2) produce 5, 10 and 15-minute polygons; zero increments
+produces only the starting band. Inputs use whole minutes, with at most 12
+bands and a final cutoff no greater than 120 minutes. Changing a setting
+recalculates the current origin and updates the legend and exported cutoffs.
+Impassable
 edges remain unreachable and poor conditions consume the budget according to
 the profile's existing generalized costs.
 

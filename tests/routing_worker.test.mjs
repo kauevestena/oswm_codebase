@@ -9,6 +9,33 @@ const workerSource = readFileSync(
     'utf8'
 );
 
+test('configurable cutoff controls validate and generate bands', () => {
+    const html = readFileSync(new URL('../routing/routing_demo.html', import.meta.url), 'utf8');
+    const source = html.slice(html.indexOf('function readIsochroneCutoffs()'),
+        html.indexOf('const routingRoot ='));
+    const values = { isochroneStart: '5', isochroneStep: '5', isochroneCount: '2' };
+    const context = { document: { getElementById: id => ({ value: values[id] }) } };
+    vm.runInNewContext(source, context);
+    const read = () => Array.from(context.readIsochroneCutoffs());
+    assert.deepEqual(read(), [5, 10, 15]);
+    values.isochroneStart = '10'; values.isochroneStep = '3'; values.isochroneCount = '4';
+    assert.deepEqual(read(), [10, 13, 16, 19, 22]);
+    assert.equal(context.isochroneBands(read()).length, 5);
+    values.isochroneCount = '0';
+    assert.deepEqual(read(), [10]);
+    values.isochroneStart = '120';
+    assert.deepEqual(read(), [120]);
+    values.isochroneCount = '1';
+    assert.throws(read, /120 minutes/);
+    values.isochroneStart = '5'; values.isochroneCount = '12';
+    assert.throws(read, /0–11/);
+    values.isochroneCount = '2';
+    for (const invalid of ['', '0', '-1', '1.5', 'Infinity']) {
+        values.isochroneStep = invalid;
+        assert.throws(read);
+    }
+});
+
 
 function fixtureGraph(accessibleWeights = [111.2, 111.2, Infinity, 111.2]) {
     const nodeCount = 3;
