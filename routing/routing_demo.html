@@ -183,8 +183,16 @@
             margin: 0 0 9px;
         }
 
+        #isochroneOptions input[type="number"] {
+            box-sizing: border-box;
+            width: 100%;
+            padding: 7px;
+            margin: 4px 0 10px;
+        }
+
         .isochrone-legend {
             display: flex;
+            flex-wrap: wrap;
             gap: 12px;
             margin: 8px 0 11px;
             font-weight: 700;
@@ -411,11 +419,14 @@
 
             <div id="isochroneOptions" hidden>
                 <p>Click one origin to calculate outward, accessibility-adjusted reachability.</p>
-                <div class="isochrone-legend" aria-label="Reachability bands">
-                    <span><i class="isochrone-swatch five"></i>5 min</span>
-                    <span><i class="isochrone-swatch ten"></i>10 min</span>
-                    <span><i class="isochrone-swatch fifteen"></i>15 min</span>
-                </div>
+                <label for="isochroneStart">Starting time (minutes)</label>
+                <input id="isochroneStart" type="number" min="1" max="120" step="1" value="5">
+                <label for="isochroneStep">Increment (minutes)</label>
+                <input id="isochroneStep" type="number" min="1" max="120" step="1" value="5">
+                <label for="isochroneCount">Number of increments</label>
+                <input id="isochroneCount" type="number" min="0" max="11" step="1" value="2">
+                <p>Increments follow the starting band. Maximum: 12 bands, up to 120 minutes.</p>
+                <div id="isochroneLegend" class="isochrone-legend" aria-label="Reachability bands"></div>
                 <button type="button" id="downloadIsochrone" class="action-button" disabled>
                     Download GeoJSON
                 </button>
@@ -432,7 +443,7 @@
                 <li>Choose Route or Reachability.</li>
                 <li>Select a routing profile.</li>
                 <li>For a route, click an origin and destination.</li>
-                <li>For reachability, click one origin to create 5, 10 and 15-minute polygons.</li>
+                <li>For reachability, choose a starting time, increment and number of increments, then click one origin.</li>
                 <li>Export calculated reachability polygons as GeoJSON when needed.</li>
             </ol>
             <p>Accessibility-adjusted times and polygons are approximate. Missing data can affect the result, and provisional profiles do not guarantee accessibility.</p>
@@ -446,12 +457,44 @@
 
         const pmtilesProtocol = new PmtilesProtocol();
         maplibregl.addProtocol('pmtiles', pmtilesProtocol.tile);
-        const ISOCHRONE_CUTOFFS_MINUTES = [5, 10, 15];
-        const ISOCHRONE_BANDS = [
-            { minutes: 15, color: '#a1dab4' },
-            { minutes: 10, color: '#41b6c4' },
-            { minutes: 5, color: '#225ea8' }
-        ];
+        let displayedIsochroneBands = [];
+
+        function readIsochroneCutoffs() {
+            const start = Number(document.getElementById('isochroneStart').value);
+            const step = Number(document.getElementById('isochroneStep').value);
+            const count = Number(document.getElementById('isochroneCount').value);
+            if (![start, step, count].every(Number.isInteger)
+                || start < 1 || step < 1 || step > 120 || count < 0 || count > 11
+                || start + step * count > 120) {
+                throw new Error('Use whole minutes, a positive start and increment, 0–11 increments, and a final time of at most 120 minutes.');
+            }
+            return Array.from({ length: count + 1 }, (_, index) => start + step * index);
+        }
+
+        function isochroneBands(cutoffs) {
+            const stops = [[34, 94, 168], [65, 182, 196], [161, 218, 180]];
+            return cutoffs.map((minutes, index) => {
+                const position = cutoffs.length === 1 ? 0 : index / (cutoffs.length - 1) * 2;
+                const low = Math.min(1, Math.floor(position));
+                const fraction = position - low;
+                const rgb = stops[low].map((value, channel) =>
+                    Math.round(value + (stops[low + 1][channel] - value) * fraction));
+                return { minutes, color: `rgb(${rgb.join(',')})` };
+            });
+        }
+
+        function updateIsochroneLegend(cutoffs) {
+            const legend = document.getElementById('isochroneLegend');
+            legend.replaceChildren();
+            for (const band of isochroneBands(cutoffs)) {
+                const label = document.createElement('span');
+                const swatch = document.createElement('i');
+                swatch.className = 'isochrone-swatch';
+                swatch.style.backgroundColor = band.color;
+                label.append(swatch, `${band.minutes} min`);
+                legend.append(label);
+            }
+        }
         const routingRoot = new URL('../../data/routing/', import.meta.url);
         const basemapUrl = new URL('../../data/basemaps/light.pmtiles', import.meta.url).href;
         const routingWorker = new Worker(
@@ -875,7 +918,7 @@
         }
 
         function removeIsochroneLayers() {
-            for (const band of [...ISOCHRONE_BANDS].reverse()) {
+            for (const band of [...displayedIsochroneBands].reverse()) {
                 const lineLayerId = `isochrone-line-${band.minutes}`;
                 const fillLayerId = `isochrone-fill-${band.minutes}`;
                 if (map.getLayer(lineLayerId)) map.removeLayer(lineLayerId);
@@ -884,9 +927,12 @@
             if (map.getSource('isochrone-polygons')) {
                 map.removeSource('isochrone-polygons');
             }
+            displayedIsochroneBands = [];
         }
 
         function setIsochroneLayers(data) {
+            removeIsochroneLayers();
+            displayedIsochroneBands = isochroneBands(data.metadata.cutoffs_minutes).reverse();
             const displayData = {
                 type: 'FeatureCollection',
                 features: data.features
@@ -901,7 +947,7 @@
                 data: displayData
             });
             const beforeLayer = map.getLayer('line-layer') ? 'line-layer' : undefined;
-            for (const band of ISOCHRONE_BANDS) {
+            for (const band of displayedIsochroneBands) {
                 map.addLayer({
                     id: `isochrone-fill-${band.minutes}`,
                     type: 'fill',
@@ -913,7 +959,7 @@
                     }
                 }, beforeLayer);
             }
-            for (const band of ISOCHRONE_BANDS) {
+            for (const band of displayedIsochroneBands) {
                 map.addLayer({
                     id: `isochrone-line-${band.minutes}`,
                     type: 'line',
@@ -974,13 +1020,15 @@
             isochroneData = null;
             downloadIsochroneButton.disabled = true;
             removeIsochroneLayers();
-            showIsochroneMessage('Calculating 5, 10 and 15-minute polygons…');
             try {
+                const cutoffsMinutes = readIsochroneCutoffs();
+                updateIsochroneLegend(cutoffsMinutes);
+                showIsochroneMessage(`Calculating ${cutoffsMinutes.join(', ')}-minute polygons…`);
                 const result = await workerRequest('isochrone', {
                     origin: start,
                     profileId,
                     speedKmh: profile.speed_kmh,
-                    cutoffsMinutes: ISOCHRONE_CUTOFFS_MINUTES
+                    cutoffsMinutes
                 });
                 if (
                     requestGeneration !== isochroneGeneration
@@ -1038,6 +1086,24 @@
         }
 
         downloadIsochroneButton.addEventListener('click', downloadIsochroneGeoJSON);
+
+        updateIsochroneLegend(readIsochroneCutoffs());
+        for (const id of ['isochroneStart', 'isochroneStep', 'isochroneCount']) {
+            document.getElementById(id).addEventListener('input', () => {
+                isochroneGeneration += 1;
+                isochroneData = null;
+                downloadIsochroneButton.disabled = true;
+                removeIsochroneLayers();
+                document.getElementById('isochroneLegend').replaceChildren();
+                try {
+                    updateIsochroneLegend(readIsochroneCutoffs());
+                    showIsochroneMessage('');
+                    if (routerReady && interactionMode === 'isochrone' && start) calculateIsochrone();
+                } catch (error) {
+                    showIsochroneMessage(error.message, true);
+                }
+            });
+        }
 
         async function calculateRoute() {
             const requestGeneration = ++routeGeneration;

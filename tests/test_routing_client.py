@@ -57,7 +57,9 @@ class RoutingClientWiringTests(unittest.TestCase):
         self.assertIn('id="isochroneModeBtn"', self.html)
         self.assertIn('id="downloadIsochrone"', self.html)
         self.assertIn("workerRequest('isochrone'", self.html)
-        self.assertIn("ISOCHRONE_CUTOFFS_MINUTES = [5, 10, 15]", self.html)
+        self.assertIn("readIsochroneCutoffs()", self.html)
+        for control in ('isochroneStart', 'isochroneStep', 'isochroneCount'):
+            self.assertIn(f'id="{control}"', self.html)
         self.assertIn("type: 'FeatureCollection'", self.html)
         self.assertIn("application/geo+json", self.html)
         self.assertIn("graph_sha256: profilePayload.graph_sha256", self.html)
