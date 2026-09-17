@@ -1,0 +1,35 @@
+name: Fleet token verification
+on:
+  push:
+    branches: [fix/fleet-automatic-token]
+    paths: [.github/workflows/fleet_token_verification.yml]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install pytest pyyaml
+      - run: python -m pytest -q tests/test_fleet_management.py
+      - name: Verify automatic-token access to every public node
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python -m fleet.reconcile --desired-sha 3023fa63ac1616fee45d5e874ef4278b3ca0b5ca --output fleet/status.json --summary "$GITHUB_STEP_SUMMARY" --fail-on-status unreachable
+          python - <<'PY'
+          import json
+          report = json.load(open("fleet/status.json"))
+          for node in report["nodes"]:
+              print(node["id"], node["status"], json.dumps(node["issues"]))
+              assert node.get("core_sha"), node
+              assert len(node["workflows"]) == 4, node
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fleet-token-verification
+          path: fleet/status.json
