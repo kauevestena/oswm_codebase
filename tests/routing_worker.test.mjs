@@ -18,6 +18,14 @@ test('configurable cutoff controls validate and generate bands', () => {
     vm.runInNewContext(source, context);
     const read = () => Array.from(context.readIsochroneCutoffs());
     assert.deepEqual(read(), [5, 10, 15]);
+    for (const id of Object.keys(values)) {
+        const previous = values[id];
+        for (const empty of ['', '   ']) {
+            values[id] = empty;
+            assert.throws(read, /Use whole minutes/, `${id} must reject blank input`);
+        }
+        values[id] = previous;
+    }
     values.isochroneStart = '10'; values.isochroneStep = '3'; values.isochroneCount = '4';
     assert.deepEqual(read(), [10, 13, 16, 19, 22]);
     assert.equal(context.isochroneBands(read()).length, 5);

@@ -462,7 +462,8 @@
         function readIsochroneCutoffs() {
             const start = Number(document.getElementById('isochroneStart').value);
             const step = Number(document.getElementById('isochroneStep').value);
-            const count = Number(document.getElementById('isochroneCount').value);
+            const countValue = document.getElementById('isochroneCount').value.trim();
+            const count = countValue === '' ? NaN : Number(countValue);
             if (![start, step, count].every(Number.isInteger)
                 || start < 1 || step < 1 || step > 120 || count < 0 || count > 11
                 || start + step * count > 120) {
