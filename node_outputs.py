@@ -316,6 +316,18 @@ def stage_profile(root: Path, profile: str) -> list[str]:
             selected.append(relative)
     if selected:
         _git(root, "add", "--", *selected)
+    if profile == "weekly":
+        # generate_api.py also rewrites indices outside the weekly data folders.
+        # Include only those indices, not unrelated raw data or binary products.
+        indices = {path.relative_to(root).as_posix()
+                   for path in (root / "data").rglob("index.json")}
+        indices.update(filter(None, _git(
+            root, "ls-files", "-z", "--", "data/index.json",
+            ":(glob)data/**/index.json",
+        ).stdout.split("\0")))
+        if indices:
+            _git(root, "add", "--", *sorted(indices))
+            selected.extend(sorted(indices))
     if profile in {"daily", "custom"}:
         basemap_outputs = [
             relative

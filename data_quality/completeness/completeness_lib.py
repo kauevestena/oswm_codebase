@@ -25,6 +25,8 @@ from tqdm import tqdm
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 from functions import get_boundaries_infos, create_folder_if_not_exists, dump_json
 from branding import branding_asset_url
+import constants as node_config
+from overpass_acquisition import DEFAULT_OVERPASS_ENDPOINTS, features_from_polygon_with_failover
 from constants import (
     CITY_NAME,
     boundaries_geojson_path,
@@ -93,7 +95,14 @@ def fetch_or_load_roads(bounds, cache_path=ROADS_CACHE_PATH, silent=False):
 
     # osmnx v2: bbox = (left, bottom, right, top) = (west, south, east, north)
     tags = {"highway": ROAD_HIGHWAY_TYPES}
-    roads = ox.features_from_bbox(bbox=(bounds[0], bounds[1], bounds[2], bounds[3]), tags=tags)
+    roads = features_from_polygon_with_failover(
+        ox,
+        box(*bounds),
+        tags,
+        endpoints=getattr(node_config, "OVERPASS_ENDPOINTS", DEFAULT_OVERPASS_ENDPOINTS),
+        attempts_per_endpoint=getattr(node_config, "OVERPASS_ATTEMPTS_PER_ENDPOINT", 2),
+        backoff_seconds=getattr(node_config, "OVERPASS_BACKOFF_SECONDS", 5),
+    )
 
     # Keep only line geometries
     roads = roads[roads.geometry.geom_type.isin(["LineString", "MultiLineString"])]
