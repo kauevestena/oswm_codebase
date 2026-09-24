@@ -1,6 +1,7 @@
 from functions import *
 from modules_info import *
 from branding import branding_asset_url
+from homepage_links import repair_homepage_links
 import re
 
 
@@ -14,19 +15,11 @@ files_obj_dict = {
 
 fifths_for_replace_between = [
     # [begin_of_string,end_of_string,new_middle,file_as_string,consider linebreaks (generally False)]
-    ["https://", ".github.io", USERNAME, files_obj_dict["homepage"], False],
     ["<CITYNAME>", "<CITYNAME>", CITY_NAME, files_obj_dict["readme"], False],
     [
         "<!--CITYNAME INSERTION-->",
         "<!--CITYNAME INSERTION-->",
         CITY_NAME,
-        files_obj_dict["homepage"],
-        False,
-    ],
-    [
-        ".github.io/",
-        "/data/updates/index.html",
-        REPO_NAME,
         files_obj_dict["homepage"],
         False,
     ],
@@ -88,7 +81,10 @@ for legacy_filename, semantic_key in legacy_homepage_branding.items():
         files_obj_dict["homepage"].content,
     )
 
-# print(readme_as_str)
+# Central project links must not inherit the node repository's GitHub owner.
+files_obj_dict["homepage"].content = repair_homepage_links(
+    files_obj_dict["homepage"].content
+)
 
 # commiting changes:
 for entry in files_obj_dict:
