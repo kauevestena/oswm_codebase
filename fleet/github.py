@@ -90,9 +90,19 @@ class GitHubClient:
     def node_snapshot(self, repository: str, branch: str, history: int) -> dict[str, Any]:
         encoded_ref = urllib.parse.quote(branch, safe="")
         workflows = self.get_json(f"repos/{repository}/actions/workflows?per_page=100")
+        # GitHub's server-side `branch=` filter has intermittently returned stale
+        # workflow-run history for otherwise current public repositories. Fetch the
+        # recent repository history without that filter and apply the branch match
+        # locally using each run's explicit head_branch instead.
         runs = self.get_json(
-            f"repos/{repository}/actions/runs?branch={encoded_ref}&per_page={history}"
+            f"repos/{repository}/actions/runs?per_page={history}"
         )
+        raw_runs = runs.get("workflow_runs", []) if isinstance(runs, dict) else []
+        branch_runs = [
+            run
+            for run in raw_runs
+            if isinstance(run, dict) and run.get("head_branch") == branch
+        ]
         config = self.get_content(repository, "config.py", branch)
         core = self.get_content(repository, "oswm_codebase", branch)
         managed = self.get_content(repository, ".oswm-managed-files.json", branch)
@@ -101,7 +111,7 @@ class GitHubClient:
             "core_sha": core.get("sha"),
             "managed_text": self.content_text(managed),
             "workflows": workflows.get("workflows", []) if isinstance(workflows, dict) else [],
-            "runs": runs.get("workflow_runs", []) if isinstance(runs, dict) else [],
+            "runs": branch_runs,
         }
 
     def probe_url(self, url: str) -> dict[str, Any]:
