@@ -38,6 +38,20 @@ def load_generator(tmp_path: Path, monkeypatch):
     return module
 
 
+def test_raster_palettes_follow_openfreemap_positron_and_dark_matter(tmp_path, monkeypatch):
+    module = load_generator(tmp_path, monkeypatch)
+
+    assert module.RENDERER_VERSION == 3
+    assert module.STYLE_BASIS == {
+        "light": "OpenFreeMap Positron",
+        "dark": "OpenFreeMap Dark Matter",
+    }
+    assert module.PALETTES["light"]["background"] == "#f2f3f0"
+    assert module.PALETTES["light"]["water"] == "#c2c8ca"
+    assert module.PALETTES["dark"]["background"] == "#0c0c0c"
+    assert module.PALETTES["dark"]["water"] == "#1b1b1d"
+
+
 def test_zoom_jobs_are_sorted_and_overzoom_from_z14(tmp_path, monkeypatch):
     module = load_generator(tmp_path, monkeypatch)
     bbox = [9.15, 45.46, 9.16, 45.47]
