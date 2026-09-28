@@ -18,7 +18,18 @@ def test_webmap_uses_generated_raster_pmtiles_without_carto():
     assert 'f"pmtiles://{basemap_dark_path}"' in library
     assert 'params["basemaps"]' in generator
     assert 'id="basemap-selector"' in template
-    assert "style.sources.osm.url" in template
+    assert "OpenFreeMap Dark Matter" in generator
+    assert "OpenFreeMap Positron" in generator
+    assert generator.index('"openfreemap_dark"') < generator.index('"openfreemap_positron"')
+    assert generator.index('"dark"') < generator.index('"openfreemap_dark"')
+    assert '"type": "style"' in generator
+    assert 'https://tiles.openfreemap.org/styles/dark' in library
+    assert 'https://tiles.openfreemap.org/styles/positron' in library
+    assert "loadOpenFreeMapStyle" in template
+    assert "delete overlayStyle.sources.osm" in template
+    assert "style.sources[sourceId] = source" in template
+    assert "style.sources.osm.url" not in template
+    assert "overlayStyle.sources.osm.url" in template
     assert runner.index("raster_basemap_gen.py") < runner.index("create_webmap_new.py")
     assert "CARTO" not in snapshot_i18n
 
