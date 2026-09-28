@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 import yaml
 
+from fleet.github import GitHubClient
 from fleet.reconcile import markdown_summary, previous_scheduled_time, reconcile
 from fleet.registry import load_registry
 
@@ -263,6 +264,52 @@ def test_fleet_workflows_are_parseable_and_secretless():
     assert "create-github-app-token" not in reusable_source + wrapper_source
     assert "${{ secrets" not in reusable_source + wrapper_source
     assert "${{ secrets" not in status_source
+
+
+def test_node_snapshot_filters_run_branch_locally_without_server_branch_query():
+    class RecordingClient(GitHubClient):
+        def __init__(self):
+            super().__init__(token=None)
+            self.paths = []
+
+        def get_json(self, path):
+            self.paths.append(path)
+            if "actions/workflows" in path:
+                return {"workflows": []}
+            if "actions/runs" in path:
+                return {
+                    "workflow_runs": [
+                        {
+                            "id": 1,
+                            "head_branch": "main",
+                            "path": ".github/workflows/data_daily_updating.yml",
+                        },
+                        {
+                            "id": 2,
+                            "head_branch": "feature/test",
+                            "path": ".github/workflows/data_daily_updating.yml",
+                        },
+                    ]
+                }
+            raise AssertionError(path)
+
+        def get_content(self, repository, path, branch):
+            payloads = {
+                "config.py": {"content": "", "encoding": "utf-8"},
+                "oswm_codebase": {"sha": REVISION},
+                ".oswm-managed-files.json": {
+                    "content": '{"managed_revision": 2}',
+                    "encoding": "utf-8",
+                },
+            }
+            return payloads[path]
+
+    client = RecordingClient()
+    snapshot = client.node_snapshot("example/test-node", "main", 20)
+
+    run_paths = [path for path in client.paths if "actions/runs" in path]
+    assert run_paths == ["repos/example/test-node/actions/runs?per_page=20"]
+    assert [run["id"] for run in snapshot["runs"]] == [1]
 
 
 def test_registry_toml_is_standard_library_parseable():
