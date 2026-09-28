@@ -99,8 +99,8 @@ FOLDER_PROFILES: dict[str, dict[str, Any]] = {
     },
     "basemaps": {
         "title": "Node raster basemaps",
-        "abstract": "Light and dark PMTiles context basemaps covering the node area.",
-        "process": "Rendered per zoom from OpenFreeMap OpenMapTiles vector data and packaged as static raster PMTiles.",
+        "abstract": "Positron-based and Dark Matter-based PMTiles context basemaps covering the node area.",
+        "process": "Rendered per zoom from OpenFreeMap OpenMapTiles vector data using Positron- and Dark Matter-derived palettes, then packaged as static raster PMTiles.",
         "sources": ["OpenFreeMap", "OpenMapTiles", "OpenStreetMap"],
     },
     "updates": {
