@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate node-scoped light and dark raster PMTiles basemaps.
+"""Generate node-scoped Positron and Dark Matter raster PMTiles basemaps.
 
 OpenFreeMap's OpenMapTiles vector service is used only as build input.  The
 published node reads the resulting static PMTiles archives and therefore needs
@@ -53,7 +53,11 @@ TILE_SIZE = 256
 ATTRIBUTION = (
     "Basemap © OpenFreeMap, © OpenMapTiles; data © OpenStreetMap contributors"
 )
-RENDERER_VERSION = 2
+RENDERER_VERSION = 3
+STYLE_BASIS = {
+    "light": "OpenFreeMap Positron",
+    "dark": "OpenFreeMap Dark Matter",
+}
 LABEL_FONT_PATHS_ENV = "OSWM_LABEL_FONT_PATHS"
 FONT_ROOTS = (
     Path("/usr/share/fonts"),
@@ -61,41 +65,45 @@ FONT_ROOTS = (
 )
 
 PALETTES = {
+    # These reduced palettes intentionally follow the published OpenFreeMap
+    # Positron and Dark Matter styles. The raster renderer only implements the
+    # subset of OpenMapTiles layers needed for OSWM context, so it is not a
+    # pixel-identical MapLibre rendering of the full upstream styles.
     "light": {
-        "background": "#edf0f2",
-        "residential": "#e3e6e8",
-        "commercial": "#e8e1dc",
-        "industrial": "#dedfe3",
-        "green": "#d7e4d2",
-        "water": "#b7d7e8",
-        "building": "#d2d0ce",
-        "road_casing": "#c8c9ca",
-        "road_major": "#f9f6ed",
-        "road_minor": "#ffffff",
-        "path": "#dfd5c6",
-        "rail": "#a9aaad",
-        "boundary": "#a795a8",
-        "waterway": "#9bc5da",
-        "label": "#52575b",
-        "label_halo": "#f5f6f7",
+        "background": "#f2f3f0",
+        "residential": "#eaeae6",
+        "commercial": "#eaeae6",
+        "industrial": "#e5e5e2",
+        "green": "#dce0dc",
+        "water": "#c2c8ca",
+        "building": "#eaeae5",
+        "road_casing": "#d5d5d5",
+        "road_major": "#ffffff",
+        "road_minor": "#e0e0e0",
+        "path": "#eaeaea",
+        "rail": "#dddddd",
+        "boundary": "#a8a8a8",
+        "waterway": "#c2cdd1",
+        "label": "#666666",
+        "label_halo": "#ffffff",
     },
     "dark": {
-        "background": "#171a1d",
-        "residential": "#202428",
-        "commercial": "#292426",
-        "industrial": "#24252a",
-        "green": "#1d2b24",
-        "water": "#152b38",
-        "building": "#292d31",
-        "road_casing": "#202327",
-        "road_major": "#55504a",
-        "road_minor": "#3c4145",
-        "path": "#4a443d",
-        "rail": "#5b5d61",
-        "boundary": "#756678",
-        "waterway": "#28536a",
-        "label": "#c8cbce",
-        "label_halo": "#1a1d20",
+        "background": "#0c0c0c",
+        "residential": "#0d0d0d",
+        "commercial": "#101010",
+        "industrial": "#121212",
+        "green": "#202020",
+        "water": "#1b1b1d",
+        "building": "#0a0a0a",
+        "road_casing": "#3c3c3ccc",
+        "road_major": "#121212",
+        "road_minor": "#181818",
+        "path": "#1b1b1d",
+        "rail": "#232323",
+        "boundary": "#363636",
+        "waterway": "#1b1b1d",
+        "label": "#656565",
+        "label_halo": "#000000",
     },
 }
 
@@ -628,14 +636,14 @@ def build_archives(
         }
         for mode, writer in writers.items():
             metadata = {
-                "name": f"OSWM {CITY_NAME} {mode} raster basemap",
+                "name": f"OSWM {CITY_NAME} {STYLE_BASIS[mode]} raster basemap",
                 "format": "jpeg",
                 "bounds": ",".join(str(value) for value in (west, south, east, north)),
                 "minzoom": min_zoom,
                 "maxzoom": max_zoom,
                 "attribution": ATTRIBUTION,
                 "description": (
-                    f"Node-scoped {mode} context basemap rendered from OpenFreeMap vector tiles."
+                    f"Node-scoped context basemap based on {STYLE_BASIS[mode]}, rendered from OpenFreeMap vector tiles."
                 ),
             }
             writer.finalize(header, metadata)
@@ -760,6 +768,7 @@ def generate(
                 "tilejson": OPENFREEMAP_TILEJSON,
                 "versioned_template": template,
                 "attribution": ATTRIBUTION,
+                "style_basis": STYLE_BASIS,
             },
             "min_zoom": min_zoom,
             "requested_max_zoom": max_zoom,

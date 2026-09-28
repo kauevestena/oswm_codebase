@@ -28,12 +28,24 @@ params["basemaps"] = {
     "default": DEFAULT_BASEMAP,
     "options": {
         "light": {
-            "name": "Light basemap",
+            "name": "Self-hosted Positron",
+            "type": "raster",
             "url": BASEMAP_URLS["light"],
         },
         "dark": {
-            "name": "Dark basemap",
+            "name": "Self-hosted Dark Matter",
+            "type": "raster",
             "url": BASEMAP_URLS["dark"],
+        },
+        "openfreemap_dark": {
+            "name": "OpenFreeMap Dark Matter",
+            "type": "style",
+            "style_url": OPENFREEMAP_STYLE_URLS["dark"],
+        },
+        "openfreemap_positron": {
+            "name": "OpenFreeMap Positron",
+            "type": "style",
+            "style_url": OPENFREEMAP_STYLE_URLS["positron"],
         },
     },
 }

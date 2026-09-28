@@ -91,11 +91,14 @@ the human-maintained `requirements.in`. Development and CI use the parallel
 
 ## Node-scoped raster basemaps
 
-Each complete node build renders light and dark context maps from OpenFreeMap's
-OpenMapTiles source and publishes them as `data/basemaps/light.pmtiles` and
-`data/basemaps/dark.pmtiles`. The Webmap reads only these static, byte-range
-addressable archives, avoiding client-side API keys and third-party basemap
-requests. Every zoom is rendered separately for appropriate multiscale labels.
+Each complete node build renders **Positron-based** and **Dark Matter-based**
+context maps from OpenFreeMap's OpenMapTiles source and publishes them as
+`data/basemaps/light.pmtiles` and `data/basemaps/dark.pmtiles`. The filenames
+remain stable for compatibility, while their style provenance is explicit in
+the generation report. The Webmap offers these self-hosted raster archives
+first, followed by live **OpenFreeMap Dark Matter** and **OpenFreeMap Positron**
+vector styles as its final two basemap choices. Every raster zoom is rendered
+separately for appropriate multiscale labels.
 Labels use glyph-aware font selection with Noto Sans CJK as the Japanese,
 Chinese, and Korean fallback, so names are rasterized as real glyphs rather
 than missing-character boxes.

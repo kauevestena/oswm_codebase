@@ -40,6 +40,10 @@ SNAPSHOT_ELSE_COLORS = WEBMAP_THEME_ELSE_COLORS
 
 # webmap stuff:
 DEFAULT_BASEMAP = "dark"
+OPENFREEMAP_STYLE_URLS = {
+    "dark": "https://tiles.openfreemap.org/styles/dark",
+    "positron": "https://tiles.openfreemap.org/styles/positron",
+}
 BASEMAP_URLS = {
     "light": f"pmtiles://{basemap_light_path}",
     "dark": f"pmtiles://{basemap_dark_path}",
