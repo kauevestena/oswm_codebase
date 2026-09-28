@@ -88,7 +88,6 @@ class GitHubClient:
         raise GitHubError(f"Unsupported GitHub contents encoding: {encoding}")
 
     def node_snapshot(self, repository: str, branch: str, history: int) -> dict[str, Any]:
-        encoded_ref = urllib.parse.quote(branch, safe="")
         workflows = self.get_json(f"repos/{repository}/actions/workflows?per_page=100")
         # GitHub's server-side `branch=` filter has intermittently returned stale
         # workflow-run history for otherwise current public repositories. Fetch the
