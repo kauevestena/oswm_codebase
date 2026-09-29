@@ -17,7 +17,7 @@ class WebmapWiringTests(unittest.TestCase):
         self.assertNotIn(
             "kauevestena.github.io/opensidewalkmap_beta", template
         )
-        self.assertIn("import('./oswm_codebase/webmap/snapshot/snapshot_control.js')", template)
+        self.assertIn("import('./oswm_runtime/webmap/snapshot/snapshot_control.js')", template)
         self.assertIn("installSnapshotControl", template)
 
         composer = (ROOT / "webmap/snapshot/snapshot_composer.js").read_text(

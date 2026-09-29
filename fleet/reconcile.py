@@ -165,18 +165,50 @@ def inspect_node(
 
     core_sha = snapshot.get("core_sha")
     result["core_sha"] = core_sha
-    if desired_sha and core_sha != desired_sha:
+
+    build_manifest = None
+    built_core_sha = None
+    build_text = snapshot.get("build_text")
+    if isinstance(build_text, str):
+        try:
+            parsed_build = json.loads(build_text)
+            if isinstance(parsed_build, dict):
+                build_manifest = parsed_build
+                core_info = parsed_build.get("core")
+                if isinstance(core_info, dict):
+                    built_core_sha = core_info.get("sha")
+        except json.JSONDecodeError:
+            _issue(issues, "warning", "invalid_build_provenance", "oswm-build.json is invalid")
+    result["built_core_sha"] = built_core_sha
+    result["architecture"] = "thin" if core_sha is None and build_manifest else "submodule"
+
+    if core_sha is not None and desired_sha and core_sha != desired_sha:
         _issue(
             issues,
             "warning",
             "core_revision_behind",
-            f"node pins {core_sha or 'no core revision'}; desired is {desired_sha}",
+            f"node pins {core_sha}; desired is {desired_sha}",
+        )
+    if build_manifest is None and core_sha is None:
+        _issue(
+            issues,
+            "warning",
+            "build_provenance_missing",
+            "thin node has no oswm-build.json",
+        )
+    elif build_manifest is not None and desired_sha and built_core_sha != desired_sha:
+        _issue(
+            issues,
+            "warning",
+            "products_out_of_sync",
+            f"published products were built with {built_core_sha or 'unknown core'}; desired is {desired_sha}",
         )
 
     managed_revision = None
     managed_source_revision = None
     try:
-        managed = json.loads(snapshot["managed_text"])
+        managed_text = snapshot.get("managed_text")
+        managed = json.loads(managed_text) if isinstance(managed_text, str) else {}
         if isinstance(managed, dict):
             managed_revision = managed.get("managed_revision")
             managed_source_revision = managed.get("source_revision")
@@ -184,7 +216,11 @@ def inspect_node(
         _issue(issues, "warning", "invalid_managed_state", ".oswm-managed-files.json is invalid")
     result["managed_workflow_revision"] = managed_revision
     result["managed_workflow_source_sha"] = managed_source_revision
-    if desired_managed_revision is not None and managed_revision != desired_managed_revision:
+    if (
+        result["architecture"] != "thin"
+        and desired_managed_revision is not None
+        and managed_revision != desired_managed_revision
+    ):
         _issue(
             issues,
             "warning",
@@ -205,7 +241,11 @@ def inspect_node(
     warning_delay = timedelta(minutes=policy.schedule_warning_minutes)
     grace = timedelta(minutes=policy.schedule_grace_minutes)
 
-    for kind, filename in EXPECTED_WORKFLOWS.items():
+    expected_workflows = dict(EXPECTED_WORKFLOWS)
+    if result["architecture"] == "thin":
+        expected_workflows.pop("sync", None)
+
+    for kind, filename in expected_workflows.items():
         workflow = workflow_index.get(filename)
         matching_runs = _workflow_runs(runs, filename)
         latest = matching_runs[0] if matching_runs else None

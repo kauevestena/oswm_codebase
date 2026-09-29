@@ -304,6 +304,10 @@ def test_node_snapshot_filters_run_branch_locally_without_server_branch_query():
                     "content": '{"managed_revision": 2}',
                     "encoding": "utf-8",
                 },
+                "oswm-build.json": {
+                    "content": json.dumps({"core": {"sha": REVISION}}),
+                    "encoding": "utf-8",
+                },
             }
             return payloads[path]
 
@@ -313,6 +317,41 @@ def test_node_snapshot_filters_run_branch_locally_without_server_branch_query():
     run_paths = [path for path in client.paths if "actions/runs" in path]
     assert run_paths == ["repos/example/test-node/actions/runs?per_page=20"]
     assert [run["id"] for run in snapshot["runs"]] == [1]
+
+
+def test_reconcile_accepts_thin_node_build_provenance(tmp_path):
+    registry = _registry(tmp_path)
+    snapshot = _healthy_snapshot()
+    snapshot["core_sha"] = None
+    snapshot["managed_text"] = None
+    snapshot["build_text"] = json.dumps({
+        "schema_version": 1,
+        "build_contract": 1,
+        "core": {"sha": REVISION},
+    })
+    snapshot["workflows"] = [
+        item for item in snapshot["workflows"]
+        if not item["path"].endswith("update_codebase.yml")
+    ]
+    snapshot["runs"] = [
+        item for item in snapshot["runs"]
+        if not item["path"].endswith("update_codebase.yml")
+    ]
+
+    report = reconcile(
+        registry,
+        FakeClient({"example/test-node": snapshot}),
+        now=datetime(2026, 9, 7, 10, 0, tzinfo=timezone.utc),
+        desired_sha=REVISION,
+        desired_managed_revision=2,
+    )
+
+    node = report["nodes"][0]
+    assert node["architecture"] == "thin"
+    assert node["built_core_sha"] == REVISION
+    assert node["status"] == "healthy"
+    assert node["issues"] == []
+    assert "sync" not in node["workflows"]
 
 
 def test_registry_toml_is_standard_library_parseable():

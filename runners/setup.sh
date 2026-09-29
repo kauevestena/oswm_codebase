@@ -6,6 +6,7 @@ if ! command -v "$PYTHON_BIN" >/dev/null 2>&1; then
     PYTHON_BIN=python3
 fi
 
+"$PYTHON_BIN" oswm_codebase/runtime_assets.py
 "$PYTHON_BIN" oswm_codebase/patch_readme_homepage.py
 "$PYTHON_BIN" oswm_codebase/other/wipers/wipe_changed_stuff.py
 "$PYTHON_BIN" oswm_codebase/special_updates.py

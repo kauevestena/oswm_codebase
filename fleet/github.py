@@ -72,6 +72,16 @@ class GitHubClient:
             raise GitHubError(f"Unexpected contents response for {repository}:{path}")
         return payload
 
+    def get_optional_content(
+        self, repository: str, path: str, branch: str
+    ) -> dict[str, Any] | None:
+        try:
+            return self.get_content(repository, path, branch)
+        except GitHubError as error:
+            if "GitHub API 404" in str(error):
+                return None
+            raise
+
     @staticmethod
     def content_text(payload: dict[str, Any]) -> str:
         content = payload.get("content")
@@ -103,12 +113,14 @@ class GitHubClient:
             if isinstance(run, dict) and run.get("head_branch") == branch
         ]
         config = self.get_content(repository, "config.py", branch)
-        core = self.get_content(repository, "oswm_codebase", branch)
-        managed = self.get_content(repository, ".oswm-managed-files.json", branch)
+        core = self.get_optional_content(repository, "oswm_codebase", branch)
+        managed = self.get_optional_content(repository, ".oswm-managed-files.json", branch)
+        build = self.get_optional_content(repository, "oswm-build.json", branch)
         return {
             "config_text": self.content_text(config),
-            "core_sha": core.get("sha"),
-            "managed_text": self.content_text(managed),
+            "core_sha": core.get("sha") if isinstance(core, dict) else None,
+            "managed_text": self.content_text(managed) if isinstance(managed, dict) else None,
+            "build_text": self.content_text(build) if isinstance(build, dict) else None,
             "workflows": workflows.get("workflows", []) if isinstance(workflows, dict) else [],
             "runs": branch_runs,
         }

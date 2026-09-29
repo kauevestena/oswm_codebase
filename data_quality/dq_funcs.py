@@ -27,13 +27,13 @@ occurrence_per_feature = {k: {} for k in geom_type_dict.keys()}
 map_view_data = {}
 
 js_functions_dq = f"""
-    <script src="../oswm_codebase/assets/js_functions/topbar.js"></script>
+    <script src="../oswm_runtime/assets/js_functions/topbar.js"></script>
 """
 
 
 styles_dq = f"""
-    <link rel="stylesheet" href="../oswm_codebase/assets/styles/topnav_styles.css">
-    <link rel="stylesheet" href="../oswm_codebase/assets/styles/accordion.css">
+    <link rel="stylesheet" href="../oswm_runtime/assets/styles/topnav_styles.css">
+    <link rel="stylesheet" href="../oswm_runtime/assets/styles/accordion.css">
 """
 
 # # # subfolders:

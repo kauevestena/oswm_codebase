@@ -135,7 +135,7 @@ def get_font_style(levels_backward=1):
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet"> 
 
-    <link rel="stylesheet" href="{relative_levels}oswm_codebase/assets/styles/font_styles.css">
+    <link rel="stylesheet" href="{relative_levels}oswm_runtime/assets/styles/font_styles.css">
     """
 
 
@@ -144,7 +144,7 @@ def get_tables_styles(levels_backward=1):
     relative_levels = relative_levels_string(levels_backward)
 
     return f"""
-    <link rel="stylesheet" href="{relative_levels}oswm_codebase/assets/styles/table_styles.css">
+    <link rel="stylesheet" href="{relative_levels}oswm_runtime/assets/styles/table_styles.css">
     """
 
 

@@ -18,7 +18,7 @@ from branding import branding_asset_url
 
 def generate_datahub_page():
     ensure_parent_folder(datahub_page_path)
-    project_logo_url = branding_asset_url("logos.project_100px", "../oswm_codebase")
+    project_logo_url = branding_asset_url("logos.project_100px", "../oswm_runtime")
     
     html = f"""<!--
   Generated automatically by oswm_codebase/datahub/datahub_index_generator.py

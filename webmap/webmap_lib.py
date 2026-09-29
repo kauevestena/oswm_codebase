@@ -53,7 +53,7 @@ webmap_params_path = "webmap_params.json"
 webmap_base_path = "oswm_codebase/webmap/webmap_base.html"
 webmap_path = "map.html"
 
-assets_path = "oswm_codebase/assets/"
+assets_path = "oswm_runtime/assets/"
 map_symbols_assets_path = os.path.join(assets_path, "map_symbols")
 
 # mapping geometry types to maplibre style

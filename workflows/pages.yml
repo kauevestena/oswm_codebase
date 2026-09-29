@@ -14,7 +14,8 @@ on:
       - "statistics/**"
       - "statistics_specs/**"
       - "assets/**"
-      - "oswm_codebase/**"
+      - "oswm_runtime/**"
+      - "oswm-build.json"
   workflow_dispatch:
 
 permissions:
@@ -35,7 +36,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: recursive
+          submodules: false
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

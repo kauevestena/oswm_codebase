@@ -447,7 +447,7 @@ def main():
 
     {get_tables_styles(1)}
 
-    <link rel="stylesheet" href="../oswm_codebase/assets/styles/topnav_styles.css">
+    <link rel="stylesheet" href="../oswm_runtime/assets/styles/topnav_styles.css">
 
     <title>OSWM DQ Home</title>
 

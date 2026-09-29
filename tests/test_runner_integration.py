@@ -15,6 +15,8 @@ from pipeline_decision import CODEBASE_REVISION_KEY
 
 ROOT = Path(__file__).resolve().parents[1]
 RUNNER_SCRIPTS = (
+    "runtime_assets.py",
+    "build_provenance.py",
     "datahub/watcher/watcher_lib.py",
     "datahub/acquisition/generate_acquisition.py",
     "getting_data.py",
@@ -53,6 +55,13 @@ root = Path.cwd()
 relative = Path(__file__).resolve().relative_to(root / "oswm_codebase").as_posix()
 with (root / "events.log").open("a") as handle:
     handle.write(relative + "\\n")
+if relative == "runtime_assets.py":
+    path = root / "oswm_runtime/runtime_manifest.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text('{"runtime_contract": 1}\\n')
+if relative == "build_provenance.py":
+    path = root / "oswm-build.json"
+    path.write_text('{"core": {"sha": "fixture"}}\\n')
 if relative == "datahub/watcher/watcher_lib.py":
     if "--render-only" in sys.argv or "--render-current" in sys.argv:
         raise SystemExit(0)
