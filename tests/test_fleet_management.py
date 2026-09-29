@@ -354,6 +354,36 @@ def test_reconcile_accepts_thin_node_build_provenance(tmp_path):
     assert "sync" not in node["workflows"]
 
 
+def test_reconcile_treats_gitlink_free_node_as_thin_before_first_manifest(tmp_path):
+    registry = _registry(tmp_path)
+    snapshot = _healthy_snapshot()
+    snapshot["core_sha"] = None
+    snapshot["managed_text"] = None
+    snapshot["build_text"] = None
+    snapshot["workflows"] = [
+        item for item in snapshot["workflows"]
+        if not item["path"].endswith("update_codebase.yml")
+    ]
+    snapshot["runs"] = [
+        item for item in snapshot["runs"]
+        if not item["path"].endswith("update_codebase.yml")
+    ]
+
+    report = reconcile(
+        registry,
+        FakeClient({"example/test-node": snapshot}),
+        now=datetime(2026, 9, 7, 10, 0, tzinfo=timezone.utc),
+        desired_sha=REVISION,
+        desired_managed_revision=2,
+    )
+
+    node = report["nodes"][0]
+    assert node["architecture"] == "thin"
+    assert node["status"] == "degraded"
+    assert {issue["code"] for issue in node["issues"]} == {"build_provenance_missing"}
+    assert "sync" not in node["workflows"]
+
+
 def test_registry_toml_is_standard_library_parseable():
     data = tomllib.loads((ROOT / "fleet/registry.toml").read_text())
     assert data["schema_version"] == 1
