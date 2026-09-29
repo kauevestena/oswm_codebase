@@ -180,7 +180,7 @@ def inspect_node(
         except json.JSONDecodeError:
             _issue(issues, "warning", "invalid_build_provenance", "oswm-build.json is invalid")
     result["built_core_sha"] = built_core_sha
-    result["architecture"] = "thin" if core_sha is None and build_manifest else "submodule"
+    result["architecture"] = "thin" if core_sha is None else "submodule"
 
     if core_sha is not None and desired_sha and core_sha != desired_sha:
         _issue(
