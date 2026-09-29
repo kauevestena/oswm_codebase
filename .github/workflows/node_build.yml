@@ -1,0 +1,122 @@
+name: Reusable OSWM node build
+
+on:
+  workflow_call:
+    inputs:
+      mode:
+        description: Build mode (daily, weekly, setup, special, custom)
+        required: true
+        type: string
+      core_ref:
+        description: oswm_codebase branch, tag, or SHA to execute
+        required: false
+        default: main
+        type: string
+      force_regeneration:
+        description: Force the complete daily derived-output rebuild
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    env:
+      PYTHONUNBUFFERED: "1"
+      OSWM_FORCE_REGEN: ${{ inputs.force_regeneration && 'true' || 'false' }}
+    steps:
+      - name: Check out node repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+          submodules: false
+
+      - name: Check out OSWM build engine ephemerally
+        uses: actions/checkout@v4
+        with:
+          repository: kauevestena/oswm_codebase
+          ref: ${{ inputs.core_ref }}
+          path: oswm_codebase
+          fetch-depth: 1
+
+      - name: Record exact core revision
+        run: echo "OSWM_CORE_REVISION=$(git -C oswm_codebase rev-parse HEAD)" >> "$GITHUB_ENV"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: oswm_codebase/requirements.txt
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fonts-noto-cjk gdal-bin libgdal-dev
+
+      - uses: actions/cache@v4
+        if: inputs.mode == 'daily'
+        with:
+          path: .cache/oswm/elevation
+          key: oswm-elevation-${{ runner.os }}-${{ hashFiles('config.py') }}
+          restore-keys: oswm-elevation-${{ runner.os }}-
+
+      - run: python -m pip install -r oswm_codebase/requirements.txt
+
+      - name: Run requested OSWM build mode
+        env:
+          OSWM_BUILD_MODE: ${{ inputs.mode }}
+        run: |
+          case "$OSWM_BUILD_MODE" in
+            daily|weekly|setup|special|custom)
+              bash "oswm_codebase/runners/$OSWM_BUILD_MODE.sh"
+              ;;
+            *)
+              echo "Unsupported build mode: $OSWM_BUILD_MODE" >&2
+              exit 2
+              ;;
+          esac
+
+      - name: Validate complete daily product contract
+        if: inputs.mode == 'daily'
+        run: |
+          python oswm_codebase/other/auxiliary_scripts/validate_tiles.py
+          python oswm_codebase/node_outputs.py --root . require
+          python oswm_codebase/node_outputs.py --root . validate-sizes --max-mib 95
+
+      - name: Stage declared products
+        env:
+          OSWM_BUILD_MODE: ${{ inputs.mode }}
+        run: |
+          case "$OSWM_BUILD_MODE" in
+            daily) profile=daily ;;
+            weekly) profile=weekly ;;
+            setup) profile=setup ;;
+            special) profile=special ;;
+            custom) profile=custom ;;
+          esac
+          python oswm_codebase/node_outputs.py --root . stage "$profile"
+
+      - name: Commit generated products
+        id: commit
+        run: |
+          echo "changed=false" >> "$GITHUB_OUTPUT"
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -m "oswm: ${{ inputs.mode }} build from $OSWM_CORE_REVISION"
+          git fetch origin "$GITHUB_REF_NAME"
+          git rebase "origin/$GITHUB_REF_NAME"
+          git push origin "HEAD:$GITHUB_REF_NAME"
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy published changes
+        if: steps.commit.outputs.changed == 'true' && inputs.mode != 'special'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run pages.yml --ref "$GITHUB_REF_NAME"
