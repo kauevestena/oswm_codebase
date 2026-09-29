@@ -52,6 +52,7 @@ else
         "$PYTHON_BIN" oswm_codebase/node_outputs.py --root . reset-derived || exit 1
     fi
 
+    run_step oswm_codebase/runtime_assets.py "runtime_assets"
     run_step oswm_codebase/filtering_adapting_data.py "filtering_adapting_data"
     run_step oswm_codebase/generation/vec_tiles_gen.py "vec_tiles_gen"
     run_step oswm_codebase/generation/raster_basemap_gen.py "raster_basemap_gen"
@@ -83,6 +84,7 @@ if [ "$MODE" != "skip" ]; then
     # The initial watcher decision predates this refresh. Publish a new
     # all-current decision only after every generation step has succeeded.
     "$PYTHON_BIN" oswm_codebase/datahub/watcher/watcher_lib.py --render-current || exit 1
+    "$PYTHON_BIN" oswm_codebase/build_provenance.py --root . --mode "$MODE" || exit 1
 fi
 
 "$PYTHON_BIN" oswm_codebase/node_outputs.py --root . require
