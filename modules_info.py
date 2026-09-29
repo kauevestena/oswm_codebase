@@ -4,9 +4,9 @@ css_class_ref = "media_image responsive"
 inner_div_class_ref = "media__body"
 outer_div_class_ref = "media"
 img_css_class_ref = "media_image responsive"
-assets_base_path = "oswm_codebase/assets/"
-assets_homepage_path = "oswm_codebase/assets/homepage/"
-assets_map_symbols_path = "oswm_codebase/assets/map_symbols/"
+assets_base_path = "oswm_runtime/assets/"
+assets_homepage_path = "oswm_runtime/assets/homepage/"
+assets_map_symbols_path = "oswm_runtime/assets/map_symbols/"
 
 modules_metadata = {
     "webmap": {
@@ -15,7 +15,7 @@ modules_metadata = {
         "text": "Webmap",
     },
     "routing": {
-        "url": "oswm_codebase/routing/routing_demo.html",
+        "url": "oswm_runtime/routing/routing_demo.html",
         "img_src": f"{assets_homepage_path}oswm_route_img.png",
         "text": "Routing Demo",
     },
@@ -35,7 +35,7 @@ modules_metadata = {
         "text": "Data Hub",
     },
         "hazard_analysis": {
-        "url": "oswm_codebase/hazard_analysis/hazard_analysis.html",
+        "url": "oswm_runtime/hazard_analysis/hazard_analysis.html",
         "img_src": f"{assets_homepage_path}oswm_hazard_img.png",
         "text": "Hazard Analysis",
     },
