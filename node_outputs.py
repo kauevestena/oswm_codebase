@@ -42,6 +42,8 @@ DERIVED_RESET_PATHS = (
     "map.html",
     "webmap_params.json",
     "global_params.json",
+    "oswm-build.json",
+    "oswm_runtime",
 )
 
 PRESERVED_DURING_DERIVED_RESET = ("quality_check/keys_without_wiki.json",)
@@ -133,6 +135,7 @@ STAGE_PROFILES = {
         "index.html",
         "metadata",
         "hub",
+        "oswm_runtime",
     ),
     "daily": (
         "data",
@@ -146,6 +149,8 @@ STAGE_PROFILES = {
         "map.html",
         "webmap_params.json",
         "global_params.json",
+        "oswm-build.json",
+        "oswm_runtime",
     ),
     "weekly": (
         "data/processed",
