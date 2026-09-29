@@ -21,3 +21,5 @@ Pillow
 mapbox-vector-tile
 pmtiles
 timezonefinder
+jsonschema
+referencing

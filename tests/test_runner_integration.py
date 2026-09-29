@@ -36,6 +36,7 @@ RUNNER_SCRIPTS = (
     "generation/routing_tiles_gen.py",
     "generation/hazard_tiles_gen.py",
     "metadata/metadata_generation.py",
+    "metadata/stac_generation.py",
     "datahub/API/generate_api.py",
     "datahub/datahub_index_generator.py",
 )
@@ -55,6 +56,8 @@ root = Path.cwd()
 relative = Path(__file__).resolve().relative_to(root / "oswm_codebase").as_posix()
 with (root / "events.log").open("a") as handle:
     handle.write(relative + "\\n")
+if relative == os.environ.get("FAIL_STEP"):
+    raise SystemExit(1)
 if relative == "runtime_assets.py":
     path = root / "oswm_runtime/runtime_manifest.json"
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -157,7 +160,17 @@ def test_no_change_runner_skips_osm_dependent_generation(tmp_path):
     assert "getting_data.py" not in events
     assert "filtering_adapting_data.py" not in events
     assert "metadata/metadata_generation.py" in events
+    assert events.index("metadata/metadata_generation.py") < events.index("metadata/stac_generation.py") < events.index("datahub/API/generate_api.py")
     assert events.count("datahub/watcher/watcher_lib.py") == 1
+
+
+def test_stac_failure_prevents_pipeline_success(tmp_path, monkeypatch):
+    _prepare_fixture(tmp_path, complete=True, recorded_revision="same")
+    monkeypatch.setenv("FAIL_STEP", "metadata/stac_generation.py")
+    result = _run(tmp_path, revision="same")
+    assert result.returncode != 0
+    assert "stac_generation" in (tmp_path / "data/updates/pipeline_failures.txt").read_text()
+    assert "Pipeline Success" not in json.loads((tmp_path / "data/updates/registry.json").read_text())
 
 
 def test_missing_basemaps_force_rebuild_during_no_change_cycle(tmp_path):
