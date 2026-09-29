@@ -189,14 +189,14 @@ def inspect_node(
             "core_revision_behind",
             f"node pins {core_sha}; desired is {desired_sha}",
         )
-    if build_manifest is None:
+    if build_manifest is None and core_sha is None:
         _issue(
             issues,
             "warning",
             "build_provenance_missing",
-            "node has no oswm-build.json yet",
+            "thin node has no oswm-build.json",
         )
-    elif desired_sha and built_core_sha != desired_sha:
+    elif build_manifest is not None and desired_sha and built_core_sha != desired_sha:
         _issue(
             issues,
             "warning",
@@ -216,7 +216,11 @@ def inspect_node(
         _issue(issues, "warning", "invalid_managed_state", ".oswm-managed-files.json is invalid")
     result["managed_workflow_revision"] = managed_revision
     result["managed_workflow_source_sha"] = managed_source_revision
-    if desired_managed_revision is not None and managed_revision != desired_managed_revision:
+    if (
+        result["architecture"] != "thin"
+        and desired_managed_revision is not None
+        and managed_revision != desired_managed_revision
+    ):
         _issue(
             issues,
             "warning",
