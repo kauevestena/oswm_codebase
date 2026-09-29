@@ -9,6 +9,9 @@ fi
 "$PYTHON_BIN" oswm_codebase/runtime_assets.py
 "$PYTHON_BIN" oswm_codebase/patch_readme_homepage.py
 "$PYTHON_BIN" oswm_codebase/other/wipers/wipe_changed_stuff.py
-"$PYTHON_BIN" oswm_codebase/special_updates.py
+case "${OSWM_THIN_NODE:-}" in
+    1|true|TRUE|yes|YES|on|ON) ;;
+    *) "$PYTHON_BIN" oswm_codebase/special_updates.py ;;
+esac
 "$PYTHON_BIN" oswm_codebase/metadata/metadata_generation.py
 "$PYTHON_BIN" oswm_codebase/datahub/API/generate_api.py
