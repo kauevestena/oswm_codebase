@@ -54,8 +54,11 @@ jobs:
           git rebase "origin/$GITHUB_REF_NAME"
           git push origin "HEAD:$GITHUB_REF_NAME"
           echo "changed=true" >> "$GITHUB_OUTPUT"
-      - name: Deploy published changes
+      - name: Regenerate published outputs
         if: steps.commit.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh workflow run pages.yml --ref "$GITHUB_REF_NAME"
+        run: |
+          gh workflow run data_daily_updating.yml \
+            --ref "$GITHUB_REF_NAME" \
+            -f force_regeneration=true

@@ -401,7 +401,9 @@ def test_workflow_contracts_are_parseable_scoped_and_serialized():
         assert "gh workflow run pages.yml" in writer
         assert 'echo "changed=true" >> "$GITHUB_OUTPUT"' in writer
     assert "actions: write" in updater
-    assert "gh workflow run pages.yml" in reusable_updater
+    assert "gh workflow run data_daily_updating.yml" in reusable_updater
+    assert "-f force_regeneration=true" in reusable_updater
+    assert "gh workflow run pages.yml" not in reusable_updater
     assert 'echo "changed=true" >> "$GITHUB_OUTPUT"' in reusable_updater
     assert "other/auxiliary_scripts/validate_tiles.py" in (
         ROOT / "workflows/data_daily_updating.yml"
