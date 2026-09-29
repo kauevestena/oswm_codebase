@@ -24,6 +24,8 @@ INITIALIZATION_RESET_PATHS = (
     "global_params.json",
     "run_log.txt",
     "run_log_full.txt",
+    "oswm-build.json",
+    "oswm_runtime",
 )
 
 DERIVED_RESET_PATHS = (
@@ -125,6 +127,8 @@ REQUIRED_OUTPUTS = (
     *REQUIRED_PUBLIC_PAGES,
     *REQUIRED_HUB_OUTPUTS,
     "webmap_params.json",
+    "oswm-build.json",
+    "oswm_runtime/runtime_manifest.json",
 )
 
 STAGE_PROFILES = {
@@ -176,6 +180,8 @@ STAGE_PROFILES = {
         "map.html",
         "webmap_params.json",
         "global_params.json",
+        "oswm-build.json",
+        "oswm_runtime",
     ),
 }
 
