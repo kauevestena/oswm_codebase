@@ -28,6 +28,7 @@ jobs:
     timeout-minutes: 240
     env:
       PYTHONUNBUFFERED: "1"
+      OSWM_THIN_NODE: "1"
       OSWM_FORCE_REGEN: ${{ inputs.force_regeneration && 'true' || 'false' }}
     steps:
       - name: Check out node repository

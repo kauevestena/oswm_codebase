@@ -80,4 +80,9 @@ def test_reusable_builder_checks_out_core_ephemerally():
     assert "path: oswm_codebase" in source
     assert "submodules: false" in source
     assert "OSWM_CORE_REVISION=$(git -C oswm_codebase rev-parse HEAD)" in source
+    assert 'OSWM_THIN_NODE: "1"' in source
     assert "python oswm_codebase/node_outputs.py --root . require" in source
+
+    setup = (ROOT / "runners/setup.sh").read_text(encoding="utf-8")
+    assert "OSWM_THIN_NODE" in setup
+    assert '*) "$PYTHON_BIN" oswm_codebase/special_updates.py ;;' in setup
