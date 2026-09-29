@@ -58,10 +58,10 @@ with (root / "events.log").open("a") as handle:
 if relative == "runtime_assets.py":
     path = root / "oswm_runtime/runtime_manifest.json"
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text('{"runtime_contract": 1}\n')
+    path.write_text('{"runtime_contract": 1}\\n')
 if relative == "build_provenance.py":
     path = root / "oswm-build.json"
-    path.write_text('{"core": {"sha": "fixture"}}\n')
+    path.write_text('{"core": {"sha": "fixture"}}\\n')
 if relative == "datahub/watcher/watcher_lib.py":
     if "--render-only" in sys.argv or "--render-current" in sys.argv:
         raise SystemExit(0)
