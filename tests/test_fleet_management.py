@@ -258,6 +258,9 @@ def test_fleet_workflows_are_parseable_and_secretless():
     assert "workflow_call:" in reusable_source
     assert '[[ ! "$REVISION" =~ ^[0-9a-f]{40}$ ]]' in reusable_source
     assert "git add -- oswm_codebase\n" in reusable_source
+    assert "gh workflow run data_daily_updating.yml" in reusable_source
+    assert "-f force_regeneration=true" in reusable_source
+    assert "gh workflow run pages.yml" not in reusable_source
     assert "uses: kauevestena/oswm_codebase/.github/workflows/node_codebase_sync.yml@main" in wrapper_source
     assert "contents: write" in wrapper_source
     assert "actions: write" in wrapper_source
