@@ -33,7 +33,7 @@ def branding_asset_path(semantic_key: str) -> str:
 
 def branding_asset_url(
     semantic_key: str,
-    codebase_prefix: str = "oswm_codebase",
+    codebase_prefix: str = "oswm_runtime",
 ) -> str:
     """Join an asset from the manifest to a node-relative or absolute prefix."""
 

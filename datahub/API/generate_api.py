@@ -1959,7 +1959,7 @@ print(data)</pre>
                       .replace("[USERNAME]", USERNAME)
                       .replace("[REPO_NAME]", REPO_NAME)
                       .replace("[node_homepage_url]", node_homepage_url)
-                      .replace("[PROJECT_LOGO_URL]", branding_asset_url("logos.project_100px", "../../oswm_codebase"))
+                      .replace("[PROJECT_LOGO_URL]", branding_asset_url("logos.project_100px", "../../oswm_runtime"))
                       .replace("[endpoints_js]", endpoints_js)
                       .replace("[example_area_js]", example_area_js))
 

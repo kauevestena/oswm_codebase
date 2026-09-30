@@ -90,6 +90,10 @@ jobs:
           python oswm_codebase/node_outputs.py --root . require
           python oswm_codebase/node_outputs.py --root . validate-sizes --max-mib 95
 
+      - name: Validate self-contained published runtime
+        if: inputs.mode != 'special'
+        run: python oswm_codebase/runtime_validation.py --root .
+
       - name: Stage declared products
         env:
           OSWM_BUILD_MODE: ${{ inputs.mode }}

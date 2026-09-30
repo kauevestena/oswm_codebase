@@ -21,8 +21,8 @@ for provider in PROVIDERS:
     """
 
 topbar = write_dq_topbar(2)
-favicon_url = branding_asset_url("favicon", "../oswm_codebase")
-project_logo_url = branding_asset_url("logos.project", "../oswm_codebase")
+favicon_url = branding_asset_url("favicon", "../oswm_runtime")
+project_logo_url = branding_asset_url("logos.project", "../oswm_runtime")
 
 
 external_qc_page = f"""<!--

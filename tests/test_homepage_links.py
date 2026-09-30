@@ -37,6 +37,8 @@ def test_setup_patcher_never_rewrites_unrelated_github_hosts(tmp_path):
     homepage.write_text('''<a href="https://kauevestena.github.io/opensidewalkmap/">Map</a>
 <a href="https://kauevestena.github.io/opensidewalkmap_beta/data/updates/index.html">Updates</a>
 <a href="https://someone.github.io/documentation/">Documentation</a>
+<img src="oswm_runtime/assets/branding/logos/project_logo_100px.png">
+<img src="oswm_codebase/assets/homepage/project_logo.png">
 <!--CITYNAME INSERTION-->Curitiba<!--CITYNAME INSERTION-->
 <!--MODULES INSERTION POINT-->old<!--MODULES INSERTION POINT-->''')
     readme.write_text('<CITYNAME>Curitiba<CITYNAME>')
@@ -65,4 +67,10 @@ def test_setup_patcher_never_rewrites_unrelated_github_hosts(tmp_path):
     assert 'https://someone.github.io/documentation/' in result
     assert '<!--CITYNAME INSERTION-->Milan<!--CITYNAME INSERTION-->' in result
     assert '<p>Modules</p>' in result
+    assert 'src="oswm_runtime/assets/branding/logos/project_logo_100px.png"' in result
+    assert 'src="oswm_runtime/assets/branding/logos/project_logo.png"' in result
+    assert 'oswm_runtime/oswm_runtime' not in result
+    with patch.dict(sys.modules, functions=functions, modules_info=modules):
+        runpy.run_path(str(ROOT / 'patch_readme_homepage.py'))
+    assert homepage.read_text() == result
     assert '<CITYNAME>Milan<CITYNAME>' == readme.read_text()

@@ -58,6 +58,19 @@ Acceptance requires:
 - repository and live Pages `oswm-build.json` agree on core SHA;
 - fleet status reports the node as thin and healthy.
 
+The reusable builder runs `python oswm_codebase/runtime_validation.py --root .`
+before staging every publishing mode. This validates static HTML assets, CSS
+URLs, ES module imports, and literal `new URL(..., import.meta.url)` references.
+Legacy local `oswm_codebase/` references fail even when the ephemeral checkout
+exists. Generator comments and external documentation links are not dependencies.
+Remote resources, dynamically constructed URLs, WebGL rendering, routing results,
+and deployed provenance still require live acceptance checks.
+
+For the runtime-repair canary, merge the core fix first, then the Curitiba caller
+change that triggers a forced daily rebuild. Remove the obsolete one-shot recovery
+workflow rather than retaining a second build implementation. Do not advance to
+production waves until the regenerated Pages deployment passes the gate above.
+
 Rollback is a normal revert of the canary migration commit.
 
 ### Phase 3 - Production waves
