@@ -7,6 +7,7 @@ import subprocess
 import shutil
 import geopandas as gpd
 import json
+import hashlib
 
 docker_img = "ghcr.io/osgeo/gdal:alpine-normal-latest"
 
@@ -48,6 +49,8 @@ if "tile_max_zoom" not in global_params:
 for layername in layers_dict:
 
     input_path = layers_dict[layername]
+    with open(input_path, "rb") as source:
+        source_sha256 = hashlib.file_digest(source, "sha256").hexdigest()
     outpath = os.path.join(tiles_folderpath, layername + ".pmtiles")
     geojson_intermediate = None
 
@@ -131,6 +134,7 @@ for layername in layers_dict:
                 )
                 tile_report[layername] = {
                     "status": "ok",
+                    "source_sha256": source_sha256,
                     "filesize": filesize,
                     "input_features": input_features,
                     "max_zoom": current_max_zoom,

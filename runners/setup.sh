@@ -14,4 +14,5 @@ case "${OSWM_THIN_NODE:-}" in
     *) "$PYTHON_BIN" oswm_codebase/special_updates.py ;;
 esac
 "$PYTHON_BIN" oswm_codebase/metadata/metadata_generation.py
+"$PYTHON_BIN" oswm_codebase/metadata/stac_generation.py --if-enabled
 "$PYTHON_BIN" oswm_codebase/datahub/API/generate_api.py

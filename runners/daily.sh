@@ -37,6 +37,7 @@ echo "Pipeline mode: $MODE"
 if [ "$MODE" = "skip" ]; then
     run_step oswm_codebase/datahub/acquisition/generate_acquisition.py "generate_acquisition"
     run_step oswm_codebase/metadata/metadata_generation.py "metadata_generation"
+    run_step oswm_codebase/metadata/stac_generation.py "stac_generation" --if-enabled
     run_step oswm_codebase/datahub/API/generate_api.py "generate_api"
     run_step oswm_codebase/datahub/datahub_index_generator.py "datahub_index"
 else
@@ -69,6 +70,7 @@ else
     run_step oswm_codebase/generation/hazard_tiles_gen.py "hazard_tiles_gen"
     run_step oswm_codebase/datahub/acquisition/generate_acquisition.py "generate_acquisition"
     run_step oswm_codebase/metadata/metadata_generation.py "metadata_generation"
+    run_step oswm_codebase/metadata/stac_generation.py "stac_generation" --if-enabled
     run_step oswm_codebase/datahub/API/generate_api.py "generate_api"
     run_step oswm_codebase/datahub/datahub_index_generator.py "datahub_index"
 fi

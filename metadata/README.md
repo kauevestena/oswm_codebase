@@ -75,3 +75,11 @@ exporters.
 `datahub/API/generate_api.py` publishes `metadata/` as a first-class API
 deliverable. Data endpoints include a link to their corresponding metadata
 record, and `metadata/index.json` is the catalogue entry point for a node.
+
+## Static STAC export
+
+An opt-in STAC 1.1.0 exporter publishes selected processed layers and the
+analytical routing network at `stac/catalog.json`. It reuses these metadata
+records, computes actual product bounds, and checks asset integrity. See
+[STAC.md](STAC.md) for pilot setup, data-license selection, timestamp semantics,
+PMTiles correspondence, validation, and global catalog generation.

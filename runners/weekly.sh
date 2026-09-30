@@ -12,5 +12,6 @@ fi
 "$PYTHON_BIN" oswm_codebase/dashboard/statistics_generation.py
 "$PYTHON_BIN" oswm_codebase/data_quality/check_wiki_keys.py
 "$PYTHON_BIN" oswm_codebase/metadata/metadata_generation.py
+"$PYTHON_BIN" oswm_codebase/metadata/stac_generation.py --if-enabled
 "$PYTHON_BIN" oswm_codebase/datahub/API/generate_api.py
 "$PYTHON_BIN" oswm_codebase/datahub/datahub_index_generator.py

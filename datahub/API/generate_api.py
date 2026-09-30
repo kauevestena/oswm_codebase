@@ -524,6 +524,24 @@ def collect_endpoints():
                     "metadata_path": None,
                 })
             
+    # STAC records share the discovery/metadata tab when the pilot is enabled.
+    if os.path.isfile("stac/catalog.json"):
+        for root, dirs, files in os.walk("stac"):
+            dirs[:] = sorted(d for d in dirs if not d.startswith("."))
+            for filename in sorted(files):
+                if not filename.endswith(".json") or filename.startswith("."):
+                    continue
+                path = os.path.join(root, filename).replace("\\", "/")
+                with open(path, encoding="utf-8") as handle:
+                    record = json.load(handle)
+                if record.get("oswm:generator") != "oswm_codebase.metadata.stac_generation":
+                    continue
+                description = record.get("description") or record.get("properties", {}).get("description", "")
+                endpoints.append(endpoint_record(
+                    "STAC " + {"Feature": "Item"}.get(record["type"], record["type"]),
+                    path, "JSON", description, "metadata",
+                ))
+
     # Sort
     endpoints.sort(key=lambda x: (
         x["category"] != "API Index", 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 import shutil
 import subprocess
@@ -98,6 +99,8 @@ def main() -> None:
 
     report: dict[str, object] = {}
     try:
+        with source_path.open("rb") as source:
+            source_sha256 = hashlib.file_digest(source, "sha256").hexdigest()
         with Path(constants.routing_metadata_path).open(encoding="utf-8") as source:
             feature_count = int(json.load(source)["feature_count"])
         if temporary_path.exists():
@@ -122,6 +125,7 @@ def main() -> None:
         os.replace(temporary_path, output_path)
         report = {
             "status": "ok",
+            "source_sha256": source_sha256,
             "source": source_path.name,
             "source_layer": DISPLAY_LAYER,
             "input_features": feature_count,
