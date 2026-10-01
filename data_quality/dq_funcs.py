@@ -472,8 +472,8 @@ def write_dq_topbar(active_index=1):
 def create_marker_cluster_html(
     outpath, centerpoint, z_level, specific_q_category=None, specific_category=None, title="OSWM Quality Assurance Map", back_url="oswm_qc_main.html", back_text="← Back to QC Homepage", logo_url=None, favicon_url=None
 ):
-    logo_url = logo_url or branding_asset_url("logos.project", "../oswm_codebase")
-    favicon_url = favicon_url or branding_asset_url("favicon", "../oswm_codebase")
+    logo_url = logo_url or branding_asset_url("logos.project", "../oswm_runtime")
+    favicon_url = favicon_url or branding_asset_url("favicon", "../oswm_runtime")
 
     # Filter data:
     map_view_data_to_use = map_view_data
@@ -1067,7 +1067,7 @@ def gen_quality_report_page_and_files(
         {get_tables_styles(3)}
 
         <title>OSWM DQT {category[0]} {quality_category}</title>
-        <link rel="icon" type="image/x-icon" href="{branding_asset_url('favicon', '../../../oswm_codebase')}">
+        <link rel="icon" type="image/x-icon" href="{branding_asset_url('favicon', '../../../oswm_runtime')}">
 
         </head>
         <body>
@@ -1077,7 +1077,7 @@ def gen_quality_report_page_and_files(
                 <a href="../../oswm_qc_main.html" style="display: inline-block; background: rgba(255,255,255,0.05); border: 1px solid rgba(0,242,254,0.3); color: #00f2fe; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: background 0.2s;">← Back to DQ Main</a>
             </div>
             
-            <h1 style="color: #f8fafc; font-size: 2rem; margin-bottom: 0.5rem;"><img src="{branding_asset_url('logos.project', '../../../oswm_codebase')}" alt="OSWM Logo" style="height: 1.5em; vertical-align: middle; margin-right: 15px;"><a href="../../../index.html" style="color: #00f2fe; text-decoration: none;">OSWM</a> Data Quality Tool</h1>
+            <h1 style="color: #f8fafc; font-size: 2rem; margin-bottom: 0.5rem;"><img src="{branding_asset_url('logos.project', '../../../oswm_runtime')}" alt="OSWM Logo" style="height: 1.5em; vertical-align: middle; margin-right: 15px;"><a href="../../../index.html" style="color: #00f2fe; text-decoration: none;">OSWM</a> Data Quality Tool</h1>
             <h2 style="color: #94a3b8; font-size: 1.2rem; font-weight: 400; margin-top: 0; margin-bottom: 2rem;">{category} / <span style="color: #f8fafc; font-weight: 600;">{quality_category}</span></h2>
             
             {files_url_part}

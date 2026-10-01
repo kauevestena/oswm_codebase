@@ -9,8 +9,8 @@ from temporal_lookup import build_temporal_lookup, temporal_attributes
 
 
 def main():
-    qc_logo_url = branding_asset_url("logos.project", "../oswm_codebase")
-    qc_favicon_url = branding_asset_url("favicon", "../oswm_codebase")
+    qc_logo_url = branding_asset_url("logos.project", "../oswm_runtime")
+    qc_favicon_url = branding_asset_url("favicon", "../oswm_runtime")
     gdf_dict = get_gdfs_dict(raw_data=True)
 
     # Load processed data to access the 'age' and 'last_update' attributes for temporal quality checks
@@ -282,8 +282,8 @@ def main():
                 title=f"{category} / {quality_category}",
                 back_url=f"../../pages/{category}/{quality_category}.html",
                 back_text=f"← Back to {quality_category}",
-                logo_url=branding_asset_url("logos.project", "../../../oswm_codebase"),
-                favicon_url=branding_asset_url("favicon", "../../../oswm_codebase")
+                logo_url=branding_asset_url("logos.project", "../../../oswm_runtime"),
+                favicon_url=branding_asset_url("favicon", "../../../oswm_runtime")
             )
 
     ######### PART 3: Quality Check Main page

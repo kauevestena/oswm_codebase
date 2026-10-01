@@ -420,7 +420,7 @@ def create_rev_date(row):
 
 
 def get_dashboard_global_insertions(levels_backward=2):
-    codebase_prefix = f"{'../' * levels_backward}oswm_codebase"
+    codebase_prefix = f"{'../' * levels_backward}oswm_runtime"
     favicon_url = branding_asset_url("favicon", codebase_prefix)
     return {
         "<head>": f"""
@@ -445,7 +445,7 @@ def get_dashboard_global_insertions(levels_backward=2):
 global_exclusions = [{"points": ["<style>", "</style>"], "multiline": True}]
 
 def get_dashboard_main_page_insertions():
-    project_logo_url = branding_asset_url("logos.project", "../oswm_codebase")
+    project_logo_url = branding_asset_url("logos.project", "../oswm_runtime")
     return {
         "<body>": f"""
 

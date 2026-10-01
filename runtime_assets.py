@@ -43,6 +43,14 @@ def publish_runtime(node_root: Path, core_root: Path) -> dict[str, object]:
         shutil.copy2(core_root / "webmap" / "snapshot" / name, snapshot_target / name)
     copied.append("webmap/snapshot")
 
+    shutil.copy2(core_root / "webmap/oswm_legend_control.js", target / "webmap/oswm_legend_control.js")
+    copied.append("webmap/oswm_legend_control.js")
+    charts_target = target / "webmap/theme_charts"
+    charts_target.mkdir()
+    for source in sorted((core_root / "webmap/theme_charts").glob("*.js")):
+        shutil.copy2(source, charts_target / source.name)
+    copied.append("webmap/theme_charts")
+
     manifest = {
         "schema_version": 1,
         "runtime_contract": RUNTIME_CONTRACT,

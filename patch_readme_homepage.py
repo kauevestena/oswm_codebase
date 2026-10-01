@@ -74,7 +74,7 @@ legacy_homepage_branding = {
 }
 for legacy_filename, semantic_key in legacy_homepage_branding.items():
     legacy_pattern = re.compile(
-        rf'(?:https?://[^"\']+/)?(?:oswm_codebase/)?assets/(?:homepage/)?{re.escape(legacy_filename)}'
+        rf'(?:https?://[^"\']+/)?(?:(?:oswm_codebase|oswm_runtime)/)?assets/(?:homepage/)?{re.escape(legacy_filename)}'
     )
     files_obj_dict["homepage"].content = legacy_pattern.sub(
         branding_asset_url(semantic_key),

@@ -926,7 +926,7 @@ def _build_map_html(geojson_str, boundary_geojson_str, center_lon, center_lat, c
     """Build the standalone MapLibre GL HTML string."""
 
     last_idx = n_timestamps - 1
-    favicon_url = branding_asset_url("favicon", "../../oswm_codebase")
+    favicon_url = branding_asset_url("favicon", "../../oswm_runtime")
     project_logo_url = branding_asset_url("logos.project", "../../oswm_runtime")
 
     return f"""<!--

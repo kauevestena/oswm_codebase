@@ -169,11 +169,11 @@ def gen_updating_infotable_page(
 <html lang="en">
 <head>
 
-{get_font_style(1)}
+{get_font_style(2)}
 
 <title>OSWM Updating Info</title>
 
-{get_tables_styles(1)}
+{get_tables_styles(2)}
 
 </head>
 <body>
