@@ -26,7 +26,12 @@ jobs:
       - run: python -m pip install -r requirements-dev.txt
       - run: python -m pip check
       - run: python -m pytest -q
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci --ignore-scripts
       - name: Run JavaScript module tests
-        run: node --test tests/routing_worker.test.mjs webmap/snapshot/*.test.mjs webmap/theme_charts/*.test.mjs
+        run: npm test
       - name: Parse runner scripts
         run: bash -n runners/*.sh local_setup.sh other/fix_scripts/fix_version_checkout.sh
