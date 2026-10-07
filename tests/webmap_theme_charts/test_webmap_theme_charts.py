@@ -10,7 +10,7 @@ class WebmapThemeChartWiringTests(unittest.TestCase):
         template = (ROOT / "webmap/webmap_base.html").read_text(encoding="utf8")
 
         self.assertIn("webmap_theme_charts.css", template)
-        self.assertIn("echarts@6.1.0/+esm", template)
+        self.assertIn("echarts@6.1.0/dist/echarts.esm.min.js", template)
         self.assertIn("theme_chart_control.js", template)
         self.assertIn("loadECharts: () => import", template)
         self.assertIn("installThemeChartControl(map, params", template)

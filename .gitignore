@@ -178,6 +178,7 @@ cache/
 *.log
 
 # development stuff
+node_modules/
 .vscode
 tests/
 !tests/

@@ -227,7 +227,7 @@ The identical `assets/homepage/favicon_homepage.png` and the non-clean `assets/p
 - GDAL command-line tools, including `ogr2ogr`, for tile/VRT and full pipeline work;
 - Noto CJK fonts (`fonts-noto-cjk` on Debian/Ubuntu) for Japanese, Chinese,
   and Korean raster-basemap labels;
-- Node.js for the dependency-free JavaScript snapshot and Webmap-chart tests;
+- Node.js 22+ and npm for the JavaScript tests (ECharts is a test-only dependency);
 - a local HTTP server for browser smoke tests (Python's standard library is sufficient).
 
 For integration work, start with a node so relative paths and generated outputs are exercised in their real topology:
@@ -279,12 +279,20 @@ python tests/test_branding_manifest.py
 python -m unittest tests.test_metadata_generation
 python -m unittest discover -s tests/webmap_snapshot -p 'test_*.py'
 python -m unittest discover -s tests/webmap_theme_charts -p 'test_*.py'
-node --test webmap/snapshot/snapshot_stats.test.mjs
-node --test webmap/theme_charts/theme_charts.test.mjs
+npm ci --ignore-scripts
+npm test
 git diff --check
 ```
 
 The branding test rejects duplicate JSON keys, unsafe or duplicate paths, missing files, an incomplete logo contract, and requested assets left at their former locations.
+
+The chart-control tests load the official ECharts ESM artifact selected by the
+Webmap template from the locked npm package. They check real SVG bars and labels
+for exact dataset totals and live viewport updates, using an SSR renderer and a
+small map/DOM fixture. Keep the official `dist/echarts.esm.min.js` browser import:
+the CDN-generated `+esm` module splits ZRender class identities and can produce
+empty SVGs even when chart initialization and data loading succeed. After a node
+rebuild, also check both chart scopes and pan/zoom updates in a WebGL2 browser.
 
 For static smoke testing, serve the node root—not the submodule directory—so the same relative URLs used by GitHub Pages are exercised:
 
