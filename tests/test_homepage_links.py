@@ -38,7 +38,7 @@ def test_setup_patcher_never_rewrites_unrelated_github_hosts(tmp_path):
 <a href="https://kauevestena.github.io/opensidewalkmap_beta/data/updates/index.html">Updates</a>
 <a href="https://someone.github.io/documentation/">Documentation</a>
 <img src="oswm_runtime/assets/branding/logos/project_logo_100px.png">
-<img src="oswm_codebase/assets/homepage/project_logo.png">
+<img src="oswm_codebase/assets/homepage/project_logo.png">\n<img src="oswm_codebase/assets/homepage/oswm_datahub_img.png">\n<a href="oswm_codebase/routing/routing_demo.html">Routing</a>\n<a href="oswm_codebase/hazard_analysis/hazard_analysis.html">Hazards</a>
 <!--CITYNAME INSERTION-->Curitiba<!--CITYNAME INSERTION-->
 <!--MODULES INSERTION POINT-->old<!--MODULES INSERTION POINT-->''')
     readme.write_text('<CITYNAME>Curitiba<CITYNAME>')
@@ -69,6 +69,9 @@ def test_setup_patcher_never_rewrites_unrelated_github_hosts(tmp_path):
     assert '<p>Modules</p>' in result
     assert 'src="oswm_runtime/assets/branding/logos/project_logo_100px.png"' in result
     assert 'src="oswm_runtime/assets/branding/logos/project_logo.png"' in result
+    assert 'src="oswm_runtime/assets/homepage/oswm_datahub_img.png"' in result
+    assert 'href="oswm_runtime/routing/routing_demo.html"' in result
+    assert 'href="oswm_runtime/hazard_analysis/hazard_analysis.html"' in result
     assert 'oswm_runtime/oswm_runtime' not in result
     with patch.dict(sys.modules, functions=functions, modules_info=modules):
         runpy.run_path(str(ROOT / 'patch_readme_homepage.py'))
