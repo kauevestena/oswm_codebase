@@ -69,7 +69,10 @@ def test_setup_patcher_never_rewrites_unrelated_github_hosts(tmp_path):
     assert '<p>Modules</p>' in result
     assert 'src="oswm_runtime/assets/branding/logos/project_logo_100px.png"' in result
     assert 'src="oswm_runtime/assets/branding/logos/project_logo.png"' in result
-    assert 'src="oswm_runtime/assets/homepage/oswm_datahub_img.png"' in result\n    assert 'href="oswm_runtime/routing/routing_demo.html"' in result\n    assert 'href="oswm_runtime/hazard_analysis/hazard_analysis.html"' in result\n    assert 'oswm_runtime/oswm_runtime' not in result
+    assert 'src="oswm_runtime/assets/homepage/oswm_datahub_img.png"' in result
+    assert 'href="oswm_runtime/routing/routing_demo.html"' in result
+    assert 'href="oswm_runtime/hazard_analysis/hazard_analysis.html"' in result
+    assert 'oswm_runtime/oswm_runtime' not in result
     with patch.dict(sys.modules, functions=functions, modules_info=modules):
         runpy.run_path(str(ROOT / 'patch_readme_homepage.py'))
     assert homepage.read_text() == result
