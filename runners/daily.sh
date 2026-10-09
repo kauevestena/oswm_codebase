@@ -43,7 +43,7 @@ if [ "$MODE" = "skip" ]; then
 else
     if [ "$MODE" = "generate" ]; then
         if ! "$PYTHON_BIN" oswm_codebase/getting_data.py; then
-            if "$PYTHON_BIN" -c 'from pathlib import Path; from pipeline_decision import RAW_OUTPUTS; assert all(Path(p).is_file() for p in RAW_OUTPUTS)'; then
+            if "$PYTHON_BIN" -c 'from pathlib import Path; import sys; sys.path.insert(0, 'oswm_codebase'); from pipeline_decision import RAW_OUTPUTS; assert all(Path(p).is_file() for p in RAW_OUTPUTS)'; then
                 echo "[daily] Provider unavailable; rebuilding from cached raw data (DEGRADED)."
                 mkdir -p data/updates
                 echo "Raw OSM data refresh failed; using cached inputs." > data/updates/data_freshness_warning.txt
