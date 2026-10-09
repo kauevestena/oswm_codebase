@@ -42,7 +42,18 @@ if [ "$MODE" = "skip" ]; then
     run_step oswm_codebase/datahub/datahub_index_generator.py "datahub_index"
 else
     if [ "$MODE" = "generate" ]; then
-        run_step oswm_codebase/getting_data.py "getting_data"
+        if ! "$PYTHON_BIN" oswm_codebase/getting_data.py; then
+            if "$PYTHON_BIN" -c 'from pathlib import Path; import sys; sys.path.insert(0, 'oswm_codebase'); from pipeline_decision import RAW_OUTPUTS; assert all(Path(p).is_file() for p in RAW_OUTPUTS)'; then
+                echo "[daily] Provider unavailable; rebuilding from cached raw data (DEGRADED)."
+                mkdir -p data/updates
+                echo "Raw OSM data refresh failed; using cached inputs." > data/updates/data_freshness_warning.txt
+                DATA_REFRESH_DEGRADED=1
+            else
+                FAILED_STEPS+=("getting_data")
+            fi
+        else
+            rm -f data/updates/data_freshness_warning.txt
+        fi
     fi
 
     if ! "$PYTHON_BIN" oswm_codebase/node_outputs.py --root . require-versioning; then
@@ -90,5 +101,9 @@ if [ "$MODE" != "skip" ]; then
 fi
 
 "$PYTHON_BIN" oswm_codebase/node_outputs.py --root . require
-"$PYTHON_BIN" oswm_codebase/pipeline_decision.py --root . record-success
+if [ "${DATA_REFRESH_DEGRADED:-0}" != "1" ]; then
+    "$PYTHON_BIN" oswm_codebase/pipeline_decision.py --root . record-success
+else
+    echo "[daily] Derived outputs built; raw data refresh NOT successful."
+fi
 rm -f data/updates/pipeline_failures.txt
