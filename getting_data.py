@@ -3,6 +3,8 @@ from oswm_codebase.functions import *
 from time import sleep, time
 import osmnx as ox
 from overpass_acquisition import features_from_polygon_with_failover
+from pbf_acquisition import PROVENANCE_KEY, pbf_options_from_config
+from time_utils import parse_timestamp
 
 
 
@@ -10,7 +12,7 @@ def main():
     """
     NOTE: This script attempts to do an incremental data fetch using OHSOME API.
     If the data doesn't exist yet, or the OHSOME API fails, it will fallback
-    to a full OSMnx data download.
+    to a full OSMnx data download, then a regional PBF if Overpass is unavailable.
     """
     # 1. Quick lookup to see if existing data is present
     all_data_exists = True
@@ -119,7 +121,9 @@ def main():
         ),
         attempts_per_endpoint=globals().get("OVERPASS_ATTEMPTS_PER_ENDPOINT", 2),
         backoff_seconds=globals().get("OVERPASS_BACKOFF_SECONDS", 5),
+        pbf_options=pbf_options_from_config(globals(), minimum_timestamp=since_dt),
     )
+    acquisition = as_gdf.attrs.get(PROVENANCE_KEY, {})
     print(f"    took {time()-t1:.2f} seconds, with {len(as_gdf)} features")
 
     # removing all with globally invalid values:
@@ -161,7 +165,12 @@ def main():
 
     print("finishing...")
     # to record data aging:
-    record_datetime("Data Fetching")
+    # An extract describes its replication cutoff, not the time we downloaded it.
+    record_datetime("Data Fetching", value=parse_timestamp(acquisition.get("snapshot_timestamp")))
+    dump_json(
+        acquisition or {"provider": "overpass", "acquired_at": formatted_datetime_now()},
+        os.path.join(os.path.dirname(updating_infos_path), "acquisition.json"),
+    )
     sleep(0.1)
 
     # generate the "report" of the updating info

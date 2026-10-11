@@ -1,5 +1,6 @@
 """Regression cases from the September 20 node failures (no live services)."""
 import ast
+import json
 import os
 from pathlib import Path
 import subprocess
@@ -104,9 +105,14 @@ class CompletenessDownloadTests(unittest.TestCase):
         cache = root / 'roads.parquet'
         settings = SimpleNamespace(OVERPASS_ENDPOINTS=('primary', 'backup'),
                                    OVERPASS_ATTEMPTS_PER_ENDPOINT=2,
-                                   OVERPASS_BACKOFF_SECONDS=0)
+                                   OVERPASS_BACKOFF_SECONDS=0,
+                                   PBF_FALLBACK_ENABLED=False)
+        from pbf_acquisition import PROVENANCE_KEY, pbf_options_from_config
         namespace = dict(os=os, ROADS_CACHE_PATH=str(cache), ROAD_HIGHWAY_TYPES=['residential'],
                          node_config=settings, DEFAULT_OVERPASS_ENDPOINTS=('unused',),
+                         PROVENANCE_KEY=PROVENANCE_KEY,
+                         pbf_options_from_config=pbf_options_from_config,
+                         dump_json=lambda data, path: Path(path).write_text(json.dumps(data)),
                          box=lambda *bounds: bounds,
                          features_from_polygon_with_failover=features_from_polygon_with_failover,
                          create_folder_if_not_exists=lambda p: Path(p).mkdir(exist_ok=True),
@@ -119,6 +125,7 @@ class CompletenessDownloadTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             class Roads:
+                attrs = {}
                 geometry = SimpleNamespace(geom_type=SimpleNamespace(isin=lambda values: [True]))
                 def __getitem__(self, key): return self
                 def copy(self): return self

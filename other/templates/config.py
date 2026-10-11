@@ -51,6 +51,15 @@ OVERPASS_ENDPOINTS = (
 OVERPASS_ATTEMPTS_PER_ENDPOINT = 2
 OVERPASS_BACKOFF_SECONDS = 5
 
+# Independent current-snapshot fallback after all Overpass attempts fail.
+# "auto" selects the smallest Geofabrik region covering the entire boundary.
+# Use a Geofabrik region ID such as "chugoku" to pin a region (coverage checked).
+PBF_FALLBACK_ENABLED = True
+PBF_REGION = "auto"
+PBF_CACHE_DIR = ".cache/oswm/pbf"  # Outside rebuilt/committed node data
+PBF_MAX_DOWNLOAD_MIB = 1024
+PBF_MAX_AGE_HOURS = 72
+
 # Metadata records are published in English ("en") by default. The timezone is
 # automatically determined from MID_LAT/MID_LGT (or BOUNDING_BOX).
 # METADATA_TIMEZONE = "America/Sao_Paulo"  # Optional manual override
