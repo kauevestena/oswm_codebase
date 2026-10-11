@@ -27,6 +27,7 @@ from functions import get_boundaries_infos, create_folder_if_not_exists, dump_js
 from branding import branding_asset_url
 import constants as node_config
 from overpass_acquisition import DEFAULT_OVERPASS_ENDPOINTS, features_from_polygon_with_failover
+from pbf_acquisition import PROVENANCE_KEY, pbf_options_from_config
 from constants import (
     CITY_NAME,
     boundaries_geojson_path,
@@ -82,7 +83,7 @@ ATTRIBUTE_RULES = {
 # ---------------------------------------------------------------------------
 
 def fetch_or_load_roads(bounds, cache_path=ROADS_CACHE_PATH, silent=False):
-    """Load roads from cache or fetch via OSMnx."""
+    """Load roads from cache or fetch via Overpass, with regional PBF failover."""
     if os.path.exists(cache_path):
         if not silent:
             print("[completeness] Loading cached road network...")
@@ -102,7 +103,9 @@ def fetch_or_load_roads(bounds, cache_path=ROADS_CACHE_PATH, silent=False):
         endpoints=getattr(node_config, "OVERPASS_ENDPOINTS", DEFAULT_OVERPASS_ENDPOINTS),
         attempts_per_endpoint=getattr(node_config, "OVERPASS_ATTEMPTS_PER_ENDPOINT", 2),
         backoff_seconds=getattr(node_config, "OVERPASS_BACKOFF_SECONDS", 5),
+        pbf_options=pbf_options_from_config(node_config),
     )
+    acquisition = roads.attrs.get(PROVENANCE_KEY, {})
 
     # Keep only line geometries
     roads = roads[roads.geometry.geom_type.isin(["LineString", "MultiLineString"])]
@@ -111,6 +114,7 @@ def fetch_or_load_roads(bounds, cache_path=ROADS_CACHE_PATH, silent=False):
 
     create_folder_if_not_exists(os.path.dirname(cache_path))
     roads.to_parquet(cache_path)
+    dump_json(acquisition or {"provider": "overpass"}, f"{cache_path}.source.json")
 
     if not silent:
         print(f"[completeness] Cached {len(roads)} road features to {cache_path}")

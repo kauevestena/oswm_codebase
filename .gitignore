@@ -193,6 +193,7 @@ tests/*
 !tests/test_hazard_analysis.py
 !tests/test_metadata_generation.py
 !tests/test_launch_readiness.py
+!tests/test_pbf_acquisition.py
 !tests/test_runner_integration.py
 !tests/test_fleet_management.py
 tests.py

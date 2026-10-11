@@ -1,4 +1,4 @@
-"""Bounded provider failover for OSMnx/Overpass cold acquisitions."""
+"""Bounded provider failover for OSMnx/Overpass and regional PBF acquisitions."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ DEFAULT_OVERPASS_ENDPOINTS = (
 
 
 class OverpassAcquisitionError(RuntimeError):
-    """Raised after every configured endpoint and retry is exhausted."""
+    """Raised after every configured provider and retry is exhausted."""
 
 
 def features_from_polygon_with_failover(
@@ -26,8 +26,9 @@ def features_from_polygon_with_failover(
     attempts_per_endpoint: int = 2,
     backoff_seconds: float = 5,
     sleep: Callable[[float], None] = time.sleep,
+    pbf_options: dict[str, Any] | None = None,
 ) -> Any:
-    """Call OSMnx using bounded retries across explicit Overpass endpoints."""
+    """Try Overpass endpoints, then an optional independent Geofabrik snapshot."""
 
     configured = tuple(str(item).rstrip("/") for item in endpoints if str(item))
     if not configured:
@@ -50,4 +51,11 @@ def features_from_polygon_with_failover(
     finally:
         if previous_url is not None:
             osmnx.settings.overpass_url = previous_url
+    if pbf_options is not None:
+        from pbf_acquisition import features_from_polygon_pbf
+
+        try:
+            return features_from_polygon_pbf(osmnx, polygon, tags, **pbf_options)
+        except Exception as exc:
+            failures.append(f"Geofabrik PBF: {type(exc).__name__}: {exc}")
     raise OverpassAcquisitionError("; ".join(failures))

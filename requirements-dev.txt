@@ -98,6 +98,8 @@ osm2geojson==0.3.2
     # via -r requirements.in
 osmapi==6.0.0
     # via -r requirements.in
+osmium==4.3.1
+    # via -r requirements.in
 osmnx==2.1.1
     # via -r requirements.in
 packaging==26.3
@@ -160,6 +162,7 @@ requests==2.34.2
     #   -r requirements.in
     #   osm2geojson
     #   osmapi
+    #   osmium
     #   osmnx
 rpds-py==2026.6.3
     # via
