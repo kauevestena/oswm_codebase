@@ -75,6 +75,9 @@ else
     run_step oswm_codebase/datahub/datahub_index_generator.py "datahub_index"
 fi
 
+# Repair existing homepages on every daily mode before publishing success.
+run_step oswm_codebase/patch_readme_homepage.py "patch_readme_homepage"
+
 if [ "${#FAILED_STEPS[@]}" -ne 0 ]; then
     mkdir -p data/updates
     printf '%s\n' "${FAILED_STEPS[@]}" > data/updates/pipeline_failures.txt

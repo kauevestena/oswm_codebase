@@ -183,6 +183,9 @@ node_modules/
 tests/
 !tests/
 tests/*
+!tests/fixtures/
+tests/fixtures/*
+!tests/fixtures/hiroshima-index.html
 !tests/test_branding_manifest.py
 !tests/webmap_snapshot/
 !tests/webmap_snapshot/*.py

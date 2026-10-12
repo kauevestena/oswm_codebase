@@ -37,6 +37,7 @@ def test_setup_patcher_never_rewrites_unrelated_github_hosts(tmp_path):
     homepage.write_text('''<a href="https://kauevestena.github.io/opensidewalkmap/">Map</a>
 <a href="https://kauevestena.github.io/opensidewalkmap_beta/data/updates/index.html">Updates</a>
 <a href="https://someone.github.io/documentation/">Documentation</a>
+<style>body { background-image: url('https://kauevestena.github.io/oswm_codebase/assets/homepage/sidewalk_background2.jpg'); }</style>
 <img src="oswm_runtime/assets/branding/logos/project_logo_100px.png">
 <img src="oswm_codebase/assets/homepage/project_logo.png">\n<img src="oswm_codebase/assets/homepage/oswm_datahub_img.png">\n<a href="oswm_codebase/routing/routing_demo.html">Routing</a>\n<a href="oswm_codebase/hazard_analysis/hazard_analysis.html">Hazards</a>
 <!--CITYNAME INSERTION-->Curitiba<!--CITYNAME INSERTION-->
@@ -65,6 +66,7 @@ def test_setup_patcher_never_rewrites_unrelated_github_hosts(tmp_path):
     assert INDEX_MAP_URL in result
     assert 'href="data/updates/index.html"' in result
     assert 'https://someone.github.io/documentation/' in result
+    assert "url('oswm_runtime/assets/homepage/sidewalk_background2.jpg')" in result
     assert '<!--CITYNAME INSERTION-->Milan<!--CITYNAME INSERTION-->' in result
     assert '<p>Modules</p>' in result
     assert 'src="oswm_runtime/assets/branding/logos/project_logo_100px.png"' in result

@@ -11,11 +11,14 @@ import pytest
 
 from node_outputs import REQUIRED_OUTPUTS
 from pipeline_decision import CODEBASE_REVISION_KEY
+from runtime_assets import COPY_TREES, SNAPSHOT_FILES, publish_runtime
+from runtime_validation import Assets, CSS_URL
 
 
 ROOT = Path(__file__).resolve().parents[1]
 RUNNER_SCRIPTS = (
     "runtime_assets.py",
+    "patch_readme_homepage.py",
     "build_provenance.py",
     "datahub/watcher/watcher_lib.py",
     "datahub/acquisition/generate_acquisition.py",
@@ -39,6 +42,19 @@ RUNNER_SCRIPTS = (
     "metadata/stac_generation.py",
     "datahub/API/generate_api.py",
     "datahub/datahub_index_generator.py",
+)
+
+LEGACY_HOMEPAGE_PATHS = (
+    "assets/branding/favicon_homepage.png",
+    "assets/branding/logos/project_logo_100px.png",
+    "assets/homepage/oswm_webmap_img.png",
+    "assets/homepage/oswm_route_img.png",
+    "assets/homepage/oswm_statistics_img.png",
+    "assets/homepage/oswm_quality_check_img.png",
+    "assets/homepage/oswm_datahub_img.png",
+    "assets/homepage/oswm_hazard_img.png",
+    "routing/routing_demo.html",
+    "hazard_analysis/hazard_analysis.html",
 )
 
 
@@ -171,6 +187,101 @@ def test_stac_failure_prevents_pipeline_success(tmp_path, monkeypatch):
     assert result.returncode != 0
     assert "stac_generation" in (tmp_path / "data/updates/pipeline_failures.txt").read_text()
     assert "Pipeline Success" not in json.loads((tmp_path / "data/updates/registry.json").read_text())
+
+
+@pytest.mark.parametrize("complete", [False, True], ids=["generate", "skip"])
+def test_homepage_patch_failure_prevents_pipeline_success(tmp_path, monkeypatch, complete):
+    _prepare_fixture(tmp_path, complete=complete, recorded_revision="same")
+    monkeypatch.setenv("FAIL_STEP", "patch_readme_homepage.py")
+
+    result = _run(tmp_path, revision="same")
+
+    assert result.returncode != 0
+    assert "patch_readme_homepage" in (tmp_path / "data/updates/pipeline_failures.txt").read_text()
+    registry = json.loads((tmp_path / "data/updates/registry.json").read_text())
+    assert "Pipeline Success" not in registry
+
+
+def _prepare_homepage_fixture(root: Path, mode: str) -> None:
+    _prepare_fixture(
+        root,
+        complete=mode != "generate",
+        recorded_revision="old" if mode == "rebuild" else "same",
+    )
+    core = root / "oswm_codebase"
+    for relative in (
+        "patch_readme_homepage.py", "functions.py", "constants.py", "modules_info.py",
+        "boundary_acquisition.py", "branding.py", "homepage_links.py",
+        "runtime_assets.py", "runtime_validation.py",
+    ):
+        shutil.copy2(ROOT / relative, core / relative)
+    for source, _ in COPY_TREES:
+        shutil.copytree(ROOT / source, core / source)
+    for relative in (
+        "webmap/oswm_legend_control.js",
+        *("webmap/snapshot/" + name for name in SNAPSHOT_FILES),
+        *(path.relative_to(ROOT).as_posix() for path in (ROOT / "webmap/theme_charts").glob("*.js")),
+    ):
+        destination = core / relative
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(ROOT / relative, destination)
+
+    configuration = (ROOT / "other/templates/config.py").read_text()
+    (root / "config.py").write_text(
+        configuration + '\nCITY_NAME = "Hiroshima, Japan"\n'
+        'USERNAME = "opensidewalkmap"\nREPO_NAME = "hiroshima"\n'
+    )
+    # Keep the failed node's homepage verbatim, including all ten legacy URLs.
+    # Source: https://github.com/opensidewalkmap/hiroshima/blob/b22bf2c/index.html
+    shutil.copy2(ROOT / "tests/fixtures/hiroshima-index.html", root / "index.html")
+    (root / "README.md").write_text("# <CITYNAME>Hiroshima, Japan<CITYNAME> node\n")
+
+    # Data-generator substitutes must leave homepage and runtime publication to
+    # their real scripts; these are otherwise part of the output-contract stub.
+    filtering = core / "filtering_adapting_data.py"
+    data_outputs = tuple(path for path in REQUIRED_OUTPUTS if path not in {
+        "index.html", "oswm_runtime/runtime_manifest.json",
+    })
+    filtering.write_text(
+        filtering.read_text().replace(repr(REQUIRED_OUTPUTS), repr(data_outputs))
+    )
+    if mode == "skip":
+        publish_runtime(root, core)
+
+
+@pytest.mark.parametrize("mode", ["generate", "rebuild", "skip"])
+def test_daily_runner_repairs_legacy_hiroshima_homepage(tmp_path, mode):
+    _prepare_homepage_fixture(tmp_path, mode)
+    homepage = tmp_path / "index.html"
+    parser = Assets()
+    parser.feed(homepage.read_text())
+    legacy_urls = {"oswm_codebase/" + path for path in LEGACY_HOMEPAGE_PATHS}
+    assert set(parser.urls) & legacy_urls == legacy_urls
+
+    result = _run(tmp_path, revision="same")
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    decision = json.loads((tmp_path / "data/updates/pipeline_decision.json").read_text())
+    assert decision["mode"] == mode
+    parser = Assets()
+    parser.feed(homepage.read_text())
+    assert not (set(parser.urls) & legacy_urls)
+    for path in LEGACY_HOMEPAGE_PATHS:
+        runtime_url = "oswm_runtime/" + path
+        assert runtime_url in parser.urls
+        assert (tmp_path / runtime_url).is_file()
+    background_url = "oswm_runtime/assets/homepage/sidewalk_background2.jpg"
+    assert background_url in CSS_URL.findall("\n".join(parser.code))
+    assert (tmp_path / background_url).is_file()
+
+    # Check the publishable tree after discarding the ephemeral build engine.
+    shutil.rmtree(tmp_path / "oswm_codebase")
+    validation = subprocess.run(
+        [sys.executable, str(ROOT / "runtime_validation.py"), "--root", str(tmp_path)],
+        text=True, capture_output=True, timeout=30,
+    )
+    assert validation.returncode == 0, validation.stdout + validation.stderr
+    assert json.loads(validation.stdout)["runtime_errors"] == []
 
 
 def test_missing_basemaps_force_rebuild_during_no_change_cycle(tmp_path):
