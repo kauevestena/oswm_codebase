@@ -61,5 +61,40 @@ class DashboardExplanationTests(unittest.TestCase):
                 ), "Inline margin must not override the mobile layout")
 
 
+def explanation_namespace():
+    # These templates are independent of the data-loading imports in this module.
+    source = ast.parse((ROOT / "dashboard/statistics_funcs.py").read_text())
+    assignments = [
+        node for node in source.body
+        if isinstance(node, ast.Assign)
+        and any(isinstance(target, ast.Name)
+                and (target.id == "explanation_base" or target.id.endswith("_link"))
+                for target in node.targets)
+    ]
+    namespace = {}
+    exec(compile(ast.Module(body=assignments, type_ignores=[]), "templates", "exec"), namespace)
+    return namespace
+
+
+class KerbExplanationTests(unittest.TestCase):
+    def test_kerb_explanation_documents_the_plotted_fields(self):
+        namespace = explanation_namespace()
+        namespace["oswm_footway_fieldname"] = "category"
+        source = ast.parse((ROOT / "dashboard/statistics_specs.py").read_text())
+        function = next(node for node in source.body
+                        if isinstance(node, ast.FunctionDef) and node.name == "get_charts_specs")
+        # Chart builders are not invoked when constructing the specification dictionary.
+        for node in ast.walk(function):
+            if isinstance(node, ast.Name) and node.id.startswith("create_"):
+                namespace[node.id] = lambda **kwargs: None
+        exec(compile(ast.Module(body=[function], type_ignores=[]), "specs", "exec"), namespace)
+        chart = namespace["get_charts_specs"]({})["kerbs"]["kerbs_x_paving_x_wheelchair"]
+        parser = ExplanationParser()
+        parser.feed(namespace["explanation_base"].format(chart["explanation"]))
+        documented_fields = {url.rsplit("Key:", 1)[-1] for url in parser.links}
+        plotted_fields = {chart["params"][field] for field in ("xs", "ys", "hcolor")}
+        self.assertEqual(documented_fields, plotted_fields)
+
+
 if __name__ == "__main__":
     unittest.main()
