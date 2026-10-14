@@ -502,4 +502,3 @@ def get_charts_specs(gdfs_dict):
             },
         },
     }
-

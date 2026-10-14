@@ -477,7 +477,7 @@ def get_dashboard_main_page_insertions():
     }
 
 # stuff for the explanation
-explanation_base = '<div class="content"><h4 style="font-weight: 500;">Explanation:</h4><p style="color: var(--text-muted);">{}</p></div>'
+explanation_base = '<div class="content" style="padding: 1.5rem 20px;"><h4 style="font-weight: 500;">Explanation:</h4><p style="color: var(--text-muted);">{}</p></div>'
 
 # the webpage links
 surface_link = "<a href='https://wiki.openstreetmap.org/wiki/Key:surface'>surface</a>"
@@ -496,4 +496,3 @@ wheelchair_link = (
 )
 traffic_calming_link = "<a href='https://wiki.openstreetmap.org/wiki/Key:traffic_calming'>Traffic Calming</a>"
 incline_link = "<a href='https://wiki.openstreetmap.org/wiki/Key:incline'>incline</a>"
-
