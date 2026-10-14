@@ -55,7 +55,10 @@ def decide(root: Path, *, watcher_status: int, force: bool = False) -> dict[str,
     required_missing = missing_required(root)
 
     if force:
-        mode, reason = "generate", "forced"
+        # force_regeneration requests derived products, not an unnecessary
+        # provider refresh. Still acquire on cold/changed/inconclusive runs.
+        mode = "generate" if raw_missing or watcher_status != 0 else "rebuild"
+        reason = "forced"
     elif raw_missing:
         mode, reason = "generate", "cold_start"
     elif current_revision and current_revision != recorded_revision:

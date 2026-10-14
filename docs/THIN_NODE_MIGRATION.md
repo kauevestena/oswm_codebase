@@ -73,6 +73,25 @@ production waves until the regenerated Pages deployment passes the gate above.
 
 Rollback is a normal revert of the canary migration commit.
 
+`force_regeneration` forces derived-output generation. When all raw inputs exist
+and the watcher returns no changes, it selects `rebuild` without re-fetching raw
+pedestrian data. Missing raw inputs, detected changes or an inconclusive
+watcher check still select `generate` and require successful acquisition.
+Rebuilds retain `Data Fetching`, acquisition provenance and the saved watcher
+decision; they record a successful product build without claiming a data refresh.
+
+Lima's October 13, 2026 migration exposed the distinction in
+[run 38465930563](https://github.com/opensidewalkmap/lima/actions/runs/38465930563).
+It had complete raw inputs acquired through Overpass at `2026-10-13T13:21:12Z`
+and a no-change watcher result, but the force flag selected acquisition. The
+incremental path rejected ohsome's lagging July 27 temporal extent; both Overpass
+endpoints then timed out. The PBF fallback selected Peru and rejected its snapshot
+as older than the recorded acquisition. The original log does not include the
+extract's exact cutoff. This freshness guard is intentional: accepting an older
+snapshot could undo newer mapped data. The correction uses the existing rebuild
+path, keeping provider failure and PBF freshness checks strict. Data Hub's zero
+matching projects was not the acquisition error.
+
 ### Phase 3 - Production waves
 
 After the Curitiba gate passes, migrate registered production nodes in fleet

@@ -162,7 +162,10 @@ def _snapshot_timestamp(path, *, now, max_age_hours, minimum_timestamp):
     if now - timestamp > timedelta(hours=max_age_hours):
         raise PbfAcquisitionError(f"PBF snapshot is older than {max_age_hours} hours")
     if minimum_timestamp is not None and timestamp < minimum_timestamp:
-        raise PbfAcquisitionError("PBF snapshot predates the last successful data acquisition")
+        raise PbfAcquisitionError(
+            "PBF snapshot predates the last successful data acquisition: "
+            f"snapshot={isoformat_utc(timestamp)}, minimum={isoformat_utc(minimum_timestamp)}"
+        )
     return timestamp
 
 

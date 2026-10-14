@@ -362,7 +362,16 @@ def test_pipeline_decision_distinguishes_cold_skip_and_core_rebuild(tmp_path, mo
 def test_force_regeneration_overrides_no_change(tmp_path, monkeypatch):
     monkeypatch.setenv("OSWM_CODEBASE_REVISION", "same")
     _make_complete_node(tmp_path, "same")
-    assert decide(tmp_path, watcher_status=0, force=True)["mode"] == "generate"
+    decision = decide(tmp_path, watcher_status=0, force=True)
+    assert decision["mode"] == "rebuild"
+    assert decision["reason"] == "forced"
+
+
+@pytest.mark.parametrize("watcher_status", [1, 2])
+def test_force_regeneration_still_fetches_changed_or_unknown_data(tmp_path, monkeypatch, watcher_status):
+    monkeypatch.setenv("OSWM_CODEBASE_REVISION", "same")
+    _make_complete_node(tmp_path, "same")
+    assert decide(tmp_path, watcher_status=watcher_status, force=True)["mode"] == "generate"
 
 
 def test_workflow_contracts_are_parseable_scoped_and_serialized():

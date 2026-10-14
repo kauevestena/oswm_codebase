@@ -86,9 +86,13 @@ if [ "${#FAILED_STEPS[@]}" -ne 0 ]; then
 fi
 
 if [ "$MODE" != "skip" ]; then
-    # The initial watcher decision predates this refresh. Publish a new
-    # all-current decision only after every generation step has succeeded.
-    "$PYTHON_BIN" oswm_codebase/datahub/watcher/watcher_lib.py --render-current || exit 1
+    # Rebuilding products does not refresh OSM data. Preserve the initial
+    # watcher decision unless acquisition and every generation step succeeded.
+    if [ "$MODE" = "generate" ]; then
+        "$PYTHON_BIN" oswm_codebase/datahub/watcher/watcher_lib.py --render-current || exit 1
+    else
+        "$PYTHON_BIN" oswm_codebase/datahub/watcher/watcher_lib.py --render-only || exit 1
+    fi
     "$PYTHON_BIN" oswm_codebase/build_provenance.py --root . --mode "$MODE" || exit 1
 fi
 
