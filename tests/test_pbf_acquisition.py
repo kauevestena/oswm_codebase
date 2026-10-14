@@ -168,6 +168,20 @@ def test_snapshot_validation(tmp_path, timestamp, minimum, reason):
         pbf._snapshot_timestamp(path, now=datetime(2026, 10, 10, tzinfo=timezone.utc), max_age_hours=72, minimum_timestamp=minimum)
 
 
+def test_recent_pbf_cannot_replace_a_newer_overpass_acquisition(tmp_path):
+    # Synthetic extract cutoff: the Lima log proves it was before 13:21:12Z
+    # but does not report its exact value. This is within the 72-hour age cap.
+    path = write_pbf(tmp_path, timestamp="2026-10-13T00:00:00Z")
+    minimum = datetime(2026, 10, 13, 13, 21, 12, tzinfo=timezone.utc)
+    with pytest.raises(pbf.PbfAcquisitionError) as error:
+        pbf._snapshot_timestamp(
+            path, now=datetime(2026, 10, 13, 21, 10, tzinfo=timezone.utc),
+            max_age_hours=72, minimum_timestamp=minimum,
+        )
+    assert "snapshot=2026-10-13T00:00:00Z" in str(error.value)
+    assert "minimum=2026-10-13T13:21:12Z" in str(error.value)
+
+
 def test_end_to_end_fallback_cache_and_provenance(tmp_path, monkeypatch):
     path = write_pbf(tmp_path)
     index = {"features": [catalog_entry("test-region", (-3, -3, 3, 3))]}

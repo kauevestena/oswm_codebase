@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from node_outputs import REQUIRED_OUTPUTS
-from pipeline_decision import CODEBASE_REVISION_KEY
+from pipeline_decision import CODEBASE_REVISION_KEY, RAW_OUTPUTS
 from runtime_assets import COPY_TREES, SNAPSHOT_FILES, publish_runtime
 from runtime_validation import Assets, CSS_URL
 
@@ -82,6 +82,8 @@ if relative == "build_provenance.py":
     path = root / "oswm-build.json"
     path.write_text('{"core": {"sha": "fixture"}}\\n')
 if relative == "datahub/watcher/watcher_lib.py":
+    with (root / "watcher_calls.log").open("a") as handle:
+        handle.write(" ".join(sys.argv[1:]) + "\\n")
     if "--render-only" in sys.argv or "--render-current" in sys.argv:
         raise SystemExit(0)
     raise SystemExit(int(os.environ.get("WATCHER_EXIT", "0")))
@@ -92,6 +94,8 @@ if relative == "getting_data.py":
         path.write_text("raw\\n")
 if relative == "filtering_adapting_data.py":
     for item in %r:
+        if item.startswith("data/raw/") or item == "data/boundaries/polygon.geojson":
+            continue
         path = root / item
         path.parent.mkdir(parents=True, exist_ok=True)
         if item == "data/hazard_analysis/terrain.json":
@@ -316,6 +320,68 @@ def test_codebase_change_rebuilds_derived_products_without_redownload(tmp_path):
     assert events.count("datahub/watcher/watcher_lib.py") == 2
     registry = json.loads((tmp_path / "data/updates/registry.json").read_text())
     assert registry[CODEBASE_REVISION_KEY] == "new"
+
+
+def test_lima_forced_rebuild_preserves_acquisition_without_refetching_raw_data(tmp_path, monkeypatch):
+    _prepare_fixture(tmp_path, complete=True, recorded_revision="same")
+    # Lima's state at the migration run: complete raw inputs and an earlier
+    # successful Overpass acquisition. Rebuilding must not redownload them.
+    registry_path = tmp_path / "data/updates/registry.json"
+    registry = json.loads(registry_path.read_text())
+    registry["Data Fetching"] = "2026-10-13T13:21:12Z"
+    registry_path.write_text(json.dumps(registry))
+    acquisition = tmp_path / "data/updates/acquisition.json"
+    acquisition.write_text(json.dumps({
+        "provider": "overpass", "acquired_at": "2026-10-13T13:21:12Z",
+    }))
+    preserved = {path: (tmp_path / path).read_bytes() for path in RAW_OUTPUTS}
+    preserved["data/updates/acquisition.json"] = acquisition.read_bytes()
+    # Any accidental acquisition would fail just as it did in the live run.
+    monkeypatch.setenv("FAIL_STEP", "getting_data.py")
+
+    result = _run(tmp_path, revision="same", watcher_exit=0, force=True)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    decision = json.loads((tmp_path / "data/updates/pipeline_decision.json").read_text())
+    assert (decision["mode"], decision["reason"]) == ("rebuild", "forced")
+    events = (tmp_path / "events.log").read_text().splitlines()
+    assert "getting_data.py" not in events
+    for step in ("runtime_assets.py", "filtering_adapting_data.py",
+                 "generation/routing_tiles_gen.py", "generation/hazard_tiles_gen.py",
+                 "datahub/acquisition/generate_acquisition.py", "build_provenance.py"):
+        assert step in events
+    assert (tmp_path / "watcher_calls.log").read_text().splitlines() == ["", "--render-only"]
+    assert all((tmp_path / path).read_bytes() == content for path, content in preserved.items())
+    registry = json.loads(registry_path.read_text())
+    assert registry["Data Fetching"] == "2026-10-13T13:21:12Z"
+    assert registry[CODEBASE_REVISION_KEY] == "same"
+    assert registry["Pipeline Success"]
+
+
+@pytest.mark.parametrize("missing_raw", RAW_OUTPUTS)
+def test_forced_rebuild_requires_acquisition_when_any_raw_input_is_missing(tmp_path, monkeypatch, missing_raw):
+    _prepare_fixture(tmp_path, complete=True, recorded_revision="same")
+    (tmp_path / missing_raw).unlink()
+    monkeypatch.setenv("FAIL_STEP", "getting_data.py")
+
+    result = _run(tmp_path, revision="same", watcher_exit=0, force=True)
+
+    assert result.returncode != 0
+    assert "getting_data" in (tmp_path / "data/updates/pipeline_failures.txt").read_text()
+    assert "getting_data.py" in (tmp_path / "events.log").read_text().splitlines()
+    assert "Pipeline Success" not in json.loads((tmp_path / "data/updates/registry.json").read_text())
+    assert "--render-current" not in (tmp_path / "watcher_calls.log").read_text()
+
+
+@pytest.mark.parametrize("watcher_exit", [1, 2])
+def test_forced_run_still_acquires_changes_or_inconclusive_data(tmp_path, watcher_exit):
+    _prepare_fixture(tmp_path, complete=True, recorded_revision="same")
+
+    result = _run(tmp_path, revision="same", watcher_exit=watcher_exit, force=True)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "getting_data.py" in (tmp_path / "events.log").read_text().splitlines()
+    assert (tmp_path / "watcher_calls.log").read_text().splitlines() == ["", "--render-current"]
 
 
 def test_refresh_renders_current_watcher_only_after_step_failure_guard():
