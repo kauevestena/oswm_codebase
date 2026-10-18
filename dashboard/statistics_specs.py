@@ -216,7 +216,7 @@ def get_charts_specs(gdfs_dict):
                     "hcolor": "wheelchair",
                     "fontsize": 24,
                 },
-                "title": "Surface x Smoothness",
+                "title": "Kerb Type x Tactile Paving x Wheelchair Accessibility",
                 "explanation": f"This chart shows the relationship between {kerb_link} type, {tactile_paving_link} presence and reported {wheelchair_link} accessibility.",
             },
             "kerb_types": {

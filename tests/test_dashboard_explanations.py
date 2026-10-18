@@ -89,6 +89,10 @@ class KerbExplanationTests(unittest.TestCase):
                 namespace[node.id] = lambda **kwargs: None
         exec(compile(ast.Module(body=[function], type_ignores=[]), "specs", "exec"), namespace)
         chart = namespace["get_charts_specs"]({})["kerbs"]["kerbs_x_paving_x_wheelchair"]
+        self.assertEqual(
+            chart["title"],
+            "Kerb Type x Tactile Paving x Wheelchair Accessibility",
+        )
         parser = ExplanationParser()
         parser.feed(namespace["explanation_base"].format(chart["explanation"]))
         documented_fields = {url.rsplit("Key:", 1)[-1] for url in parser.links}
