@@ -164,6 +164,7 @@ test("whole-dataset control paints the exact summary and never queries rendered 
     const { control, counts } = setup(t);
     control.open();
     await settle();
+    assert.equal(control.panel.attributes.get("data-oswm-theme-chart-version"), "viewport-idle-v1");
     assert.match(control.status.textContent, /Entire dataset · exact/);
     assert.equal(control.content.attributes.has("aria-busy"), false);
     assert.equal(control.charts.length, 1);
@@ -222,4 +223,87 @@ test("live charts wait for style loading and repaint the newly selected numeric 
     assertPainted(control.charts[0], "Features");
     assert.deepEqual(control.charts[0].getOption().series[0].data.map((d) => d.value), [1, 1, 0]);
     assert.equal(counts().requests, 0);
+});
+
+
+test("visible-area charts repaint when late tiles finish rendering without another movement", async (t) => {
+    const { control, map, counts } = setup(t);
+    t.mock.timers.enable({ apis: ["setTimeout"] });
+    control.viewportInput.checked = true;
+    map.features = [];
+    control.open();
+    await settle();
+    assert.equal(counts().queries, 1);
+    assert.match(control.content.textContent, /No rendered features/);
+
+    // The first query ran before the tile arrived. No moveend or styledata
+    // follows: idle is the first event after the tile has actually rendered.
+    map.features = [feature(1), feature(2), feature(2)];
+    map.fire("idle");
+    map.fire("idle");
+    t.mock.timers.tick(0);
+    await settle();
+    assert.equal(counts().queries, 2, "coalesce completion events into one refresh");
+    assert.equal(control.charts.length, 1);
+    assertPainted(control.charts[0], "sidewalks");
+    assert.equal(control.charts[0].getOption().series[0].data[0].value, 2);
+    assert.match(control.content.textContent, /2 features represented/);
+
+    // A pan may first paint only a subset of its new tiles. Repaint again
+    // when that viewport finishes, even though the user has stopped moving.
+    map.features = [feature(3)];
+    map.fire("moveend");
+    t.mock.timers.tick(100);
+    await settle();
+    const partial = control.charts[0];
+    assert.equal(partial.getOption().series[0].data[0].value, 1);
+    map.features = [feature(3), feature(4), feature(5)];
+    map.fire("idle");
+    t.mock.timers.tick(0);
+    await settle();
+    assert.equal(partial.isDisposed(), true);
+    assert.equal(control.charts[0].getOption().series[0].data[0].value, 3);
+    assert.deepEqual(counts(), { requests: 0, imports: 1, queries: 4 });
+});
+
+test("tile completion leaves exact summaries and closed panels alone", async (t) => {
+    const { control, map, counts } = setup(t);
+    t.mock.timers.enable({ apis: ["setTimeout"] });
+    control.open();
+    await settle();
+    const exact = control.charts[0];
+    map.fire("idle");
+    t.mock.timers.tick(1000);
+    await settle();
+    assert.equal(control.charts[0], exact);
+    assert.deepEqual(counts(), { requests: 1, imports: 1, queries: 0 });
+
+    control.viewportInput.checked = true;
+    control.close();
+    map.fire("idle");
+    t.mock.timers.tick(1000);
+    await settle();
+    assert.equal(counts().queries, 0);
+});
+
+test("removing the control detaches tile completion and cancels its pending refresh", async (t) => {
+    const { control, map, counts } = setup(t);
+    t.mock.timers.enable({ apis: ["setTimeout"] });
+    control.viewportInput.checked = true;
+    control.open();
+    await settle();
+    map.fire("idle");
+    control.onRemove();
+    // Make a listener leak observable, rather than relying on render()'s
+    // early return when there is no map anymore.
+    let scheduled = 0;
+    control.scheduleRender = () => { scheduled += 1; };
+    map.fire("idle");
+    map.fire("moveend");
+    map.fire("styledata");
+    t.mock.timers.tick(1000);
+    await settle();
+    assert.equal(scheduled, 0);
+    assert.equal(counts().queries, 1);
+    assert.equal(control.charts.length, 0);
 });
