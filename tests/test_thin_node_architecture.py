@@ -22,6 +22,11 @@ def test_runtime_bundle_is_self_contained(tmp_path):
     assert (tmp_path / "oswm_runtime/routing/routing_demo.html").is_file()
     assert (tmp_path / "oswm_runtime/hazard_analysis/hazard_analysis.html").is_file()
 
+    # Deployment evidence must come from the actual copied chart module, not
+    # only the core SHA recorded in the surrounding build manifest.
+    chart_path = "webmap/theme_charts/theme_chart_control.js"
+    assert (tmp_path / "oswm_runtime" / chart_path).read_bytes() == (ROOT / chart_path).read_bytes()
+
     webmap = (ROOT / "webmap/webmap_base.html").read_text(encoding="utf-8")
     assert "oswm_runtime/assets/" in webmap
     assert "oswm_runtime/webmap/snapshot/" in webmap
