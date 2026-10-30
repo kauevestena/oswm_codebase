@@ -78,7 +78,7 @@ def main():
         path, noop = sync_source(URL, replica_cache, target_sequence=results[-1]["sequence"])
         if noop["diffs_applied"] or any(x["url"].endswith(".osm.pbf") for x in noop["downloads"]):
             raise ValueError("A no-op unexpectedly fetched source data")
-        results.append({"phase": "no_new_sequence", **noop})
+        results.append({"phase": "pinned_sequence_rerun", **noop})
         if args.bootstrap_url:
             # Seed the daily acquisition cache only from the successful replay.
             source = json.loads((replica_cache / "current.json").read_text())

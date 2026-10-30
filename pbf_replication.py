@@ -140,7 +140,7 @@ def sync_source(snapshot_url, cache_dir, *, bootstrap_url=None, target_sequence=
     downloaded = []
 
     def download(url, destination, max_bytes):
-        for attempt in range(2):
+        for attempt in range(3):
             if time.monotonic() - started > max_elapsed_seconds:
                 raise ReplicationError("Replication elapsed-time budget exceeded")
             try:
@@ -148,9 +148,15 @@ def sync_source(snapshot_url, cache_dir, *, bootstrap_url=None, target_sequence=
                 downloaded.append({"url": url, "bytes": destination.stat().st_size, "sha256": digest})
                 return digest
             except requests.RequestException as exc:
-                if (isinstance(exc, requests.HTTPError) and exc.response is not None
-                        and exc.response.status_code == 404) or attempt:
+                status = exc.response.status_code if isinstance(exc, requests.HTTPError) and exc.response is not None else None
+                if (status is not None and 400 <= status < 500 and status != 429) or attempt == 2:
                     raise
+                delay = 2 ** (attempt + 1)
+                if status == 429:
+                    retry_after = exc.response.headers.get("Retry-After", "")
+                    if retry_after.isdigit():
+                        delay = min(30, max(delay, int(retry_after)))
+                time.sleep(delay)
         raise AssertionError("unreachable")
 
     with (cache / ".lock").open("w") as lock, tempfile.TemporaryDirectory(dir=cache, prefix="candidate-") as temp:
@@ -169,9 +175,9 @@ def sync_source(snapshot_url, cache_dir, *, bootstrap_url=None, target_sequence=
             return result
 
         latest = state()
-        target = latest if target_sequence is None else state(target_sequence)
-        if target.sequence > latest.sequence:
+        if target_sequence is not None and target_sequence > latest.sequence:
             raise ReplicationError("Target sequence has not been published")
+        target = latest if target_sequence is None or target_sequence == latest.sequence else None
         original = None
         recovery = None
         try:
@@ -190,6 +196,11 @@ def sync_source(snapshot_url, cache_dir, *, bootstrap_url=None, target_sequence=
             original = None
 
         start_state = source_state if original else None
+        if target is None:
+            # A checksum/header-validated checkpoint has already established this
+            # sequence's cutoff. Repeating a pinned run needs no historical HTTP
+            # lookup, even if the provider has published another sequence since.
+            target = source_state if original and source_state.sequence == target_sequence else state(target_sequence)
         candidate = work / "updated.osm.pbf"
 
         def bootstrap():
@@ -216,7 +227,7 @@ def sync_source(snapshot_url, cache_dir, *, bootstrap_url=None, target_sequence=
             for seq in range(source_state.sequence + 1, target.sequence + 1):
                 if seq - source_state.sequence > max_diffs:
                     raise ReplicationError("Catch-up range exceeded after bootstrap")
-                next_state = state(seq)
+                next_state = target if seq == target.sequence else state(seq)
                 if next_state.timestamp < previous.timestamp:
                     raise ReplicationError("Replication timestamp regressed")
                 diff = work / f"{seq}.osc.gz"
@@ -259,6 +270,8 @@ def sync_source(snapshot_url, cache_dir, *, bootstrap_url=None, target_sequence=
         else:
             result = source
         actual = read_header(result, base)
+        if actual.timestamp > now + timedelta(minutes=5) or actual.timestamp > latest.timestamp:
+            raise ReplicationError("Result timestamp is in the future or exceeds provider state")
         if result.stat().st_size > max_download_bytes:
             raise ReplicationError("Updated snapshot exceeds regional size budget")
         if actual != target:
@@ -290,6 +303,7 @@ def sync_source(snapshot_url, cache_dir, *, bootstrap_url=None, target_sequence=
                 old.unlink()
         return destination, {
             **manifest, "provider": "geofabrik_replication", "checked_at": isoformat_utc(now),
+            "available_sequence": latest.sequence,
             "from_sequence": start_state.sequence if start_state else None,
             "diffs_applied": len(changes), "recovery": recovery,
             "freshness_warning": now - actual.timestamp > timedelta(hours=48),

@@ -70,6 +70,10 @@ jobs:
             args=(--bootstrap-url "$BOOTSTRAP_URL" --start-sequence "$START_SEQUENCE" --end-sequence "$END_SEQUENCE")
           fi
           python oswm_codebase/replication_preview.py "${args[@]}"
+      - uses: actions/cache/save@v4
+        with:
+          path: .cache/oswm/replication/source
+          key: oswm-replica-preview-v1-${{ github.repository_id }}-sul-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Generate Curitiba preview products
         run: bash oswm_codebase/runners/daily.sh
       - name: Validate preview products
@@ -81,10 +85,6 @@ jobs:
           cp data/updates/acquisition.json replication-preview/
           cp .cache/oswm/replication/staged/report.json replication-preview/daily-report.json
           git diff --stat > replication-preview/generated-changes.txt
-      - uses: actions/cache/save@v4
-        with:
-          path: .cache/oswm/replication/source
-          key: oswm-replica-preview-v1-${{ github.repository_id }}-sul-${{ github.run_id }}-${{ github.run_attempt }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:

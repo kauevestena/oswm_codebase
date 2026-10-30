@@ -126,6 +126,33 @@ def test_catchup_applies_two_missing_days(tmp_path, server):
     assert replica.semantic_digest(result) == replica.semantic_digest(server[0][102])
 
 
+def test_latest_and_cached_pinned_sequences_need_no_redundant_state_lookup(tmp_path, server):
+    sync(tmp_path, server)
+    del server[1][BASE + "/000/000/102.state.txt"]
+    calls = len(server[2])
+    _, report = sync(tmp_path, server, target_sequence=102)
+    assert report["diffs_applied"] == 0
+    assert server[2][calls:] == [BASE + "/state.txt"]
+    server[1][BASE + "/state.txt"] = b"sequenceNumber=103\ntimestamp=2026-10-30T01:00:00Z"
+    _, report = sync(tmp_path, server, target_sequence=102)
+    assert report["sequence"] == 102 and report["available_sequence"] == 103
+
+
+def test_transient_provider_errors_use_bounded_retry_backoff(tmp_path, server, monkeypatch):
+    attempts, delays = [], []
+    monkeypatch.setattr(replica.time, "sleep", delays.append)
+    original_fetch = server[3]
+    def fetch(url, destination, **kwargs):
+        attempts.append(url)
+        if len(attempts) <= 2:
+            response = requests.Response()
+            response.status_code = 502
+            raise requests.HTTPError("temporary gateway failure", response=response)
+        return original_fetch(url, destination, **kwargs)
+    _, report = replica.sync_source(URL, tmp_path / "cache", now=NOW, fetch=fetch)
+    assert report["sequence"] == 102 and delays == [2, 4]
+
+
 def test_missing_diff_and_evicted_or_corrupt_cache_rebootstrap(tmp_path, server):
     del server[1][BASE + "/000/000/101.osc.gz"]
     result, report = sync(tmp_path, server, bootstrap_url=URL.replace('latest', '261027'), target_sequence=100)
