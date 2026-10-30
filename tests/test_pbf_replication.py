@@ -180,3 +180,20 @@ def test_canonical_features_detect_changes_with_equal_counts_and_accept_empty_la
     assert fingerprint(frame) != fingerprint(changed)
     assert difference(frame, changed) == {"added": 0, "removed": 0, "modified": 1}
     assert fingerprint(frame.iloc[:0])["count"] == 0
+
+
+def test_spatial_prefilter_keeps_crossing_and_enclosing_geometry_without_regional_limit(tmp_path):
+    from test_pbf_acquisition import XML, AOI, TAGS, write_pbf
+    # Many distant matching ways must not consume the city subset's budget.
+    xml = XML.replace('<way id="3">', '<node id="13" lat="10.1" lon="10.1"/><way id="3">')
+    distant = ''.join(f'<way id="{i}"><nd ref="12"/><nd ref="13"/><tag k="highway" v="footway"/></way>'
+                      for i in range(100, 140))
+    xml = xml.replace('<relation id="20">', distant + '<relation id="20">')
+    path = write_pbf(tmp_path, xml=xml)
+    with pytest.raises(replica.PbfAcquisitionError, match="matching objects"):
+        features_from_pbf(osmnx, path, AOI, TAGS, max_matching_objects=20)
+    city = features_from_pbf(osmnx, path, AOI, TAGS, spatial_prefilter=True, max_matching_objects=20)
+    expected = osmnx.features_from_xml(tmp_path / "source.osm", polygon=AOI, tags=TAGS)
+    assert set(city.index) == set(expected.index)
+    for identity in expected.index:
+        assert city.loc[identity].geometry.equals(expected.loc[identity].geometry)

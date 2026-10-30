@@ -88,7 +88,7 @@ def extract_city(path, cfg):
     boundary = gpd.read_file(cfg.boundaries_geojson_path).geometry.union_all()
     bbox = box(*boundary.bounds)
     tags = merge_list_of_dictionaries([*cfg.layer_tags_dict.values(), {"highway": ROAD_TYPES}])
-    combined = features_from_pbf(ox, path, bbox, tags, temporary_dir=STAGING)
+    combined = features_from_pbf(ox, path, bbox, tags, temporary_dir=STAGING, spatial_prefilter=True)
     combined = combined.reset_index().rename(columns={"osmid": "id"})
     roads = combined[combined["highway"].isin(ROAD_TYPES)
                      & combined.geometry.geom_type.isin(["LineString", "MultiLineString"])].copy()
