@@ -200,6 +200,13 @@ def render():
                             '<title>OSWM historical feed unavailable</title>'
                             '<description>No history provider configured for this pilot.</description>'
                             '</channel></rss>')
+    Path("data/updates/watcher_decision.json").write_text(json.dumps({
+        "schema_version": 1, "checked_at": report["checked_at"],
+        "snapshot_timestamp": report["snapshot_timestamp"], "source": BACKEND,
+        "needs_update": False, "layers": {name: False for name in report["city_fingerprints"] if name != ROADS},
+    }, indent=2) + "\n")
+    from functions import gen_updating_infotable_page
+    gen_updating_infotable_page()
 
 
 def finalize():

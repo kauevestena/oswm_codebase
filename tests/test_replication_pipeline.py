@@ -43,7 +43,8 @@ def city(tmp_path, monkeypatch):
                 elif result.get(key) is not True:
                     result[key] = list(set(result.get(key, []) + values))
         return result
-    monkeypatch.setitem(sys.modules, "functions", SimpleNamespace(merge_list_of_dictionaries=merged))
+    monkeypatch.setitem(sys.modules, "functions", SimpleNamespace(
+        merge_list_of_dictionaries=merged, gen_updating_infotable_page=lambda: None))
     import pbf_acquisition
     monkeypatch.setattr(pbf_acquisition, "_cached_json", lambda *a, **k: {"features": [
         {"geometry": mapping(box(-2, -2, 2, 2)), "properties": {"id": "test", "urls": {"pbf": URL}}}
@@ -92,6 +93,22 @@ def test_product_metadata_uses_candidate_cutoff_without_advancing_registry(city)
     assert pipeline.registry_for_products(Path.cwd(), original)["Data Fetching"] == TIMES[101]
     assert original == {"Data Fetching": TIMES[100]}
     assert not Path("data/updates/registry.json").exists()
+
+
+def test_complete_derived_rebuild_preserves_replica_history_and_feeds(city, monkeypatch):
+    from node_outputs import reset_derived
+    Path("oswm_codebase").mkdir()
+    paths = ["quality_check/completeness/data.json", "hub/watcher/feed.xml", "hub/watcher/changesets.xml"]
+    for path in paths:
+        p = Path(path)
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text("historical content with original cutoff")
+    reset_derived(Path.cwd())
+    for path in paths:
+        assert Path(path).read_text() == "historical content with original cutoff"
+    monkeypatch.delenv("OSWM_OSM_UPDATE_BACKEND")
+    reset_derived(Path.cwd())
+    assert all(not Path(p).exists() for p in paths)
 
 
 def test_stage_tampering_cannot_be_installed(city):
