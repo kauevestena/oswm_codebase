@@ -298,13 +298,15 @@ A broader rollout needs a separate decision based on the Curitiba evidence.
 
 - [x] Separate core migration branch and reviewable implementation plan.
 - [x] Replication engine and offline regression coverage.
-- [ ] Opt-in daily integration with zero ohsome calls in the experimental path.
-- [ ] Persistent, validated pilot cache with tested bootstrap/recovery.
-- [ ] Manual Curitiba preview workflow pinned to an exact core SHA.
-- [ ] Matching-snapshot parity and measured incremental-transfer savings.
-- [ ] Two live incremental advances plus no-op and catch-up evidence.
-- [ ] Curitiba product/browser/deployed-provenance validation if publication begins.
-- [ ] Rollback evidence and concise pilot report.
+- [x] Opt-in daily integration with zero ohsome calls in the experimental path.
+- [x] Persistent, validated pilot cache with tested bootstrap/recovery.
+- [x] Manual Curitiba preview workflow pinned to an exact core SHA.
+- [x] Matching-snapshot parity and measured incremental-transfer savings.
+- [x] Two live incremental advances plus no-op and binary catch-up/recovery evidence.
+- [x] Curitiba generated-product validation in a read-only preview.
+- [x] Concise pilot report and saved run/provenance evidence.
+- [ ] Browser/deployed-provenance validation if publication begins.
+- [ ] Publication rollback rehearsal if a publishing canary begins.
 - [ ] Separate decision about merging the core or enrolling another node.
 
 ## Primary references

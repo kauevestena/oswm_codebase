@@ -1,0 +1,390 @@
+{
+  "run_url": "https://github.com/kauevestena/opensidewalkmap_beta/actions/runs/41130460371",
+  "core_sha": "f46fb97f98b5cbdeaa770ba6c2d62fa40f2331e3",
+  "node_sha": "93cb79b2ebbc043955687755e656664a438e3423",
+  "result": "success",
+  "checks": {
+    "matching_full_snapshot_and_city_layers": true,
+    "pinned_sequence_rerun": true,
+    "source_cache_saved": true,
+    "full_daily_product_generation": true,
+    "required_output_contract": true,
+    "pmtiles_validation": true,
+    "self_contained_runtime": true,
+    "publication": "disabled"
+  },
+  "replay": [
+    {
+      "schema_version": 1,
+      "file": "source-2506-043de0bc40c8fec3.osm.pbf",
+      "source_url": "https://download.geofabrik.de/south-america/brazil/sul-latest.osm.pbf",
+      "replication_url": "https://download.geofabrik.de/south-america/brazil/sul-updates",
+      "sequence": 2506,
+      "snapshot_timestamp": "2026-10-29T21:21:26Z",
+      "sha256": "043de0bc40c8fec32c259a5d12862bdb6868096074995208cca1978f1319f3a8",
+      "provider": "geofabrik_replication",
+      "checked_at": "2026-10-30T21:22:42Z",
+      "available_sequence": 2506,
+      "from_sequence": null,
+      "diffs_applied": 0,
+      "recovery": "bootstrap: FileNotFoundError",
+      "freshness_warning": false,
+      "downloads": [
+        {
+          "url": "https://download.geofabrik.de/south-america/brazil/sul-updates/state.txt",
+          "bytes": 113,
+          "sha256": "638a5fc4f09c2889f06d8c14eabedac32fc95bbcc2ae0f24c8427b5f060a8376"
+        },
+        {
+          "url": "https://download.geofabrik.de/south-america/brazil/sul-latest.osm.pbf",
+          "bytes": 428903024,
+          "sha256": "043de0bc40c8fec32c259a5d12862bdb6868096074995208cca1978f1319f3a8"
+        }
+      ],
+      "download_bytes": 428903137,
+      "elapsed_seconds": 37.863,
+      "parity": {
+        "regional_objects_equal": true,
+        "city_fingerprints": {
+          "kerbs": {
+            "sha256": "aba689ac8955cd9595caf00df9ff4d3a7d1c7f6947e37af10b22ef0834491d7c",
+            "count": 3081,
+            "crs": "epsg:4326"
+          },
+          "sidewalks": {
+            "sha256": "bf3cd6f120d15eccd09c0fc727488b324a806aea7281609ed90cc146abd5166d",
+            "count": 8157,
+            "crs": "epsg:4326"
+          },
+          "crossings": {
+            "sha256": "e405f6d0f375ac261358819f6c70f6e58c254be4a72bf89c79c7351b9a47c710",
+            "count": 2448,
+            "crs": "epsg:4326"
+          },
+          "other_footways": {
+            "sha256": "eef695231f79cb7439a2f67d60fc07d18429f29ab883950b4ee6474cbbbf0928",
+            "count": 7047,
+            "crs": "epsg:4326"
+          },
+          "roads_for_completeness": {
+            "sha256": "6788f2cc3b51e0de2d8bbd5916f93b02a709b0cf70ba25008e9fc0d517bdee64",
+            "count": 29849,
+            "crs": "epsg:4326"
+          }
+        },
+        "full_snapshot_sha256": "043de0bc40c8fec32c259a5d12862bdb6868096074995208cca1978f1319f3a8",
+        "full_snapshot_url": "https://download.geofabrik.de/south-america/brazil/sul-261029.osm.pbf",
+        "osmium_summary": "Summary: left=0 right=0 same=74411689 different=0\n"
+      }
+    },
+    {
+      "phase": "pinned_sequence_rerun",
+      "schema_version": 1,
+      "file": "source-2506-043de0bc40c8fec3.osm.pbf",
+      "source_url": "https://download.geofabrik.de/south-america/brazil/sul-latest.osm.pbf",
+      "replication_url": "https://download.geofabrik.de/south-america/brazil/sul-updates",
+      "sequence": 2506,
+      "snapshot_timestamp": "2026-10-29T21:21:26Z",
+      "sha256": "043de0bc40c8fec32c259a5d12862bdb6868096074995208cca1978f1319f3a8",
+      "provider": "geofabrik_replication",
+      "checked_at": "2026-10-30T21:26:21Z",
+      "available_sequence": 2506,
+      "from_sequence": 2506,
+      "diffs_applied": 0,
+      "recovery": null,
+      "freshness_warning": false,
+      "downloads": [
+        {
+          "url": "https://download.geofabrik.de/south-america/brazil/sul-updates/state.txt",
+          "bytes": 113,
+          "sha256": "638a5fc4f09c2889f06d8c14eabedac32fc95bbcc2ae0f24c8427b5f060a8376"
+        }
+      ],
+      "download_bytes": 113,
+      "elapsed_seconds": 7.391
+    }
+  ],
+  "manifest": {
+    "schema_version": 1,
+    "build_contract": 1,
+    "node": "Curitiba",
+    "generated_at": "2026-10-30T21:34:51Z",
+    "mode": "generate",
+    "acquisition": {
+      "schema_version": 1,
+      "source_url": "https://download.geofabrik.de/south-america/brazil/sul-latest.osm.pbf",
+      "replication_url": "https://download.geofabrik.de/south-america/brazil/sul-updates",
+      "sequence": 2506,
+      "snapshot_timestamp": "2026-10-29T21:21:26Z",
+      "sha256": "043de0bc40c8fec32c259a5d12862bdb6868096074995208cca1978f1319f3a8",
+      "provider": "geofabrik_replication",
+      "checked_at": "2026-10-30T21:26:34Z",
+      "available_sequence": 2506,
+      "from_sequence": 2506,
+      "diffs_applied": 0,
+      "recovery": null,
+      "freshness_warning": false,
+      "download_bytes": 113,
+      "elapsed_seconds": 7.389,
+      "region": "sul",
+      "city_fingerprints": {
+        "kerbs": {
+          "sha256": "aba689ac8955cd9595caf00df9ff4d3a7d1c7f6947e37af10b22ef0834491d7c",
+          "count": 3081,
+          "crs": "{\"$schema\": \"https://proj.org/schemas/v0.7/projjson.schema.json\", \"type\": \"GeographicCRS\", \"name\": \"WGS 84\", \"datum_ensemble\": {\"name\": \"World Geodetic System 1984 ensemble\", \"members\": [{\"name\": \"World Geodetic System 1984 (Transit)\"}, {\"name\": \"World Geodetic System 1984 (G730)\"}, {\"name\": \"World Geodetic System 1984 (G873)\"}, {\"name\": \"World Geodetic System 1984 (G1150)\"}, {\"name\": \"World Geodetic System 1984 (G1674)\"}, {\"name\": \"World Geodetic System 1984 (G1762)\"}, {\"name\": \"World Geodetic System 1984 (G2139)\"}, {\"name\": \"World Geodetic System 1984 (G2296)\"}], \"ellipsoid\": {\"name\": \"WGS 84\", \"semi_major_axis\": 6378137, \"inverse_flattening\": 298.257223563}, \"accuracy\": \"2.0\", \"id\": {\"authority\": \"EPSG\", \"code\": 6326}}, \"coordinate_system\": {\"subtype\": \"ellipsoidal\", \"axis\": [{\"name\": \"Geodetic latitude\", \"abbreviation\": \"Lat\", \"direction\": \"north\", \"unit\": \"degree\"}, {\"name\": \"Geodetic longitude\", \"abbreviation\": \"Lon\", \"direction\": \"east\", \"unit\": \"degree\"}]}, \"scope\": \"Horizontal component of 3D system.\", \"area\": \"World.\", \"bbox\": {\"south_latitude\": -90, \"west_longitude\": -180, \"north_latitude\": 90, \"east_longitude\": 180}, \"id\": {\"authority\": \"EPSG\", \"code\": 4326}}"
+        },
+        "sidewalks": {
+          "sha256": "bf3cd6f120d15eccd09c0fc727488b324a806aea7281609ed90cc146abd5166d",
+          "count": 8157,
+          "crs": "{\"$schema\": \"https://proj.org/schemas/v0.7/projjson.schema.json\", \"type\": \"GeographicCRS\", \"name\": \"WGS 84\", \"datum_ensemble\": {\"name\": \"World Geodetic System 1984 ensemble\", \"members\": [{\"name\": \"World Geodetic System 1984 (Transit)\"}, {\"name\": \"World Geodetic System 1984 (G730)\"}, {\"name\": \"World Geodetic System 1984 (G873)\"}, {\"name\": \"World Geodetic System 1984 (G1150)\"}, {\"name\": \"World Geodetic System 1984 (G1674)\"}, {\"name\": \"World Geodetic System 1984 (G1762)\"}, {\"name\": \"World Geodetic System 1984 (G2139)\"}, {\"name\": \"World Geodetic System 1984 (G2296)\"}], \"ellipsoid\": {\"name\": \"WGS 84\", \"semi_major_axis\": 6378137, \"inverse_flattening\": 298.257223563}, \"accuracy\": \"2.0\", \"id\": {\"authority\": \"EPSG\", \"code\": 6326}}, \"coordinate_system\": {\"subtype\": \"ellipsoidal\", \"axis\": [{\"name\": \"Geodetic latitude\", \"abbreviation\": \"Lat\", \"direction\": \"north\", \"unit\": \"degree\"}, {\"name\": \"Geodetic longitude\", \"abbreviation\": \"Lon\", \"direction\": \"east\", \"unit\": \"degree\"}]}, \"scope\": \"Horizontal component of 3D system.\", \"area\": \"World.\", \"bbox\": {\"south_latitude\": -90, \"west_longitude\": -180, \"north_latitude\": 90, \"east_longitude\": 180}, \"id\": {\"authority\": \"EPSG\", \"code\": 4326}}"
+        },
+        "crossings": {
+          "sha256": "e405f6d0f375ac261358819f6c70f6e58c254be4a72bf89c79c7351b9a47c710",
+          "count": 2448,
+          "crs": "{\"$schema\": \"https://proj.org/schemas/v0.7/projjson.schema.json\", \"type\": \"GeographicCRS\", \"name\": \"WGS 84\", \"datum_ensemble\": {\"name\": \"World Geodetic System 1984 ensemble\", \"members\": [{\"name\": \"World Geodetic System 1984 (Transit)\"}, {\"name\": \"World Geodetic System 1984 (G730)\"}, {\"name\": \"World Geodetic System 1984 (G873)\"}, {\"name\": \"World Geodetic System 1984 (G1150)\"}, {\"name\": \"World Geodetic System 1984 (G1674)\"}, {\"name\": \"World Geodetic System 1984 (G1762)\"}, {\"name\": \"World Geodetic System 1984 (G2139)\"}, {\"name\": \"World Geodetic System 1984 (G2296)\"}], \"ellipsoid\": {\"name\": \"WGS 84\", \"semi_major_axis\": 6378137, \"inverse_flattening\": 298.257223563}, \"accuracy\": \"2.0\", \"id\": {\"authority\": \"EPSG\", \"code\": 6326}}, \"coordinate_system\": {\"subtype\": \"ellipsoidal\", \"axis\": [{\"name\": \"Geodetic latitude\", \"abbreviation\": \"Lat\", \"direction\": \"north\", \"unit\": \"degree\"}, {\"name\": \"Geodetic longitude\", \"abbreviation\": \"Lon\", \"direction\": \"east\", \"unit\": \"degree\"}]}, \"scope\": \"Horizontal component of 3D system.\", \"area\": \"World.\", \"bbox\": {\"south_latitude\": -90, \"west_longitude\": -180, \"north_latitude\": 90, \"east_longitude\": 180}, \"id\": {\"authority\": \"EPSG\", \"code\": 4326}}"
+        },
+        "other_footways": {
+          "sha256": "eef695231f79cb7439a2f67d60fc07d18429f29ab883950b4ee6474cbbbf0928",
+          "count": 7047,
+          "crs": "{\"$schema\": \"https://proj.org/schemas/v0.7/projjson.schema.json\", \"type\": \"GeographicCRS\", \"name\": \"WGS 84\", \"datum_ensemble\": {\"name\": \"World Geodetic System 1984 ensemble\", \"members\": [{\"name\": \"World Geodetic System 1984 (Transit)\"}, {\"name\": \"World Geodetic System 1984 (G730)\"}, {\"name\": \"World Geodetic System 1984 (G873)\"}, {\"name\": \"World Geodetic System 1984 (G1150)\"}, {\"name\": \"World Geodetic System 1984 (G1674)\"}, {\"name\": \"World Geodetic System 1984 (G1762)\"}, {\"name\": \"World Geodetic System 1984 (G2139)\"}, {\"name\": \"World Geodetic System 1984 (G2296)\"}], \"ellipsoid\": {\"name\": \"WGS 84\", \"semi_major_axis\": 6378137, \"inverse_flattening\": 298.257223563}, \"accuracy\": \"2.0\", \"id\": {\"authority\": \"EPSG\", \"code\": 6326}}, \"coordinate_system\": {\"subtype\": \"ellipsoidal\", \"axis\": [{\"name\": \"Geodetic latitude\", \"abbreviation\": \"Lat\", \"direction\": \"north\", \"unit\": \"degree\"}, {\"name\": \"Geodetic longitude\", \"abbreviation\": \"Lon\", \"direction\": \"east\", \"unit\": \"degree\"}]}, \"scope\": \"Horizontal component of 3D system.\", \"area\": \"World.\", \"bbox\": {\"south_latitude\": -90, \"west_longitude\": -180, \"north_latitude\": 90, \"east_longitude\": 180}, \"id\": {\"authority\": \"EPSG\", \"code\": 4326}}"
+        },
+        "roads_for_completeness": {
+          "sha256": "6788f2cc3b51e0de2d8bbd5916f93b02a709b0cf70ba25008e9fc0d517bdee64",
+          "count": 29849,
+          "crs": "{\"$schema\": \"https://proj.org/schemas/v0.7/projjson.schema.json\", \"type\": \"GeographicCRS\", \"name\": \"WGS 84\", \"datum_ensemble\": {\"name\": \"World Geodetic System 1984 ensemble\", \"members\": [{\"name\": \"World Geodetic System 1984 (Transit)\"}, {\"name\": \"World Geodetic System 1984 (G730)\"}, {\"name\": \"World Geodetic System 1984 (G873)\"}, {\"name\": \"World Geodetic System 1984 (G1150)\"}, {\"name\": \"World Geodetic System 1984 (G1674)\"}, {\"name\": \"World Geodetic System 1984 (G1762)\"}, {\"name\": \"World Geodetic System 1984 (G2139)\"}, {\"name\": \"World Geodetic System 1984 (G2296)\"}], \"ellipsoid\": {\"name\": \"WGS 84\", \"semi_major_axis\": 6378137, \"inverse_flattening\": 298.257223563}, \"accuracy\": \"2.0\", \"id\": {\"authority\": \"EPSG\", \"code\": 6326}}, \"coordinate_system\": {\"subtype\": \"ellipsoidal\", \"axis\": [{\"name\": \"Geodetic latitude\", \"abbreviation\": \"Lat\", \"direction\": \"north\", \"unit\": \"degree\"}, {\"name\": \"Geodetic longitude\", \"abbreviation\": \"Lon\", \"direction\": \"east\", \"unit\": \"degree\"}]}, \"scope\": \"Horizontal component of 3D system.\", \"area\": \"World.\", \"bbox\": {\"south_latitude\": -90, \"west_longitude\": -180, \"north_latitude\": 90, \"east_longitude\": 180}, \"id\": {\"authority\": \"EPSG\", \"code\": 4326}}"
+        }
+      },
+      "configuration_sha256": "ec797d61751681893e6b7c47535e7dabe575759e631cc3969d62ae7154ceede6",
+      "net_snapshot_changes": {
+        "kerbs": {
+          "added": 0,
+          "removed": 0,
+          "modified": 4
+        },
+        "sidewalks": {
+          "added": 11,
+          "removed": 2,
+          "modified": 9
+        },
+        "crossings": {
+          "added": 0,
+          "removed": 5,
+          "modified": 16
+        },
+        "other_footways": {
+          "added": 22,
+          "removed": 13,
+          "modified": 48
+        },
+        "roads_for_completeness": {
+          "added": 29849,
+          "removed": 0,
+          "modified": 0
+        }
+      },
+      "needs_update": true,
+      "history": {
+        "mode": "cached",
+        "backfill": "unavailable",
+        "changes_measure": "net differences between snapshots; not all edits"
+      }
+    },
+    "core": {
+      "repository": "kauevestena/oswm_codebase",
+      "sha": "f46fb97f98b5cbdeaa770ba6c2d62fa40f2331e3"
+    },
+    "runtime": {
+      "schema_version": 1,
+      "runtime_contract": 1,
+      "source": "kauevestena/oswm_codebase",
+      "paths": [
+        "assets",
+        "routing",
+        "hazard_analysis",
+        "webmap/snapshot",
+        "webmap/oswm_legend_control.js",
+        "webmap/theme_charts"
+      ]
+    },
+    "products": {
+      "webmap": true,
+      "vector_tiles": true,
+      "routing": true,
+      "hazards": true,
+      "basemaps": {
+        "available": true,
+        "renderer_version": 3,
+        "style_basis": {
+          "light": "OpenFreeMap Positron",
+          "dark": "OpenFreeMap Dark Matter"
+        }
+      }
+    }
+  },
+  "acquisition": {
+    "schema_version": 1,
+    "source_url": "https://download.geofabrik.de/south-america/brazil/sul-latest.osm.pbf",
+    "replication_url": "https://download.geofabrik.de/south-america/brazil/sul-updates",
+    "sequence": 2506,
+    "snapshot_timestamp": "2026-10-29T21:21:26Z",
+    "sha256": "043de0bc40c8fec32c259a5d12862bdb6868096074995208cca1978f1319f3a8",
+    "provider": "geofabrik_replication",
+    "checked_at": "2026-10-30T21:26:34Z",
+    "available_sequence": 2506,
+    "from_sequence": 2506,
+    "diffs_applied": 0,
+    "recovery": null,
+    "freshness_warning": false,
+    "download_bytes": 113,
+    "elapsed_seconds": 7.389,
+    "region": "sul",
+    "city_fingerprints": {
+      "kerbs": {
+        "sha256": "aba689ac8955cd9595caf00df9ff4d3a7d1c7f6947e37af10b22ef0834491d7c",
+        "count": 3081,
+        "crs": "{\"$schema\": \"https://proj.org/schemas/v0.7/projjson.schema.json\", \"type\": \"GeographicCRS\", \"name\": \"WGS 84\", \"datum_ensemble\": {\"name\": \"World Geodetic System 1984 ensemble\", \"members\": [{\"name\": \"World Geodetic System 1984 (Transit)\"}, {\"name\": \"World Geodetic System 1984 (G730)\"}, {\"name\": \"World Geodetic System 1984 (G873)\"}, {\"name\": \"World Geodetic System 1984 (G1150)\"}, {\"name\": \"World Geodetic System 1984 (G1674)\"}, {\"name\": \"World Geodetic System 1984 (G1762)\"}, {\"name\": \"World Geodetic System 1984 (G2139)\"}, {\"name\": \"World Geodetic System 1984 (G2296)\"}], \"ellipsoid\": {\"name\": \"WGS 84\", \"semi_major_axis\": 6378137, \"inverse_flattening\": 298.257223563}, \"accuracy\": \"2.0\", \"id\": {\"authority\": \"EPSG\", \"code\": 6326}}, \"coordinate_system\": {\"subtype\": \"ellipsoidal\", \"axis\": [{\"name\": \"Geodetic latitude\", \"abbreviation\": \"Lat\", \"direction\": \"north\", \"unit\": \"degree\"}, {\"name\": \"Geodetic longitude\", \"abbreviation\": \"Lon\", \"direction\": \"east\", \"unit\": \"degree\"}]}, \"scope\": \"Horizontal component of 3D system.\", \"area\": \"World.\", \"bbox\": {\"south_latitude\": -90, \"west_longitude\": -180, \"north_latitude\": 90, \"east_longitude\": 180}, \"id\": {\"authority\": \"EPSG\", \"code\": 4326}}"
+      },
+      "sidewalks": {
+        "sha256": "bf3cd6f120d15eccd09c0fc727488b324a806aea7281609ed90cc146abd5166d",
+        "count": 8157,
+        "crs": "{\"$schema\": \"https://proj.org/schemas/v0.7/projjson.schema.json\", \"type\": \"GeographicCRS\", \"name\": \"WGS 84\", \"datum_ensemble\": {\"name\": \"World Geodetic System 1984 ensemble\", \"members\": [{\"name\": \"World Geodetic System 1984 (Transit)\"}, {\"name\": \"World Geodetic System 1984 (G730)\"}, {\"name\": \"World Geodetic System 1984 (G873)\"}, {\"name\": \"World Geodetic System 1984 (G1150)\"}, {\"name\": \"World Geodetic System 1984 (G1674)\"}, {\"name\": \"World Geodetic System 1984 (G1762)\"}, {\"name\": \"World Geodetic System 1984 (G2139)\"}, {\"name\": \"World Geodetic System 1984 (G2296)\"}], \"ellipsoid\": {\"name\": \"WGS 84\", \"semi_major_axis\": 6378137, \"inverse_flattening\": 298.257223563}, \"accuracy\": \"2.0\", \"id\": {\"authority\": \"EPSG\", \"code\": 6326}}, \"coordinate_system\": {\"subtype\": \"ellipsoidal\", \"axis\": [{\"name\": \"Geodetic latitude\", \"abbreviation\": \"Lat\", \"direction\": \"north\", \"unit\": \"degree\"}, {\"name\": \"Geodetic longitude\", \"abbreviation\": \"Lon\", \"direction\": \"east\", \"unit\": \"degree\"}]}, \"scope\": \"Horizontal component of 3D system.\", \"area\": \"World.\", \"bbox\": {\"south_latitude\": -90, \"west_longitude\": -180, \"north_latitude\": 90, \"east_longitude\": 180}, \"id\": {\"authority\": \"EPSG\", \"code\": 4326}}"
+      },
+      "crossings": {
+        "sha256": "e405f6d0f375ac261358819f6c70f6e58c254be4a72bf89c79c7351b9a47c710",
+        "count": 2448,
+        "crs": "{\"$schema\": \"https://proj.org/schemas/v0.7/projjson.schema.json\", \"type\": \"GeographicCRS\", \"name\": \"WGS 84\", \"datum_ensemble\": {\"name\": \"World Geodetic System 1984 ensemble\", \"members\": [{\"name\": \"World Geodetic System 1984 (Transit)\"}, {\"name\": \"World Geodetic System 1984 (G730)\"}, {\"name\": \"World Geodetic System 1984 (G873)\"}, {\"name\": \"World Geodetic System 1984 (G1150)\"}, {\"name\": \"World Geodetic System 1984 (G1674)\"}, {\"name\": \"World Geodetic System 1984 (G1762)\"}, {\"name\": \"World Geodetic System 1984 (G2139)\"}, {\"name\": \"World Geodetic System 1984 (G2296)\"}], \"ellipsoid\": {\"name\": \"WGS 84\", \"semi_major_axis\": 6378137, \"inverse_flattening\": 298.257223563}, \"accuracy\": \"2.0\", \"id\": {\"authority\": \"EPSG\", \"code\": 6326}}, \"coordinate_system\": {\"subtype\": \"ellipsoidal\", \"axis\": [{\"name\": \"Geodetic latitude\", \"abbreviation\": \"Lat\", \"direction\": \"north\", \"unit\": \"degree\"}, {\"name\": \"Geodetic longitude\", \"abbreviation\": \"Lon\", \"direction\": \"east\", \"unit\": \"degree\"}]}, \"scope\": \"Horizontal component of 3D system.\", \"area\": \"World.\", \"bbox\": {\"south_latitude\": -90, \"west_longitude\": -180, \"north_latitude\": 90, \"east_longitude\": 180}, \"id\": {\"authority\": \"EPSG\", \"code\": 4326}}"
+      },
+      "other_footways": {
+        "sha256": "eef695231f79cb7439a2f67d60fc07d18429f29ab883950b4ee6474cbbbf0928",
+        "count": 7047,
+        "crs": "{\"$schema\": \"https://proj.org/schemas/v0.7/projjson.schema.json\", \"type\": \"GeographicCRS\", \"name\": \"WGS 84\", \"datum_ensemble\": {\"name\": \"World Geodetic System 1984 ensemble\", \"members\": [{\"name\": \"World Geodetic System 1984 (Transit)\"}, {\"name\": \"World Geodetic System 1984 (G730)\"}, {\"name\": \"World Geodetic System 1984 (G873)\"}, {\"name\": \"World Geodetic System 1984 (G1150)\"}, {\"name\": \"World Geodetic System 1984 (G1674)\"}, {\"name\": \"World Geodetic System 1984 (G1762)\"}, {\"name\": \"World Geodetic System 1984 (G2139)\"}, {\"name\": \"World Geodetic System 1984 (G2296)\"}], \"ellipsoid\": {\"name\": \"WGS 84\", \"semi_major_axis\": 6378137, \"inverse_flattening\": 298.257223563}, \"accuracy\": \"2.0\", \"id\": {\"authority\": \"EPSG\", \"code\": 6326}}, \"coordinate_system\": {\"subtype\": \"ellipsoidal\", \"axis\": [{\"name\": \"Geodetic latitude\", \"abbreviation\": \"Lat\", \"direction\": \"north\", \"unit\": \"degree\"}, {\"name\": \"Geodetic longitude\", \"abbreviation\": \"Lon\", \"direction\": \"east\", \"unit\": \"degree\"}]}, \"scope\": \"Horizontal component of 3D system.\", \"area\": \"World.\", \"bbox\": {\"south_latitude\": -90, \"west_longitude\": -180, \"north_latitude\": 90, \"east_longitude\": 180}, \"id\": {\"authority\": \"EPSG\", \"code\": 4326}}"
+      },
+      "roads_for_completeness": {
+        "sha256": "6788f2cc3b51e0de2d8bbd5916f93b02a709b0cf70ba25008e9fc0d517bdee64",
+        "count": 29849,
+        "crs": "{\"$schema\": \"https://proj.org/schemas/v0.7/projjson.schema.json\", \"type\": \"GeographicCRS\", \"name\": \"WGS 84\", \"datum_ensemble\": {\"name\": \"World Geodetic System 1984 ensemble\", \"members\": [{\"name\": \"World Geodetic System 1984 (Transit)\"}, {\"name\": \"World Geodetic System 1984 (G730)\"}, {\"name\": \"World Geodetic System 1984 (G873)\"}, {\"name\": \"World Geodetic System 1984 (G1150)\"}, {\"name\": \"World Geodetic System 1984 (G1674)\"}, {\"name\": \"World Geodetic System 1984 (G1762)\"}, {\"name\": \"World Geodetic System 1984 (G2139)\"}, {\"name\": \"World Geodetic System 1984 (G2296)\"}], \"ellipsoid\": {\"name\": \"WGS 84\", \"semi_major_axis\": 6378137, \"inverse_flattening\": 298.257223563}, \"accuracy\": \"2.0\", \"id\": {\"authority\": \"EPSG\", \"code\": 6326}}, \"coordinate_system\": {\"subtype\": \"ellipsoidal\", \"axis\": [{\"name\": \"Geodetic latitude\", \"abbreviation\": \"Lat\", \"direction\": \"north\", \"unit\": \"degree\"}, {\"name\": \"Geodetic longitude\", \"abbreviation\": \"Lon\", \"direction\": \"east\", \"unit\": \"degree\"}]}, \"scope\": \"Horizontal component of 3D system.\", \"area\": \"World.\", \"bbox\": {\"south_latitude\": -90, \"west_longitude\": -180, \"north_latitude\": 90, \"east_longitude\": 180}, \"id\": {\"authority\": \"EPSG\", \"code\": 4326}}"
+      }
+    },
+    "configuration_sha256": "ec797d61751681893e6b7c47535e7dabe575759e631cc3969d62ae7154ceede6",
+    "net_snapshot_changes": {
+      "kerbs": {
+        "added": 0,
+        "removed": 0,
+        "modified": 4
+      },
+      "sidewalks": {
+        "added": 11,
+        "removed": 2,
+        "modified": 9
+      },
+      "crossings": {
+        "added": 0,
+        "removed": 5,
+        "modified": 16
+      },
+      "other_footways": {
+        "added": 22,
+        "removed": 13,
+        "modified": 48
+      },
+      "roads_for_completeness": {
+        "added": 29849,
+        "removed": 0,
+        "modified": 0
+      }
+    },
+    "needs_update": true,
+    "history": {
+      "mode": "cached",
+      "backfill": "unavailable",
+      "changes_measure": "net differences between snapshots; not all edits"
+    }
+  },
+  "daily_report": {
+    "schema_version": 1,
+    "file": "source-2506-043de0bc40c8fec3.osm.pbf",
+    "source_url": "https://download.geofabrik.de/south-america/brazil/sul-latest.osm.pbf",
+    "replication_url": "https://download.geofabrik.de/south-america/brazil/sul-updates",
+    "sequence": 2506,
+    "snapshot_timestamp": "2026-10-29T21:21:26Z",
+    "sha256": "043de0bc40c8fec32c259a5d12862bdb6868096074995208cca1978f1319f3a8",
+    "provider": "geofabrik_replication",
+    "checked_at": "2026-10-30T21:26:34Z",
+    "available_sequence": 2506,
+    "from_sequence": 2506,
+    "diffs_applied": 0,
+    "recovery": null,
+    "freshness_warning": false,
+    "downloads": [
+      {
+        "url": "https://download.geofabrik.de/south-america/brazil/sul-updates/state.txt",
+        "bytes": 113,
+        "sha256": "638a5fc4f09c2889f06d8c14eabedac32fc95bbcc2ae0f24c8427b5f060a8376"
+      }
+    ],
+    "download_bytes": 113,
+    "elapsed_seconds": 7.389,
+    "region": "sul",
+    "city_fingerprints": {
+      "kerbs": {
+        "sha256": "aba689ac8955cd9595caf00df9ff4d3a7d1c7f6947e37af10b22ef0834491d7c",
+        "count": 3081,
+        "crs": "{\"$schema\": \"https://proj.org/schemas/v0.7/projjson.schema.json\", \"type\": \"GeographicCRS\", \"name\": \"WGS 84\", \"datum_ensemble\": {\"name\": \"World Geodetic System 1984 ensemble\", \"members\": [{\"name\": \"World Geodetic System 1984 (Transit)\"}, {\"name\": \"World Geodetic System 1984 (G730)\"}, {\"name\": \"World Geodetic System 1984 (G873)\"}, {\"name\": \"World Geodetic System 1984 (G1150)\"}, {\"name\": \"World Geodetic System 1984 (G1674)\"}, {\"name\": \"World Geodetic System 1984 (G1762)\"}, {\"name\": \"World Geodetic System 1984 (G2139)\"}, {\"name\": \"World Geodetic System 1984 (G2296)\"}], \"ellipsoid\": {\"name\": \"WGS 84\", \"semi_major_axis\": 6378137, \"inverse_flattening\": 298.257223563}, \"accuracy\": \"2.0\", \"id\": {\"authority\": \"EPSG\", \"code\": 6326}}, \"coordinate_system\": {\"subtype\": \"ellipsoidal\", \"axis\": [{\"name\": \"Geodetic latitude\", \"abbreviation\": \"Lat\", \"direction\": \"north\", \"unit\": \"degree\"}, {\"name\": \"Geodetic longitude\", \"abbreviation\": \"Lon\", \"direction\": \"east\", \"unit\": \"degree\"}]}, \"scope\": \"Horizontal component of 3D system.\", \"area\": \"World.\", \"bbox\": {\"south_latitude\": -90, \"west_longitude\": -180, \"north_latitude\": 90, \"east_longitude\": 180}, \"id\": {\"authority\": \"EPSG\", \"code\": 4326}}"
+      },
+      "sidewalks": {
+        "sha256": "bf3cd6f120d15eccd09c0fc727488b324a806aea7281609ed90cc146abd5166d",
+        "count": 8157,
+        "crs": "{\"$schema\": \"https://proj.org/schemas/v0.7/projjson.schema.json\", \"type\": \"GeographicCRS\", \"name\": \"WGS 84\", \"datum_ensemble\": {\"name\": \"World Geodetic System 1984 ensemble\", \"members\": [{\"name\": \"World Geodetic System 1984 (Transit)\"}, {\"name\": \"World Geodetic System 1984 (G730)\"}, {\"name\": \"World Geodetic System 1984 (G873)\"}, {\"name\": \"World Geodetic System 1984 (G1150)\"}, {\"name\": \"World Geodetic System 1984 (G1674)\"}, {\"name\": \"World Geodetic System 1984 (G1762)\"}, {\"name\": \"World Geodetic System 1984 (G2139)\"}, {\"name\": \"World Geodetic System 1984 (G2296)\"}], \"ellipsoid\": {\"name\": \"WGS 84\", \"semi_major_axis\": 6378137, \"inverse_flattening\": 298.257223563}, \"accuracy\": \"2.0\", \"id\": {\"authority\": \"EPSG\", \"code\": 6326}}, \"coordinate_system\": {\"subtype\": \"ellipsoidal\", \"axis\": [{\"name\": \"Geodetic latitude\", \"abbreviation\": \"Lat\", \"direction\": \"north\", \"unit\": \"degree\"}, {\"name\": \"Geodetic longitude\", \"abbreviation\": \"Lon\", \"direction\": \"east\", \"unit\": \"degree\"}]}, \"scope\": \"Horizontal component of 3D system.\", \"area\": \"World.\", \"bbox\": {\"south_latitude\": -90, \"west_longitude\": -180, \"north_latitude\": 90, \"east_longitude\": 180}, \"id\": {\"authority\": \"EPSG\", \"code\": 4326}}"
+      },
+      "crossings": {
+        "sha256": "e405f6d0f375ac261358819f6c70f6e58c254be4a72bf89c79c7351b9a47c710",
+        "count": 2448,
+        "crs": "{\"$schema\": \"https://proj.org/schemas/v0.7/projjson.schema.json\", \"type\": \"GeographicCRS\", \"name\": \"WGS 84\", \"datum_ensemble\": {\"name\": \"World Geodetic System 1984 ensemble\", \"members\": [{\"name\": \"World Geodetic System 1984 (Transit)\"}, {\"name\": \"World Geodetic System 1984 (G730)\"}, {\"name\": \"World Geodetic System 1984 (G873)\"}, {\"name\": \"World Geodetic System 1984 (G1150)\"}, {\"name\": \"World Geodetic System 1984 (G1674)\"}, {\"name\": \"World Geodetic System 1984 (G1762)\"}, {\"name\": \"World Geodetic System 1984 (G2139)\"}, {\"name\": \"World Geodetic System 1984 (G2296)\"}], \"ellipsoid\": {\"name\": \"WGS 84\", \"semi_major_axis\": 6378137, \"inverse_flattening\": 298.257223563}, \"accuracy\": \"2.0\", \"id\": {\"authority\": \"EPSG\", \"code\": 6326}}, \"coordinate_system\": {\"subtype\": \"ellipsoidal\", \"axis\": [{\"name\": \"Geodetic latitude\", \"abbreviation\": \"Lat\", \"direction\": \"north\", \"unit\": \"degree\"}, {\"name\": \"Geodetic longitude\", \"abbreviation\": \"Lon\", \"direction\": \"east\", \"unit\": \"degree\"}]}, \"scope\": \"Horizontal component of 3D system.\", \"area\": \"World.\", \"bbox\": {\"south_latitude\": -90, \"west_longitude\": -180, \"north_latitude\": 90, \"east_longitude\": 180}, \"id\": {\"authority\": \"EPSG\", \"code\": 4326}}"
+      },
+      "other_footways": {
+        "sha256": "eef695231f79cb7439a2f67d60fc07d18429f29ab883950b4ee6474cbbbf0928",
+        "count": 7047,
+        "crs": "{\"$schema\": \"https://proj.org/schemas/v0.7/projjson.schema.json\", \"type\": \"GeographicCRS\", \"name\": \"WGS 84\", \"datum_ensemble\": {\"name\": \"World Geodetic System 1984 ensemble\", \"members\": [{\"name\": \"World Geodetic System 1984 (Transit)\"}, {\"name\": \"World Geodetic System 1984 (G730)\"}, {\"name\": \"World Geodetic System 1984 (G873)\"}, {\"name\": \"World Geodetic System 1984 (G1150)\"}, {\"name\": \"World Geodetic System 1984 (G1674)\"}, {\"name\": \"World Geodetic System 1984 (G1762)\"}, {\"name\": \"World Geodetic System 1984 (G2139)\"}, {\"name\": \"World Geodetic System 1984 (G2296)\"}], \"ellipsoid\": {\"name\": \"WGS 84\", \"semi_major_axis\": 6378137, \"inverse_flattening\": 298.257223563}, \"accuracy\": \"2.0\", \"id\": {\"authority\": \"EPSG\", \"code\": 6326}}, \"coordinate_system\": {\"subtype\": \"ellipsoidal\", \"axis\": [{\"name\": \"Geodetic latitude\", \"abbreviation\": \"Lat\", \"direction\": \"north\", \"unit\": \"degree\"}, {\"name\": \"Geodetic longitude\", \"abbreviation\": \"Lon\", \"direction\": \"east\", \"unit\": \"degree\"}]}, \"scope\": \"Horizontal component of 3D system.\", \"area\": \"World.\", \"bbox\": {\"south_latitude\": -90, \"west_longitude\": -180, \"north_latitude\": 90, \"east_longitude\": 180}, \"id\": {\"authority\": \"EPSG\", \"code\": 4326}}"
+      },
+      "roads_for_completeness": {
+        "sha256": "6788f2cc3b51e0de2d8bbd5916f93b02a709b0cf70ba25008e9fc0d517bdee64",
+        "count": 29849,
+        "crs": "{\"$schema\": \"https://proj.org/schemas/v0.7/projjson.schema.json\", \"type\": \"GeographicCRS\", \"name\": \"WGS 84\", \"datum_ensemble\": {\"name\": \"World Geodetic System 1984 ensemble\", \"members\": [{\"name\": \"World Geodetic System 1984 (Transit)\"}, {\"name\": \"World Geodetic System 1984 (G730)\"}, {\"name\": \"World Geodetic System 1984 (G873)\"}, {\"name\": \"World Geodetic System 1984 (G1150)\"}, {\"name\": \"World Geodetic System 1984 (G1674)\"}, {\"name\": \"World Geodetic System 1984 (G1762)\"}, {\"name\": \"World Geodetic System 1984 (G2139)\"}, {\"name\": \"World Geodetic System 1984 (G2296)\"}], \"ellipsoid\": {\"name\": \"WGS 84\", \"semi_major_axis\": 6378137, \"inverse_flattening\": 298.257223563}, \"accuracy\": \"2.0\", \"id\": {\"authority\": \"EPSG\", \"code\": 6326}}, \"coordinate_system\": {\"subtype\": \"ellipsoidal\", \"axis\": [{\"name\": \"Geodetic latitude\", \"abbreviation\": \"Lat\", \"direction\": \"north\", \"unit\": \"degree\"}, {\"name\": \"Geodetic longitude\", \"abbreviation\": \"Lon\", \"direction\": \"east\", \"unit\": \"degree\"}]}, \"scope\": \"Horizontal component of 3D system.\", \"area\": \"World.\", \"bbox\": {\"south_latitude\": -90, \"west_longitude\": -180, \"north_latitude\": 90, \"east_longitude\": 180}, \"id\": {\"authority\": \"EPSG\", \"code\": 4326}}"
+      }
+    },
+    "configuration_sha256": "ec797d61751681893e6b7c47535e7dabe575759e631cc3969d62ae7154ceede6",
+    "net_snapshot_changes": {
+      "kerbs": {
+        "added": 0,
+        "removed": 0,
+        "modified": 4
+      },
+      "sidewalks": {
+        "added": 11,
+        "removed": 2,
+        "modified": 9
+      },
+      "crossings": {
+        "added": 0,
+        "removed": 5,
+        "modified": 16
+      },
+      "other_footways": {
+        "added": 22,
+        "removed": 13,
+        "modified": 48
+      },
+      "roads_for_completeness": {
+        "added": 29849,
+        "removed": 0,
+        "modified": 0
+      }
+    },
+    "needs_update": true,
+    "history": {
+      "mode": "cached",
+      "backfill": "unavailable",
+      "changes_measure": "net differences between snapshots; not all edits"
+    }
+  }
+}
