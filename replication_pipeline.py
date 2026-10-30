@@ -34,6 +34,16 @@ def read_json(path):
         return {}
 
 
+def registry_for_products(root, registry):
+    """Annotate candidate products without advancing the publication checkpoint."""
+    if not enabled():
+        return registry
+    candidate = read_json(Path(root) / REPORT)
+    if not candidate.get("city_fingerprints") or parse_timestamp(candidate.get("snapshot_timestamp")) is None:
+        raise ValueError("Products require a validated candidate source cutoff")
+    return {**registry, "Data Fetching": candidate["snapshot_timestamp"]}
+
+
 def feature_records(frame):
     """Canonical per-object content, independent of row order and empty columns."""
     import pandas as pd
@@ -74,6 +84,7 @@ def extract_city(path, cfg):
     from shapely.geometry import box
     from functions import merge_list_of_dictionaries
     from pbf_acquisition import features_from_pbf
+    STAGING.mkdir(parents=True, exist_ok=True)
     boundary = gpd.read_file(cfg.boundaries_geojson_path).geometry.union_all()
     bbox = box(*boundary.bounds)
     tags = merge_list_of_dictionaries([*cfg.layer_tags_dict.values(), {"highway": ROAD_TYPES}])

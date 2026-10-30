@@ -154,7 +154,8 @@ def gen_updating_infotable_page(
 
     tablepart = ""
 
-    records_dict = read_json(json_path)
+    from replication_pipeline import registry_for_products
+    records_dict = registry_for_products(".", read_json(json_path))
 
     for key in records_dict:
         tablepart += f"""

@@ -19,8 +19,8 @@ Development branch: `migration/geofabrik-incremental-curitiba` in
 The only live test node is Curitiba:
 `kauevestena/opensidewalkmap_beta`. Use a separate node branch,
 `pilot/geofabrik-incremental-curitiba`, during preview testing. Pin every
-preview to the exact core commit being evaluated. This node branch is proposed,
-not created by this planning change.
+preview to the exact core commit being evaluated. The isolated caller is now
+tracked in [Curitiba PR #26](https://github.com/kauevestena/opensidewalkmap_beta/pull/26).
 
 Do not merge the core branch, change fleet defaults, modify another node, or
 dispatch another node's workflows as part of this pilot. Offline fixtures and
@@ -226,8 +226,9 @@ the same runner and output validators as the normal build, but stop before
 staging, committing or dispatching Pages. Enforce the Curitiba repository
 allowlist in the preview workflow.
 
-On the proposed Curitiba pilot branch, adapt the existing
-`data_daily_updating.yml` caller to manual dispatch only and call that preview
+On the Curitiba pilot branch, adapt the existing
+`data_daily_updating.yml` caller to manual dispatch and pushes changing only
+that caller on the exact pilot branch, and call that preview
 workflow at a full core SHA. Set `core_ref` to the same SHA. Dispatch the already
 registered daily workflow against the pilot branch; no default-branch schedule
 or caller change is needed for preview.
@@ -296,7 +297,7 @@ A broader rollout needs a separate decision based on the Curitiba evidence.
 ## Deliverables and completion checklist
 
 - [x] Separate core migration branch and reviewable implementation plan.
-- [ ] Replication engine and offline regression coverage.
+- [x] Replication engine and offline regression coverage.
 - [ ] Opt-in daily integration with zero ohsome calls in the experimental path.
 - [ ] Persistent, validated pilot cache with tested bootstrap/recovery.
 - [ ] Manual Curitiba preview workflow pinned to an exact core SHA.

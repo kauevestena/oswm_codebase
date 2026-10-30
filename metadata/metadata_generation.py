@@ -346,6 +346,8 @@ def _parse_registry_timestamp(node_root: Path, timezone_name: str) -> tuple[str 
     registry = _load_json(node_root / "data" / "updates" / "registry.json", {})
     if not isinstance(registry, dict):
         return None, {}
+    from replication_pipeline import registry_for_products
+    registry = registry_for_products(node_root, registry)
 
     parsed: list[datetime] = []
     for value in registry.values():

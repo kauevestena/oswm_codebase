@@ -12,7 +12,9 @@ engine at the same full core commit SHA. The reusable preview has read-only
 repository permissions, disables checkout credential persistence and has no
 commit, push, dispatch or Pages step.
 
-The node caller is manual only. It may supply a retained Geofabrik bootstrap
+The node caller supports manual dispatch and a push trigger restricted to its
+own workflow file on the exact pilot branch. It has no schedule. Manual runs
+may supply a retained Geofabrik bootstrap
 URL, its actual embedded starting sequence, and a later published end sequence
 for replay. Verify those sequences through PBF headers and region state files;
 do not derive them from dates. Bootstrap replay uses the normal freshness checks,
@@ -51,7 +53,7 @@ mismatch or an unavailable required diff cause validated rebootstrap.
 
 ## Validation so far
 
-- Python suite: **246 passed, 20 subtests passed** with the locked dependencies
+- Python suite: **248 passed, 20 subtests passed** with the locked dependencies
   and a supported Noto CJK font supplied via `OSWM_LABEL_FONT_PATHS`.
 - JavaScript suite: **41 passed**.
 - Runner syntax, Python compilation and whitespace checks pass.
@@ -67,6 +69,16 @@ mismatch or an unavailable required diff cause validated rebootstrap.
 Live Curitiba replay and complete product-generation results are recorded as
 they complete. No production cutover, rollback rehearsal or other-node rollout
 is claimed by these offline checks.
+
+The first GitHub preview reached regional object equality but stopped because
+the independent city-extraction path had not created its staging directory.
+That path now creates the directory itself and has a dedicated regression.
+Candidate product metadata also reads the candidate source cutoff without
+advancing the published registry before validation.
+
+Provider transfer size is not total CI transfer size. Hosted runners restore
+and save a complete regional cache; that overhead can exceed a small daily diff.
+The pilot must measure it before claiming an overall bandwidth improvement.
 
 ## Acceptance still required
 

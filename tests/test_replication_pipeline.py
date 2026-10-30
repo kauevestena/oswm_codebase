@@ -78,6 +78,22 @@ def test_prepare_real_binary_geometry_then_retry_cannot_skip_unpublished_data(ci
     assert "net snapshot differences" in Path("hub/watcher/index.html").read_text()
 
 
+def test_parity_extraction_creates_staging_without_a_daily_prepare(city):
+    source, cfg = city
+    assert not pipeline.STAGING.exists()
+    layers = pipeline.extract_city(source, cfg)
+    assert len(layers["sidewalks"]) == 1
+    assert pipeline.STAGING.is_dir()
+
+
+def test_product_metadata_uses_candidate_cutoff_without_advancing_registry(city):
+    pipeline.prepare()
+    original = {"Data Fetching": TIMES[100]}
+    assert pipeline.registry_for_products(Path.cwd(), original)["Data Fetching"] == TIMES[101]
+    assert original == {"Data Fetching": TIMES[100]}
+    assert not Path("data/updates/registry.json").exists()
+
+
 def test_stage_tampering_cannot_be_installed(city):
     pipeline.prepare()
     frame = gpd.read_parquet(pipeline.STAGING / "kerbs.parquet")

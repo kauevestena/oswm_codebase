@@ -50,6 +50,8 @@ def main():
                 URL, replica_cache, bootstrap_url=args.bootstrap_url, target_sequence=target,
             )
             print(json.dumps({"phase": "source", **report}), flush=True)
+            results.append(report)
+            (evidence / "replay.json").write_text(json.dumps(results, indent=2) + "\n")
             if index or not args.bootstrap_url:
                 # Derive a candidate dated URL from the actual source watermark,
                 # then require its embedded sequence to match; dates are not IDs.
@@ -71,10 +73,9 @@ def main():
                                     "full_snapshot_sha256": control_hash, "full_snapshot_url": control_url,
                                     "osmium_summary": parity.stderr}
                 control.unlink()
-            results.append(report)
             (evidence / "replay.json").write_text(json.dumps(results, indent=2) + "\n")
         # Verify idempotency without interpreting it as a real incremental update.
-        path, noop = sync_source(URL, replica_cache, target_sequence=args.end_sequence)
+        path, noop = sync_source(URL, replica_cache, target_sequence=results[-1]["sequence"])
         if noop["diffs_applied"] or any(x["url"].endswith(".osm.pbf") for x in noop["downloads"]):
             raise ValueError("A no-op unexpectedly fetched source data")
         results.append({"phase": "no_new_sequence", **noop})
