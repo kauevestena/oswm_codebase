@@ -84,6 +84,10 @@ ATTRIBUTE_RULES = {
 
 def fetch_or_load_roads(bounds, cache_path=ROADS_CACHE_PATH, silent=False):
     """Load roads from cache or fetch via Overpass, with regional PBF failover."""
+    from replication_pipeline import enabled
+    if enabled():
+        # Acquired from the same regional sequence as the pedestrian layers.
+        return gpd.read_parquet("data/raw/roads_for_completeness.parquet")
     if os.path.exists(cache_path):
         if not silent:
             print("[completeness] Loading cached road network...")
@@ -513,6 +517,9 @@ def get_next_historical_timestamp(existing_timestamps):
 
 def get_current_timestamp():
     """Get today's date as timestamp string."""
+    from replication_pipeline import enabled, read_json, REPORT
+    if enabled():
+        return read_json(REPORT)["snapshot_timestamp"][:10]
     return datetime.now(tz=timezone.utc).strftime("%Y-%m-%d")
 
 
@@ -746,7 +753,8 @@ def run_completeness_analysis(
       - OHSOME for one more historical month (unless offline)
     """
     current_ts = get_current_timestamp()
-    is_offline = offline or bool(os.environ.get("OSWM_OFFLINE"))
+    from replication_pipeline import enabled, read_json, REPORT
+    is_offline = offline or bool(os.environ.get("OSWM_OFFLINE")) or enabled()
 
     # Step 1: Local snapshot (always)
     if not silent:
@@ -803,6 +811,10 @@ def run_completeness_analysis(
         print("\n[completeness] Building results...")
 
     results = _init_results_structure(bounds, all_timestamps)
+    if enabled():
+        results["metadata"]["method"] = "local_snapshot_with_preserved_history"
+        results["metadata"]["source_cutoff"] = read_json(REPORT)["snapshot_timestamp"]
+        results["metadata"]["historical_backfill"] = "unavailable"
 
     # Add OHSOME historical data
     for ts, z17_r, z17_f, z17_s in ohsome_results:

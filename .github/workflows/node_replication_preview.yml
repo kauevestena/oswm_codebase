@@ -1,0 +1,94 @@
+name: Curitiba Geofabrik replication preview
+
+on:
+  workflow_call:
+    inputs:
+      core_ref:
+        required: true
+        type: string
+      bootstrap_url:
+        default: ""
+        type: string
+      start_sequence:
+        default: ""
+        type: string
+      end_sequence:
+        default: ""
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  preview:
+    if: github.repository == 'kauevestena/opensidewalkmap_beta'
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      PYTHONUNBUFFERED: "1"
+      OSWM_THIN_NODE: "1"
+      OSWM_OSM_UPDATE_BACKEND: geofabrik_replication
+      OSWM_PBF_REGION: sul
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: kauevestena/oswm_codebase
+          ref: ${{ inputs.core_ref }}
+          path: oswm_codebase
+          persist-credentials: false
+      - name: Record exact core revision
+        run: |
+          echo "OSWM_CORE_REVISION=$(git -C oswm_codebase rev-parse HEAD)" >> "$GITHUB_ENV"
+          echo "OSWM_CODEBASE_REVISION=$(git -C oswm_codebase rev-parse HEAD)" >> "$GITHUB_ENV"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: oswm_codebase/requirements.txt
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fonts-noto-cjk gdal-bin libgdal-dev osmium-tool
+          python -m pip install -r oswm_codebase/requirements.txt
+      - uses: actions/cache/restore@v4
+        with:
+          path: .cache/oswm/replication/source
+          key: oswm-replica-preview-v1-${{ github.repository_id }}-sul-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: oswm-replica-preview-v1-${{ github.repository_id }}-sul-
+      - name: Replay and compare independent full snapshots
+        env:
+          BOOTSTRAP_URL: ${{ inputs.bootstrap_url }}
+          START_SEQUENCE: ${{ inputs.start_sequence }}
+          END_SEQUENCE: ${{ inputs.end_sequence }}
+        run: |
+          args=()
+          if [ -n "$BOOTSTRAP_URL" ]; then
+            args=(--bootstrap-url "$BOOTSTRAP_URL" --start-sequence "$START_SEQUENCE" --end-sequence "$END_SEQUENCE")
+          fi
+          python oswm_codebase/replication_preview.py "${args[@]}"
+      - name: Generate Curitiba preview products
+        run: bash oswm_codebase/runners/daily.sh
+      - name: Validate preview products
+        run: |
+          python oswm_codebase/other/auxiliary_scripts/validate_tiles.py
+          python oswm_codebase/node_outputs.py --root . require
+          python oswm_codebase/runtime_validation.py --root .
+          cp oswm-build.json replication-preview/
+          cp data/updates/acquisition.json replication-preview/
+          cp .cache/oswm/replication/staged/report.json replication-preview/daily-report.json
+          git diff --stat > replication-preview/generated-changes.txt
+      - uses: actions/cache/save@v4
+        with:
+          path: .cache/oswm/replication/source
+          key: oswm-replica-preview-v1-${{ github.repository_id }}-sul-${{ github.run_id }}-${{ github.run_attempt }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: curitiba-replication-preview-${{ github.run_id }}-${{ github.run_attempt }}
+          path: replication-preview/
+          if-no-files-found: warn
+      # This workflow has no staging, git push, workflow dispatch or Pages step.

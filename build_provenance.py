@@ -61,6 +61,7 @@ def write_manifest(root: Path, *, mode: str) -> dict[str, object]:
         "node": _city_name(root),
         "generated_at": isoformat_utc(),
         "mode": mode,
+        "acquisition": _json(root / "data/updates/acquisition.json"),
         "core": {
             "repository": "kauevestena/oswm_codebase",
             "sha": _core_revision(root),

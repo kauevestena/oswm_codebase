@@ -1,7 +1,9 @@
 # Daily Geofabrik replication migration: Curitiba pilot
 
-Status: implementation plan, 2026-10-30. This change creates the plan only;
-the replication implementation and live pilot have not run.
+Status: experimental implementation in progress, 2026-10-30. The branch now
+contains the replication engine, opt-in daily integration, offline regressions
+and a read-only Curitiba preview workflow. Publication gates below still apply.
+See [pilot evidence and operating instructions](CURITIBA_REPLICATION_PILOT.md).
 
 ## Objective and boundary
 

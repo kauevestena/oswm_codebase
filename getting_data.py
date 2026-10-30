@@ -14,6 +14,11 @@ def main():
     If the data doesn't exist yet, or the OHSOME API fails, it will fallback
     to a full OSMnx data download, then a regional PBF if Overpass is unavailable.
     """
+    from replication_pipeline import enabled, install_prepared
+    if enabled():
+        install_prepared()
+        return
+
     # 1. Quick lookup to see if existing data is present
     all_data_exists = True
     for category in layer_tags_dict:
