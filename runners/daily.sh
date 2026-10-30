@@ -19,7 +19,14 @@ run_step() {
 }
 
 WATCHER_STATUS=0
-"$PYTHON_BIN" oswm_codebase/datahub/watcher/watcher_lib.py || WATCHER_STATUS=$?
+REPLICA_ARGS=()
+if [ "${OSWM_OSM_UPDATE_BACKEND:-legacy}" = "geofabrik_replication" ]; then
+    "$PYTHON_BIN" oswm_codebase/replication_pipeline.py prepare || exit 1
+    WATCHER_STATUS=$("$PYTHON_BIN" -c 'import json; print(int(json.load(open(".cache/oswm/replication/staged/report.json"))["needs_update"]))') || exit 1
+    REPLICA_ARGS=(--replication-report .cache/oswm/replication/staged/report.json)
+else
+    "$PYTHON_BIN" oswm_codebase/datahub/watcher/watcher_lib.py || WATCHER_STATUS=$?
+fi
 
 DECISION_ARGS=(
     --root . decide
@@ -29,7 +36,7 @@ DECISION_ARGS=(
 case "${OSWM_FORCE_REGEN:-}" in
     1|true|TRUE|yes|YES|on|ON) DECISION_ARGS+=(--force) ;;
 esac
-"$PYTHON_BIN" oswm_codebase/pipeline_decision.py "${DECISION_ARGS[@]}" || exit 1
+"$PYTHON_BIN" oswm_codebase/pipeline_decision.py "${DECISION_ARGS[@]}" "${REPLICA_ARGS[@]}" || exit 1
 
 MODE=$("$PYTHON_BIN" -c 'import json; print(json.load(open("data/updates/pipeline_decision.json"))["mode"])')
 echo "Pipeline mode: $MODE"
@@ -85,7 +92,9 @@ if [ "${#FAILED_STEPS[@]}" -ne 0 ]; then
     exit 1
 fi
 
-if [ "$MODE" != "skip" ]; then
+if [ "${OSWM_OSM_UPDATE_BACKEND:-legacy}" = "geofabrik_replication" ]; then
+    "$PYTHON_BIN" oswm_codebase/replication_pipeline.py render || exit 1
+elif [ "$MODE" != "skip" ]; then
     # Rebuilding products does not refresh OSM data. Preserve the initial
     # watcher decision unless acquisition and every generation step succeeded.
     if [ "$MODE" = "generate" ]; then
@@ -93,9 +102,19 @@ if [ "$MODE" != "skip" ]; then
     else
         "$PYTHON_BIN" oswm_codebase/datahub/watcher/watcher_lib.py --render-only || exit 1
     fi
-    "$PYTHON_BIN" oswm_codebase/build_provenance.py --root . --mode "$MODE" || exit 1
 fi
 
-"$PYTHON_BIN" oswm_codebase/node_outputs.py --root . require
+if [ "$MODE" != "skip" ]; then
+    "$PYTHON_BIN" oswm_codebase/build_provenance.py --root . --mode "$MODE" || exit 1
+fi
+"$PYTHON_BIN" oswm_codebase/node_outputs.py --root . require || exit 1
+if [ "${OSWM_OSM_UPDATE_BACKEND:-legacy}" = "geofabrik_replication" ]; then
+    "$PYTHON_BIN" oswm_codebase/node_outputs.py --root . validate-sizes --max-mib 95 || exit 1
+    "$PYTHON_BIN" oswm_codebase/runtime_validation.py --root . || exit 1
+    "$PYTHON_BIN" oswm_codebase/replication_pipeline.py finalize || exit 1
+fi
+if [ "${OSWM_OSM_UPDATE_BACKEND:-legacy}" = "geofabrik_replication" ]; then
+    "$PYTHON_BIN" oswm_codebase/build_provenance.py --root . --mode "$MODE" || exit 1
+fi
 "$PYTHON_BIN" oswm_codebase/pipeline_decision.py --root . record-success
 rm -f data/updates/pipeline_failures.txt

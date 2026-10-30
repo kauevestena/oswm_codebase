@@ -237,7 +237,14 @@ def reset_derived(root: Path) -> list[str]:
 
     validate_node_root(root)
     preserved: dict[str, bytes] = {}
-    for relative in PRESERVED_DURING_DERIVED_RESET:
+    preserved_paths = PRESERVED_DURING_DERIVED_RESET
+    if os.environ.get("OSWM_OSM_UPDATE_BACKEND") == "geofabrik_replication":
+        preserved_paths += (
+            "quality_check/completeness/data.json",
+            "hub/watcher/feed.xml",
+            "hub/watcher/changesets.xml",
+        )
+    for relative in preserved_paths:
         path = root / relative
         if path.is_file():
             preserved[relative] = path.read_bytes()

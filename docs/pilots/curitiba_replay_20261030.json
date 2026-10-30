@@ -1,0 +1,191 @@
+{
+  "run_url": "https://github.com/kauevestena/opensidewalkmap_beta/actions/runs/41127745459",
+  "core_sha": "e2e29d559f410de21bc3862098bd703eae817025",
+  "node_sha": "4bddb923fc6081df6937bac05ce91f2ecc4e6aa3",
+  "result": {
+    "two_real_advances": "passed",
+    "regional_object_and_city_layer_parity": "passed",
+    "pinned_rerun": "blocked by Geofabrik HTTP 502 on redundant state request",
+    "product_generation": "not reached in this run"
+  },
+  "replay": [
+    {
+      "schema_version": 1,
+      "file": "source-2504-8dd0d87b438b08ce.osm.pbf",
+      "source_url": "https://download.geofabrik.de/south-america/brazil/sul-latest.osm.pbf",
+      "replication_url": "https://download.geofabrik.de/south-america/brazil/sul-updates",
+      "sequence": 2504,
+      "snapshot_timestamp": "2026-10-27T21:23:59Z",
+      "sha256": "8dd0d87b438b08ce6d3e36d136ce70eed4680ebce206f983503c64757add5a15",
+      "provider": "geofabrik_replication",
+      "checked_at": "2026-10-30T21:02:23Z",
+      "from_sequence": null,
+      "diffs_applied": 0,
+      "recovery": "bootstrap: FileNotFoundError",
+      "freshness_warning": true,
+      "downloads": [
+        {
+          "url": "https://download.geofabrik.de/south-america/brazil/sul-updates/state.txt",
+          "bytes": 113,
+          "sha256": "638a5fc4f09c2889f06d8c14eabedac32fc95bbcc2ae0f24c8427b5f060a8376"
+        },
+        {
+          "url": "https://download.geofabrik.de/south-america/brazil/sul-updates/000/002/504.state.txt",
+          "bytes": 113,
+          "sha256": "e0973543a7c4266ed74488748ccbca6fb9fa18a655a34a09c606c78523644bd6"
+        },
+        {
+          "url": "https://download.geofabrik.de/south-america/brazil/sul-261027.osm.pbf",
+          "bytes": 428720337,
+          "sha256": "8dd0d87b438b08ce6d3e36d136ce70eed4680ebce206f983503c64757add5a15"
+        }
+      ],
+      "download_bytes": 428720563,
+      "elapsed_seconds": 51.164
+    },
+    {
+      "schema_version": 1,
+      "file": "source-2505-a047a198151431c0.osm.pbf",
+      "source_url": "https://download.geofabrik.de/south-america/brazil/sul-latest.osm.pbf",
+      "replication_url": "https://download.geofabrik.de/south-america/brazil/sul-updates",
+      "sequence": 2505,
+      "snapshot_timestamp": "2026-10-28T21:21:02Z",
+      "sha256": "a047a198151431c07876a28d29832be07d1010ee3f7b7cc3fcc1ddd0a729fa5b",
+      "provider": "geofabrik_replication",
+      "checked_at": "2026-10-30T21:03:14Z",
+      "from_sequence": 2504,
+      "diffs_applied": 1,
+      "recovery": null,
+      "freshness_warning": false,
+      "downloads": [
+        {
+          "url": "https://download.geofabrik.de/south-america/brazil/sul-updates/state.txt",
+          "bytes": 113,
+          "sha256": "638a5fc4f09c2889f06d8c14eabedac32fc95bbcc2ae0f24c8427b5f060a8376"
+        },
+        {
+          "url": "https://download.geofabrik.de/south-america/brazil/sul-updates/000/002/505.state.txt",
+          "bytes": 113,
+          "sha256": "7f4c5c07caa0df0f58d3df0731fc4963bcfca735c8d8c32979024a2f00d31155"
+        },
+        {
+          "url": "https://download.geofabrik.de/south-america/brazil/sul-updates/000/002/505.state.txt",
+          "bytes": 113,
+          "sha256": "7f4c5c07caa0df0f58d3df0731fc4963bcfca735c8d8c32979024a2f00d31155"
+        },
+        {
+          "url": "https://download.geofabrik.de/south-america/brazil/sul-updates/000/002/505.osc.gz",
+          "bytes": 542988,
+          "sha256": "9389efe411fd50f40217b9d527d67cec7f5784365d0d8e59194753f7e7bb1b3c"
+        }
+      ],
+      "download_bytes": 543327,
+      "elapsed_seconds": 33.755,
+      "parity": {
+        "regional_objects_equal": true,
+        "city_fingerprints": {
+          "kerbs": {
+            "sha256": "aba689ac8955cd9595caf00df9ff4d3a7d1c7f6947e37af10b22ef0834491d7c",
+            "count": 3081,
+            "crs": "epsg:4326"
+          },
+          "sidewalks": {
+            "sha256": "bf3cd6f120d15eccd09c0fc727488b324a806aea7281609ed90cc146abd5166d",
+            "count": 8157,
+            "crs": "epsg:4326"
+          },
+          "crossings": {
+            "sha256": "e405f6d0f375ac261358819f6c70f6e58c254be4a72bf89c79c7351b9a47c710",
+            "count": 2448,
+            "crs": "epsg:4326"
+          },
+          "other_footways": {
+            "sha256": "eef695231f79cb7439a2f67d60fc07d18429f29ab883950b4ee6474cbbbf0928",
+            "count": 7047,
+            "crs": "epsg:4326"
+          },
+          "roads_for_completeness": {
+            "sha256": "2dda1b418bd62becfd7fd1cdd86dd1a4afa96eb352f3c6272e332e98840b8ec3",
+            "count": 29848,
+            "crs": "epsg:4326"
+          }
+        },
+        "full_snapshot_sha256": "7d905f690836374e394a4c47c7ecd5972beb2078a1e9b95b5f5b8b022224a459",
+        "full_snapshot_url": "https://download.geofabrik.de/south-america/brazil/sul-261028.osm.pbf",
+        "osmium_summary": "Summary: left=0 right=0 same=74398131 different=0\n"
+      }
+    },
+    {
+      "schema_version": 1,
+      "file": "source-2506-60a2478379bae188.osm.pbf",
+      "source_url": "https://download.geofabrik.de/south-america/brazil/sul-latest.osm.pbf",
+      "replication_url": "https://download.geofabrik.de/south-america/brazil/sul-updates",
+      "sequence": 2506,
+      "snapshot_timestamp": "2026-10-29T21:21:26Z",
+      "sha256": "60a2478379bae188b6efaf6516cc79d90670cfd423aa6a72d325a648abd9cfdf",
+      "provider": "geofabrik_replication",
+      "checked_at": "2026-10-30T21:09:05Z",
+      "from_sequence": 2505,
+      "diffs_applied": 1,
+      "recovery": null,
+      "freshness_warning": false,
+      "downloads": [
+        {
+          "url": "https://download.geofabrik.de/south-america/brazil/sul-updates/state.txt",
+          "bytes": 113,
+          "sha256": "638a5fc4f09c2889f06d8c14eabedac32fc95bbcc2ae0f24c8427b5f060a8376"
+        },
+        {
+          "url": "https://download.geofabrik.de/south-america/brazil/sul-updates/000/002/506.state.txt",
+          "bytes": 113,
+          "sha256": "638a5fc4f09c2889f06d8c14eabedac32fc95bbcc2ae0f24c8427b5f060a8376"
+        },
+        {
+          "url": "https://download.geofabrik.de/south-america/brazil/sul-updates/000/002/506.state.txt",
+          "bytes": 113,
+          "sha256": "638a5fc4f09c2889f06d8c14eabedac32fc95bbcc2ae0f24c8427b5f060a8376"
+        },
+        {
+          "url": "https://download.geofabrik.de/south-america/brazil/sul-updates/000/002/506.osc.gz",
+          "bytes": 277965,
+          "sha256": "b6ccba2f75adbfd97903a5dcd85c707632146fd45ef6a5504b31cc2fce71a596"
+        }
+      ],
+      "download_bytes": 278304,
+      "elapsed_seconds": 109.886,
+      "parity": {
+        "regional_objects_equal": true,
+        "city_fingerprints": {
+          "kerbs": {
+            "sha256": "aba689ac8955cd9595caf00df9ff4d3a7d1c7f6947e37af10b22ef0834491d7c",
+            "count": 3081,
+            "crs": "epsg:4326"
+          },
+          "sidewalks": {
+            "sha256": "bf3cd6f120d15eccd09c0fc727488b324a806aea7281609ed90cc146abd5166d",
+            "count": 8157,
+            "crs": "epsg:4326"
+          },
+          "crossings": {
+            "sha256": "e405f6d0f375ac261358819f6c70f6e58c254be4a72bf89c79c7351b9a47c710",
+            "count": 2448,
+            "crs": "epsg:4326"
+          },
+          "other_footways": {
+            "sha256": "eef695231f79cb7439a2f67d60fc07d18429f29ab883950b4ee6474cbbbf0928",
+            "count": 7047,
+            "crs": "epsg:4326"
+          },
+          "roads_for_completeness": {
+            "sha256": "6788f2cc3b51e0de2d8bbd5916f93b02a709b0cf70ba25008e9fc0d517bdee64",
+            "count": 29849,
+            "crs": "epsg:4326"
+          }
+        },
+        "full_snapshot_sha256": "043de0bc40c8fec32c259a5d12862bdb6868096074995208cca1978f1319f3a8",
+        "full_snapshot_url": "https://download.geofabrik.de/south-america/brazil/sul-261029.osm.pbf",
+        "osmium_summary": "Summary: left=0 right=0 same=74411689 different=0\n"
+      }
+    }
+  ]
+}
