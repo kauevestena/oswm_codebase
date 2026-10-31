@@ -10,6 +10,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import signal
 import subprocess
 import sys
@@ -212,11 +213,28 @@ def deadline(signum, frame):
     raise TimeoutError("Sandbox variant elapsed-time budget exhausted")
 
 
-def osm_benchmark(cfg, work, report, save):
+def compact_features_query(polygon_coord_str, tags):
+    """Same n/w/r tag union and down-reference closure, expanded once."""
+    from osmnx import _overpass
+    clauses = []
+    for key, values in tags.items():
+        if values is True:
+            condition = '[' + json.dumps(key) + ']'
+        else:
+            values = [values] if isinstance(values, str) else values
+            pattern = "^(" + "|".join(re.escape(v) for v in values) + ")$"
+            condition = '[' + json.dumps(key) + '~' + json.dumps(pattern) + ']'
+        clauses.append('nwr' + condition + '(poly:' + json.dumps(polygon_coord_str) + ');')
+    return _overpass._make_overpass_settings() + ';(' + ''.join(clauses) + ');(._;>;);out;'
+
+
+def osm_benchmark(cfg, work, report, save, variants):
     import osmnx as ox
     import geopandas as gpd
     from shapely.geometry import box
     from replication_pipeline import ROAD_TYPES
+    from osmnx import _overpass
+    original_builder = _overpass._create_overpass_features_query
     boundary = gpd.read_file(cfg.boundaries_geojson_path).geometry.union_all()
     bbox = box(*boundary.bounds)
     ped_tags = merged_tags(cfg.layer_tags_dict.values())
@@ -226,7 +244,7 @@ def osm_benchmark(cfg, work, report, save):
                    "variants": [], "measurement": "encoded HTTP response-body bytes, excluding headers/TLS; includes status/DNS/error bodies"})
     ox.settings.http_user_agent = AGENT
     ox.settings.http_referer = "https://github.com/kauevestena/oswm_codebase/pull/62"
-    ox.settings.requests_timeout = 60
+    ox.settings.requests_timeout = 45
     ox.settings.overpass_settings = '[out:json][timeout:{timeout}]{maxsize}'
     if SNAPSHOT != "live":
         ox.settings.overpass_settings += '[date:"' + SNAPSHOT + '"]'
@@ -234,7 +252,8 @@ def osm_benchmark(cfg, work, report, save):
     ox.settings.log_console = False
     endpoints = ["https://overpass.private.coffee/api", "https://overpass-api.de/api"]
     signal.signal(signal.SIGALRM, deadline)
-    for variant in ("bbox_two_queries", "combined_one_query"):
+    for variant in variants:
+        _overpass._create_overpass_features_query = compact_features_query if variant == "compact_combined_one_query" else original_builder
         item = {"variant": variant, "attempts": []}
         report["variants"].append(item)
         folder = work / variant
@@ -242,7 +261,7 @@ def osm_benchmark(cfg, work, report, save):
         ox.settings.cache_folder = str(folder / "http-cache")
         active_meter = None
         def fetch():
-            if variant == "combined_one_query":
+            if variant in ("combined_one_query", "compact_combined_one_query"):
                 active_meter.phase = variant + ":combined"
                 combined = ox.features_from_polygon(bbox, union_tags)
                 roads = combined[combined["highway"].isin(ROAD_TYPES)].copy()
@@ -257,14 +276,17 @@ def osm_benchmark(cfg, work, report, save):
             return partition(ped, roads, boundary, cfg)
         for endpoint in endpoints:
             ox.settings.overpass_url = endpoint
-            attempt = {"endpoint": endpoint}
+            # Private.coffee documents no rate-limit slots. Polling its status
+            # recursively is not required by that operator's usage policy.
+            ox.settings.overpass_rate_limit = endpoint != "https://overpass.private.coffee/api"
+            attempt = {"endpoint": endpoint, "rate_limit_status_polling": ox.settings.overpass_rate_limit}
             item["attempts"].append(attempt)
             start = time.monotonic()
             with Meter() as meter:
                 active_meter = meter
                 meter.phase = variant + ":cold"
                 try:
-                    signal.alarm(300)
+                    signal.alarm(180)
                     layers = fetch()
                     signal.alarm(0)
                     attempt["acquisition_seconds"] = round(time.monotonic() - start, 3)
@@ -304,6 +326,7 @@ def osm_benchmark(cfg, work, report, save):
         item["cache_json_bytes"] = sum(p.stat().st_size for p in folder.rglob("*.json"))
         save()
         print(json.dumps({"city": report["city"], **{k: item[k] for k in ("variant", "success", "total_encoded_body_bytes_including_failures")}}), flush=True)
+    _overpass._create_overpass_features_query = original_builder
 
 
 def main():
@@ -313,6 +336,8 @@ def main():
     parser.add_argument("--provider", choices=["osmnx", "baseline"], default="osmnx")
     parser.add_argument("--pbf", type=Path)
     parser.add_argument("--snapshot", default="live", help="live or an explicit UTC timestamp")
+    parser.add_argument("--variants", nargs="+", choices=["bbox_two_queries", "combined_one_query", "compact_combined_one_query"],
+                        default=["combined_one_query", "compact_combined_one_query"])
     parser.add_argument("--work", type=Path, required=True)
     args = parser.parse_args()
     SNAPSHOT = args.snapshot
@@ -333,7 +358,7 @@ def main():
         report["node_inputs"] = provenance
         save()
         if args.provider == "osmnx":
-            osm_benchmark(cfg, work, report, save)
+            osm_benchmark(cfg, work, report, save, args.variants)
         else:
             if pbf is None:
                 raise ValueError("A baseline requires --pbf")

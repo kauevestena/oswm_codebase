@@ -11,7 +11,7 @@ permissions:
   contents: read
 concurrency:
   group: oswm-source-benchmark-sandbox
-  cancel-in-progress: false
+  cancel-in-progress: true
 jobs:
   benchmark:
     if: github.repository == 'kauevestena/oswm_codebase' && github.ref == 'refs/heads/sandbox/metro-extract-curitiba-milan'
