@@ -1,0 +1,45 @@
+name: OSMnx source benchmark sandbox
+on:
+  push:
+    branches: [sandbox/metro-extract-curitiba-milan]
+    paths:
+      - sandbox/source_benchmark.py
+      - .github/workflows/source_benchmark_sandbox.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  benchmark:
+    if: github.repository == 'kauevestena/oswm_codebase' && github.ref == 'refs/heads/sandbox/metro-extract-curitiba-milan'
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        city: [curitiba, milan]
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      PYTHONUNBUFFERED: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - run: python -m pip install -r requirements.txt
+      - name: Cold and same-snapshot warm OSMnx downloads
+        run: |
+          python sandbox/source_benchmark.py --city '${{ matrix.city }}' \
+            --work "$RUNNER_TEMP/source-benchmark-${{ matrix.city }}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: osmnx-source-benchmark-${{ matrix.city }}-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/source-benchmark-${{ matrix.city }}/report.json
+            ${{ runner.temp }}/source-benchmark-${{ matrix.city }}/*/descriptors.json.gz
+          if-no-files-found: error
+      # Read-only experiment: no node writes, source-cache save, or publisher.
