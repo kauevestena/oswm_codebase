@@ -15,6 +15,7 @@ import subprocess
 import sys
 import time
 import traceback
+import zlib
 
 import requests
 
@@ -115,8 +116,8 @@ def descriptors(layers, cfg):
 class Meter:
     """Count encoded HTTP response bodies, including failed attempts/metadata.
 
-    urllib3's raw.tell() counts bytes before Content-Encoding decompression.
-    It excludes headers, TLS and transport framing. Decoded JSON is separate.
+    Explicit undecoded raw streams handle both length-delimited and chunked
+    responses. Headers/TLS/framing are excluded. Decoded JSON is separate.
     """
     def __init__(self):
         self.events = []
@@ -142,9 +143,38 @@ class Meter:
                      "url": request.url.split("?", 1)[0], "request_body_bytes": len(body)}
             meter.events.append(event)
             try:
+                # raw.tell() is zero for some urllib3 chunked-gzip responses.
+                # Read undecoded bytes explicitly before restoring Response's
+                # usual decoded .content behavior for OSMnx.
+                request.headers["Accept-Encoding"] = "gzip, deflate"
+                kwargs["stream"] = True
                 response = meter.original(session, request, **kwargs)
-                content = response.content
-                event.update({"status": response.status_code, "encoded_body_bytes": response.raw.tell(),
+                if getattr(response, "_oswm_source_counted", False):
+                    event.update({"redirect_reuse": True, "status": response.status_code,
+                                  "encoded_body_bytes": 0, "decoded_body_bytes": 0,
+                                  "seconds": round(time.monotonic() - start, 3)})
+                    return response  # destination was metered by nested send
+                event["status"] = response.status_code
+                event["encoded_body_bytes"] = 0
+                chunks = []
+                for chunk in response.raw.stream(1024**2, decode_content=False):
+                    event["encoded_body_bytes"] += len(chunk)
+                    chunks.append(chunk)
+                encoded = b"".join(chunks)
+                encoding = response.headers.get("Content-Encoding", "identity")
+                if encoding == "gzip":
+                    content = gzip.decompress(encoded)
+                elif encoding == "deflate":
+                    try: content = zlib.decompress(encoded)
+                    except zlib.error: content = zlib.decompress(encoded, -zlib.MAX_WBITS)
+                elif encoding in ("identity", ""):
+                    content = encoded
+                else:
+                    raise ValueError("Unsupported content encoding: " + encoding)
+                response._content = content
+                response._content_consumed = True
+                response._oswm_source_counted = True
+                event.update({"body_complete": True,
                               "decoded_body_bytes": len(content), "content_encoding": response.headers.get("Content-Encoding", "identity"),
                               "content_length_header": response.headers.get("Content-Length"),
                               "seconds": round(time.monotonic() - start, 3)})
@@ -156,7 +186,7 @@ class Meter:
                     if payload.get("remark"):
                         raise ValueError("Overpass remark (partial/error response): " + payload["remark"])
                     base = event["osm_base_timestamp"]
-                    if base and base < SNAPSHOT:
+                    if base and SNAPSHOT != "live" and base < SNAPSHOT:
                         raise ValueError("Overpass database watermark predates the requested snapshot")
                 return response
             except Exception as exc:
@@ -174,7 +204,7 @@ class Meter:
                 "interpreter_requests": sum("/interpreter" in e["url"] for e in self.events),
                 "encoded_response_body_bytes": sum(e.get("encoded_body_bytes", 0) for e in self.events),
                 "decoded_response_body_bytes": sum(e.get("decoded_body_bytes", 0) for e in self.events),
-                "byte_total_is_lower_bound": any("error" in e and "encoded_body_bytes" not in e for e in self.events),
+                "byte_total_is_lower_bound": any(e.get("redirect_reuse") or ("error" in e and not e.get("body_complete")) for e in self.events),
                 "events": self.events}
 
 
@@ -196,13 +226,15 @@ def osm_benchmark(cfg, work, report, save):
                    "variants": [], "measurement": "encoded HTTP response-body bytes, excluding headers/TLS; includes status/DNS/error bodies"})
     ox.settings.http_user_agent = AGENT
     ox.settings.http_referer = "https://github.com/kauevestena/oswm_codebase/pull/62"
-    ox.settings.requests_timeout = 120
-    ox.settings.overpass_settings = '[out:json][timeout:{timeout}]{maxsize}[date:"' + SNAPSHOT + '"]'
+    ox.settings.requests_timeout = 60
+    ox.settings.overpass_settings = '[out:json][timeout:{timeout}]{maxsize}'
+    if SNAPSHOT != "live":
+        ox.settings.overpass_settings += '[date:"' + SNAPSHOT + '"]'
     ox.settings.use_cache = True
     ox.settings.log_console = False
-    endpoints = ["https://overpass-api.de/api", "https://overpass.kumi.systems/api"]
+    endpoints = ["https://overpass.private.coffee/api", "https://overpass-api.de/api"]
     signal.signal(signal.SIGALRM, deadline)
-    for variant in ("current_two_queries", "combined_one_query"):
+    for variant in ("bbox_two_queries", "combined_one_query"):
         item = {"variant": variant, "attempts": []}
         report["variants"].append(item)
         folder = work / variant
@@ -216,7 +248,9 @@ def osm_benchmark(cfg, work, report, save):
                 roads = combined[combined["highway"].isin(ROAD_TYPES)].copy()
                 return partition(combined, roads, boundary, cfg)
             active_meter.phase = variant + ":pedestrian"
-            ped = ox.features_from_polygon(boundary, ped_tags)
+            # Retain the exact city predicate in partition(), while avoiding
+            # repeating thousands of boundary vertices in every tag clause.
+            ped = ox.features_from_polygon(bbox, ped_tags)
             active_meter.phase = variant + ":roads"
             roads = ox.features_from_polygon(bbox, {"highway": ROAD_TYPES})
             roads = roads[roads["highway"].isin(ROAD_TYPES)].copy()
@@ -230,7 +264,7 @@ def osm_benchmark(cfg, work, report, save):
                 active_meter = meter
                 meter.phase = variant + ":cold"
                 try:
-                    signal.alarm(480)
+                    signal.alarm(300)
                     layers = fetch()
                     signal.alarm(0)
                     attempt["acquisition_seconds"] = round(time.monotonic() - start, 3)
@@ -273,12 +307,15 @@ def osm_benchmark(cfg, work, report, save):
 
 
 def main():
+    global SNAPSHOT
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--city", choices=SITES, required=True)
     parser.add_argument("--provider", choices=["osmnx", "baseline"], default="osmnx")
     parser.add_argument("--pbf", type=Path)
+    parser.add_argument("--snapshot", default="live", help="live or an explicit UTC timestamp")
     parser.add_argument("--work", type=Path, required=True)
     args = parser.parse_args()
+    SNAPSHOT = args.snapshot
     work = args.work.resolve()
     if work.exists() and any(work.iterdir()):
         raise ValueError("Use a new empty sandbox")
@@ -287,6 +324,7 @@ def main():
     report = {"city": args.city, "provider": args.provider, "sandbox_only": True,
               "started_at": datetime.now(timezone.utc).isoformat(),
               "code_revision": subprocess.check_output(["git", "-C", CORE, "rev-parse", "HEAD"], text=True).strip()}
+    report["harness_sha256"] = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
     def save():
         (work / "report.json").write_text(json.dumps(report, indent=2) + "\n")
     save()
@@ -299,6 +337,14 @@ def main():
         else:
             if pbf is None:
                 raise ValueError("A baseline requires --pbf")
+            import osmium
+            with osmium.io.Reader(str(pbf)) as reader:
+                header = reader.header()
+                report["pbf_header"] = {k: header.get(k) for k in (
+                    "osmosis_replication_timestamp", "osmosis_replication_sequence_number", "osmosis_replication_base_url")}
+            report["snapshot"] = report["pbf_header"]["osmosis_replication_timestamp"]
+            if not report["snapshot"] or (SNAPSHOT != "live" and report["snapshot"] != SNAPSHOT):
+                raise ValueError("PBF header does not identify the requested source cutoff")
             from replication_pipeline import extract_city
             started = time.monotonic()
             maps, summaries = descriptors(extract_city(pbf, cfg), cfg)

@@ -4,10 +4,14 @@ on:
     branches: [sandbox/metro-extract-curitiba-milan]
     paths:
       - sandbox/source_benchmark.py
+      - sandbox/test_source_benchmark.py
       - .github/workflows/source_benchmark_sandbox.yml
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: oswm-source-benchmark-sandbox
+  cancel-in-progress: false
 jobs:
   benchmark:
     if: github.repository == 'kauevestena/oswm_codebase' && github.ref == 'refs/heads/sandbox/metro-extract-curitiba-milan'
@@ -30,9 +34,27 @@ jobs:
           cache: pip
           cache-dependency-path: requirements.txt
       - run: python -m pip install -r requirements.txt
+      - name: Verify byte counting and source provenance
+        run: python sandbox/test_source_benchmark.py
+      - name: Avoid overlapping the initial historical-query experiment
+        run: |
+          python - <<'PY'
+          import time, requests
+          url = 'https://api.github.com/repos/kauevestena/oswm_codebase/actions/runs/41252443369'
+          deadline = time.monotonic() + 900
+          while time.monotonic() < deadline:
+              r = requests.get(url, timeout=15, headers={'User-Agent': 'OSWM-source-benchmark-sandbox'})
+              r.raise_for_status()
+              if r.json()['status'] == 'completed':
+                  print('Initial historical-query experiment has finished; public queries may proceed.')
+                  break
+              time.sleep(30)
+          else:
+              raise RuntimeError('Earlier experiment still active; do not overlap public queries.')
+          PY
       - name: Cold and same-snapshot warm OSMnx downloads
         run: |
-          python sandbox/source_benchmark.py --city '${{ matrix.city }}' \
+          python sandbox/source_benchmark.py --city '${{ matrix.city }}' --snapshot live \
             --work "$RUNNER_TEMP/source-benchmark-${{ matrix.city }}"
       - uses: actions/upload-artifact@v4
         if: always()
