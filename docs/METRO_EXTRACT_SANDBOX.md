@@ -152,4 +152,41 @@ The [Milan continuation](https://github.com/kauevestena/oswm_codebase/actions/ru
 uses `2c3741ddb86599c4bbc79a653a830684dea614b6`. It retains any direct-source
 parser failures and explicitly labels a fresh buffered control when needed.
 Pushes on the experimental branch now repeat Milan only; manual inputs can
-select either or both cities. Final Milan results will be added when complete.
+select either or both cities. This continuation **completed successfully**.
+
+Both Milan advances, **4012 → 4013 → 4014**, matched the independently
+downloaded full regional snapshots at object level and matched their fresh
+metropolitan extractions exactly. All five OSWM raw layers matched the fresh
+metropolitan controls. The direct full-regional-source parser failed on relation
+1023743 at **both** target cutoffs; these are retained as failures, not counted
+as direct-regional raw-layer parity passes.
+
+Milan's final cache was **106,719,744 bytes**. The two regional diff/state
+downloads were **591,271** and **471,984 bytes**. Including the incoming cached
+PBF, normal source-download traffic would be **107,287,735** and **107,180,105
+bytes**, versus **594,313,166** and **594,359,737 bytes** for the corresponding
+full snapshots: approximately **82.0% less acquisition download traffic**.
+No local-guard fallback was triggered by either real Milan update.
+
+The final Milan control contained 37,384 kerbs, 21,806 sidewalks, 17,752
+crossings, 21,754 other footways, and 35,971 completeness roads. Between the two
+target cutoffs, other footways increased by six and completeness roads decreased
+by one; the comparison covered real changing city inputs. Exact per-layer
+hashes and both failed direct-regional control traces are in
+[Milan completed evidence](pilots/milan_metro_20261031.json).
+
+| City | Updated buffered PBF | Cache download + regional changes per observed daily step | Matching full regional PBF | Real replay result |
+| --- | --- | --- | --- | --- |
+| Curitiba | 20.18–20.19 MB | 20.45–20.69 MB | 428.90–429.01 MB | 2/2 object and direct-regional OSWM raw-layer comparisons matched |
+| Milan | 106.71–106.72 MB | 107.18–107.29 MB | 594.31–594.36 MB | 2/2 object and fresh-metropolitan OSWM raw-layer comparisons matched; direct-regional parser blocked |
+
+MB here means 1,000,000 bytes. The middle column is a **normal-run estimate
+derived from measured file sizes**, not a claim that this experiment downloaded
+only that amount: full snapshots were deliberately downloaded as independent
+controls. Cache upload and package/runtime/product transfers are excluded.
+
+The experiment confirms substantial source-size savings in this two-day replay
+window. It does **not** approve production cutover: the two synthetic silent
+omission cases still defeat the reference-only fallback, and Milan's direct
+regional feature parser remains blocked. No routing/webmap/hazard product
+generation or live-site deployment was tested in this metropolitan experiment.
