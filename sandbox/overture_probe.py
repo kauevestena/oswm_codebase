@@ -13,8 +13,11 @@ import gzip
 import hashlib
 import io
 import json
+import os
 from pathlib import Path
+import platform
 import re
+import subprocess
 import time
 import traceback
 
@@ -228,6 +231,10 @@ def main():
     bbox = boundary.bounds
     transport = Transport()
     report = {"sandbox_only": True, "city": args.city, "release": args.release,
+              "code_revision": subprocess.check_output(["git", "-C", str(Path(__file__).absolute().parent.parent), "rev-parse", "HEAD"], text=True).strip(),
+              "environment": {"python": platform.python_version(), "platform": platform.platform(),
+                              "runner_os": os.environ.get("RUNNER_OS"), "runner_arch": os.environ.get("RUNNER_ARCH"),
+                              "github_run_id": os.environ.get("GITHUB_RUN_ID")},
               "started_at": datetime.now(timezone.utc).isoformat(), "bbox": list(bbox),
               "reader": "instrumented HTTPS ranges; STAC file selection and row-group bbox pruning; all columns",
               "measurement": "encoded response bodies only; includes STAC and Parquet metadata/spillover; excludes HTTP/TLS headers",

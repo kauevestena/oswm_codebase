@@ -1,0 +1,59 @@
+name: Overture source benchmark sandbox
+on:
+  push:
+    branches: [sandbox/metro-extract-curitiba-milan]
+    paths:
+      - sandbox/overture_probe.py
+      - .github/workflows/overture_source_sandbox.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  benchmark:
+    if: github.repository == 'kauevestena/oswm_codebase' && github.ref == 'refs/heads/sandbox/metro-extract-curitiba-milan'
+    strategy:
+      fail-fast: false
+      matrix:
+        city: [curitiba, milan]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PYTHONUNBUFFERED: '1'
+      CITY: ${{ matrix.city }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - run: python -m pip install -r requirements.txt
+      - name: Prepare pinned read-only node inputs
+        run: |
+          python - <<'PY'
+          import json, os, sys
+          from pathlib import Path
+          sys.path.insert(0, 'sandbox')
+          from source_benchmark import prepare_node
+          root = Path(os.environ['RUNNER_TEMP']) / ('overture-node-' + os.environ['CITY'])
+          _, provenance = prepare_node(os.environ['CITY'], root)
+          (root / 'inputs.json').write_text(json.dumps(provenance, indent=2))
+          PY
+      - name: Measure Overture cloud reads on the same runner class as OSMnx
+        run: |
+          node="$RUNNER_TEMP/overture-node-$CITY/node"
+          python sandbox/overture_probe.py --city "$CITY" --release 2026-10-21.0 \
+            --boundary "$node/data/boundaries/polygon.geojson" --config "$node/config.py" \
+            --work "$RUNNER_TEMP/overture-source-$CITY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: overture-source-benchmark-${{ matrix.city }}-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/overture-source-${{ matrix.city }}/report.json
+            ${{ runner.temp }}/overture-source-${{ matrix.city }}/candidate-osm-ids.json.gz
+            ${{ runner.temp }}/overture-node-${{ matrix.city }}/inputs.json
+          if-no-files-found: error
+      # All outputs are disposable artifacts; no source-cache or site publishing.
