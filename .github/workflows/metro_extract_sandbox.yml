@@ -7,6 +7,11 @@ on:
       - sandbox/metro_extract_probe.py
       - .github/workflows/metro_extract_sandbox.yml
   workflow_dispatch:
+    inputs:
+      cities:
+        description: 'JSON city list: curitiba and/or milan'
+        default: '["curitiba", "milan"]'
+        type: string
 
 permissions:
   contents: read
@@ -17,7 +22,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        city: [curitiba, milan]
+        # Curitiba passed the initial two-city run. Pushes continue Milan only;
+        # a manual dispatch can explicitly repeat either or both sandboxes.
+        city: ${{ fromJSON(inputs.cities || '["milan"]') }}
     runs-on: ubuntu-latest
     timeout-minutes: 120
     env:
