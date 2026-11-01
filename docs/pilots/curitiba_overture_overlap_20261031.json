@@ -1,0 +1,98 @@
+{
+  "crossings": {
+    "osm_reference": 2448,
+    "overture_provenance_ids": 2841,
+    "mapped_overlap": 2445,
+    "mapped_overlap_pct": 99.88,
+    "any_queried_theme_overlap": 2448,
+    "missing_sample": [
+      "way:1025376342",
+      "way:1025376347",
+      "way:686240784"
+    ]
+  },
+  "kerbs": {
+    "osm_reference": 3081,
+    "overture_provenance_ids": 3011,
+    "mapped_overlap": 3011,
+    "mapped_overlap_pct": 97.73,
+    "any_queried_theme_overlap": 3035,
+    "missing_sample": [
+      "node:11141943408",
+      "node:11142355479",
+      "node:7593965421",
+      "node:8813243753",
+      "node:8822681684",
+      "node:8822683925",
+      "node:8822688643",
+      "node:8822688645",
+      "node:8822688726",
+      "node:8822688866",
+      "node:8822688868",
+      "node:8822688869"
+    ]
+  },
+  "other_footways": {
+    "osm_reference": 7047,
+    "overture_provenance_ids": 5567,
+    "mapped_overlap": 5416,
+    "mapped_overlap_pct": 76.86,
+    "any_queried_theme_overlap": 6977,
+    "missing_sample": [
+      "node:11498519523",
+      "node:11515439360",
+      "node:11515439362",
+      "node:14287723454",
+      "node:3612806758",
+      "node:6175907181",
+      "node:6432178757",
+      "node:7115782186",
+      "relation:14750142",
+      "relation:15097192",
+      "relation:16177013",
+      "relation:16338803"
+    ]
+  },
+  "roads_for_completeness": {
+    "osm_reference": 29849,
+    "overture_provenance_ids": 29780,
+    "mapped_overlap": 29645,
+    "mapped_overlap_pct": 99.32,
+    "any_queried_theme_overlap": 29648,
+    "missing_sample": [
+      "way:1067012621",
+      "way:1564832274",
+      "way:1564832275",
+      "way:1564832276",
+      "way:1564832277",
+      "way:1564832278",
+      "way:1564832279",
+      "way:1565584200",
+      "way:1565584201",
+      "way:1565678403",
+      "way:1565678404",
+      "way:1565684417"
+    ]
+  },
+  "sidewalks": {
+    "osm_reference": 8157,
+    "overture_provenance_ids": 8405,
+    "mapped_overlap": 8130,
+    "mapped_overlap_pct": 99.67,
+    "any_queried_theme_overlap": 8148,
+    "missing_sample": [
+      "way:1019342758",
+      "way:1134128048",
+      "way:1163977693",
+      "way:1335732322",
+      "way:1409280566",
+      "way:1453221549",
+      "way:1453221551",
+      "way:1453221552",
+      "way:1453221555",
+      "way:1453221556",
+      "way:1453221560",
+      "way:1508008288"
+    ]
+  }
+}

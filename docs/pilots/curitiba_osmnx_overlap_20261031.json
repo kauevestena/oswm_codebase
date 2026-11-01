@@ -1,0 +1,79 @@
+{
+  "reference_snapshot": "2026-10-29T21:21:26Z",
+  "query_snapshot": "live; see server watermark in source report",
+  "strict_same_snapshot_parity": false,
+  "all_three_live_variant_descriptors_identical": true,
+  "layers": {
+    "crossings": {
+      "reference_count": 2448,
+      "query_count": 2447,
+      "shared_ids": 2447,
+      "reference_ids_absent": [
+        "way:659241090"
+      ],
+      "new_ids": [],
+      "same_geometry": 2446,
+      "changed_geometry": 1,
+      "same_retained_tags": 2447,
+      "changed_retained_tags": 0
+    },
+    "kerbs": {
+      "reference_count": 3081,
+      "query_count": 3081,
+      "shared_ids": 3081,
+      "reference_ids_absent": [],
+      "new_ids": [],
+      "same_geometry": 3080,
+      "changed_geometry": 1,
+      "same_retained_tags": 3081,
+      "changed_retained_tags": 0
+    },
+    "other_footways": {
+      "reference_count": 7047,
+      "query_count": 7048,
+      "shared_ids": 7047,
+      "reference_ids_absent": [],
+      "new_ids": [
+        "way:1171447954"
+      ],
+      "same_geometry": 7047,
+      "changed_geometry": 0,
+      "same_retained_tags": 7047,
+      "changed_retained_tags": 0
+    },
+    "roads_for_completeness": {
+      "reference_count": 29849,
+      "query_count": 29855,
+      "shared_ids": 29847,
+      "reference_ids_absent": [
+        "way:125750038",
+        "way:940359766"
+      ],
+      "new_ids": [
+        "way:1573504463",
+        "way:1573842624",
+        "way:1573842635",
+        "way:1573842636",
+        "way:1573842637",
+        "way:1573842638",
+        "way:1573842639",
+        "way:1573842641"
+      ],
+      "same_geometry": 29804,
+      "changed_geometry": 43,
+      "same_retained_tags": 29825,
+      "changed_retained_tags": 22
+    },
+    "sidewalks": {
+      "reference_count": 8157,
+      "query_count": 8157,
+      "shared_ids": 8157,
+      "reference_ids_absent": [],
+      "new_ids": [],
+      "same_geometry": 8152,
+      "changed_geometry": 5,
+      "same_retained_tags": 8157,
+      "changed_retained_tags": 0
+    }
+  }
+}

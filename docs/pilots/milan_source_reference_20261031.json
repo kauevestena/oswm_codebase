@@ -1,0 +1,180 @@
+{
+  "city": "milan",
+  "provider": "baseline",
+  "sandbox_only": true,
+  "started_at": "2026-10-31T23:30:00.522047+00:00",
+  "code_revision": "4e0280f221ae0b38801b945d9335df5d82bd490b",
+  "node_inputs": {
+    "repository": "opensidewalkmap/milan",
+    "revision": "78b5e6af60a031ccd232e8b35eccd23b521e8fd1",
+    "inputs": [
+      {
+        "url": "https://raw.githubusercontent.com/opensidewalkmap/milan/78b5e6af60a031ccd232e8b35eccd23b521e8fd1/config.py",
+        "bytes": 7205,
+        "sha256": "b1f8722b038805d474b67ec6511d39d01a3a00cc99408863e51c4967e5d0dfd8"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/opensidewalkmap/milan/78b5e6af60a031ccd232e8b35eccd23b521e8fd1/data/boundaries/polygon.geojson",
+        "bytes": 170364,
+        "sha256": "6f4675458ad21dce0feb88e32ffc1d50e8209473b1b3a208d1eb76adefda9b64"
+      }
+    ]
+  },
+  "layers": {
+    "kerbs": {
+      "count": 37384,
+      "ids_sha256": "039262b08dacd5dce5ce6f1fd5f1e21a5a415df1c157c7887044ebd91b006ef6",
+      "geometry_and_tags_sha256": "8335c215db20a3763eb56cd3468c74440e1e191f8a2802dded716b13ee25d605",
+      "field_coverage": {
+        "barrier": 37202,
+        "kerb": 37219,
+        "tactile_paving": 36966,
+        "highway": 186,
+        "crossing": 161,
+        "mapillary": 33,
+        "wheelchair": 520,
+        "crossing:signals": 36,
+        "kerb:height": 596,
+        "smoothness": 960,
+        "surface": 984,
+        "bicycle": 2,
+        "lit": 10,
+        "width": 68,
+        "incline": 2,
+        "footway": 9,
+        "foot": 2
+      }
+    },
+    "sidewalks": {
+      "count": 21806,
+      "ids_sha256": "1cf4223aa727ba0452001a88e2ce54f19dd72e5c1af89e8cbb4868bac618fb25",
+      "geometry_and_tags_sha256": "e4568b185dfa26b6bfa8131e586c06a56a19338243887fd31012c938cc38ee54",
+      "field_coverage": {
+        "footway": 21806,
+        "surface": 16286,
+        "highway": 21800,
+        "lit": 6699,
+        "bicycle": 279,
+        "foot": 170,
+        "motor_vehicle": 15,
+        "smoothness": 2496,
+        "width": 397,
+        "wheelchair": 344,
+        "tactile_paving": 3329,
+        "sidewalk": 2,
+        "access": 13,
+        "mapillary": 132,
+        "incline": 33,
+        "crossing": 9,
+        "crossing:signals": 12,
+        "barrier": 1
+      }
+    },
+    "crossings": {
+      "count": 17752,
+      "ids_sha256": "970c072bfbc1d7727569df3ec85ae7d35660cf3167c0436198281b44b80e209f",
+      "geometry_and_tags_sha256": "0d5734981d519b318c762173851782e071fb16f9afb081f7b3dbc9a0a16d20c6",
+      "field_coverage": {
+        "crossing": 17698,
+        "footway": 17752,
+        "highway": 17749,
+        "bicycle": 276,
+        "foot": 142,
+        "surface": 15396,
+        "lit": 4821,
+        "access": 7,
+        "motor_vehicle": 14,
+        "smoothness": 1859,
+        "crossing:signals": 4822,
+        "incline": 7,
+        "mapillary": 36,
+        "wheelchair": 192,
+        "tactile_paving": 374,
+        "width": 17,
+        "kerb:height": 1
+      }
+    },
+    "other_footways": {
+      "count": 21748,
+      "ids_sha256": "325f85dece2abbe3c5156840ffbf8d2c06d0a1155c245be5a8fd8af5249a9133",
+      "geometry_and_tags_sha256": "ae448f4050f5331cbfd4bf17fdc2c90db01242f8b9870a91208f355186bddce3",
+      "field_coverage": {
+        "barrier": 531,
+        "bicycle": 3473,
+        "foot": 3227,
+        "motor_vehicle": 886,
+        "access": 605,
+        "wheelchair": 438,
+        "crossing": 136,
+        "crossing:signals": 38,
+        "highway": 21189,
+        "mapillary": 44,
+        "lit": 5860,
+        "surface": 11133,
+        "smoothness": 1198,
+        "sidewalk": 384,
+        "sidewalk:both": 151,
+        "incline": 2049,
+        "width": 290,
+        "footway": 2281,
+        "step_count": 800,
+        "tactile_paving": 836
+      }
+    },
+    "roads_for_completeness": {
+      "count": 35972,
+      "ids_sha256": "6a95d0ba06ac7230e00a8064e44b4d7bbad8068eed46eaf1da4772c85836385e",
+      "geometry_and_tags_sha256": "c4b0a546276163d5ccfca63e9d39ed4c6974925c863feea70746e8df528f72d9",
+      "field_coverage": {
+        "highway": 35972,
+        "lit": 17017,
+        "surface": 29616,
+        "sidewalk:both": 3803,
+        "incline": 167,
+        "sidewalk": 5034,
+        "smoothness": 1932,
+        "width": 387,
+        "foot": 1603,
+        "bicycle": 1551,
+        "access": 723,
+        "motor_vehicle": 208,
+        "wheelchair": 9,
+        "mapillary": 19
+      }
+    }
+  },
+  "seconds": 119.827,
+  "pbf_bytes": 106708199,
+  "pbf_sha256": "608b807de36ea69752add8787404c3cc055d33a3d95ae9838dbed810fdf1c93b",
+  "finished_at": "2026-10-31T23:32:13.982485+00:00",
+  "reference_snapshot": "2026-10-29T21:21:26Z",
+  "harness_commit": "c87e6fb73269541c7ecb18e390bca62ec3a00bb4",
+  "reference_scope": "fresh 25km buffered extract from the independently verified regional source",
+  "source_sha256_verified_against": "docs/pilots/milan_metro_20261031.json",
+  "independent_full_source": {
+    "url": "https://download.geofabrik.de/europe/italy/nord-ovest-261029.osm.pbf",
+    "bytes": 594313166,
+    "sha256": "6074fc11664f90745a018eac3dee597ccb400c9202847a642022c36f83c6c10a",
+    "seconds": 45.88,
+    "sequence": 4013,
+    "timestamp": "2026-10-29T21:21:26+00:00"
+  },
+  "buffered_reference_provenance": {
+    "source": "/workspace/scratch/49729b32f89d/metro-real-replay/milan/regional-261029.osm.pbf",
+    "source_bytes": 594313166,
+    "source_sha256": "6074fc11664f90745a018eac3dee597ccb400c9202847a642022c36f83c6c10a",
+    "metro_bytes": 106708199,
+    "metro_sha256": "608b807de36ea69752add8787404c3cc055d33a3d95ae9838dbed810fdf1c93b",
+    "header": {
+      "osmosis_replication_timestamp": "2026-10-29T21:21:26Z",
+      "osmosis_replication_sequence_number": "4013",
+      "osmosis_replication_base_url": "https://download.geofabrik.de/europe/italy/nord-ovest-updates"
+    },
+    "bbox": [
+      8.720697518769935,
+      45.16216030625225,
+      9.598299481230065,
+      45.76042599374775
+    ]
+  }
+}

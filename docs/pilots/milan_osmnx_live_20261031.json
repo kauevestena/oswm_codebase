@@ -1,0 +1,411 @@
+{
+  "workflow_run": "https://github.com/kauevestena/oswm_codebase/actions/runs/41254128986",
+  "job_id": 124693627833,
+  "job_conclusion": "success",
+  "city": "milan",
+  "provider": "osmnx",
+  "sandbox_only": true,
+  "started_at": "2026-10-31T23:54:34.517464+00:00",
+  "code_revision": "cf0e3a4492d845541adb969ba7b210f625921cd5",
+  "harness_sha256": "707a7f4ddfeda5ea507ecda60b797dfec1e78da0cb54ebb811cbcd94832f78e1",
+  "node_inputs": {
+    "repository": "opensidewalkmap/milan",
+    "revision": "78b5e6af60a031ccd232e8b35eccd23b521e8fd1",
+    "inputs": [
+      {
+        "url": "https://raw.githubusercontent.com/opensidewalkmap/milan/78b5e6af60a031ccd232e8b35eccd23b521e8fd1/config.py",
+        "bytes": 7205,
+        "sha256": "b1f8722b038805d474b67ec6511d39d01a3a00cc99408863e51c4967e5d0dfd8"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/opensidewalkmap/milan/78b5e6af60a031ccd232e8b35eccd23b521e8fd1/data/boundaries/polygon.geojson",
+        "bytes": 170364,
+        "sha256": "6f4675458ad21dce0feb88e32ffc1d50e8209473b1b3a208d1eb76adefda9b64"
+      }
+    ]
+  },
+  "osmnx_version": "2.1.1",
+  "boundary_bounds": [
+    9.0408867,
+    45.3867381,
+    9.2781103,
+    45.5358482
+  ],
+  "snapshot": "live",
+  "pedestrian_tags": {
+    "kerb": [
+      "lowered",
+      "raised",
+      "flush",
+      "rolled",
+      "no",
+      "yes"
+    ],
+    "barrier": [
+      "kerb"
+    ],
+    "footway": [
+      "sidewalk",
+      "crossing",
+      "alley",
+      "path",
+      "yes"
+    ],
+    "highway": [
+      "footway",
+      "steps",
+      "living_street",
+      "pedestrian",
+      "track",
+      "path"
+    ],
+    "foot": [
+      "yes",
+      "designated",
+      "permissive",
+      "destination"
+    ],
+    "sidewalk": [
+      "no"
+    ],
+    "sidewalk:both": [
+      "no"
+    ]
+  },
+  "combined_tags": {
+    "kerb": [
+      "lowered",
+      "raised",
+      "flush",
+      "rolled",
+      "no",
+      "yes"
+    ],
+    "barrier": [
+      "kerb"
+    ],
+    "footway": [
+      "sidewalk",
+      "crossing",
+      "alley",
+      "path",
+      "yes"
+    ],
+    "highway": [
+      "footway",
+      "steps",
+      "living_street",
+      "pedestrian",
+      "track",
+      "path",
+      "motorway",
+      "trunk",
+      "primary",
+      "secondary",
+      "tertiary",
+      "residential",
+      "unclassified",
+      "motorway_link",
+      "trunk_link",
+      "primary_link",
+      "secondary_link",
+      "tertiary_link"
+    ],
+    "foot": [
+      "yes",
+      "designated",
+      "permissive",
+      "destination"
+    ],
+    "sidewalk": [
+      "no"
+    ],
+    "sidewalk:both": [
+      "no"
+    ]
+  },
+  "variants": [
+    {
+      "variant": "combined_one_query",
+      "attempts": [
+        {
+          "endpoint": "https://overpass.private.coffee/api",
+          "rate_limit_status_polling": false,
+          "success": false,
+          "error": "ReadTimeout: HTTPSConnectionPool(host='overpass.private.coffee', port=443): Read timed out. (read timeout=45)",
+          "acquisition_seconds": 46.24,
+          "http": {
+            "http_requests": 1,
+            "interpreter_requests": 1,
+            "encoded_response_body_bytes": 0,
+            "decoded_response_body_bytes": 0,
+            "byte_total_is_lower_bound": true,
+            "events": [
+              {
+                "phase": "combined_one_query:combined",
+                "method": "POST",
+                "url": "https://overpass.private.coffee/api/interpreter",
+                "request_body_bytes": 20013,
+                "error": "ReadTimeout: HTTPSConnectionPool(host='overpass.private.coffee', port=443): Read timed out. (read timeout=45)",
+                "seconds": 45.334
+              }
+            ]
+          }
+        },
+        {
+          "endpoint": "https://overpass-api.de/api",
+          "rate_limit_status_polling": true,
+          "success": false,
+          "error": "ReadTimeout: HTTPSConnectionPool(host='overpass-api.de', port=443): Read timed out. (read timeout=45)",
+          "acquisition_seconds": 67.328,
+          "http": {
+            "http_requests": 2,
+            "interpreter_requests": 1,
+            "encoded_response_body_bytes": 179,
+            "decoded_response_body_bytes": 208,
+            "byte_total_is_lower_bound": true,
+            "events": [
+              {
+                "phase": "combined_one_query:combined",
+                "method": "GET",
+                "url": "https://overpass-api.de/api/status",
+                "request_body_bytes": 0,
+                "status": 200,
+                "encoded_body_bytes": 179,
+                "body_complete": true,
+                "decoded_body_bytes": 208,
+                "content_encoding": "gzip",
+                "content_length_header": null,
+                "seconds": 21.638
+              },
+              {
+                "phase": "combined_one_query:combined",
+                "method": "POST",
+                "url": "https://overpass-api.de/api/interpreter",
+                "request_body_bytes": 20013,
+                "error": "ReadTimeout: HTTPSConnectionPool(host='overpass-api.de', port=443): Read timed out. (read timeout=45)",
+                "seconds": 45.331
+              }
+            ]
+          }
+        }
+      ],
+      "success": false,
+      "total_encoded_body_bytes_including_failures": 179,
+      "cache_json_bytes": 0
+    },
+    {
+      "variant": "compact_combined_one_query",
+      "attempts": [
+        {
+          "endpoint": "https://overpass.private.coffee/api",
+          "rate_limit_status_polling": false,
+          "success": false,
+          "error": "ReadTimeout: HTTPSConnectionPool(host='overpass.private.coffee', port=443): Read timed out. (read timeout=45)",
+          "acquisition_seconds": 45.375,
+          "http": {
+            "http_requests": 1,
+            "interpreter_requests": 1,
+            "encoded_response_body_bytes": 0,
+            "decoded_response_body_bytes": 0,
+            "byte_total_is_lower_bound": true,
+            "events": [
+              {
+                "phase": "compact_combined_one_query:combined",
+                "method": "POST",
+                "url": "https://overpass.private.coffee/api/interpreter",
+                "request_body_bytes": 1531,
+                "error": "ReadTimeout: HTTPSConnectionPool(host='overpass.private.coffee', port=443): Read timed out. (read timeout=45)",
+                "seconds": 45.304
+              }
+            ]
+          }
+        },
+        {
+          "endpoint": "https://overpass-api.de/api",
+          "rate_limit_status_polling": true,
+          "acquisition_seconds": 78.589,
+          "success": true,
+          "http": {
+            "http_requests": 2,
+            "interpreter_requests": 1,
+            "encoded_response_body_bytes": 13550359,
+            "decoded_response_body_bytes": 80946703,
+            "byte_total_is_lower_bound": false,
+            "events": [
+              {
+                "phase": "compact_combined_one_query:combined",
+                "method": "GET",
+                "url": "https://overpass-api.de/api/status",
+                "request_body_bytes": 0,
+                "status": 200,
+                "encoded_body_bytes": 181,
+                "body_complete": true,
+                "decoded_body_bytes": 211,
+                "content_encoding": "gzip",
+                "content_length_header": null,
+                "seconds": 14.004
+              },
+              {
+                "phase": "compact_combined_one_query:combined",
+                "method": "POST",
+                "url": "https://overpass-api.de/api/interpreter",
+                "request_body_bytes": 1531,
+                "status": 200,
+                "encoded_body_bytes": 13550178,
+                "body_complete": true,
+                "decoded_body_bytes": 80946492,
+                "content_encoding": "gzip",
+                "content_length_header": null,
+                "seconds": 36.555,
+                "osm_base_timestamp": "2026-10-31T23:55:52Z",
+                "osm_elements": 556966
+              }
+            ]
+          }
+        }
+      ],
+      "layers": {
+        "kerbs": {
+          "count": 37382,
+          "ids_sha256": "ca064d8fe24cffc0a985864a17667d80db70b68a6b0809ea71c0fce1a6bbcdcd",
+          "geometry_and_tags_sha256": "0d124754eac3e34578e1e8e6888df5dd33ff3dc8d8b94a742acbf0064f83696c",
+          "field_coverage": {
+            "barrier": 37200,
+            "kerb": 37217,
+            "tactile_paving": 36964,
+            "highway": 186,
+            "crossing": 161,
+            "mapillary": 33,
+            "wheelchair": 520,
+            "crossing:signals": 36,
+            "kerb:height": 596,
+            "smoothness": 960,
+            "surface": 984,
+            "bicycle": 2,
+            "lit": 10,
+            "width": 68,
+            "incline": 2,
+            "footway": 9,
+            "foot": 2
+          }
+        },
+        "sidewalks": {
+          "count": 21806,
+          "ids_sha256": "1cf4223aa727ba0452001a88e2ce54f19dd72e5c1af89e8cbb4868bac618fb25",
+          "geometry_and_tags_sha256": "117ee1f29c22d9e26dc74d209604680564ae90bb35eaeeacc8c9a88117ea04ad",
+          "field_coverage": {
+            "footway": 21806,
+            "surface": 16288,
+            "highway": 21800,
+            "lit": 6699,
+            "bicycle": 279,
+            "foot": 170,
+            "motor_vehicle": 15,
+            "smoothness": 2496,
+            "width": 397,
+            "wheelchair": 344,
+            "tactile_paving": 3329,
+            "sidewalk": 2,
+            "access": 13,
+            "mapillary": 132,
+            "incline": 33,
+            "crossing": 9,
+            "crossing:signals": 12,
+            "barrier": 1
+          }
+        },
+        "crossings": {
+          "count": 17753,
+          "ids_sha256": "181ecb0503e6880d89928b58c26690372bb0f407c269e6ee81fcfc51da9c75b9",
+          "geometry_and_tags_sha256": "e97ce1494c0704aeb8a8e0ad13d6747cebb41956306e901e6c70e949884cd0e9",
+          "field_coverage": {
+            "crossing": 17697,
+            "footway": 17753,
+            "highway": 17750,
+            "bicycle": 276,
+            "foot": 142,
+            "surface": 15395,
+            "lit": 4821,
+            "access": 7,
+            "motor_vehicle": 14,
+            "smoothness": 1859,
+            "crossing:signals": 4822,
+            "incline": 7,
+            "mapillary": 36,
+            "wheelchair": 192,
+            "tactile_paving": 374,
+            "width": 17,
+            "kerb:height": 1
+          }
+        },
+        "other_footways": {
+          "count": 21758,
+          "ids_sha256": "6786166e217f322d744dad5b52d08e580ae0fe296963cc5250632f5ba180f078",
+          "geometry_and_tags_sha256": "3802968b588733a22602b5b716d40ac985dc6df66be14d4df117281bdf67f8ef",
+          "field_coverage": {
+            "barrier": 531,
+            "bicycle": 3473,
+            "foot": 3227,
+            "motor_vehicle": 886,
+            "access": 605,
+            "wheelchair": 438,
+            "crossing": 136,
+            "crossing:signals": 38,
+            "highway": 21199,
+            "mapillary": 44,
+            "lit": 5862,
+            "surface": 11137,
+            "smoothness": 1199,
+            "sidewalk": 384,
+            "sidewalk:both": 153,
+            "incline": 2049,
+            "width": 291,
+            "footway": 2281,
+            "step_count": 800,
+            "tactile_paving": 836
+          }
+        },
+        "roads_for_completeness": {
+          "count": 35976,
+          "ids_sha256": "c5dd5e08cb55c9d34544f0fde2e6b02ea736e3f617497bbf6034939df2140fdc",
+          "geometry_and_tags_sha256": "b3cd706202d56bab2e879e6b8d0d37450bf6a5c6ad6e392aa4ee98d84beb2d3c",
+          "field_coverage": {
+            "highway": 35976,
+            "lit": 17017,
+            "surface": 29652,
+            "sidewalk:both": 3815,
+            "incline": 167,
+            "sidewalk": 5035,
+            "smoothness": 1935,
+            "width": 387,
+            "foot": 1603,
+            "bicycle": 1551,
+            "access": 723,
+            "motor_vehicle": 208,
+            "wheelchair": 9,
+            "mapillary": 19
+          }
+        }
+      },
+      "descriptor_file": "compact_combined_one_query/descriptors.json.gz",
+      "warm_same_snapshot": {
+        "seconds": 73.77,
+        "layers_equal": true,
+        "http": {
+          "http_requests": 0,
+          "interpreter_requests": 0,
+          "encoded_response_body_bytes": 0,
+          "decoded_response_body_bytes": 0,
+          "byte_total_is_lower_bound": false,
+          "events": []
+        }
+      },
+      "success": true,
+      "total_encoded_body_bytes_including_failures": 13550359,
+      "cache_json_bytes": 67838833
+    }
+  ],
+  "measurement": "encoded HTTP response-body bytes, excluding headers/TLS; includes status/DNS/error bodies",
+  "finished_at": "2026-11-01T00:00:37.371046+00:00"
+}
