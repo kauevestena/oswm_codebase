@@ -1,5 +1,9 @@
 # Curitiba and Milan acquisition benchmark
 
+The follow-up [change-query investigation](OVERPASS_CHANGE_QUERY_SANDBOX.md)
+tests daily `adiff` responses, restored source caches and the full-acquisition
+fallback, and records the resulting migration choice.
+
 This is a read-only sandbox investigation on
 `sandbox/metro-extract-curitiba-milan`, not a production source change. Neither
 node branch, production cache, generated site, nor schedule is modified.

@@ -1,0 +1,118 @@
+{
+  "workflow_run_url": "https://github.com/kauevestena/oswm_codebase/actions/runs/41344713249",
+  "city": "milan",
+  "sandbox_only": true,
+  "started_at": "2026-11-01T20:08:19.755036+00:00",
+  "code_revision": "1cd47b22e324829987c2e17c41601dcbb3fab52e",
+  "seed_workflow_run": 41343838674,
+  "publication": "none; persisted source graph remains a disposable workflow artifact",
+  "node_inputs": {
+    "repository": "opensidewalkmap/milan",
+    "revision": "78b5e6af60a031ccd232e8b35eccd23b521e8fd1",
+    "inputs": [
+      {
+        "url": "https://raw.githubusercontent.com/opensidewalkmap/milan/78b5e6af60a031ccd232e8b35eccd23b521e8fd1/config.py",
+        "bytes": 7205,
+        "sha256": "b1f8722b038805d474b67ec6511d39d01a3a00cc99408863e51c4967e5d0dfd8"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/opensidewalkmap/milan/78b5e6af60a031ccd232e8b35eccd23b521e8fd1/data/boundaries/polygon.geojson",
+        "bytes": 170364,
+        "sha256": "6f4675458ad21dce0feb88e32ffc1d50e8209473b1b3a208d1eb76adefda9b64"
+      }
+    ]
+  },
+  "query_id": "6ff71b1ffdc8a2323595b885f17a88531d5427f5ad043a51e2ba39cae0ac2221",
+  "start": "2026-11-01T20:00:19Z",
+  "end": "2026-11-01T20:00:19Z",
+  "seed": {
+    "file": "source-a0151fc8c120cec225877d17c7cfc918b9a5554021ee5fdeb56eca16cdf29ea1.json.gz",
+    "sha256": "a0151fc8c120cec225877d17c7cfc918b9a5554021ee5fdeb56eca16cdf29ea1",
+    "cutoff": "2026-11-01T20:00:19Z",
+    "query_id": "6ff71b1ffdc8a2323595b885f17a88531d5427f5ad043a51e2ba39cae0ac2221",
+    "compressed_bytes": 11752470,
+    "objects": 556379
+  },
+  "scope": "tagged nodes/ways/area relations in city bbox; transitive reference closure",
+  "requests": [
+    {
+      "phase": "full:live",
+      "endpoint": "https://overpass-api.de/api",
+      "query_sha256": "f7e1a3dd1ff42994af037fccc09277149f5598a19b30ad15aacbf02ac81ad6cb",
+      "target": "2026-11-01T20:00:19Z",
+      "status_warning": "ReadTimeout: HTTPSConnectionPool(host='overpass-api.de', port=443): Read timed out. (read timeout=15)",
+      "http": {
+        "http_requests": 2,
+        "interpreter_requests": 1,
+        "encoded_response_body_bytes": 534,
+        "decoded_response_body_bytes": 534,
+        "byte_total_is_lower_bound": true,
+        "events": [
+          {
+            "phase": "full:live",
+            "method": "GET",
+            "url": "https://overpass-api.de/api/status",
+            "request_body_bytes": 0,
+            "error": "ReadTimeout: HTTPSConnectionPool(host='overpass-api.de', port=443): Read timed out. (read timeout=15)",
+            "seconds": 15.452
+          },
+          {
+            "phase": "full:live",
+            "method": "POST",
+            "url": "https://overpass-api.de/api/interpreter",
+            "request_body_bytes": 3635,
+            "status": 502,
+            "encoded_body_bytes": 534,
+            "body_complete": true,
+            "decoded_body_bytes": 534,
+            "content_encoding": "identity",
+            "content_length_header": "534",
+            "seconds": 0.366,
+            "error": "HTTPError: 502 Server Error: Bad Gateway for url: https://overpass-api.de/api/interpreter"
+          }
+        ]
+      },
+      "success": false,
+      "error": "HTTPError: 502 Server Error: Bad Gateway for url: https://overpass-api.de/api/interpreter",
+      "seconds": 27.451
+    },
+    {
+      "phase": "full:live",
+      "endpoint": "https://overpass.private.coffee/api",
+      "query_sha256": "f7e1a3dd1ff42994af037fccc09277149f5598a19b30ad15aacbf02ac81ad6cb",
+      "target": "2026-11-01T20:00:19Z",
+      "status_warning": "ReadTimeout: HTTPSConnectionPool(host='overpass.private.coffee', port=443): Read timed out. (read timeout=15)",
+      "http": {
+        "http_requests": 2,
+        "interpreter_requests": 1,
+        "encoded_response_body_bytes": 0,
+        "decoded_response_body_bytes": 0,
+        "byte_total_is_lower_bound": true,
+        "events": [
+          {
+            "phase": "full:live",
+            "method": "GET",
+            "url": "https://overpass.private.coffee/api/status",
+            "request_body_bytes": 0,
+            "error": "ReadTimeout: HTTPSConnectionPool(host='overpass.private.coffee', port=443): Read timed out. (read timeout=15)",
+            "seconds": 15.84
+          },
+          {
+            "phase": "full:live",
+            "method": "POST",
+            "url": "https://overpass.private.coffee/api/interpreter",
+            "request_body_bytes": 3635,
+            "error": "ReadTimeout: HTTPSConnectionPool(host='overpass.private.coffee', port=443): Read timed out. (read timeout=65)",
+            "seconds": 65.283
+          }
+        ]
+      },
+      "success": false,
+      "error": "ReadTimeout: HTTPSConnectionPool(host='overpass.private.coffee', port=443): Read timed out. (read timeout=65)",
+      "seconds": 91.125
+    }
+  ],
+  "fatal_error": "Traceback (most recent call last):\n  File \"/opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages/urllib3/connectionpool.py\", line 534, in _make_request\n    response = conn.getresponse()\n               ^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages/urllib3/connection.py\", line 571, in getresponse\n    httplib_response = super().getresponse()\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/http/client.py\", line 1478, in getresponse\n    response.begin()\n  File \"/opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/http/client.py\", line 343, in begin\n    version, status, reason = self._read_status()\n                              ^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/http/client.py\", line 304, in _read_status\n    line = str(self.fp.readline(_MAXLINE + 1), \"iso-8859-1\")\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/socket.py\", line 720, in readinto\n    return self._sock.recv_into(b)\n           ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/ssl.py\", line 1264, in recv_into\n    return self.read(nbytes, buffer)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/ssl.py\", line 1116, in read\n    return self._sslobj.read(len, buffer)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTimeoutError: The read operation timed out\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"/opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages/requests/adapters.py\", line 696, in send\n    resp = conn.urlopen(\n           ^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages/urllib3/connectionpool.py\", line 842, in urlopen\n    retries = retries.increment(\n              ^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages/urllib3/util/retry.py\", line 498, in increment\n    raise reraise(type(error), error, _stacktrace)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages/urllib3/util/util.py\", line 39, in reraise\n    raise value\n  File \"/opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages/urllib3/connectionpool.py\", line 788, in urlopen\n    response = self._make_request(\n               ^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages/urllib3/connectionpool.py\", line 536, in _make_request\n    self._raise_timeout(err=e, url=url, timeout_value=read_timeout)\n  File \"/opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages/urllib3/connectionpool.py\", line 367, in _raise_timeout\n    raise ReadTimeoutError(\nurllib3.exceptions.ReadTimeoutError: HTTPSConnectionPool(host='overpass.private.coffee', port=443): Read timed out. (read timeout=65)\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"/home/runner/work/oswm_codebase/oswm_codebase/sandbox/cached_change_replay.py\", line 60, in main\n    target, end = provider.live()\n                  ^^^^^^^^^^^^^^^\n  File \"/home/runner/work/oswm_codebase/oswm_codebase/sandbox/change_query_probe.py\", line 362, in live\n    content = self.fetch(query, \"json\", \"full:live\", minimum, 45)\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/oswm_codebase/oswm_codebase/sandbox/change_query_probe.py\", line 297, in fetch\n    raise last_error\n  File \"/home/runner/work/oswm_codebase/oswm_codebase/sandbox/change_query_probe.py\", line 294, in fetch\n    return self.fetch_once(query, response_format, phase, target, timeout, endpoint)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/oswm_codebase/oswm_codebase/sandbox/change_query_probe.py\", line 327, in fetch_once\n    response = requests.post(endpoint + \"/interpreter\", data={\"data\": query},\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages/requests/api.py\", line 134, in post\n    return request(\"post\", url, data=data, json=json, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages/requests/api.py\", line 71, in request\n    return session.request(method=method, url=url, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages/requests/sessions.py\", line 651, in request\n    resp = self.send(prep, **send_kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/oswm_codebase/oswm_codebase/sandbox/source_benchmark.py\", line 154, in send\n    response = meter.original(session, request, **kwargs)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages/requests/sessions.py\", line 784, in send\n    r = adapter.send(request, **kwargs)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages/requests/adapters.py\", line 742, in send\n    raise ReadTimeout(e, request=request)\nrequests.exceptions.ReadTimeout: HTTPSConnectionPool(host='overpass.private.coffee', port=443): Read timed out. (read timeout=65)\n",
+  "success": false,
+  "finished_at": "2026-11-01T20:10:21.117599+00:00"
+}
