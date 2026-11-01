@@ -277,11 +277,20 @@ class Provider:
         self.events = []
 
     def fetch(self, query, response_format, phase, target, timeout):
-        outcome = {"phase": phase, "query_sha256": hashlib.sha256(query.encode()).hexdigest(), "target": target}
+        last_error = None
+        for endpoint in ("https://overpass-api.de/api", "https://overpass.private.coffee/api"):
+            try:
+                return self.fetch_once(query, response_format, phase, target, timeout, endpoint)
+            except Exception as exc:
+                last_error = exc
+        raise last_error
+
+    def fetch_once(self, query, response_format, phase, target, timeout, endpoint):
+        outcome = {"phase": phase, "endpoint": endpoint,
+                   "query_sha256": hashlib.sha256(query.encode()).hexdigest(), "target": target}
         self.events.append(outcome)
         began = time.monotonic()
-        # One endpoint and no automatic recursive retry: availability failures
-        # remain observable and do not silently become empty/no-change results.
+        # One interpreter request per endpoint, never OSMnx's recursive retry.
         import osmnx as ox
         from osmnx import _overpass
         ox.settings.overpass_rate_limit = True
@@ -293,11 +302,18 @@ class Provider:
             with bench.Meter(response_format=response_format) as meter:
                 meter.phase = phase
                 try:
-                    pause = _overpass._get_overpass_pause("https://overpass-api.de/api")
+                    try:
+                        pause = _overpass._get_overpass_pause(endpoint)
+                    except requests.RequestException as exc:
+                        # /status can fail independently of /interpreter. A
+                        # single bounded query after a short pause still obeys
+                        # interpreter HTTP 429/504, with no recursive retry.
+                        outcome["status_warning"] = type(exc).__name__ + ": " + str(exc)
+                        pause = 10
                     if pause > 45:
                         raise InvalidSource("No public query slot within the sandbox wait budget")
                     time.sleep(pause)
-                    response = requests.post("https://overpass-api.de/api/interpreter", data={"data": query},
+                    response = requests.post(endpoint + "/interpreter", data={"data": query},
                                              headers={"User-Agent": bench.AGENT}, timeout=(15, timeout + 20))
                     content = response.content
                     watermark = next((e.get("osm_base_timestamp") for e in reversed(meter.events)
