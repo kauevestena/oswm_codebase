@@ -155,5 +155,13 @@ class TransactionTests(unittest.TestCase):
                 else: del after[layer]["way:1"]
                 self.assertTrue(p.local_changes(before, after)["needs_rebuild"])
 
+    def test_persisted_summary_gate_detects_road_only_change_and_config(self):
+        before = {n: {"geometry_and_tags_sha256": "old"} for n in ["kerbs", "roads_for_completeness"]}
+        after = copy.deepcopy(before)
+        self.assertFalse(p.summary_changes(before, after)["needs_rebuild"])
+        after["roads_for_completeness"]["geometry_and_tags_sha256"] = "changed"
+        self.assertEqual(p.summary_changes(before, after)["changed_layers"], ["roads_for_completeness"])
+        self.assertTrue(p.summary_changes(before, before, True)["needs_rebuild"])
+
 
 if __name__ == "__main__": unittest.main()

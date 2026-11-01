@@ -257,6 +257,16 @@ def local_changes(before, after, configuration_changed=False):
             "configuration_changed": configuration_changed, "layers": changes}
 
 
+def summary_changes(before, after, configuration_changed=False):
+    """Persisted per-layer digests suffice for a conservative rebuild gate."""
+    if before.keys() != after.keys():
+        raise InvalidSource("Missing raw layer in source summaries")
+    changed = [name for name in after
+               if before[name]["geometry_and_tags_sha256"] != after[name]["geometry_and_tags_sha256"]]
+    return {"needs_rebuild": bool(changed) or configuration_changed,
+            "changed_layers": changed, "configuration_changed": configuration_changed}
+
+
 def query_body(bbox, tags):
     """Only area relations become features; all nested dependencies are retained."""
     west, south, east, north = bbox
@@ -346,6 +356,13 @@ class Provider:
         query = f'[out:xml][timeout:60][adiff:"{start}","{end}"];{self.body}out meta geom;'
         return self.fetch(query, "xml", "adiff", end, 60)
 
+    def live(self):
+        minimum = self.report["end"]
+        query = f'[out:json][timeout:45];{self.body}out body;'
+        content = self.fetch(query, "json", "full:live", minimum, 45)
+        payload = json.loads(content)
+        return full_records(payload, minimum), payload["osm3s"]["timestamp_osm_base"]
+
 
 def source_frame(records, boundary, tags):
     from osmnx import features as feature_module
@@ -364,11 +381,52 @@ def views(records, cfg, boundary, tags):
     return bench.descriptors(bench.partition(frame, roads, boundary, cfg), cfg)
 
 
+def daily_full_trial(provider, work, city, cfg, boundary, tags, query_id, report, save, reason):
+    """Test the current full-download route even when attic queries fail.
+
+    This comparison uses an archived source digest, not an invented 24h replay.
+    It is a conservative all-products rebuild gate, not a partial build engine.
+    """
+    print(json.dumps({"city": city, "phase": "daily full acquisition fallback"}), flush=True)
+    target, cutoff = provider.live()
+    maps, summaries = views(target, cfg, boundary, tags)
+    reference_path = bench.CORE / "docs/pilots" / f"{city}_source_reference_20261031.json"
+    reference = json.loads(reference_path.read_text())
+    current_path = work / "layer-summaries.json"
+    current_path.write_text(json.dumps({"query_id": query_id, "cutoff": cutoff, "layers": summaries}, indent=2) + "\n")
+    restored = json.loads(current_path.read_text())
+    gate = summary_changes(reference["layers"], restored["layers"])
+    cache = SnapshotCache(work / "source-cache")
+    final = cache.commit(target, cutoff, query_id)
+    reloaded, pointer = SnapshotCache(work / "source-cache").load(query_id)
+    if reloaded != target:
+        raise InvalidSource("Daily full cache failed its reload check")
+    def no_request(): raise AssertionError("Idempotent replay must not fetch")
+    _, repeat = acquire(reloaded, pointer, query_id, cutoff, cutoff, no_request, lambda t: no_request())
+    report.update({"acquisition": {"mode": "daily_full_plus_local_detection", "reason": reason},
+        "delta_trial_passed": False, "daily_full_trial_passed": True,
+        "daily_full_plus_local_detection": {**gate, "source_cutoff": cutoff,
+            "reference_snapshot": reference["reference_snapshot"], "reference_file": str(reference_path.relative_to(bench.CORE)),
+            "reference_scope": "archived Oct29 source digests; this is not fixed-24h delta parity",
+            "source_summaries_persisted_and_reloaded": True,
+            "same_snapshot_repeat_needs_rebuild": summary_changes(restored["layers"], summaries)["needs_rebuild"],
+            "note": "conservative rebuild gate; selective downstream product generation is not tested",
+            "layers": summaries},
+        "final_checkpoint": final, "serialized_cache_reloaded": True,
+        "idempotent_repeat": repeat,
+        "traffic": {"target_full_response_bytes": provider.events[-1]["http"]["encoded_response_body_bytes"],
+            "source_cache_bytes": final["compressed_bytes"],
+            "caveat": "live full acquisition; failed historic/delta attempts are recorded separately"},
+        "success": True})
+    save()
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--city", choices=bench.SITES, required=True)
     parser.add_argument("--start", default=T0)
     parser.add_argument("--end", default=T1)
+    parser.add_argument("--mode", choices=["auto", "full"], default="auto")
     parser.add_argument("--work", type=Path, required=True)
     args = parser.parse_args()
     if not stamp(args.start) < stamp(args.end) < datetime.now(timezone.utc):
@@ -397,8 +455,27 @@ def main():
         report.update({"query_id": query_id, "scope": "tagged nodes/ways/area relations in city bbox; transitive reference closure",
                        "bbox": list(boundary.bounds), "tags": tags})
         provider = Provider(body, report, save)
+        if args.mode == "full":
+            daily_full_trial(provider, work, args.city, cfg, boundary, tags, query_id, report, save, "explicit full mode")
+            return
+        print(json.dumps({"city": args.city, "phase": "probe daily augmented diff first"}), flush=True)
+        try:
+            delta_content = provider.delta(args.start, args.end)
+            _, statistics = parse_adiff(delta_content, args.end)
+            report["delta_probe"] = {"success": True, "actions": statistics}
+        except Exception as exc:
+            error = type(exc).__name__ + ": " + str(exc)
+            report["delta_probe"] = {"success": False, "error": error}
+            daily_full_trial(provider, work, args.city, cfg, boundary, tags, query_id, report, save, error)
+            return
         print(json.dumps({"city": args.city, "phase": "baseline full snapshot"}), flush=True)
-        before = provider.snapshot(args.start, "bootstrap")
+        try:
+            before = provider.snapshot(args.start, "bootstrap")
+        except Exception as exc:
+            error = "Historical bootstrap failed: " + type(exc).__name__ + ": " + str(exc)
+            report["delta_parity_blocked"] = error
+            daily_full_trial(provider, work, args.city, cfg, boundary, tags, query_id, report, save, error)
+            return
         cache = SnapshotCache(work / "source-cache")
         seed = cache.commit(before, args.start, query_id)
         before, pointer = SnapshotCache(work / "source-cache").load(query_id)
@@ -407,13 +484,23 @@ def main():
         report["baseline_layers"] = before_summary
         save()
         print(json.dumps({"city": args.city, "phase": "augmented diff"}), flush=True)
-        candidate, acquisition = acquire(before, pointer, query_id, args.start, args.end,
-                                         lambda: provider.delta(args.start, args.end),
-                                         lambda t: provider.snapshot(t, "fallback"))
+        try:
+            candidate, acquisition = acquire(before, pointer, query_id, args.start, args.end,
+                                             lambda: delta_content,
+                                             lambda t: provider.snapshot(t, "fallback"))
+        except Exception as exc:
+            daily_full_trial(provider, work, args.city, cfg, boundary, tags, query_id, report, save,
+                             "Delta application/dated full fallback failed: " + type(exc).__name__ + ": " + str(exc))
+            return
         report["acquisition"] = acquisition
         save()
         print(json.dumps({"city": args.city, "phase": "independent target full snapshot"}), flush=True)
-        target = provider.snapshot(args.end, "independent_oracle")
+        try:
+            target = provider.snapshot(args.end, "independent_oracle")
+        except Exception as exc:
+            daily_full_trial(provider, work, args.city, cfg, boundary, tags, query_id, report, save,
+                             "Independent historical control failed: " + type(exc).__name__ + ": " + str(exc))
+            return
         target_maps, target_summary = views(target, cfg, boundary, tags)
         # Fault injection reuses the real full target: no additional public
         # query, and it is not counted as evidence of a second live download.

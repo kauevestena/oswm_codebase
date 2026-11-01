@@ -38,7 +38,7 @@ jobs:
         run: |
           python sandbox/test_source_benchmark.py
           python sandbox/test_change_query_probe.py
-      - name: Compare one daily augmented diff with full historical controls
+      - name: Test augmented diff, otherwise daily full acquisition and local detection
         run: |
           python sandbox/change_query_probe.py --city '${{ matrix.city }}' \
             --work "$RUNNER_TEMP/overpass-changes-${{ matrix.city }}"
@@ -48,6 +48,7 @@ jobs:
           name: overpass-changes-${{ matrix.city }}-${{ github.run_id }}
           path: |
             ${{ runner.temp }}/overpass-changes-${{ matrix.city }}/report.json
+            ${{ runner.temp }}/overpass-changes-${{ matrix.city }}/layer-summaries.json
             ${{ runner.temp }}/overpass-changes-${{ matrix.city }}/source-cache/*.json*
           if-no-files-found: error
           retention-days: 14
