@@ -84,6 +84,19 @@ class DeltaTests(unittest.TestCase):
         target = {"node:2": node(2, lat=3)}
         self.assertNotEqual(naive, target)
 
+    def test_osmnx_recomputes_geometry_without_mutating_cached_graph(self):
+        from shapely.geometry import box
+        base = {"node:1": node(),
+                "node:2": p.primitive(dict(type="node", id=2, lat=1, lon=3)),
+                "way:1": p.primitive(dict(type="way", id=1, nodes=[1, 2], tags={"highway": "footway"}))}
+        unchanged = copy.deepcopy(base)
+        after = p.apply_adiff(base, [{"action": "modify", "key": "node:1", "old": node(), "new": node(lat=2)}])
+        def geometry(records):
+            return p.source_frame(records, box(0, 0, 4, 4), {"highway": ["footway"]}).loc[("way", 1)].geometry
+        self.assertFalse(geometry(base).equals(geometry(after)))
+        self.assertTrue(geometry(base).equals(geometry(base)))
+        self.assertEqual(base, unchanged)
+
 
 class TransactionTests(unittest.TestCase):
     def setUp(self):

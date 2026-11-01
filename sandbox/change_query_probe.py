@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 from collections import Counter
+import copy
 from datetime import datetime, timezone
 import gzip
 import hashlib
@@ -346,12 +347,19 @@ class Provider:
         return self.fetch(query, "xml", "adiff", end, 60)
 
 
-def views(records, cfg, boundary, tags):
+def source_frame(records, boundary, tags):
     from osmnx import features as feature_module
     from shapely.geometry import box
+    # OSMnx pops tags, type and references while constructing its features.
+    # Never let feature extraction mutate the persisted source graph.
+    elements = sorted(copy.deepcopy(list(records.values())),
+                      key=lambda e: ({"node": 0, "way": 1, "relation": 2}[e["type"]], e["id"]))
+    return feature_module._create_gdf(iter([{"elements": elements}]), box(*boundary.bounds), tags)
+
+
+def views(records, cfg, boundary, tags):
     from replication_pipeline import ROAD_TYPES
-    elements = sorted(records.values(), key=lambda e: ({"node": 0, "way": 1, "relation": 2}[e["type"]], e["id"]))
-    frame = feature_module._create_gdf(iter([{"elements": elements}]), box(*boundary.bounds), tags)
+    frame = source_frame(records, boundary, tags)
     roads = frame[frame["highway"].isin(ROAD_TYPES)].copy()
     return bench.descriptors(bench.partition(frame, roads, boundary, cfg), cfg)
 
