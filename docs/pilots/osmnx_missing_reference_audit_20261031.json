@@ -1,0 +1,263 @@
+[
+  {
+    "city": "curitiba",
+    "layer": "crossings",
+    "identity": "way:659241090",
+    "url": "https://www.openstreetmap.org/api/0.6/way/659241090/history",
+    "reference_cutoff": "2026-10-29T21:21:26Z",
+    "query_watermark": "2026-10-31T23:51:51Z",
+    "at_reference": {
+      "version": 4,
+      "timestamp": "2023-05-12T00:49:36Z",
+      "visible": true,
+      "tags": {
+        "footway": "crossing",
+        "highway": "footway"
+      }
+    },
+    "at_query": {
+      "version": 5,
+      "timestamp": "2026-10-31T03:40:22Z",
+      "visible": false,
+      "tags": {}
+    },
+    "changed_since_reference": true
+  },
+  {
+    "city": "curitiba",
+    "layer": "roads_for_completeness",
+    "identity": "way:125750038",
+    "url": "https://www.openstreetmap.org/api/0.6/way/125750038/history",
+    "reference_cutoff": "2026-10-29T21:21:26Z",
+    "query_watermark": "2026-10-31T23:51:51Z",
+    "at_reference": {
+      "version": 9,
+      "timestamp": "2021-08-19T22:09:10Z",
+      "visible": true,
+      "tags": {
+        "highway": "secondary"
+      }
+    },
+    "at_query": {
+      "version": 10,
+      "timestamp": "2026-10-31T03:20:09Z",
+      "visible": true,
+      "tags": {
+        "highway": "construction"
+      }
+    },
+    "changed_since_reference": true
+  },
+  {
+    "city": "curitiba",
+    "layer": "roads_for_completeness",
+    "identity": "way:940359766",
+    "url": "https://www.openstreetmap.org/api/0.6/way/940359766/history",
+    "reference_cutoff": "2026-10-29T21:21:26Z",
+    "query_watermark": "2026-10-31T23:51:51Z",
+    "at_reference": {
+      "version": 2,
+      "timestamp": "2021-08-19T22:09:10Z",
+      "visible": true,
+      "tags": {
+        "highway": "secondary"
+      }
+    },
+    "at_query": {
+      "version": 3,
+      "timestamp": "2026-10-31T03:20:09Z",
+      "visible": true,
+      "tags": {
+        "highway": "construction"
+      }
+    },
+    "changed_since_reference": true
+  },
+  {
+    "city": "milan",
+    "layer": "crossings",
+    "identity": "way:1181754809",
+    "url": "https://www.openstreetmap.org/api/0.6/way/1181754809/history",
+    "reference_cutoff": "2026-10-29T21:21:26Z",
+    "query_watermark": "2026-10-31T23:55:52Z",
+    "at_reference": {
+      "version": 1,
+      "timestamp": "2023-06-13T12:04:32Z",
+      "visible": true,
+      "tags": {
+        "footway": "crossing",
+        "highway": "footway"
+      }
+    },
+    "at_query": {
+      "version": 2,
+      "timestamp": "2026-10-31T20:44:36Z",
+      "visible": false,
+      "tags": {}
+    },
+    "changed_since_reference": true
+  },
+  {
+    "city": "milan",
+    "layer": "kerbs",
+    "identity": "node:10973672291",
+    "url": "https://www.openstreetmap.org/api/0.6/node/10973672291/history",
+    "reference_cutoff": "2026-10-29T21:21:26Z",
+    "query_watermark": "2026-10-31T23:55:52Z",
+    "at_reference": {
+      "version": 1,
+      "timestamp": "2023-06-13T12:04:32Z",
+      "visible": true,
+      "tags": {
+        "barrier": "kerb",
+        "kerb": "raised"
+      }
+    },
+    "at_query": {
+      "version": 2,
+      "timestamp": "2026-10-31T20:44:36Z",
+      "visible": false,
+      "tags": {}
+    },
+    "changed_since_reference": true
+  },
+  {
+    "city": "milan",
+    "layer": "kerbs",
+    "identity": "node:10973672292",
+    "url": "https://www.openstreetmap.org/api/0.6/node/10973672292/history",
+    "reference_cutoff": "2026-10-29T21:21:26Z",
+    "query_watermark": "2026-10-31T23:55:52Z",
+    "at_reference": {
+      "version": 1,
+      "timestamp": "2023-06-13T12:04:32Z",
+      "visible": true,
+      "tags": {
+        "barrier": "kerb",
+        "kerb": "raised"
+      }
+    },
+    "at_query": {
+      "version": 2,
+      "timestamp": "2026-10-31T20:44:36Z",
+      "visible": false,
+      "tags": {}
+    },
+    "changed_since_reference": true
+  },
+  {
+    "city": "milan",
+    "layer": "other_footways",
+    "identity": "way:1106519346",
+    "url": "https://www.openstreetmap.org/api/0.6/way/1106519346/history",
+    "reference_cutoff": "2026-10-29T21:21:26Z",
+    "query_watermark": "2026-10-31T23:55:52Z",
+    "at_reference": {
+      "version": 5,
+      "timestamp": "2023-07-06T09:23:37Z",
+      "visible": true,
+      "tags": {
+        "highway": "pedestrian"
+      }
+    },
+    "at_query": {
+      "version": 6,
+      "timestamp": "2026-10-31T15:50:00Z",
+      "visible": false,
+      "tags": {}
+    },
+    "changed_since_reference": true
+  },
+  {
+    "city": "milan",
+    "layer": "other_footways",
+    "identity": "way:1106519347",
+    "url": "https://www.openstreetmap.org/api/0.6/way/1106519347/history",
+    "reference_cutoff": "2026-10-29T21:21:26Z",
+    "query_watermark": "2026-10-31T23:55:52Z",
+    "at_reference": {
+      "version": 5,
+      "timestamp": "2026-03-26T15:47:29Z",
+      "visible": true,
+      "tags": {
+        "highway": "pedestrian"
+      }
+    },
+    "at_query": {
+      "version": 6,
+      "timestamp": "2026-10-31T15:50:00Z",
+      "visible": false,
+      "tags": {}
+    },
+    "changed_since_reference": true
+  },
+  {
+    "city": "milan",
+    "layer": "other_footways",
+    "identity": "way:1106519348",
+    "url": "https://www.openstreetmap.org/api/0.6/way/1106519348/history",
+    "reference_cutoff": "2026-10-29T21:21:26Z",
+    "query_watermark": "2026-10-31T23:55:52Z",
+    "at_reference": {
+      "version": 3,
+      "timestamp": "2023-07-06T09:23:37Z",
+      "visible": true,
+      "tags": {
+        "highway": "pedestrian"
+      }
+    },
+    "at_query": {
+      "version": 4,
+      "timestamp": "2026-10-31T15:50:00Z",
+      "visible": false,
+      "tags": {}
+    },
+    "changed_since_reference": true
+  },
+  {
+    "city": "milan",
+    "layer": "roads_for_completeness",
+    "identity": "way:277519152",
+    "url": "https://www.openstreetmap.org/api/0.6/way/277519152/history",
+    "reference_cutoff": "2026-10-29T21:21:26Z",
+    "query_watermark": "2026-10-31T23:55:52Z",
+    "at_reference": {
+      "version": 3,
+      "timestamp": "2026-02-15T13:37:18Z",
+      "visible": true,
+      "tags": {
+        "highway": "secondary"
+      }
+    },
+    "at_query": {
+      "version": 4,
+      "timestamp": "2026-10-30T09:38:58Z",
+      "visible": false,
+      "tags": {}
+    },
+    "changed_since_reference": true
+  },
+  {
+    "city": "milan",
+    "layer": "roads_for_completeness",
+    "identity": "way:277519160",
+    "url": "https://www.openstreetmap.org/api/0.6/way/277519160/history",
+    "reference_cutoff": "2026-10-29T21:21:26Z",
+    "query_watermark": "2026-10-31T23:55:52Z",
+    "at_reference": {
+      "version": 9,
+      "timestamp": "2026-03-05T09:04:12Z",
+      "visible": true,
+      "tags": {
+        "highway": "secondary"
+      }
+    },
+    "at_query": {
+      "version": 10,
+      "timestamp": "2026-10-30T09:38:58Z",
+      "visible": false,
+      "tags": {}
+    },
+    "changed_since_reference": true
+  }
+]

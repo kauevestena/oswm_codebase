@@ -1,0 +1,109 @@
+{
+  "sandbox_only": true,
+  "production_changes": false,
+  "user_date": "2026-10-31",
+  "byte_unit": "response body bytes, excluding HTTP/TLS headers",
+  "osmnx": {
+    "curitiba": {
+      "method": "compact tag union + OSMnx parser",
+      "successful_endpoint_body_bytes": 5582917,
+      "successful_endpoint_acquisition_seconds": 75.245,
+      "cache_json_bytes": 27032228,
+      "warm_http_requests": 0,
+      "warm_same_layers": true,
+      "server_watermark": "2026-10-31T23:51:51Z",
+      "raw_layer_counts": {
+        "kerbs": 3081,
+        "sidewalks": 8157,
+        "crossings": 2447,
+        "other_footways": 7048,
+        "roads_for_completeness": 29855
+      },
+      "other_endpoint_attempts": "timeouts; interrupted-transfer byte totals are lower bounds; see full report",
+      "ordinary_two_bbox_queries_successful_body_bytes": 5942735,
+      "ordinary_combined_successful_body_bytes": 5582915,
+      "all_three_completed_live_variant_descriptors_equal": true
+    },
+    "milan": {
+      "method": "compact tag union + OSMnx parser",
+      "successful_endpoint_body_bytes": 13550359,
+      "successful_endpoint_acquisition_seconds": 78.589,
+      "cache_json_bytes": 67838833,
+      "warm_http_requests": 0,
+      "warm_same_layers": true,
+      "server_watermark": "2026-10-31T23:55:52Z",
+      "raw_layer_counts": {
+        "kerbs": 37382,
+        "sidewalks": 21806,
+        "crossings": 17753,
+        "other_footways": 21758,
+        "roads_for_completeness": 35976
+      },
+      "other_endpoint_attempts": "timeouts; interrupted-transfer byte totals are lower bounds; see full report"
+    }
+  },
+  "buffered_pbf": {
+    "curitiba": {
+      "normal_incoming_bytes_estimates": [
+        20453927,
+        20686859
+      ],
+      "includes": "incoming buffered source cache and regional diff/state; excludes initial/recovery download and cache upload",
+      "fallback_safe_to_deploy": false
+    },
+    "milan": {
+      "normal_incoming_bytes_estimates": [
+        107287735,
+        107180105
+      ],
+      "includes": "incoming buffered source cache and regional diff/state; excludes initial/recovery download and cache upload",
+      "fallback_safe_to_deploy": false
+    }
+  },
+  "overture": {
+    "curitiba": {
+      "release": "2026-10-21.0",
+      "segments_infrastructure_metadata_body_bytes": 50014117,
+      "including_connectors_body_bytes": 64078370,
+      "export_bytes_without_connectors": 16816932,
+      "osm_input_versions": {
+        "segment": {
+          "2026-10-10": 105981
+        },
+        "connector": {
+          "2026-10-10": 98653
+        },
+        "infrastructure": {
+          "2026-10-04T00:00:00.000Z": 41134
+        }
+      },
+      "reader": "STAC selection, bbox row-group pruning, all columns; not minimum projected bandwidth"
+    },
+    "milan": {
+      "release": "2026-10-21.0",
+      "segments_infrastructure_metadata_body_bytes": 98755046,
+      "including_connectors_body_bytes": 124753900,
+      "export_bytes_without_connectors": 35984864,
+      "osm_input_versions": {
+        "segment": {
+          "2026-10-10": 144939
+        },
+        "connector": {
+          "2026-10-10": 174390
+        },
+        "infrastructure": {
+          "2026-10-04T00:00:00.000Z": 169399
+        }
+      },
+      "reader": "STAC selection, bbox row-group pruning, all columns; not minimum projected bandwidth"
+    }
+  },
+  "reference_absences": {
+    "audited": 11,
+    "deleted_after_reference": 9,
+    "retagged_secondary_to_construction": 2,
+    "all_absences_explained": true
+  },
+  "regression_tests": 7,
+  "recommendation": "Filtered daily Overpass acquisition is promising on incoming bytes; retain PBF fallback. Overture has useful coverage but monthly/input lag does not meet the one-day objective. No production adapter or cutover is implemented."
+}

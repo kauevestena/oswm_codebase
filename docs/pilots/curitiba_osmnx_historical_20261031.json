@@ -1,0 +1,289 @@
+{
+  "workflow_run": "https://github.com/kauevestena/oswm_codebase/actions/runs/41252443369",
+  "job_id": 124688569376,
+  "job_conclusion": "success",
+  "acquisition_success": false,
+  "encoded_byte_totals_valid": false,
+  "measurement_note": "Initial raw.tell counter is invalid for chunked gzip. No valid dataset was returned; tiny error-body totals must not be used as source download sizes. Corrected streamed measurement is in the live continuation.",
+  "city": "curitiba",
+  "provider": "osmnx",
+  "sandbox_only": true,
+  "started_at": "2026-10-31T23:25:35.914582+00:00",
+  "code_revision": "c87e6fb73269541c7ecb18e390bca62ec3a00bb4",
+  "node_inputs": {
+    "repository": "kauevestena/opensidewalkmap_beta",
+    "revision": "f71145af01ad6f91d144b79e59a5b93aea5cfa67",
+    "inputs": [
+      {
+        "url": "https://raw.githubusercontent.com/kauevestena/opensidewalkmap_beta/f71145af01ad6f91d144b79e59a5b93aea5cfa67/config.py",
+        "bytes": 5542,
+        "sha256": "901d8275b23562d82f7a8d06f6f011b94d8b534743023f1ca02efdba07a90d5e"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/kauevestena/opensidewalkmap_beta/f71145af01ad6f91d144b79e59a5b93aea5cfa67/data/boundaries/polygon.geojson",
+        "bytes": 249926,
+        "sha256": "93865b00f7cd53a611683e8e86ace3f88aa942e3697fe0e82792dde495ad0d43"
+      }
+    ]
+  },
+  "osmnx_version": "2.1.1",
+  "boundary_bounds": [
+    -49.38914,
+    -25.6435043,
+    -49.1843182,
+    -25.3449505
+  ],
+  "snapshot": "2026-10-29T21:21:26Z",
+  "pedestrian_tags": {
+    "kerb": [
+      "lowered",
+      "raised",
+      "flush",
+      "rolled",
+      "no",
+      "yes"
+    ],
+    "barrier": [
+      "kerb"
+    ],
+    "footway": [
+      "sidewalk",
+      "crossing",
+      "alley",
+      "path",
+      "yes"
+    ],
+    "highway": [
+      "footway",
+      "steps",
+      "living_street",
+      "pedestrian",
+      "track",
+      "path"
+    ],
+    "foot": [
+      "yes",
+      "designated",
+      "permissive",
+      "destination"
+    ],
+    "sidewalk": [
+      "no"
+    ],
+    "sidewalk:both": [
+      "no"
+    ]
+  },
+  "combined_tags": {
+    "kerb": [
+      "lowered",
+      "raised",
+      "flush",
+      "rolled",
+      "no",
+      "yes"
+    ],
+    "barrier": [
+      "kerb"
+    ],
+    "footway": [
+      "sidewalk",
+      "crossing",
+      "alley",
+      "path",
+      "yes"
+    ],
+    "highway": [
+      "footway",
+      "steps",
+      "living_street",
+      "pedestrian",
+      "track",
+      "path",
+      "motorway",
+      "trunk",
+      "primary",
+      "secondary",
+      "tertiary",
+      "residential",
+      "unclassified",
+      "motorway_link",
+      "trunk_link",
+      "primary_link",
+      "secondary_link",
+      "tertiary_link"
+    ],
+    "foot": [
+      "yes",
+      "designated",
+      "permissive",
+      "destination"
+    ],
+    "sidewalk": [
+      "no"
+    ],
+    "sidewalk:both": [
+      "no"
+    ]
+  },
+  "variants": [
+    {
+      "variant": "current_two_queries",
+      "attempts": [
+        {
+          "endpoint": "https://overpass-api.de/api",
+          "success": false,
+          "error": "HTTPError: 413 Client Error: Request Entity Too Large for url: https://overpass-api.de/api/interpreter",
+          "acquisition_seconds": 21.052,
+          "http": {
+            "http_requests": 2,
+            "interpreter_requests": 1,
+            "encoded_response_body_bytes": 176,
+            "decoded_response_body_bytes": 385,
+            "byte_total_is_lower_bound": false,
+            "events": [
+              {
+                "phase": "current_two_queries:pedestrian",
+                "method": "GET",
+                "url": "https://overpass-api.de/api/status",
+                "request_body_bytes": 0,
+                "status": 200,
+                "encoded_body_bytes": 0,
+                "decoded_body_bytes": 209,
+                "content_encoding": "gzip",
+                "content_length_header": null,
+                "seconds": 19.606
+              },
+              {
+                "phase": "current_two_queries:pedestrian",
+                "method": "POST",
+                "url": "https://overpass-api.de/api/interpreter",
+                "request_body_bytes": 4620635,
+                "status": 413,
+                "encoded_body_bytes": 176,
+                "decoded_body_bytes": 176,
+                "content_encoding": "identity",
+                "content_length_header": "176",
+                "seconds": 0.899,
+                "error": "HTTPError: 413 Client Error: Request Entity Too Large for url: https://overpass-api.de/api/interpreter"
+              }
+            ]
+          }
+        },
+        {
+          "endpoint": "https://overpass.kumi.systems/api",
+          "success": false,
+          "error": "ReadTimeout: HTTPSConnectionPool(host='overpass.kumi.systems', port=443): Read timed out. (read timeout=120)",
+          "acquisition_seconds": 184.08,
+          "http": {
+            "http_requests": 2,
+            "interpreter_requests": 0,
+            "encoded_response_body_bytes": 802,
+            "decoded_response_body_bytes": 802,
+            "byte_total_is_lower_bound": true,
+            "events": [
+              {
+                "phase": "current_two_queries:pedestrian",
+                "method": "GET",
+                "url": "https://overpass.kumi.systems/api/status",
+                "request_body_bytes": 0,
+                "status": 200,
+                "encoded_body_bytes": 802,
+                "decoded_body_bytes": 802,
+                "content_encoding": "identity",
+                "content_length_header": "802",
+                "seconds": 57.918
+              },
+              {
+                "phase": "current_two_queries:pedestrian",
+                "method": "GET",
+                "url": "https://overpass.kumi.systems/api/status",
+                "request_body_bytes": 0,
+                "error": "ReadTimeout: HTTPSConnectionPool(host='overpass.kumi.systems', port=443): Read timed out. (read timeout=120)",
+                "seconds": 120.289
+              }
+            ]
+          }
+        }
+      ],
+      "success": false,
+      "total_encoded_body_bytes_including_failures": 978,
+      "cache_json_bytes": 0
+    },
+    {
+      "variant": "combined_one_query",
+      "attempts": [
+        {
+          "endpoint": "https://overpass-api.de/api",
+          "success": false,
+          "error": "ValueError: Overpass remark (partial/error response): runtime error: Query run out of memory using about 2048 MB of RAM.",
+          "acquisition_seconds": 135.906,
+          "http": {
+            "http_requests": 2,
+            "interpreter_requests": 1,
+            "encoded_response_body_bytes": 0,
+            "decoded_response_body_bytes": 579,
+            "byte_total_is_lower_bound": false,
+            "events": [
+              {
+                "phase": "combined_one_query:combined",
+                "method": "GET",
+                "url": "https://overpass-api.de/api/status",
+                "request_body_bytes": 0,
+                "status": 200,
+                "encoded_body_bytes": 0,
+                "decoded_body_bytes": 212,
+                "content_encoding": "gzip",
+                "content_length_header": null,
+                "seconds": 34.554
+              },
+              {
+                "phase": "combined_one_query:combined",
+                "method": "POST",
+                "url": "https://overpass-api.de/api/interpreter",
+                "request_body_bytes": 21677,
+                "status": 200,
+                "encoded_body_bytes": 0,
+                "decoded_body_bytes": 367,
+                "content_encoding": "gzip",
+                "content_length_header": null,
+                "seconds": 101.279,
+                "osm_base_timestamp": "2026-10-31T23:28:26Z",
+                "osm_elements": 0,
+                "error": "ValueError: Overpass remark (partial/error response): runtime error: Query run out of memory using about 2048 MB of RAM."
+              }
+            ]
+          }
+        },
+        {
+          "endpoint": "https://overpass.kumi.systems/api",
+          "success": false,
+          "error": "ReadTimeout: HTTPSConnectionPool(host='overpass.kumi.systems', port=443): Read timed out. (read timeout=120)",
+          "acquisition_seconds": 120.362,
+          "http": {
+            "http_requests": 1,
+            "interpreter_requests": 0,
+            "encoded_response_body_bytes": 0,
+            "decoded_response_body_bytes": 0,
+            "byte_total_is_lower_bound": true,
+            "events": [
+              {
+                "phase": "combined_one_query:combined",
+                "method": "GET",
+                "url": "https://overpass.kumi.systems/api/status",
+                "request_body_bytes": 0,
+                "error": "ReadTimeout: HTTPSConnectionPool(host='overpass.kumi.systems', port=443): Read timed out. (read timeout=120)",
+                "seconds": 120.29
+              }
+            ]
+          }
+        }
+      ],
+      "success": false,
+      "total_encoded_body_bytes_including_failures": 0,
+      "cache_json_bytes": 0
+    }
+  ],
+  "measurement": "encoded HTTP response-body bytes, excluding headers/TLS; includes status/DNS/error bodies",
+  "finished_at": "2026-10-31T23:33:21.545874+00:00"
+}

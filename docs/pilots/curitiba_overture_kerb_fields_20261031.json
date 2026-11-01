@@ -1,0 +1,82 @@
+{
+  "overture_kerb_candidates": 3011,
+  "overture_source_tag_coverage": {
+    "kerb": 1227,
+    "wheelchair": 435,
+    "tactile_paving": 321,
+    "barrier": 2916,
+    "surface": 69,
+    "smoothness": 66,
+    "kerb:height": 11
+  },
+  "overture_tag_values": {
+    "kerb": {
+      "raised": 346,
+      "flush": 131,
+      "lowered": 700,
+      "rolled": 10,
+      "normal": 2,
+      "regular": 9,
+      "no": 25,
+      "barrier=kerb": 2,
+      "lowered=no": 1,
+      "unknown": 1
+    },
+    "wheelchair": {
+      "no": 176,
+      "yes": 209,
+      "limited": 50
+    },
+    "tactile_paving": {
+      "yes": 46,
+      "no": 263,
+      "contrasted": 11,
+      "bad": 1
+    },
+    "barrier": {
+      "kerb": 2916
+    },
+    "surface": {
+      "cobblestone": 1,
+      "asphalt": 2,
+      "concrete": 17,
+      "paving_stones": 15,
+      "concrete:plates": 29,
+      "unpaved": 1,
+      "grass": 1,
+      "paver": 1,
+      "sett": 2
+    },
+    "smoothness": {
+      "intermediate": 19,
+      "excellent": 4,
+      "good": 34,
+      "bad": 4,
+      "very_bad": 4,
+      "horrible": 1
+    },
+    "kerb:height": {
+      "2 cm": 8,
+      "1 cm": 3
+    }
+  },
+  "osm_reference_count": 3081,
+  "osm_reference_field_coverage": {
+    "crossing": 105,
+    "highway": 109,
+    "kerb": 1297,
+    "bicycle": 13,
+    "mapillary": 103,
+    "wheelchair": 446,
+    "tactile_paving": 342,
+    "barrier": 2916,
+    "crossing:signals": 13,
+    "surface": 80,
+    "kerb:height": 12,
+    "smoothness": 72,
+    "sidewalk": 3,
+    "footway": 9,
+    "lit": 2
+  },
+  "caveat": "different input dates; raw Overture source_tags coverage, not a claim of lost fields"
+}

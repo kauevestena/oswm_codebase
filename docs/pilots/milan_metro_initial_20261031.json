@@ -1,0 +1,350 @@
+{
+  "workflow_run": "https://github.com/kauevestena/oswm_codebase/actions/runs/41248467389",
+  "job_id": 124676782844,
+  "job_conclusion": "failure",
+  "experiment_status": "stopped at direct regional source layer parsing after first real metropolitan object parity passed",
+  "safe_to_deploy": false,
+  "sandbox_only": true,
+  "started_at": "2026-10-31T22:31:03.076697+00:00",
+  "code_revision": "d8443894d77dcc2a98dc6da044933f0a2da6e0ac",
+  "buffer_km": 25.0,
+  "strategy": "smart (complete ways and multipolygons)",
+  "publication": "none; no node workflow or production data is modified",
+  "fixtures": [
+    {
+      "case": "new_way_references_old_outside_nodes",
+      "guard": {
+        "passed": false,
+        "way_references": {
+          "exit_code": 1,
+          "seconds": 0.004,
+          "stdout": "",
+          "stderr": "There are 1 nodes, 1 ways, and 0 relations in this file.\nNodes in ways missing: 1\n"
+        },
+        "multipolygon_references": {
+          "exit_code": 0,
+          "seconds": 0.002,
+          "stdout": "",
+          "stderr": "There are 0 nodes, 0 ways, and 0 relations in this file.\nNodes     in ways      missing: 0\nNodes     in relations missing: 0\nWays      in relations missing: 0\nRelations in relations missing: 0\n"
+        },
+        "scope": "all ways and selected multipolygons; not a completeness proof"
+      },
+      "oracle": {
+        "equal": false,
+        "exit_code": 1,
+        "seconds": 0.002,
+        "stdout": "",
+        "stderr": "Summary: left=0 right=1 same=2 different=0\n"
+      },
+      "unsafe_false_acceptance": false,
+      "fallback_triggered": true,
+      "after_reference_only_fallback_equals_truth": true
+    },
+    {
+      "case": "moved_node_brings_unknown_parent_way_into_city",
+      "guard": {
+        "passed": true,
+        "way_references": {
+          "exit_code": 0,
+          "seconds": 0.004,
+          "stdout": "",
+          "stderr": "There are 1 nodes, 0 ways, and 0 relations in this file.\nNodes in ways missing: 0\n"
+        },
+        "multipolygon_references": {
+          "exit_code": 0,
+          "seconds": 0.002,
+          "stdout": "",
+          "stderr": "There are 0 nodes, 0 ways, and 0 relations in this file.\nNodes     in ways      missing: 0\nNodes     in relations missing: 0\nWays      in relations missing: 0\nRelations in relations missing: 0\n"
+        },
+        "scope": "all ways and selected multipolygons; not a completeness proof"
+      },
+      "oracle": {
+        "equal": false,
+        "exit_code": 1,
+        "seconds": 0.002,
+        "stdout": "",
+        "stderr": "Summary: left=0 right=2 same=1 different=0\n"
+      },
+      "unsafe_false_acceptance": true,
+      "fallback_triggered": false,
+      "after_reference_only_fallback_equals_truth": false
+    },
+    {
+      "case": "new_multipolygon_references_old_outside_way",
+      "guard": {
+        "passed": false,
+        "way_references": {
+          "exit_code": 0,
+          "seconds": 0.004,
+          "stdout": "",
+          "stderr": "There are 1 nodes, 0 ways, and 1 relations in this file.\nNodes in ways missing: 0\n"
+        },
+        "multipolygon_references": {
+          "exit_code": 1,
+          "seconds": 0.008,
+          "stdout": "",
+          "stderr": "There are 1 nodes, 0 ways, and 1 relations in this file.\nNodes     in ways      missing: 0\nNodes     in relations missing: 0\nWays      in relations missing: 1\nRelations in relations missing: 0\n"
+        },
+        "scope": "all ways and selected multipolygons; not a completeness proof"
+      },
+      "oracle": {
+        "equal": false,
+        "exit_code": 1,
+        "seconds": 0.002,
+        "stdout": "",
+        "stderr": "Summary: left=0 right=3 same=2 different=0\n"
+      },
+      "unsafe_false_acceptance": false,
+      "fallback_triggered": true,
+      "after_reference_only_fallback_equals_truth": true
+    },
+    {
+      "case": "moved_node_brings_unknown_parent_relation_into_city",
+      "guard": {
+        "passed": true,
+        "way_references": {
+          "exit_code": 0,
+          "seconds": 0.004,
+          "stdout": "",
+          "stderr": "There are 1 nodes, 0 ways, and 0 relations in this file.\nNodes in ways missing: 0\n"
+        },
+        "multipolygon_references": {
+          "exit_code": 0,
+          "seconds": 0.002,
+          "stdout": "",
+          "stderr": "There are 0 nodes, 0 ways, and 0 relations in this file.\nNodes     in ways      missing: 0\nNodes     in relations missing: 0\nWays      in relations missing: 0\nRelations in relations missing: 0\n"
+        },
+        "scope": "all ways and selected multipolygons; not a completeness proof"
+      },
+      "oracle": {
+        "equal": false,
+        "exit_code": 1,
+        "seconds": 0.002,
+        "stdout": "",
+        "stderr": "Summary: left=0 right=4 same=1 different=0\n"
+      },
+      "unsafe_false_acceptance": true,
+      "fallback_triggered": false,
+      "after_reference_only_fallback_equals_truth": false
+    },
+    {
+      "case": "deletion_of_existing_way",
+      "guard": {
+        "passed": true,
+        "way_references": {
+          "exit_code": 0,
+          "seconds": 0.004,
+          "stdout": "",
+          "stderr": "There are 2 nodes, 0 ways, and 0 relations in this file.\nNodes in ways missing: 0\n"
+        },
+        "multipolygon_references": {
+          "exit_code": 0,
+          "seconds": 0.002,
+          "stdout": "",
+          "stderr": "There are 0 nodes, 0 ways, and 0 relations in this file.\nNodes     in ways      missing: 0\nNodes     in relations missing: 0\nWays      in relations missing: 0\nRelations in relations missing: 0\n"
+        },
+        "scope": "all ways and selected multipolygons; not a completeness proof"
+      },
+      "oracle": {
+        "equal": true,
+        "exit_code": 0,
+        "seconds": 0.002,
+        "stdout": "",
+        "stderr": "Summary: left=0 right=0 same=2 different=0\n"
+      },
+      "unsafe_false_acceptance": false,
+      "fallback_triggered": false,
+      "after_reference_only_fallback_equals_truth": true
+    },
+    {
+      "case": "ordinary_new_local_way",
+      "guard": {
+        "passed": true,
+        "way_references": {
+          "exit_code": 0,
+          "seconds": 0.004,
+          "stdout": "",
+          "stderr": "There are 2 nodes, 1 ways, and 0 relations in this file.\nNodes in ways missing: 0\n"
+        },
+        "multipolygon_references": {
+          "exit_code": 0,
+          "seconds": 0.002,
+          "stdout": "",
+          "stderr": "There are 0 nodes, 0 ways, and 0 relations in this file.\nNodes     in ways      missing: 0\nNodes     in relations missing: 0\nWays      in relations missing: 0\nRelations in relations missing: 0\n"
+        },
+        "scope": "all ways and selected multipolygons; not a completeness proof"
+      },
+      "oracle": {
+        "equal": true,
+        "exit_code": 0,
+        "seconds": 0.002,
+        "stdout": "",
+        "stderr": "Summary: left=0 right=0 same=3 different=0\n"
+      },
+      "unsafe_false_acceptance": false,
+      "fallback_triggered": false,
+      "after_reference_only_fallback_equals_truth": true
+    }
+  ],
+  "cities": [
+    {
+      "city": "milan",
+      "repository": "opensidewalkmap/milan",
+      "downloads": [
+        {
+          "url": "https://raw.githubusercontent.com/opensidewalkmap/milan/78b5e6af60a031ccd232e8b35eccd23b521e8fd1/config.py",
+          "bytes": 7205,
+          "sha256": "b1f8722b038805d474b67ec6511d39d01a3a00cc99408863e51c4967e5d0dfd8",
+          "seconds": 0.175
+        },
+        {
+          "url": "https://raw.githubusercontent.com/opensidewalkmap/milan/78b5e6af60a031ccd232e8b35eccd23b521e8fd1/data/boundaries/polygon.geojson",
+          "bytes": 170364,
+          "sha256": "6f4675458ad21dce0feb88e32ffc1d50e8209473b1b3a208d1eb76adefda9b64",
+          "seconds": 0.16
+        },
+        {
+          "url": "https://download.geofabrik.de/europe/italy/nord-ovest-261028.osm.pbf",
+          "bytes": 594229010,
+          "sha256": "008c7851a41e8f6626c81c98f98b4436ec7a21fa41697845805dc4815c5060d0",
+          "seconds": 199.146
+        },
+        {
+          "url": "https://download.geofabrik.de/europe/italy/nord-ovest-261029.osm.pbf",
+          "bytes": 594313166,
+          "sha256": "6074fc11664f90745a018eac3dee597ccb400c9202847a642022c36f83c6c10a",
+          "seconds": 186.112
+        }
+      ],
+      "steps": [
+        {
+          "date": "261028",
+          "sequence": 4012,
+          "timestamp": "2026-10-28T21:21:02+00:00",
+          "full_snapshot": {
+            "url": "https://download.geofabrik.de/europe/italy/nord-ovest-261028.osm.pbf",
+            "bytes": 594229010,
+            "sha256": "008c7851a41e8f6626c81c98f98b4436ec7a21fa41697845805dc4815c5060d0",
+            "seconds": 199.146
+          },
+          "diff_downloads": [],
+          "bootstrap_extract": {
+            "exit_code": 0,
+            "seconds": 20.126,
+            "stdout": "",
+            "stderr": ""
+          },
+          "metro_bytes": 106696464,
+          "baseline_guard": {
+            "passed": true,
+            "way_references": {
+              "exit_code": 0,
+              "seconds": 1.585,
+              "stdout": "",
+              "stderr": "There are 10533348 nodes, 1622329 ways, and 33547 relations in this file.\nNodes in ways missing: 0\n"
+            },
+            "multipolygon_references": {
+              "exit_code": 0,
+              "seconds": 0.93,
+              "stdout": "",
+              "stderr": "There are 735041 nodes, 41895 ways, and 12016 relations in this file.\nNodes     in ways      missing: 0\nNodes     in relations missing: 0\nWays      in relations missing: 0\nRelations in relations missing: 0\n"
+            },
+            "scope": "all ways and selected multipolygons; not a completeness proof"
+          }
+        },
+        {
+          "date": "261029",
+          "sequence": 4013,
+          "timestamp": "2026-10-29T21:21:26+00:00",
+          "full_snapshot": {
+            "url": "https://download.geofabrik.de/europe/italy/nord-ovest-261029.osm.pbf",
+            "bytes": 594313166,
+            "sha256": "6074fc11664f90745a018eac3dee597ccb400c9202847a642022c36f83c6c10a",
+            "seconds": 186.112
+          },
+          "diff_downloads": [
+            {
+              "url": "https://download.geofabrik.de/europe/italy/nord-ovest-updates/000/004/013.state.txt",
+              "bytes": 113,
+              "sha256": "d84d89903db2d8d661ab54ed15819d0f7f25d77b392125715c543a476d62156a",
+              "seconds": 0.658
+            },
+            {
+              "url": "https://download.geofabrik.de/europe/italy/nord-ovest-updates/000/004/013.osc.gz",
+              "bytes": 591158,
+              "sha256": "fa89bcd4e8a87011ea9c73502c8c241429628d98b8333a8340f23554b0d168b0",
+              "seconds": 1.161
+            }
+          ],
+          "regional_replay_oracle": {
+            "equal": true,
+            "exit_code": 0,
+            "seconds": 23.222,
+            "stdout": "",
+            "stderr": "Summary: left=0 right=0 same=78989860 different=0\n"
+          },
+          "apply": {
+            "exit_code": 0,
+            "seconds": 4.751,
+            "stdout": "",
+            "stderr": ""
+          },
+          "crop": {
+            "exit_code": 0,
+            "seconds": 7.845,
+            "stdout": "",
+            "stderr": ""
+          },
+          "guard": {
+            "passed": true,
+            "way_references": {
+              "exit_code": 0,
+              "seconds": 1.594,
+              "stdout": "",
+              "stderr": "There are 10534501 nodes, 1622519 ways, and 33548 relations in this file.\nNodes in ways missing: 0\n"
+            },
+            "multipolygon_references": {
+              "exit_code": 0,
+              "seconds": 0.942,
+              "stdout": "",
+              "stderr": "There are 735042 nodes, 41897 ways, and 12017 relations in this file.\nNodes     in ways      missing: 0\nNodes     in relations missing: 0\nWays      in relations missing: 0\nRelations in relations missing: 0\n"
+            },
+            "scope": "all ways and selected multipolygons; not a completeness proof"
+          },
+          "candidate_metro_bytes": 106708121,
+          "control_extract": {
+            "exit_code": 0,
+            "seconds": 20.142,
+            "stdout": "",
+            "stderr": ""
+          },
+          "metro_object_oracle": {
+            "equal": true,
+            "exit_code": 0,
+            "seconds": 4.087,
+            "stdout": "",
+            "stderr": "Summary: left=0 right=0 same=12190568 different=0\n"
+          },
+          "control_layers": {
+            "error": "Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n  File \"/home/runner/work/_temp/metro-extract-milan/milan/node/oswm_codebase/replication_pipeline.py\", line 91, in extract_city\n    combined = features_from_pbf(ox, path, bbox, tags, temporary_dir=STAGING, spatial_prefilter=True)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/_temp/metro-extract-milan/milan/node/oswm_codebase/pbf_acquisition.py\", line 352, in features_from_pbf\n    _write_spatial_subset(selected, xml, polygon, tags)\n  File \"/home/runner/work/_temp/metro-extract-milan/milan/node/oswm_codebase/pbf_acquisition.py\", line 274, in _write_spatial_subset\n    raise PbfAcquisitionError(f\"Incomplete PBF relation {item.id}\")\npbf_acquisition.PbfAcquisitionError: Incomplete PBF relation 1023743\n",
+            "exit_code": 1
+          }
+        }
+      ],
+      "node_revision": "78b5e6af60a031ccd232e8b35eccd23b521e8fd1",
+      "node_bbox_wsen": [
+        9.0408867,
+        45.3867381,
+        9.2781103,
+        45.5358482
+      ],
+      "buffered_bbox_wsen": [
+        8.720697518769935,
+        45.16216030625225,
+        9.598299481230065,
+        45.76042599374775
+      ],
+      "coverage": "rectangular buffer including nearby municipalities, not an administrative metro polygon"
+    }
+  ]
+}

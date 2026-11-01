@@ -1,0 +1,107 @@
+{
+  "crossings": {
+    "osm_reference": 17752,
+    "overture_provenance_ids": 26949,
+    "mapped_overlap": 17715,
+    "mapped_overlap_pct": 99.79,
+    "any_queried_theme_overlap": 17720,
+    "missing_sample": [
+      "way:1016871192",
+      "way:1029569960",
+      "way:1134825531",
+      "way:1413527945",
+      "way:1482504819",
+      "way:1482510191",
+      "way:1565006517",
+      "way:1565009357",
+      "way:1566283017",
+      "way:1566656691",
+      "way:1567267050",
+      "way:1567267091"
+    ]
+  },
+  "kerbs": {
+    "osm_reference": 37384,
+    "overture_provenance_ids": 37352,
+    "mapped_overlap": 37320,
+    "mapped_overlap_pct": 99.83,
+    "any_queried_theme_overlap": 37336,
+    "missing_sample": [
+      "node:10058728360",
+      "node:10058728361",
+      "node:10665057979",
+      "node:11285921371",
+      "node:11289017546",
+      "node:11289017547",
+      "node:11333518207",
+      "node:11333518208",
+      "node:11333518213",
+      "node:11382267880",
+      "node:12641918081",
+      "node:12641918082"
+    ]
+  },
+  "other_footways": {
+    "osm_reference": 21748,
+    "overture_provenance_ids": 17536,
+    "mapped_overlap": 16169,
+    "mapped_overlap_pct": 74.35,
+    "any_queried_theme_overlap": 20680,
+    "missing_sample": [
+      "node:11920612239",
+      "node:13621311713",
+      "node:13621311745",
+      "node:13621311746",
+      "node:13621311747",
+      "node:14279837927",
+      "node:14279837929",
+      "node:1512688454",
+      "node:1627126717",
+      "node:1699886632",
+      "node:1744786284",
+      "node:2716828051"
+    ]
+  },
+  "roads_for_completeness": {
+    "osm_reference": 35972,
+    "overture_provenance_ids": 36093,
+    "mapped_overlap": 35937,
+    "mapped_overlap_pct": 99.9,
+    "any_queried_theme_overlap": 35942,
+    "missing_sample": [
+      "way:1544045246",
+      "way:1567294978",
+      "way:1567639841",
+      "way:1567639842",
+      "way:1567639843",
+      "way:1568827408",
+      "way:1570725440",
+      "way:1570725441",
+      "way:1570725442",
+      "way:1570725443",
+      "way:1571034311",
+      "way:1571034312"
+    ]
+  },
+  "sidewalks": {
+    "osm_reference": 21806,
+    "overture_provenance_ids": 27406,
+    "mapped_overlap": 21739,
+    "mapped_overlap_pct": 99.69,
+    "any_queried_theme_overlap": 21755,
+    "missing_sample": [
+      "node:10135351338",
+      "node:10154784107",
+      "node:10154945957",
+      "node:2711495015",
+      "way:1029613832",
+      "way:1029619648",
+      "way:1156000821",
+      "way:1156077495",
+      "way:1156077496",
+      "way:1190595863",
+      "way:1190595865",
+      "way:1346903268"
+    ]
+  }
+}

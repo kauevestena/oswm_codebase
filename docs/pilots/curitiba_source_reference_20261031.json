@@ -1,0 +1,159 @@
+{
+  "city": "curitiba",
+  "provider": "baseline",
+  "sandbox_only": true,
+  "started_at": "2026-10-31T23:25:03.041813+00:00",
+  "code_revision": "4e0280f221ae0b38801b945d9335df5d82bd490b",
+  "node_inputs": {
+    "repository": "kauevestena/opensidewalkmap_beta",
+    "revision": "f71145af01ad6f91d144b79e59a5b93aea5cfa67",
+    "inputs": [
+      {
+        "url": "https://raw.githubusercontent.com/kauevestena/opensidewalkmap_beta/f71145af01ad6f91d144b79e59a5b93aea5cfa67/config.py",
+        "bytes": 5542,
+        "sha256": "901d8275b23562d82f7a8d06f6f011b94d8b534743023f1ca02efdba07a90d5e"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/kauevestena/opensidewalkmap_beta/f71145af01ad6f91d144b79e59a5b93aea5cfa67/data/boundaries/polygon.geojson",
+        "bytes": 249926,
+        "sha256": "93865b00f7cd53a611683e8e86ace3f88aa942e3697fe0e82792dde495ad0d43"
+      }
+    ]
+  },
+  "layers": {
+    "kerbs": {
+      "count": 3081,
+      "ids_sha256": "7385d88543719c57a09142485499ce98b28927d6c0bacbcb98c4a95d2bbe920a",
+      "geometry_and_tags_sha256": "6ae0878bb8e0b7a60b03d5be67bc0c0da1573ee8f03af243d45ef63557169ef3",
+      "field_coverage": {
+        "crossing": 105,
+        "highway": 109,
+        "kerb": 1297,
+        "bicycle": 13,
+        "mapillary": 103,
+        "wheelchair": 446,
+        "tactile_paving": 342,
+        "barrier": 2916,
+        "crossing:signals": 13,
+        "surface": 80,
+        "kerb:height": 12,
+        "smoothness": 72,
+        "sidewalk": 3,
+        "footway": 9,
+        "lit": 2
+      }
+    },
+    "sidewalks": {
+      "count": 8157,
+      "ids_sha256": "8013ed1c579648905a514a9a4def171e0a3f151b07fdae99a5ed868041c054ec",
+      "geometry_and_tags_sha256": "e458f1ecdd27022c0f668fb0b6a752d3e7df158c4d7ef2b3e55deddfd3d56dab",
+      "field_coverage": {
+        "footway": 8157,
+        "highway": 8156,
+        "surface": 2379,
+        "foot": 103,
+        "sidewalk": 5,
+        "bicycle": 215,
+        "wheelchair": 161,
+        "lit": 452,
+        "width": 91,
+        "incline": 15,
+        "step_count": 5,
+        "crossing": 27,
+        "smoothness": 1313,
+        "access": 46,
+        "motor_vehicle": 26,
+        "mapillary": 1046,
+        "tactile_paving": 1016
+      }
+    },
+    "crossings": {
+      "count": 2448,
+      "ids_sha256": "2a1e2cda918f68a696be9e91d0c2cf712ddefb88db168cffd284ad043b05010f",
+      "geometry_and_tags_sha256": "0077d3359ca83330304a1f19c316ceee410586d19feeadc39eddffcdf0db6ed3",
+      "field_coverage": {
+        "bicycle": 192,
+        "crossing": 1280,
+        "footway": 2448,
+        "highway": 2448,
+        "foot": 46,
+        "lit": 158,
+        "wheelchair": 3,
+        "surface": 672,
+        "tactile_paving": 26,
+        "access": 12,
+        "motor_vehicle": 10,
+        "incline": 3,
+        "smoothness": 136,
+        "mapillary": 28,
+        "sidewalk": 1,
+        "width": 4
+      }
+    },
+    "other_footways": {
+      "count": 7047,
+      "ids_sha256": "b4158c927a844b80d91045d80e50e7fa88bcd708c02478681b06003e88b311d9",
+      "geometry_and_tags_sha256": "816aaeb7f3c057c0c08e186cac0d2de300be1e71ef9f42613ce954f7826cb321",
+      "field_coverage": {
+        "barrier": 40,
+        "bicycle": 1834,
+        "foot": 1728,
+        "motor_vehicle": 227,
+        "access": 969,
+        "wheelchair": 43,
+        "width": 240,
+        "highway": 6996,
+        "surface": 2848,
+        "lit": 541,
+        "sidewalk": 90,
+        "smoothness": 151,
+        "incline": 245,
+        "step_count": 41,
+        "tactile_paving": 19,
+        "crossing": 496,
+        "sidewalk:both": 6,
+        "mapillary": 3,
+        "footway": 4
+      }
+    },
+    "roads_for_completeness": {
+      "count": 29849,
+      "ids_sha256": "10cfb3a538518d08aa39eb8a88cb1566cbedc6500d432059894c21d5fe5c0e0c",
+      "geometry_and_tags_sha256": "189ed64ae8bac11205f406e1a26d8be9debf2f4d75e42495009be4027dfe37be",
+      "field_coverage": {
+        "highway": 29849,
+        "surface": 13096,
+        "lit": 6480,
+        "sidewalk": 1915,
+        "bicycle": 573,
+        "foot": 1477,
+        "smoothness": 179,
+        "access": 1275,
+        "incline": 14,
+        "mapillary": 137,
+        "width": 22,
+        "sidewalk:both": 36,
+        "motor_vehicle": 85,
+        "wheelchair": 4,
+        "tactile_paving": 3,
+        "barrier": 1
+      }
+    }
+  },
+  "seconds": 100.903,
+  "pbf_bytes": 428903024,
+  "pbf_sha256": "043de0bc40c8fec32c259a5d12862bdb6868096074995208cca1978f1319f3a8",
+  "finished_at": "2026-10-31T23:26:57.775557+00:00",
+  "reference_snapshot": "2026-10-29T21:21:26Z",
+  "harness_commit": "c87e6fb73269541c7ecb18e390bca62ec3a00bb4",
+  "reference_scope": "direct full regional source",
+  "source_sha256_verified_against": "docs/pilots/curitiba_metro_20261031.json",
+  "independent_full_source": {
+    "url": "https://download.geofabrik.de/south-america/brazil/sul-261029.osm.pbf",
+    "bytes": 428903024,
+    "sha256": "043de0bc40c8fec32c259a5d12862bdb6868096074995208cca1978f1319f3a8",
+    "seconds": 111.38,
+    "sequence": 2506,
+    "timestamp": "2026-10-29T21:21:26+00:00"
+  }
+}

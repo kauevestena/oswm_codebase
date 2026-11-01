@@ -1,0 +1,98 @@
+{
+  "reference_snapshot": "2026-10-29T21:21:26Z",
+  "query_snapshot": "live; see server watermark in source report",
+  "strict_same_snapshot_parity": false,
+  "layers": {
+    "crossings": {
+      "reference_count": 17752,
+      "query_count": 17753,
+      "shared_ids": 17751,
+      "reference_ids_absent": [
+        "way:1181754809"
+      ],
+      "new_ids": [
+        "way:1574014501",
+        "way:1574019272"
+      ],
+      "same_geometry": 17726,
+      "changed_geometry": 25,
+      "same_retained_tags": 17751,
+      "changed_retained_tags": 0
+    },
+    "kerbs": {
+      "reference_count": 37384,
+      "query_count": 37382,
+      "shared_ids": 37382,
+      "reference_ids_absent": [
+        "node:10973672291",
+        "node:10973672292"
+      ],
+      "new_ids": [],
+      "same_geometry": 37362,
+      "changed_geometry": 20,
+      "same_retained_tags": 37382,
+      "changed_retained_tags": 0
+    },
+    "other_footways": {
+      "reference_count": 21748,
+      "query_count": 21758,
+      "shared_ids": 21745,
+      "reference_ids_absent": [
+        "way:1106519346",
+        "way:1106519347",
+        "way:1106519348"
+      ],
+      "new_ids": [
+        "way:1573715874",
+        "way:1573715876",
+        "way:1573715879",
+        "way:1573715880",
+        "way:1573886911",
+        "way:1573947957",
+        "way:1573947958",
+        "way:1573947959",
+        "way:1573966739",
+        "way:1573966740",
+        "way:1573974144",
+        "way:277314367",
+        "way:36951941"
+      ],
+      "same_geometry": 21734,
+      "changed_geometry": 11,
+      "same_retained_tags": 21743,
+      "changed_retained_tags": 2
+    },
+    "roads_for_completeness": {
+      "reference_count": 35972,
+      "query_count": 35976,
+      "shared_ids": 35970,
+      "reference_ids_absent": [
+        "way:277519152",
+        "way:277519160"
+      ],
+      "new_ids": [
+        "way:1573623939",
+        "way:1574006627",
+        "way:1574008994",
+        "way:1574016688",
+        "way:1574016689",
+        "way:1574017379"
+      ],
+      "same_geometry": 35929,
+      "changed_geometry": 41,
+      "same_retained_tags": 35927,
+      "changed_retained_tags": 43
+    },
+    "sidewalks": {
+      "reference_count": 21806,
+      "query_count": 21806,
+      "shared_ids": 21806,
+      "reference_ids_absent": [],
+      "new_ids": [],
+      "same_geometry": 21783,
+      "changed_geometry": 23,
+      "same_retained_tags": 21804,
+      "changed_retained_tags": 2
+    }
+  }
+}
