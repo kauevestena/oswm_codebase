@@ -1,0 +1,577 @@
+{
+  "workflow_run_url": "https://github.com/kauevestena/oswm_codebase/actions/runs/41344713249",
+  "city": "curitiba",
+  "sandbox_only": true,
+  "started_at": "2026-11-01T20:04:26.213686+00:00",
+  "code_revision": "1cd47b22e324829987c2e17c41601dcbb3fab52e",
+  "seed_workflow_run": 41343838674,
+  "publication": "none; persisted source graph remains a disposable workflow artifact",
+  "node_inputs": {
+    "repository": "kauevestena/opensidewalkmap_beta",
+    "revision": "f71145af01ad6f91d144b79e59a5b93aea5cfa67",
+    "inputs": [
+      {
+        "url": "https://raw.githubusercontent.com/kauevestena/opensidewalkmap_beta/f71145af01ad6f91d144b79e59a5b93aea5cfa67/config.py",
+        "bytes": 5542,
+        "sha256": "901d8275b23562d82f7a8d06f6f011b94d8b534743023f1ca02efdba07a90d5e"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/kauevestena/opensidewalkmap_beta/f71145af01ad6f91d144b79e59a5b93aea5cfa67/data/boundaries/polygon.geojson",
+        "bytes": 249926,
+        "sha256": "93865b00f7cd53a611683e8e86ace3f88aa942e3697fe0e82792dde495ad0d43"
+      }
+    ]
+  },
+  "query_id": "5357c162c8a9dfcba04e25a422dbf733f59d8352b04fe681e8a7b7468f087ecb",
+  "start": "2026-11-01T19:55:06Z",
+  "end": "2026-11-01T20:04:20Z",
+  "seed": {
+    "file": "source-1deac018efb77b54a0abde36b9be179404ba1cc06b0689804fb5c169a3353786.json.gz",
+    "sha256": "1deac018efb77b54a0abde36b9be179404ba1cc06b0689804fb5c169a3353786",
+    "cutoff": "2026-11-01T19:55:06Z",
+    "query_id": "5357c162c8a9dfcba04e25a422dbf733f59d8352b04fe681e8a7b7468f087ecb",
+    "compressed_bytes": 5049875,
+    "objects": 250189
+  },
+  "scope": "tagged nodes/ways/area relations in city bbox; transitive reference closure",
+  "requests": [
+    {
+      "phase": "full:live",
+      "endpoint": "https://overpass-api.de/api",
+      "query_sha256": "c451555925c3ecd9d4570aed249421d131f1ec69ce73427e478b424bdf742bdc",
+      "target": "2026-11-01T19:55:06Z",
+      "status_warning": "ReadTimeout: HTTPSConnectionPool(host='overpass-api.de', port=443): Read timed out. (read timeout=15)",
+      "success": true,
+      "watermark": "2026-11-01T20:04:20Z",
+      "response_sha256": "645b9ab9a9c554664279a261036cce5aab40a490bbc6db34d64e17dbfd897997",
+      "http": {
+        "http_requests": 2,
+        "interpreter_requests": 1,
+        "encoded_response_body_bytes": 5582735,
+        "decoded_response_body_bytes": 32055675,
+        "byte_total_is_lower_bound": true,
+        "events": [
+          {
+            "phase": "full:live",
+            "method": "GET",
+            "url": "https://overpass-api.de/api/status",
+            "request_body_bytes": 0,
+            "error": "ReadTimeout: HTTPSConnectionPool(host='overpass-api.de', port=443): Read timed out. (read timeout=15)",
+            "seconds": 15.466
+          },
+          {
+            "phase": "full:live",
+            "method": "POST",
+            "url": "https://overpass-api.de/api/interpreter",
+            "request_body_bytes": 3719,
+            "status": 200,
+            "encoded_body_bytes": 5582735,
+            "body_complete": true,
+            "decoded_body_bytes": 32055675,
+            "content_encoding": "gzip",
+            "content_length_header": null,
+            "seconds": 32.297,
+            "osm_base_timestamp": "2026-11-01T20:04:20Z",
+            "osm_elements": 250189
+          }
+        ]
+      },
+      "seconds": 59.836
+    },
+    {
+      "phase": "adiff",
+      "endpoint": "https://overpass-api.de/api",
+      "query_sha256": "33143a0ab6d8df38fb382850de26668f451f77a23f3e8801b1945747d3a7aa03",
+      "target": "2026-11-01T20:04:20Z",
+      "status_warning": "HTTPError: 502 Server Error: Bad Gateway for url: https://overpass-api.de/api/status",
+      "success": true,
+      "watermark": "2026-11-01T20:05:21Z",
+      "response_sha256": "b13073312d129a4925eda2d247333a999b9c404e410351c381f77c2af2f3016b",
+      "http": {
+        "http_requests": 2,
+        "interpreter_requests": 1,
+        "encoded_response_body_bytes": 765,
+        "decoded_response_body_bytes": 804,
+        "byte_total_is_lower_bound": false,
+        "events": [
+          {
+            "phase": "adiff",
+            "method": "GET",
+            "url": "https://overpass-api.de/api/status",
+            "request_body_bytes": 0,
+            "status": 502,
+            "encoded_body_bytes": 534,
+            "body_complete": true,
+            "decoded_body_bytes": 534,
+            "content_encoding": "identity",
+            "content_length_header": "534",
+            "seconds": 0.37,
+            "error": "HTTPError: 502 Server Error: Bad Gateway for url: https://overpass-api.de/api/status"
+          },
+          {
+            "phase": "adiff",
+            "method": "POST",
+            "url": "https://overpass-api.de/api/interpreter",
+            "request_body_bytes": 3800,
+            "status": 200,
+            "encoded_body_bytes": 231,
+            "body_complete": true,
+            "decoded_body_bytes": 270,
+            "content_encoding": "gzip",
+            "content_length_header": null,
+            "seconds": 73.238,
+            "osm_base_timestamp": "2026-11-01T20:05:21Z",
+            "actions": 0
+          }
+        ]
+      },
+      "seconds": 83.611
+    }
+  ],
+  "interval_seconds": 554,
+  "full_24h_replay": false,
+  "interval_note": "elapsed between two live snapshots, not a validated overnight update",
+  "acquisition": {
+    "mode": "adiff",
+    "actions": {},
+    "needs_commit": true
+  },
+  "raw_query_result_parity": {
+    "equal": true,
+    "candidate_sha256": "1deac018efb77b54a0abde36b9be179404ba1cc06b0689804fb5c169a3353786",
+    "control_sha256": "1deac018efb77b54a0abde36b9be179404ba1cc06b0689804fb5c169a3353786",
+    "candidate_objects": 250189,
+    "control_objects": 250189,
+    "missing_sample": [],
+    "extra_sample": [],
+    "modified_sample": []
+  },
+  "layer_parity": {
+    "equal": true,
+    "method": "identical complete primitives; common deterministic OSWM extraction",
+    "layers": {
+      "kerbs": {
+        "count": 3081,
+        "ids_sha256": "7385d88543719c57a09142485499ce98b28927d6c0bacbcb98c4a95d2bbe920a",
+        "geometry_and_tags_sha256": "8a84c6aa46c2b05818481dd3e61f7cf2ec166a4a291465d3993711718c0ed123",
+        "field_coverage": {
+          "crossing": 105,
+          "highway": 109,
+          "kerb": 1297,
+          "bicycle": 13,
+          "mapillary": 103,
+          "wheelchair": 446,
+          "tactile_paving": 342,
+          "barrier": 2916,
+          "crossing:signals": 13,
+          "surface": 80,
+          "kerb:height": 12,
+          "smoothness": 72,
+          "sidewalk": 3,
+          "footway": 9,
+          "lit": 2
+        }
+      },
+      "sidewalks": {
+        "count": 8157,
+        "ids_sha256": "8013ed1c579648905a514a9a4def171e0a3f151b07fdae99a5ed868041c054ec",
+        "geometry_and_tags_sha256": "92e2e2eaa1096ece067d7134c2297f3d0fad1c3f9fe0281a3d4ef45a68d20750",
+        "field_coverage": {
+          "footway": 8157,
+          "highway": 8156,
+          "surface": 2379,
+          "foot": 103,
+          "sidewalk": 5,
+          "bicycle": 215,
+          "wheelchair": 161,
+          "lit": 452,
+          "width": 91,
+          "incline": 15,
+          "step_count": 5,
+          "crossing": 27,
+          "smoothness": 1313,
+          "access": 46,
+          "motor_vehicle": 26,
+          "mapillary": 1046,
+          "tactile_paving": 1016
+        }
+      },
+      "crossings": {
+        "count": 2447,
+        "ids_sha256": "faf2fafa018c99079927b38852d12e410af01c8c7173ef0f9d5f77aea37ad039",
+        "geometry_and_tags_sha256": "0502af23b09d28a4e58f94f9ca46d91a010a549995c313cb7e8de2e98f3c4377",
+        "field_coverage": {
+          "bicycle": 191,
+          "crossing": 1279,
+          "footway": 2447,
+          "highway": 2447,
+          "foot": 46,
+          "lit": 158,
+          "wheelchair": 3,
+          "surface": 672,
+          "tactile_paving": 26,
+          "access": 12,
+          "motor_vehicle": 10,
+          "incline": 3,
+          "smoothness": 136,
+          "mapillary": 28,
+          "sidewalk": 1,
+          "width": 4
+        }
+      },
+      "other_footways": {
+        "count": 7048,
+        "ids_sha256": "b014091ae07c0aa180d44b7837bf66046d385ab4f762146ac4f3bdd3e7b7f1c6",
+        "geometry_and_tags_sha256": "9cb08f7320150d21c6fca4b7c296a4f2db6799b82854d933ad1cafbc7938cc13",
+        "field_coverage": {
+          "barrier": 40,
+          "bicycle": 1834,
+          "foot": 1728,
+          "motor_vehicle": 227,
+          "access": 969,
+          "wheelchair": 43,
+          "width": 240,
+          "highway": 6997,
+          "surface": 2848,
+          "lit": 542,
+          "sidewalk": 90,
+          "smoothness": 151,
+          "incline": 245,
+          "step_count": 41,
+          "tactile_paving": 19,
+          "crossing": 496,
+          "sidewalk:both": 6,
+          "mapillary": 3,
+          "footway": 4
+        }
+      },
+      "roads_for_completeness": {
+        "count": 29855,
+        "ids_sha256": "a276571a1312745dcee9581ee36b11b842a794095d207904a2f1e04193210fdc",
+        "geometry_and_tags_sha256": "8d239280d515b1be646fd8ec83f2dab094a796a4f132357c5801b0347c9ee7d0",
+        "field_coverage": {
+          "highway": 29855,
+          "surface": 13100,
+          "lit": 6480,
+          "sidewalk": 1916,
+          "bicycle": 573,
+          "foot": 1474,
+          "smoothness": 179,
+          "access": 1275,
+          "incline": 14,
+          "mapillary": 137,
+          "width": 22,
+          "sidewalk:both": 36,
+          "motor_vehicle": 84,
+          "wheelchair": 4,
+          "tactile_paving": 3,
+          "barrier": 1
+        }
+      }
+    }
+  },
+  "forced_delta_failure": {
+    "mode": "full_fallback",
+    "delta_error": "ReadTimeout: Injected delta failure",
+    "needs_commit": true,
+    "full_target_equal": true,
+    "baseline_unchanged": true,
+    "full_response_reused_from_oracle": true
+  },
+  "daily_full_plus_local_detection": {
+    "needs_rebuild": false,
+    "configuration_changed": false,
+    "layers": {
+      "kerbs": {
+        "added": 0,
+        "removed": 0,
+        "modified": 0
+      },
+      "sidewalks": {
+        "added": 0,
+        "removed": 0,
+        "modified": 0
+      },
+      "crossings": {
+        "added": 0,
+        "removed": 0,
+        "modified": 0
+      },
+      "other_footways": {
+        "added": 0,
+        "removed": 0,
+        "modified": 0
+      },
+      "roads_for_completeness": {
+        "added": 0,
+        "removed": 0,
+        "modified": 0
+      }
+    },
+    "same_snapshot_repeat_needs_rebuild": false,
+    "baseline_layers": {
+      "kerbs": {
+        "count": 3081,
+        "ids_sha256": "7385d88543719c57a09142485499ce98b28927d6c0bacbcb98c4a95d2bbe920a",
+        "geometry_and_tags_sha256": "8a84c6aa46c2b05818481dd3e61f7cf2ec166a4a291465d3993711718c0ed123",
+        "field_coverage": {
+          "crossing": 105,
+          "highway": 109,
+          "kerb": 1297,
+          "bicycle": 13,
+          "mapillary": 103,
+          "wheelchair": 446,
+          "tactile_paving": 342,
+          "barrier": 2916,
+          "crossing:signals": 13,
+          "surface": 80,
+          "kerb:height": 12,
+          "smoothness": 72,
+          "sidewalk": 3,
+          "footway": 9,
+          "lit": 2
+        }
+      },
+      "sidewalks": {
+        "count": 8157,
+        "ids_sha256": "8013ed1c579648905a514a9a4def171e0a3f151b07fdae99a5ed868041c054ec",
+        "geometry_and_tags_sha256": "92e2e2eaa1096ece067d7134c2297f3d0fad1c3f9fe0281a3d4ef45a68d20750",
+        "field_coverage": {
+          "footway": 8157,
+          "highway": 8156,
+          "surface": 2379,
+          "foot": 103,
+          "sidewalk": 5,
+          "bicycle": 215,
+          "wheelchair": 161,
+          "lit": 452,
+          "width": 91,
+          "incline": 15,
+          "step_count": 5,
+          "crossing": 27,
+          "smoothness": 1313,
+          "access": 46,
+          "motor_vehicle": 26,
+          "mapillary": 1046,
+          "tactile_paving": 1016
+        }
+      },
+      "crossings": {
+        "count": 2447,
+        "ids_sha256": "faf2fafa018c99079927b38852d12e410af01c8c7173ef0f9d5f77aea37ad039",
+        "geometry_and_tags_sha256": "0502af23b09d28a4e58f94f9ca46d91a010a549995c313cb7e8de2e98f3c4377",
+        "field_coverage": {
+          "bicycle": 191,
+          "crossing": 1279,
+          "footway": 2447,
+          "highway": 2447,
+          "foot": 46,
+          "lit": 158,
+          "wheelchair": 3,
+          "surface": 672,
+          "tactile_paving": 26,
+          "access": 12,
+          "motor_vehicle": 10,
+          "incline": 3,
+          "smoothness": 136,
+          "mapillary": 28,
+          "sidewalk": 1,
+          "width": 4
+        }
+      },
+      "other_footways": {
+        "count": 7048,
+        "ids_sha256": "b014091ae07c0aa180d44b7837bf66046d385ab4f762146ac4f3bdd3e7b7f1c6",
+        "geometry_and_tags_sha256": "9cb08f7320150d21c6fca4b7c296a4f2db6799b82854d933ad1cafbc7938cc13",
+        "field_coverage": {
+          "barrier": 40,
+          "bicycle": 1834,
+          "foot": 1728,
+          "motor_vehicle": 227,
+          "access": 969,
+          "wheelchair": 43,
+          "width": 240,
+          "highway": 6997,
+          "surface": 2848,
+          "lit": 542,
+          "sidewalk": 90,
+          "smoothness": 151,
+          "incline": 245,
+          "step_count": 41,
+          "tactile_paving": 19,
+          "crossing": 496,
+          "sidewalk:both": 6,
+          "mapillary": 3,
+          "footway": 4
+        }
+      },
+      "roads_for_completeness": {
+        "count": 29855,
+        "ids_sha256": "a276571a1312745dcee9581ee36b11b842a794095d207904a2f1e04193210fdc",
+        "geometry_and_tags_sha256": "8d239280d515b1be646fd8ec83f2dab094a796a4f132357c5801b0347c9ee7d0",
+        "field_coverage": {
+          "highway": 29855,
+          "surface": 13100,
+          "lit": 6480,
+          "sidewalk": 1916,
+          "bicycle": 573,
+          "foot": 1474,
+          "smoothness": 179,
+          "access": 1275,
+          "incline": 14,
+          "mapillary": 137,
+          "width": 22,
+          "sidewalk:both": 36,
+          "motor_vehicle": 84,
+          "wheelchair": 4,
+          "tactile_paving": 3,
+          "barrier": 1
+        }
+      }
+    },
+    "target_layers": {
+      "kerbs": {
+        "count": 3081,
+        "ids_sha256": "7385d88543719c57a09142485499ce98b28927d6c0bacbcb98c4a95d2bbe920a",
+        "geometry_and_tags_sha256": "8a84c6aa46c2b05818481dd3e61f7cf2ec166a4a291465d3993711718c0ed123",
+        "field_coverage": {
+          "crossing": 105,
+          "highway": 109,
+          "kerb": 1297,
+          "bicycle": 13,
+          "mapillary": 103,
+          "wheelchair": 446,
+          "tactile_paving": 342,
+          "barrier": 2916,
+          "crossing:signals": 13,
+          "surface": 80,
+          "kerb:height": 12,
+          "smoothness": 72,
+          "sidewalk": 3,
+          "footway": 9,
+          "lit": 2
+        }
+      },
+      "sidewalks": {
+        "count": 8157,
+        "ids_sha256": "8013ed1c579648905a514a9a4def171e0a3f151b07fdae99a5ed868041c054ec",
+        "geometry_and_tags_sha256": "92e2e2eaa1096ece067d7134c2297f3d0fad1c3f9fe0281a3d4ef45a68d20750",
+        "field_coverage": {
+          "footway": 8157,
+          "highway": 8156,
+          "surface": 2379,
+          "foot": 103,
+          "sidewalk": 5,
+          "bicycle": 215,
+          "wheelchair": 161,
+          "lit": 452,
+          "width": 91,
+          "incline": 15,
+          "step_count": 5,
+          "crossing": 27,
+          "smoothness": 1313,
+          "access": 46,
+          "motor_vehicle": 26,
+          "mapillary": 1046,
+          "tactile_paving": 1016
+        }
+      },
+      "crossings": {
+        "count": 2447,
+        "ids_sha256": "faf2fafa018c99079927b38852d12e410af01c8c7173ef0f9d5f77aea37ad039",
+        "geometry_and_tags_sha256": "0502af23b09d28a4e58f94f9ca46d91a010a549995c313cb7e8de2e98f3c4377",
+        "field_coverage": {
+          "bicycle": 191,
+          "crossing": 1279,
+          "footway": 2447,
+          "highway": 2447,
+          "foot": 46,
+          "lit": 158,
+          "wheelchair": 3,
+          "surface": 672,
+          "tactile_paving": 26,
+          "access": 12,
+          "motor_vehicle": 10,
+          "incline": 3,
+          "smoothness": 136,
+          "mapillary": 28,
+          "sidewalk": 1,
+          "width": 4
+        }
+      },
+      "other_footways": {
+        "count": 7048,
+        "ids_sha256": "b014091ae07c0aa180d44b7837bf66046d385ab4f762146ac4f3bdd3e7b7f1c6",
+        "geometry_and_tags_sha256": "9cb08f7320150d21c6fca4b7c296a4f2db6799b82854d933ad1cafbc7938cc13",
+        "field_coverage": {
+          "barrier": 40,
+          "bicycle": 1834,
+          "foot": 1728,
+          "motor_vehicle": 227,
+          "access": 969,
+          "wheelchair": 43,
+          "width": 240,
+          "highway": 6997,
+          "surface": 2848,
+          "lit": 542,
+          "sidewalk": 90,
+          "smoothness": 151,
+          "incline": 245,
+          "step_count": 41,
+          "tactile_paving": 19,
+          "crossing": 496,
+          "sidewalk:both": 6,
+          "mapillary": 3,
+          "footway": 4
+        }
+      },
+      "roads_for_completeness": {
+        "count": 29855,
+        "ids_sha256": "a276571a1312745dcee9581ee36b11b842a794095d207904a2f1e04193210fdc",
+        "geometry_and_tags_sha256": "8d239280d515b1be646fd8ec83f2dab094a796a4f132357c5801b0347c9ee7d0",
+        "field_coverage": {
+          "highway": 29855,
+          "surface": 13100,
+          "lit": 6480,
+          "sidewalk": 1916,
+          "bicycle": 573,
+          "foot": 1474,
+          "smoothness": 179,
+          "access": 1275,
+          "incline": 14,
+          "mapillary": 137,
+          "width": 22,
+          "sidewalk:both": 36,
+          "motor_vehicle": 84,
+          "wheelchair": 4,
+          "tactile_paving": 3,
+          "barrier": 1
+        }
+      }
+    }
+  },
+  "final_checkpoint": {
+    "file": "source-1deac018efb77b54a0abde36b9be179404ba1cc06b0689804fb5c169a3353786.json.gz",
+    "sha256": "1deac018efb77b54a0abde36b9be179404ba1cc06b0689804fb5c169a3353786",
+    "cutoff": "2026-11-01T20:04:20Z",
+    "query_id": "5357c162c8a9dfcba04e25a422dbf733f59d8352b04fe681e8a7b7468f087ecb",
+    "compressed_bytes": 5049875,
+    "objects": 250189
+  },
+  "idempotent_repeat": {
+    "mode": "idempotent_cached_target",
+    "needs_commit": false
+  },
+  "traffic": {
+    "baseline_cache_bytes": 5049875,
+    "successful_delta_response_bytes": 765,
+    "target_full_response_bytes": 5582735,
+    "hosted_incoming_cache_plus_delta_bytes": 5050640,
+    "cache_upload_bytes_additional": 5049875,
+    "caveat": "cache payload estimate excludes artifact ZIP framing/metadata; errors and full oracle are separate overhead"
+  },
+  "delta_trial_passed": true,
+  "daily_full_trial_passed": true,
+  "success": true,
+  "finished_at": "2026-11-01T20:07:36.035566+00:00"
+}
