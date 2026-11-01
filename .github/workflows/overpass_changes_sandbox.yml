@@ -1,0 +1,54 @@
+name: Overpass change-query sandbox
+on:
+  push:
+    branches: [sandbox/overpass-change-queries]
+    paths:
+      - sandbox/change_query_probe.py
+      - sandbox/test_change_query_probe.py
+      - .github/workflows/overpass_changes_sandbox.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: oswm-overpass-change-query-sandbox
+  cancel-in-progress: false
+jobs:
+  compare:
+    if: github.repository == 'kauevestena/oswm_codebase' && github.ref == 'refs/heads/sandbox/overpass-change-queries'
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        city: [curitiba, milan]
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    env:
+      PYTHONUNBUFFERED: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - run: python -m pip install -r requirements.txt
+      - name: Verify byte accounting and fail-closed source handling
+        run: |
+          python sandbox/test_source_benchmark.py
+          python sandbox/test_change_query_probe.py
+      - name: Compare one daily augmented diff with full historical controls
+        run: |
+          python sandbox/change_query_probe.py --city '${{ matrix.city }}' \
+            --work "$RUNNER_TEMP/overpass-changes-${{ matrix.city }}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: overpass-changes-${{ matrix.city }}-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/overpass-changes-${{ matrix.city }}/report.json
+            ${{ runner.temp }}/overpass-changes-${{ matrix.city }}/source-cache/*.json*
+          if-no-files-found: error
+          retention-days: 14
+      # No node checkout, publication, shared source-cache writes, or schedules.

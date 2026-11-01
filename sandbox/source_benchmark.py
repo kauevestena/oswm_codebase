@@ -16,6 +16,7 @@ import subprocess
 import sys
 import time
 import traceback
+import xml.etree.ElementTree as ET
 import zlib
 
 import requests
@@ -120,10 +121,11 @@ class Meter:
     Explicit undecoded raw streams handle both length-delimited and chunked
     responses. Headers/TLS/framing are excluded. Decoded JSON is separate.
     """
-    def __init__(self):
+    def __init__(self, response_format="json"):
         self.events = []
         self.queries = Counter()
         self.phase = ""
+        self.response_format = response_format
 
     def __enter__(self):
         self.original = requests.Session.send
@@ -181,11 +183,20 @@ class Meter:
                               "seconds": round(time.monotonic() - start, 3)})
                 response.raise_for_status()  # avoid OSMnx's recursive 429/504 retry
                 if interpreter:
-                    payload = response.json()
-                    event["osm_base_timestamp"] = payload.get("osm3s", {}).get("timestamp_osm_base")
-                    event["osm_elements"] = len(payload.get("elements", []))
-                    if payload.get("remark"):
-                        raise ValueError("Overpass remark (partial/error response): " + payload["remark"])
+                    if meter.response_format == "xml":
+                        document = ET.fromstring(content)
+                        meta = document.find("meta")
+                        event["osm_base_timestamp"] = meta.get("osm_base") if meta is not None else None
+                        event["actions"] = len(document.findall("action"))
+                        remark = document.find("remark")
+                        if remark is not None:
+                            raise ValueError("Overpass remark: " + "".join(remark.itertext()))
+                    else:
+                        payload = response.json()
+                        event["osm_base_timestamp"] = payload.get("osm3s", {}).get("timestamp_osm_base")
+                        event["osm_elements"] = len(payload.get("elements", []))
+                        if payload.get("remark"):
+                            raise ValueError("Overpass remark (partial/error response): " + payload["remark"])
                     base = event["osm_base_timestamp"]
                     if base and SNAPSHOT != "live" and base < SNAPSHOT:
                         raise ValueError("Overpass database watermark predates the requested snapshot")
