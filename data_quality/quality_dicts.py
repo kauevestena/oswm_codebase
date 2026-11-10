@@ -241,7 +241,6 @@ categories_dict_keys = {
         "about": "Keys that (almost certainly) shouldn't be used at that feature type",
         "dict": improper_keys,
         "type": "keys",
-        "invert_geomtype": False,
         "iso_19157": iso_19157_classification["improper_keys"],
         "occurrences": {
             "sidewalks": {},
@@ -260,7 +259,6 @@ categories_dict_keys = {
         "about": "Keys that may be OK in some specific situations, but may be a mistake",
         "dict": uncanny_keys,
         "type": "keys",
-        "invert_geomtype": False,
         "iso_19157": iso_19157_classification["uncanny_keys"],
         "occurrences": {
             "sidewalks": {},
@@ -279,7 +277,6 @@ categories_dict_keys = {
         "about": "Keys that may be wrong, because there's no wiki article for it",
         "dict": "quality_check/keys_without_wiki.json",
         "type": "keys",
-        "invert_geomtype": False,
         "iso_19157": iso_19157_classification["keys_without_wiki"],
         "occurrences": {
             "sidewalks": {},
@@ -298,7 +295,6 @@ categories_dict_keys = {
         "about": "values that are not wrong, but there's a better  option that is in the commentary",
         "dict": replaceable_values,
         "type": "values",
-        "invert_geomtype": False,
         "iso_19157": iso_19157_classification["replaceable_values"],
         "occurrences": {
             "sidewalks": {},
@@ -317,7 +313,6 @@ categories_dict_keys = {
         "about": "Values that are probably wrong, but they may be mispelled or just unlisted",
         "dict": "quality_check/valid_tag_values.json",
         "type": "values",
-        "invert_geomtype": False,
         "iso_19157": iso_19157_classification["wrong_mispelled_or_unlisted_values"],
         "occurrences": {
             "sidewalks": {},
@@ -336,7 +331,6 @@ categories_dict_keys = {
         "about": "characters that should not be in the value or in the key",
         "dict": invalid_characters,
         "type": "tags",
-        "invert_geomtype": False,
         "iso_19157": iso_19157_classification["invalid_characters"],
         "occurrences": {
             "sidewalks": {},
@@ -355,7 +349,6 @@ categories_dict_keys = {
         "about": "Features that haven't been updated in over five years, potentially outdated.",
         "dict": None,
         "type": "age",
-        "invert_geomtype": False,
         "iso_19157": iso_19157_classification["older_than_five_years"],
         "occurrences": {
             "sidewalks": {},
@@ -374,7 +367,6 @@ categories_dict_keys = {
         "about": "Features that are missing important tags",
         "dict": missing_tags,
         "type": "missing_keys",
-        "invert_geomtype": False,
         "iso_19157": iso_19157_classification["missing_tags"],
         "occurrences": {
             "sidewalks": {},
@@ -400,7 +392,6 @@ geom_dict_keys = {
         "path": disjointed_folderpath,
         "suffix": disjointed_geoms_suffix,
         "type": "geometries",
-        "invert_geomtype": False,
         "iso_19157": iso_19157_classification["disjointed_geometries"],
         "occurrences": {
             "sidewalks": {},
@@ -421,7 +412,6 @@ geom_dict_keys = {
         "path": improper_geoms_folderpath,
         "suffix": improper_geoms_suffix,
         "type": "geometries",
-        "invert_geomtype": True,
         "iso_19157": iso_19157_classification["improper_geometries"],
         "occurrences": {
             "sidewalks": {},
@@ -442,7 +432,6 @@ geom_dict_keys = {
         "path": crossings_lacking_kerbs_folderpath,
         "suffix": crossings_lacking_kerbs_suffix,
         "type": "geometries",
-        "invert_geomtype": False,
         "iso_19157": iso_19157_classification["crossings_lacking_kerbs"],
         "occurrences": {
             "sidewalks": {},
@@ -463,7 +452,6 @@ geom_dict_keys = {
         "path": kerb_on_top_of_non_crossing_folderpath,
         "suffix": kerb_on_top_of_non_crossing_suffix,
         "type": "geometries",
-        "invert_geomtype": False,
         "iso_19157": iso_19157_classification["kerb_on_top_of_non_crossing"],
         "occurrences": {
             "sidewalks": {},

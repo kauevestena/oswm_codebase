@@ -820,12 +820,3 @@ def compose_osm_map_url(lon, lat, z=19):
 
 def join_list_for_req(input_list, character=","):
     return character.join(map(str, input_list))
-
-
-def osm_feat_type_inverter(feat_type):
-    if feat_type == "node":
-        return "way"
-    elif feat_type == "way":
-        return "node"
-    elif feat_type == "relation":
-        return "relation"
