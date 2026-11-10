@@ -933,7 +933,6 @@ def gen_quality_report_page_and_files(
     text,
     occ_type,
     csvpath,
-    invert_geom=False,
     iso_19157=None,
 ):
 
@@ -957,10 +956,6 @@ def gen_quality_report_page_and_files(
 
     valid_featcount = 0
 
-    # inverting feature type, if needed:
-    if invert_geom:
-        feat_types = {k: osm_feat_type_inverter(v) for k, v in feat_types.items()}
-
     op_nodes, op_ways, op_rels = [], [], []
 
     # the main iteration
@@ -976,6 +971,8 @@ def gen_quality_report_page_and_files(
                     if len(line) > 2:
                         if not pd.isna(line[2]):
 
+                            # Invalid geometry does not change OSM identity.
+                            # Keep the source element type for links and exports.
                             feat_type = feat_types[line[0]]
                             
                             if feat_type == "node":

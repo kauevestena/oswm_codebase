@@ -268,7 +268,6 @@ def main():
                 text=curr["about"],
                 occ_type=curr["type"],
                 csvpath=csvpath,
-                invert_geom=curr["invert_geomtype"],
                 iso_19157=curr.get("iso_19157", None),
             )
 
