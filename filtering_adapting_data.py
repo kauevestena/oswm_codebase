@@ -168,6 +168,10 @@ def main():
         # TODO: check if this is the better approach to handle invalid values
         print("     - Replacing Utterly invalid values")
         for subkey in wrong_misspelled_values[category]:
+            # A tag can be absent from every feature in a small node. Keep
+            # missing tags absent rather than inventing observations for them.
+            if subkey not in curr_gdf.columns:
+                continue
             curr_gdf.loc[:, subkey] = curr_gdf[subkey].replace(
                 wrong_misspelled_values[category][subkey]
             )
