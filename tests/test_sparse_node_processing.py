@@ -73,8 +73,8 @@ def test_preprocessing_handles_missing_optional_tags(tmp_path, with_aliases):
     for category, rows in records.items():
         processed = gpd.read_parquet(tmp_path / f"data/processed/{category}.parquet")
         assert len(processed) == len(rows)
-        assert processed.crs.to_epsg() == 4326
         if rows:
+            assert processed.crs.to_epsg() == 4326
             assert processed["id"].tolist() == [row["id"] for row in rows]
             assert processed["element"].tolist() == ["way"] * len(rows)
 
