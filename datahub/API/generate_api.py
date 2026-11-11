@@ -18,17 +18,19 @@ if dh_dir not in sys.path:
 
 import config as node_config  # noqa: E402
 from config import CITY_NAME, USERNAME, REPO_NAME  # noqa: E402
-from constants import node_homepage_url, api_folder  # noqa: E402
+from constants import node_homepage_url, api_folder, METADATA_TIMEZONE  # noqa: E402
 from functions import ensure_parent_folder  # noqa: E402
 from branding import branding_asset_url  # noqa: E402
 from metadata.metadata_generation import metadata_relative_path_for_data  # noqa: E402
 try:  # noqa: E402
+    from .data_freshness import data_generation_html
     from .resource_examples import (
         capabilities_for_resource,
         resource_format,
         square_bbox,
     )
 except ImportError:  # Direct execution from a node checkout.
+    from data_freshness import data_generation_html
     from resource_examples import (  # noqa: E402
         capabilities_for_resource,
         resource_format,
@@ -1268,6 +1270,7 @@ def generate_api_html(endpoints):
             <div class="glass-panel info-card">
                 <h2>Serverless API Details</h2>
                 <p>OSWM exposes processed city datasets and their ISO-aligned JSON metadata as static files hosted on GitHub Pages. Every data endpoint links to its metadata record.</p>
+                <p id="data-generated-at">[DATA_GENERATION_INFO]</p>
                 <div class="base-url-box" id="base-url-display"></div>
             </div>
 
@@ -1955,6 +1958,7 @@ print(data)</pre>
     
     # Process the replacements
     processed_html = (html_template
+                      .replace("[DATA_GENERATION_INFO]", data_generation_html(timezone_name=METADATA_TIMEZONE))
                       .replace("[CITY_NAME]", CITY_NAME)
                       .replace("[USERNAME]", USERNAME)
                       .replace("[REPO_NAME]", REPO_NAME)
