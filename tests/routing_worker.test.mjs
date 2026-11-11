@@ -215,6 +215,36 @@ test('worker preserves directional barriers and computes a fallback baseline', a
     assert.ok(result.comparison);
 });
 
+test('profile-aware snapping skips blocked segments and bounds the access distance', async () => {
+    const request = createWorkerHarness(fixtureGraph([111.2, 111.2, Infinity, Infinity]));
+    await request('init', {
+        graphUrl: 'fixture.oswmg', profileOrder: ['distance', 'accessible']
+    });
+    const click = [0.0018, 0];
+    const baseline = await request('snap', { coordinates: click, profileId: 'distance' });
+    const accessible = await request('snap', { coordinates: click, profileId: 'accessible' });
+    assert.equal(baseline.segmentId, 1);
+    assert.equal(accessible.segmentId, 0);
+    assert.ok(accessible.distanceM > 88 && accessible.distanceM < 90);
+    assert.deepEqual(Array.from(accessible.inputCoordinates), click);
+    await assert.rejects(request('snap', {
+        coordinates: click, profileId: 'accessible', maxDistanceM: 50
+    }), /within 50 m/);
+    await assert.rejects(request('snap', {
+        coordinates: click, profileId: 'nonexistent'
+    }), /Unknown routing profile/);
+});
+
+test('snapping reports an unavailable profile instead of returning an unusable origin', async () => {
+    const request = createWorkerHarness(fixtureGraph([Infinity, Infinity, Infinity, Infinity]));
+    await request('init', {
+        graphUrl: 'fixture.oswmg', profileOrder: ['distance', 'accessible']
+    });
+    await assert.rejects(request('snap', {
+        coordinates: [0.0002, 0], profileId: 'accessible'
+    }), /No usable network segment/);
+});
+
 
 test('worker builds nested accessibility-adjusted isochrone polygons', async () => {
     const request = createWorkerHarness(fixtureGraph());
@@ -342,4 +372,80 @@ test('polygon tracing separates corner-touching rings', () => {
             ring.length - 1
         );
     }
+});
+
+function profileSwitchHarness(workerRequest) {
+    const html = readFileSync(new URL('../routing/routing_demo.html', import.meta.url), 'utf8');
+    const source = html.slice(html.indexOf('function showSnapNotice()'),
+        html.indexOf("compareDistance.addEventListener('change'"));
+    const elements = new Map();
+    let routeCalls = 0;
+    let isochroneCalls = 0;
+    const context = vm.createContext({
+        startClick: [0.0002, 0], endClick: [0.0018, 0],
+        start: { coordinates: [0.0002, 0] }, end: { coordinates: [0.0018, 0] },
+        markers: [], snapGeneration: 0, routeGeneration: 0, isochroneGeneration: 0,
+        profileSelect: { value: 'wheelchair', addEventListener() {} },
+        interactionMode: 'route', comparisonInfo: {}, routingStatus: {},
+        isochroneData: {}, downloadIsochroneButton: {},
+        workerRequest, updateProfileControls() {}, removeDisplayedPaths() {},
+        removeIsochroneLayers() {}, hideRouteInfo() {}, showIsochroneMessage() {},
+        addMarker() {}, updateReadyStatus() {}, selectedProfileLabel: () => 'Wheelchair',
+        calculateRoute() { routeCalls += 1; },
+        calculateIsochrone() { isochroneCalls += 1; },
+        showNoRoute(message) { elements.set('error', { textContent: message }); },
+        document: { getElementById(id) {
+            if (!elements.has(id)) elements.set(id, {});
+            return elements.get(id);
+        } }
+    });
+    vm.runInContext(source, context);
+    return { context, elements, routeCalls: () => routeCalls, isochroneCalls: () => isochroneCalls };
+}
+
+test('changing profiles resnaps original clicks with origin and destination roles', async () => {
+    const requests = [];
+    const harness = profileSwitchHarness(async (type, payload) => {
+        requests.push({ type, ...payload });
+        return { coordinates: [payload.coordinates[0], 0.0001], distanceM: 11 };
+    });
+    await harness.context.refreshProfileEndpoints();
+    assert.equal(requests.length, 2);
+    assert.equal(requests[0].profileId, 'wheelchair');
+    assert.equal(requests[0].role, 'origin');
+    assert.equal(requests[1].role, 'destination');
+    assert.deepEqual(requests.map(request => Array.from(request.coordinates)), [[0.0002, 0], [0.0018, 0]]);
+    assert.equal(harness.context.start.coordinates[1], 0.0001);
+    assert.equal(harness.routeCalls(), 1);
+    assert.match(harness.elements.get('snapNotice').textContent, /11 \/ 11 m/);
+    harness.context.interactionMode = 'isochrone';
+    harness.context.endClick = null;
+    await harness.context.refreshProfileEndpoints();
+    assert.equal(harness.isochroneCalls(), 1);
+});
+
+test('stale profile snaps cannot replace the latest result', async () => {
+    const waiting = [];
+    const harness = profileSwitchHarness((type, payload) => new Promise(resolve => {
+        waiting.push(() => resolve({ coordinates: payload.coordinates, distanceM: 0 }));
+    }));
+    const earlier = harness.context.refreshProfileEndpoints();
+    const latest = harness.context.refreshProfileEndpoints();
+    waiting[2](); waiting[3]();
+    await latest;
+    assert.equal(harness.routeCalls(), 1);
+    waiting[0](); waiting[1]();
+    await earlier;
+    assert.equal(harness.routeCalls(), 1);
+});
+
+test('failed profile snapping clears old endpoints and reports a useful reason', async () => {
+    const harness = profileSwitchHarness(async () => { throw new Error('No usable network segment within 100 m'); });
+    await harness.context.refreshProfileEndpoints();
+    assert.equal(harness.context.start, null);
+    assert.equal(harness.context.end, null);
+    assert.equal(harness.routeCalls(), 0);
+    assert.equal(harness.context.downloadIsochroneButton.disabled, true);
+    assert.match(harness.elements.get('error').textContent, /within 100 m/);
+    assert.deepEqual(Array.from(harness.context.startClick), [0.0002, 0]);
 });

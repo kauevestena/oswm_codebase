@@ -2,9 +2,15 @@
   "name": "oswm-webmap-tests",
   "private": true,
   "scripts": {
-    "test": "node --test tests/routing_worker.test.mjs webmap/snapshot/*.test.mjs webmap/theme_charts/*.test.mjs"
+    "test": "node --test tests/routing*.test.mjs webmap/snapshot/*.test.mjs webmap/theme_charts/*.test.mjs",
+    "benchmark:routing": "node --expose-gc benchmarks/routing_benchmark.mjs"
   },
   "devDependencies": {
-    "echarts": "6.1.0"
+    "@turf/nearest-point-on-line": "7.4.0",
+    "echarts": "6.1.0",
+    "geojson-path-finder": "2.1.0",
+    "ngraph.graph": "20.1.2",
+    "ngraph.path": "1.6.1",
+    "rbush": "4.0.1"
   }
 }

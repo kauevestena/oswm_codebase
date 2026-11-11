@@ -46,6 +46,23 @@ class ProfileValidationTests(unittest.TestCase):
         with self.assertRaises(ProfileValidationError):
             validate_profiles(profiles)
 
+    def test_uncertain_zero_grade_configuration_is_validated(self):
+        for key, value in (
+            ("zero_grade_min_confidence", True),
+            ("zero_grade_min_confidence", 101),
+            ("unconfirmed_zero_grade", 0),
+            ("unconfirmed_zero_grade", None),
+        ):
+            profiles = copy.deepcopy(ROUTING_PROFILES)
+            profiles["wheelchair"]["factors"]["incline"][key] = value
+            with self.subTest(key=key, value=value):
+                with self.assertRaises(ProfileValidationError):
+                    validate_profiles(profiles)
+        profiles = copy.deepcopy(ROUTING_PROFILES)
+        del profiles["wheelchair"]["factors"]["incline"]["unconfirmed_zero_grade"]
+        with self.assertRaises(ProfileValidationError):
+            validate_profiles(profiles)
+
     def test_public_metadata_contains_no_factor_tables(self):
         metadata = public_profile_metadata(ROUTING_PROFILES)
         self.assertEqual(metadata["distance"]["routing_mode"], "distance")
@@ -94,6 +111,45 @@ class NormalizationTests(unittest.TestCase):
 
 
 class GradingTests(unittest.TestCase):
+    def test_absent_tactile_paving_is_difficult_but_not_a_hard_barrier(self):
+        feature = {
+            "crossing": "traffic_signals",
+            "associated_tactile_paving": ["no"],
+            "associated_kerbs": ["lowered"],
+        }
+        result = grade_feature(feature, edge_kind="crossing")
+        blind = result["profiles"]["blind"]["forward"]
+        self.assertTrue(blind["allowed"])
+        self.assertGreater(blind["grade"], 0)
+        self.assertLess(blind["grade"], 20)
+
+    def test_coarse_surface_model_cannot_confirm_an_impassable_incline(self):
+        for confidence, source in ((45, "copernicus_glo30"), (30, "copernicus_glo90")):
+            result = grade_feature(
+                {}, edge_kind="sidewalk", estimated_slope_percent=20,
+                slope_source=source, slope_confidence=confidence,
+            )
+            for profile_id in ("wheelchair", "elderly"):
+                with self.subTest(profile=profile_id, source=source):
+                    for direction in ("forward", "backward"):
+                        graded = result["profiles"][profile_id][direction]
+                        self.assertTrue(graded["allowed"])
+                        self.assertLess(graded["grade"], 40)
+
+    def test_confirmed_steep_inclines_and_explicit_barriers_stay_blocked(self):
+        for feature, slope, confidence in (
+            ({"incline": "20%"}, None, 0),
+            ({}, 20, 90),
+            ({"access": "private"}, 20, 45),
+            ({"smoothness": "impassable"}, 20, 45),
+        ):
+            result = grade_feature(
+                feature, edge_kind="sidewalk", estimated_slope_percent=slope,
+                slope_source="local_lidar_dtm", slope_confidence=confidence,
+            )
+            for profile_id in ("wheelchair", "elderly"):
+                self.assertFalse(result["profiles"][profile_id]["forward"]["allowed"])
+
     def test_perfect_wheelchair_sidewalk_scores_100(self):
         feature = {
             "surface": "concrete",
