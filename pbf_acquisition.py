@@ -297,7 +297,8 @@ def _write_spatial_subset(source, destination, polygon, tags):
                 writer.add(item)
 
 
-def features_from_pbf(osmnx, path, polygon, tags, *, temporary_dir=None):
+def features_from_pbf(osmnx, path, polygon, tags, *, temporary_dir=None,
+                      spatial_prefilter=False, max_matching_objects=1_000_000):
     """Filter tags, retain full ways/relations, then let OSMnx filter the AOI.
 
     Filtering by node coordinates first would lose crossing ways and polygons
@@ -305,23 +306,47 @@ def features_from_pbf(osmnx, path, polygon, tags, *, temporary_dir=None):
     """
     import osmium
 
+    west, south, east, north = polygon.bounds
     with tempfile.TemporaryDirectory(prefix="features-", dir=temporary_dir) as temporary:
         selected = Path(temporary) / "selected.osm.pbf"
         xml = Path(temporary) / "features.osm"
         count = 0
+        processor = osmium.FileProcessor(path)
+        if spatial_prefilter:
+            # C++ location handling sees all nodes before the tag filter. Only
+            # nearby tagged ways/nodes and complete candidate area relations
+            # enter BackReferenceWriter, avoiding a huge regional tag subset.
+            processor.with_locations()
+        processor.with_filter(osmium.filter.KeyFilter(*tags))
         with osmium.BackReferenceWriter(selected, ref_src=path, remove_tags=False, relation_depth=5) as writer:
-            for item in osmium.FileProcessor(path).with_filter(osmium.filter.KeyFilter(*tags)):
+            for item in processor:
                 if not _matches(item.tags, tags):
                     continue
                 if item.is_relation() and item.tags.get("type") not in {"multipolygon", "boundary"}:
                     continue
+                if spatial_prefilter and item.is_node():
+                    if not item.location.valid():
+                        raise PbfAcquisitionError(f"Invalid PBF node {item.id}")
+                    if not (west <= item.lon <= east and south <= item.lat <= north):
+                        continue
+                elif spatial_prefilter and item.is_way():
+                    if not item.nodes or any(not n.location.valid() for n in item.nodes):
+                        raise PbfAcquisitionError(f"Incomplete PBF way {item.id}")
+                    coords = [(n.lon, n.lat) for n in item.nodes]
+                    if (max(x for x, y in coords) < west or min(x for x, y in coords) > east
+                            or max(y for x, y in coords) < south or min(y for x, y in coords) > north):
+                        continue
+                # Area relations remain candidates even when their rings have
+                # no vertices inside the AOI. Reference completion followed by
+                # the existing exact spatial pass handles these safely.
                 count += 1
-                if count > 1_000_000:
+                if count > max_matching_objects:
                     raise PbfAcquisitionError("PBF exceeds one million matching objects; use a smaller region")
                 writer.add(item)
         # BackReferenceWriter retains its ID tracker after close. Release the
         # regional tracker before constructing the smaller AOI reference set.
         del writer
+        del processor
         if not count:
             raise PbfAcquisitionError("No matching features in PBF")
         _write_spatial_subset(selected, xml, polygon, tags)

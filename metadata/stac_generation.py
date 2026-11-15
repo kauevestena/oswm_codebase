@@ -256,6 +256,8 @@ def generate_stac(node_root: str | Path = ".") -> dict:
     node_id = "oswm-" + re.sub(r"[^a-z0-9_.-]+", "-", f"{config.USERNAME}-{config.REPO_NAME}".lower())
     city = config.CITY_NAME
     registry = _read(root / "data/updates/registry.json")
+    from replication_pipeline import registry_for_products
+    registry = registry_for_products(root, registry)
     timezone = _timezone(config)
     catalog = _base("Catalog", node_id, f"{city} — OpenSidewalkMap",
                     "Current published OSWM products. Assets are mutable; historical releases are not retained by this catalog.")

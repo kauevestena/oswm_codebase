@@ -46,7 +46,8 @@ def current_codebase_revision(root: Path) -> str | None:
     return result.stdout.strip() or None if result.returncode == 0 else None
 
 
-def decide(root: Path, *, watcher_status: int, force: bool = False) -> dict[str, Any]:
+def decide(root: Path, *, watcher_status: int, force: bool = False,
+           replication_report: Path | None = None) -> dict[str, Any]:
     registry_path = root / "data/updates/registry.json"
     registry = _load_json(registry_path)
     current_revision = current_codebase_revision(root)
@@ -54,7 +55,12 @@ def decide(root: Path, *, watcher_status: int, force: bool = False) -> dict[str,
     raw_missing = [item for item in RAW_OUTPUTS if not (root / item).is_file()]
     required_missing = missing_required(root)
 
-    if force:
+    replica = _load_json(replication_report) if replication_report is not None else None
+    if replication_report is not None and not replica.get("city_fingerprints"):
+        raise ValueError("Missing validated replication report")
+    if replica is not None and (replica.get("needs_update") or raw_missing):
+        mode, reason = "generate", "replication_city_changes"
+    elif force:
         # force_regeneration requests derived products, not an unnecessary
         # provider refresh. Still acquire on cold/changed/inconclusive runs.
         mode = "generate" if raw_missing or watcher_status != 0 else "rebuild"
@@ -104,6 +110,7 @@ def main(argv: list[str] | None = None) -> int:
     decision = subparsers.add_parser("decide")
     decision.add_argument("--watcher-status", type=int, required=True)
     decision.add_argument("--force", action="store_true")
+    decision.add_argument("--replication-report", type=Path)
     decision.add_argument("--output", type=Path)
     subparsers.add_parser("record-success")
     args = parser.parse_args(argv)
@@ -112,7 +119,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "record-success":
         record_success(root)
         return 0
-    payload = decide(root, watcher_status=args.watcher_status, force=args.force)
+    payload = decide(root, watcher_status=args.watcher_status, force=args.force,
+                     replication_report=args.replication_report)
     rendered = json.dumps(payload, indent=2) + "\n"
     if args.output:
         output = args.output if args.output.is_absolute() else root / args.output
