@@ -1,11 +1,11 @@
 schema_version = 1
 
 [policy]
-# GitHub-hosted scheduled runs can start several hours late. Surface the lag as
-# degraded after three hours, but reserve a failing stale status for a missed
-# seven-hour SLA. In-progress and queued runs remain "updating".
+# Keep the three-hour warning. November 2026 scheduled jobs took up to 12h22m
+# to complete after cron. Round up to 13 hours to allow that observed delay
+# while still detecting a missing run within its daily cycle.
 schedule_warning_minutes = 180
-schedule_grace_minutes = 420
+schedule_grace_minutes = 780
 workflow_history = 100
 api_timeout_seconds = 20
 page_timeout_seconds = 20

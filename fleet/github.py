@@ -157,3 +157,22 @@ class GitHubClient:
                 "url": url,
                 "error": str(error),
             }
+
+    def pages_build_manifest(self, pages_url: str) -> dict[str, Any] | None:
+        url = urllib.parse.urljoin(pages_url.rstrip("/") + "/", "oswm-build.json")
+        request = urllib.request.Request(
+            url,
+            headers={"Accept": "application/json", "Cache-Control": "no-cache"},
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=self.page_timeout_seconds) as response:
+                manifest = json.load(response)
+        except urllib.error.HTTPError as error:
+            if error.code == 404:
+                return None
+            raise GitHubError(f"Pages manifest returned HTTP {error.code}") from error
+        except (urllib.error.URLError, TimeoutError, ValueError) as error:
+            raise GitHubError(f"Could not read Pages manifest: {error}") from error
+        if not isinstance(manifest, dict):
+            raise GitHubError("Pages manifest is not a JSON object")
+        return manifest
