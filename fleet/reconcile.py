@@ -201,7 +201,7 @@ def inspect_node(
             issues,
             "warning",
             "products_out_of_sync",
-            f"published products were built with {built_core_sha or 'unknown core'}; desired is {desired_sha}",
+            f"repository products were built with {built_core_sha or 'unknown core'}; desired is {desired_sha}",
         )
 
     managed_revision = None
@@ -326,6 +326,7 @@ def inspect_node(
 
     pages = client.probe_url(node.pages_url)
     result["pages"] = pages
+    result["published_core_sha"] = None
     if not pages.get("ok"):
         _issue(
             issues,
@@ -334,6 +335,25 @@ def inspect_node(
             f"Pages probe returned {pages.get('status') or pages.get('error') or 'an error'}",
         )
         stale = True
+    elif result["architecture"] == "thin" and build_manifest is not None:
+        try:
+            published_manifest = client.pages_build_manifest(node.pages_url)
+        except GitHubError as error:
+            _issue(issues, "warning", "published_build_provenance_unavailable", str(error))
+        else:
+            if published_manifest is None:
+                _issue(issues, "warning", "published_build_provenance_missing", "Pages has no oswm-build.json")
+            else:
+                published_core = published_manifest.get("core")
+                if isinstance(published_core, dict):
+                    result["published_core_sha"] = published_core.get("sha")
+                if published_manifest != build_manifest:
+                    _issue(
+                        issues,
+                        "warning",
+                        "published_build_out_of_sync",
+                        f"Pages serves a different oswm-build.json than {node.branch}",
+                    )
 
     if stale:
         result["status"] = "stale"
@@ -398,8 +418,8 @@ def markdown_summary(report: dict[str, Any]) -> str:
         f"Observed: `{report['generated_at']}`  ",
         f"Desired core: `{report.get('desired_core_sha') or 'not checked'}`",
         "",
-        "| Node | Status | Core | Daily | Weekly | Pages | Issues |",
-        "|---|---|---|---|---|---|---:|",
+        "| Node | Status | Built or pinned core | Published core | Latest daily (UTC) | Latest weekly (UTC) | Pages | Issues |",
+        "|---|---|---|---|---|---|---|---|",
     ]
     for node in report["nodes"]:
         workflows = node.get("workflows", {})
@@ -407,21 +427,22 @@ def markdown_summary(report: dict[str, Any]) -> str:
         def conclusion(kind: str) -> str:
             latest = workflows.get(kind, {}).get("latest") or {}
             status = latest.get("status")
-            if status == "completed":
-                return str(latest.get("conclusion") or status)
-            return str(status or latest.get("conclusion") or "—")
+            label = (latest.get("conclusion") or status) if status == "completed" else status
+            created = parse_time(latest.get("created_at"))
+            return f"{label or '—'} ({created:%Y-%m-%d %H:%M})" if created else str(label or "—")
 
         pages = node.get("pages") or {}
         page_status = str(pages.get("status") or ("ok" if pages.get("ok") else "—"))
         lines.append(
-            "| {id} | {status} | `{core}` | {daily} | {weekly} | {pages} | {issues} |".format(
+            "| {id} | {status} | `{core}` | `{published_core}` | {daily} | {weekly} | {pages} | {issues} |".format(
                 id=node["id"],
                 status=node["status"],
-                core=_short_sha(node.get("core_sha")),
+                core=_short_sha(node.get("built_core_sha") or node.get("core_sha")),
+                published_core=_short_sha(node.get("published_core_sha")),
                 daily=conclusion("daily"),
                 weekly=conclusion("weekly"),
                 pages=page_status,
-                issues=len(node.get("issues", [])),
+                issues=", ".join(f"`{issue['code']}`" for issue in node.get("issues", [])) or "—",
             )
         )
     return "\n".join(lines) + "\n"

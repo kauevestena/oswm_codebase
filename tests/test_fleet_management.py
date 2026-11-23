@@ -18,15 +18,19 @@ REVISION = "a" * 40
 
 
 class FakeClient:
-    def __init__(self, snapshots, pages=None):
+    def __init__(self, snapshots, pages=None, manifests=None):
         self.snapshots = snapshots
         self.pages = pages or {}
+        self.manifests = manifests or {}
 
     def node_snapshot(self, repository, branch, history):
         return self.snapshots[repository]
 
     def probe_url(self, url):
         return self.pages.get(url, {"ok": True, "status": 200, "url": url})
+
+    def pages_build_manifest(self, pages_url):
+        return self.manifests.get(pages_url)
 
 
 def _registry(tmp_path, *, enabled=True):
@@ -103,7 +107,7 @@ def test_canonical_registry_is_valid_and_covers_current_fleet():
     assert registry.nodes[0].role == "reference"
     assert all(node.enabled for node in registry.nodes)
     assert registry.policy.schedule_warning_minutes == 180
-    assert registry.policy.schedule_grace_minutes == 420
+    assert registry.policy.schedule_grace_minutes == 780
 
 
 def test_previous_scheduled_time_supports_daily_and_weekly_crons():
@@ -175,6 +179,39 @@ def test_reconcile_warns_about_scheduler_lag_before_failing(tmp_path):
     node = report["nodes"][0]
     assert node["status"] == "degraded"
     assert {issue["code"] for issue in node["issues"]} == {"daily_delayed"}
+
+
+@pytest.mark.parametrize(("observed_hour", "status", "issue_suffix"), [
+    (15, "degraded", "delayed"),
+    (20, "degraded", "delayed"),
+    (22, "stale", "overdue"),
+])
+def test_fleet_grace_warns_during_observed_scheduler_lag_then_fails(
+    observed_hour, status, issue_suffix
+):
+    snapshot = _healthy_snapshot()
+    snapshot["runs"] = [
+        _run("data_daily_updating.yml", "2026-11-21T15:27:36Z"),
+        _run("weekly.yml", "2026-11-15T15:34:50Z"),
+    ]
+    registry_path = ROOT / "fleet/registry.toml"
+    registry = load_registry(registry_path)
+    report = reconcile(
+        registry_path,
+        FakeClient({node.repository: snapshot for node in registry.nodes}),
+        now=datetime(2026, 11, 22, observed_hour, 27, tzinfo=timezone.utc),
+        desired_sha=REVISION,
+        desired_managed_revision=2,
+    )
+
+    curitiba = report["nodes"][0]
+    assert curitiba["status"] == status
+    assert {issue["code"] for issue in curitiba["issues"]} == {
+        f"daily_{issue_suffix}", f"weekly_{issue_suffix}"
+    }
+    summary = markdown_summary(report)
+    assert "success (2026-11-21 15:27)" in summary
+    assert f"`weekly_{issue_suffix}`" in summary
 
 
 def test_registry_rejects_warning_threshold_at_or_after_grace(tmp_path):
@@ -340,7 +377,10 @@ def test_reconcile_accepts_thin_node_build_provenance(tmp_path):
 
     report = reconcile(
         registry,
-        FakeClient({"example/test-node": snapshot}),
+        FakeClient(
+            {"example/test-node": snapshot},
+            manifests={"https://example.github.io/test-node/": json.loads(snapshot["build_text"])},
+        ),
         now=datetime(2026, 9, 7, 10, 0, tzinfo=timezone.utc),
         desired_sha=REVISION,
         desired_managed_revision=2,
@@ -349,9 +389,45 @@ def test_reconcile_accepts_thin_node_build_provenance(tmp_path):
     node = report["nodes"][0]
     assert node["architecture"] == "thin"
     assert node["built_core_sha"] == REVISION
+    assert node["published_core_sha"] == REVISION
     assert node["status"] == "healthy"
     assert node["issues"] == []
     assert "sync" not in node["workflows"]
+    assert "| test-node | healthy | `aaaaaaaa` | `aaaaaaaa` |" in markdown_summary(report)
+
+
+@pytest.mark.parametrize(("published_manifest", "issue"), [
+    (None, "published_build_provenance_missing"),
+    ({"generated_at": "2026-09-06T07:00:00Z", "core": {"sha": REVISION}},
+     "published_build_out_of_sync"),
+    ({"generated_at": "2026-09-07T07:00:00Z", "core": {"sha": "b" * 40}},
+     "published_build_out_of_sync"),
+])
+def test_reconcile_warns_when_reachable_pages_lacks_the_repository_build(
+    tmp_path, published_manifest, issue
+):
+    snapshot = _healthy_snapshot()
+    snapshot["core_sha"] = None
+    snapshot["build_text"] = json.dumps({
+        "generated_at": "2026-09-07T07:00:00Z", "core": {"sha": REVISION}
+    })
+    client = FakeClient(
+        {"example/test-node": snapshot},
+        manifests={"https://example.github.io/test-node/": published_manifest},
+    )
+    report = reconcile(
+        _registry(tmp_path),
+        client,
+        now=datetime(2026, 9, 7, 10, tzinfo=timezone.utc),
+        desired_sha=REVISION,
+    )
+    node = report["nodes"][0]
+    assert node["status"] == "degraded"
+    assert node["pages"]["status"] == 200
+    assert {detail["code"] for detail in node["issues"]} == {issue}
+    assert node["published_core_sha"] == (
+        published_manifest["core"]["sha"] if published_manifest else None
+    )
 
 
 def test_reconcile_treats_gitlink_free_node_as_thin_before_first_manifest(tmp_path):
