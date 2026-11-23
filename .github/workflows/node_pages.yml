@@ -1,0 +1,58 @@
+name: Reusable OSWM Pages deployment
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+  actions: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    env:
+      PAGES_ARTIFACT_NAME: github-pages-${{ github.run_attempt }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        id: upload
+        with:
+          name: ${{ env.PAGES_ARTIFACT_NAME }}
+          path: .
+      - name: Wait for the Pages artifact to be listed
+        timeout-minutes: 1
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PAGES_ARTIFACT_ID: ${{ steps.upload.outputs.artifact_id }}
+        run: |
+          if [[ ! "$PAGES_ARTIFACT_ID" =~ ^[0-9]+$ ]]; then
+            echo "::error::The Pages upload did not return an artifact ID."
+            exit 1
+          fi
+          # The upload can finish before the artifact listing reflects it.
+          for attempt in {1..6}; do
+            sleep 5
+            if listed_id=$(gh api --method GET \
+              "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/artifacts" \
+              -f "name=$PAGES_ARTIFACT_NAME" \
+              --jq '.artifacts[] | select(.expired == false) | .id') &&
+              [[ "$listed_id" == "$PAGES_ARTIFACT_ID" ]]; then
+              exit 0
+            fi
+          done
+          echo "::error::Pages artifact $PAGES_ARTIFACT_ID did not appear in this run's artifact list."
+          exit 1
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: ${{ env.PAGES_ARTIFACT_NAME }}
