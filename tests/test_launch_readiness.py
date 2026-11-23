@@ -391,7 +391,9 @@ def test_workflow_contracts_are_parseable_scoped_and_serialized():
         assert "group: oswm-node-writer-${{ github.repository }}" in (
             ROOT / "workflows" / name
         ).read_text()
-    assert "actions/deploy-pages@v4" in (ROOT / "workflows/pages.yml").read_text()
+    pages_caller = yaml.load((ROOT / "workflows/pages.yml").read_text(), Loader=yaml.BaseLoader)
+    assert pages_caller["jobs"]["deploy"]["uses"].endswith("/node_pages.yml@main")
+    assert pages_caller["permissions"]["actions"] == "read"
     updater = (ROOT / "workflows/update_codebase.yml").read_text()
     reusable_updater = (
         ROOT / ".github/workflows/node_codebase_sync.yml"
@@ -420,6 +422,56 @@ def test_workflow_contracts_are_parseable_scoped_and_serialized():
     manifest = json.loads((ROOT / "workflows/manifest.json").read_text())
     assert isinstance(manifest["revision"], int) and manifest["revision"] > 0
     assert "workflows/deploy_pages.yml" in manifest["retired"]
+
+
+@pytest.mark.parametrize(("publish_listing", "exit_code", "polls"), [
+    ("137", 0, 3),
+    ("136", 1, 6),
+])
+def test_pages_deploy_waits_for_exact_upload(tmp_path, publish_listing, exit_code, polls):
+    workflow = yaml.load(
+        (ROOT / ".github/workflows/node_pages.yml").read_text(), Loader=yaml.BaseLoader
+    )
+    assert "workflow_call" in workflow["on"]
+    job = workflow["jobs"]["deploy"]
+    assert job["env"]["PAGES_ARTIFACT_NAME"] == "github-pages-${{ github.run_attempt }}"
+    upload, wait, deploy = job["steps"][-3:]
+    assert upload["id"] == "upload"
+    assert deploy["uses"] == "actions/deploy-pages@v4"
+    assert upload["with"]["name"] == deploy["with"]["artifact_name"]
+    assert wait["env"]["PAGES_ARTIFACT_ID"] == "${{ steps.upload.outputs.artifact_id }}"
+
+    calls = tmp_path / "artifact-listings"
+    shims = """
+    sleep() { :; }
+    gh() {
+        printf '%s\n' "$*" >> "$CALLS"
+        case $(wc -l < "$CALLS") in
+            1) return 0 ;;
+            2) printf '%s\n' 136 ;;
+            *) printf '%s\n' "$PUBLISH_LISTING" ;;
+        esac
+    }
+    """
+    result = subprocess.run(
+        ["bash", "-e", "-c", shims + wait["run"]],
+        env={
+            "CALLS": str(calls),
+            "PUBLISH_LISTING": publish_listing,
+            "PAGES_ARTIFACT_ID": "137",
+            "PAGES_ARTIFACT_NAME": "github-pages-2",
+            "GITHUB_REPOSITORY": "example/node",
+            "GITHUB_RUN_ID": "92",
+        },
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert result.returncode == exit_code
+    queries = calls.read_text().splitlines()
+    assert len(queries) == polls
+    assert all("repos/example/node/actions/runs/92/artifacts -f name=github-pages-2" in query
+               for query in queries)
 
 
 def test_tile_generation_limit_matches_managed_workflow_guard():
