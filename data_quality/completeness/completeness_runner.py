@@ -1,11 +1,20 @@
-"""Generate completeness from the local OSM snapshot; optionally backfill one date using OHSOME v2."""
+"""
+Completeness analysis runner for OSWM.
+
+Hybrid pipeline:
+- Current month: computed from local GeoParquet data (fast, offline)
+- Historical months: OHSOME API at Z15 (fewer calls than Z17)
+
+First run:  3 prior months via OHSOME + current month local = 4 timestamps
+Monthly:    +1 current (local) + -1 historical (OHSOME extending backwards)
+
+Output: quality_check/completeness/data.json
+"""
 
 import os
 import sys
 import json
 import argparse
-import tempfile
-from datetime import date
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
@@ -20,19 +29,15 @@ DATA_JSON_PATH = os.path.join(OUTPUT_DIR, "data.json")
 def main():
     parser = argparse.ArgumentParser(description="OSWM Completeness Analysis")
     parser.add_argument("--silent", action="store_true", help="Run in automated silent mode")
-    parser.add_argument("--offline", action="store_true", help="Without historical queries (the default)")
-    parser.add_argument("--history-date", type=date.fromisoformat, help="Backfill one UTC date via authenticated OHSOME v2")
-    parser.add_argument("--refresh-roads", action="store_true", help="Refresh the current road snapshot before measuring it")
+    parser.add_argument("--offline", action="store_true", help="Run in offline mode without OHSOME queries")
     args = parser.parse_args()
-    if args.offline and args.history_date:
-        parser.error("--offline and --history-date are mutually exclusive")
 
     def p(msg):
         if not args.silent:
             print(msg)
 
     p("=" * 60)
-    p("OSWM Completeness Analysis")
+    p("OSWM Completeness Analysis (Hybrid)")
     p("=" * 60)
 
     # 1. Get bounds
@@ -59,8 +64,7 @@ def main():
         bounds,
         existing_data=existing_data,
         silent=args.silent,
-        historical_date=args.history_date.isoformat() if args.history_date else None,
-        refresh_roads=args.refresh_roads,
+        offline=args.offline,
     )
 
     elapsed = time.time() - t0
@@ -68,14 +72,11 @@ def main():
 
     # 4. Save JSON
     create_folder_if_not_exists(OUTPUT_DIR)
-    # Render both before replacing existing outputs. Failed backfills cannot replace history.
-    with tempfile.TemporaryDirectory(prefix=".completeness-", dir=OUTPUT_DIR) as stage:
-        stage_json = os.path.join(stage, "data.json")
-        dump_json(results, stage_json)
-        generate_completeness_map(results, stage, silent=args.silent)
-        os.replace(os.path.join(stage, "index.html"), os.path.join(OUTPUT_DIR, "index.html"))
-        os.replace(stage_json, DATA_JSON_PATH)
+    dump_json(results, DATA_JSON_PATH)
     p(f"Data saved to {DATA_JSON_PATH}")
+
+    # 5. Generate map
+    generate_completeness_map(results, OUTPUT_DIR, silent=args.silent)
 
     # 6. Record timestamp
     record_datetime("Completeness Analysis")

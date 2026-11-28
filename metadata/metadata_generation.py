@@ -89,7 +89,7 @@ FOLDER_PROFILES: dict[str, dict[str, Any]] = {
         "title": "Raw pedestrian-network data",
         "abstract": "Unfiltered pedestrian-network extracts acquired for the configured node area.",
         "process": "Acquired from OpenStreetMap-compatible services for the configured node coverage.",
-        "sources": ["OpenStreetMap", "Overpass / Geofabrik"],
+        "sources": ["OpenStreetMap", "ohsome API"],
     },
     "tiles": {
         "title": "Pedestrian-network vector tiles",
@@ -107,7 +107,7 @@ FOLDER_PROFILES: dict[str, dict[str, Any]] = {
         "title": "Update and version history",
         "abstract": "Refresh status, OSM changeset monitoring, and feature-version history.",
         "process": "Generated from node workflow executions and OpenStreetMap history services.",
-        "sources": ["OpenStreetMap", "Archived OHSOME v1 records", "OSWM workflows"],
+        "sources": ["OpenStreetMap", "ohsome API", "OSWM workflows"],
     },
     "vrts": {
         "title": "Virtual dataset descriptors",

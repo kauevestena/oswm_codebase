@@ -3,7 +3,8 @@
 Full acquisition now tries the configured Overpass endpoints and retries, then
 downloads a current Geofabrik `.osm.pbf` snapshot if they all fail. No API key is
 required. This applies to both pedestrian layers in `getting_data.py` and the
-road network used by current completeness analysis. See [the v1 cutover](OHSOME_V2_CUTOVER.md) for history and daily refresh.
+road network used by current completeness analysis. Existing ohsome incremental
+updates still run first when eligible.
 
 The fallback selects the smallest Geofabrik region whose download boundary
 covers the entire requested polygon. For Hiroshima's stored boundary and its
@@ -58,7 +59,7 @@ no additional native command-line tools are required.
   own provider attribution.
 
 This fallback supplies a current snapshot. Historical completeness, contributor
-statistics and changeset histories are handled separately; see the cutover guide.
+statistics, changesets and other history-dependent ohsome work are unchanged.
 It also does not address the separate Hiroshima runtime-validation errors for
 legacy `oswm_codebase/` asset URLs.
 

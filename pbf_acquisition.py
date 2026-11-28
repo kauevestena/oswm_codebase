@@ -31,21 +31,18 @@ class PbfAcquisitionError(RuntimeError):
     """The PBF provider could not supply a complete, sufficiently fresh snapshot."""
 
 
-def pbf_options_from_config(config, *, minimum_timestamp=None, excluded_tags=None):
+def pbf_options_from_config(config, *, minimum_timestamp=None):
     """Defaults also enable the fallback on existing nodes without config edits."""
     get = config.get if isinstance(config, Mapping) else lambda k, d: getattr(config, k, d)
     if not get("PBF_FALLBACK_ENABLED", True):
         return None
-    options = {
+    return {
         "region": get("PBF_REGION", "auto"),
         "cache_dir": get("PBF_CACHE_DIR", ".cache/oswm/pbf"),
         "max_download_bytes": get("PBF_MAX_DOWNLOAD_MIB", 1024) * 1024 * 1024,
         "max_age_hours": get("PBF_MAX_AGE_HOURS", 72),
         "minimum_timestamp": minimum_timestamp,
     }
-    if excluded_tags:
-        options["excluded_tags"] = excluded_tags
-    return options
 
 
 def _download(url, destination, *, max_bytes, deadline_seconds=900):
@@ -199,11 +196,7 @@ def _cached_snapshot(url, cache_dir, *, max_download_bytes, max_age_hours, minim
     # TemporaryDirectory also cleans up failed or interrupted downloads.
     with tempfile.TemporaryDirectory(prefix="download-", dir=cache_dir) as temporary:
         candidate = Path(temporary) / "snapshot.osm.pbf"
-        transfer_start = time.monotonic()
-        LOGGER.warning("Starting cold PBF transfer: %s", url)
         checksum = _download(url, candidate, max_bytes=max_download_bytes)
-        LOGGER.warning("PBF transfer complete: %d bytes in %.2f s (SHA-256 %s)",
-                       candidate.stat().st_size, time.monotonic() - transfer_start, checksum)
         timestamp = _snapshot_timestamp(candidate, **validation)
         metadata = {
             "source_url": url,
@@ -225,7 +218,7 @@ def _matches(tags, query):
     )
 
 
-def _write_spatial_subset(source, destination, polygon, tags, excluded_tags):
+def _write_spatial_subset(source, destination, polygon, tags):
     """Bound memory before OSMnx loads XML, retaining complete intersecting objects.
 
     Envelopes deliberately over-select: crossing ways and enclosing polygons
@@ -249,9 +242,6 @@ def _write_spatial_subset(source, destination, polygon, tags, excluded_tags):
         return (min(item[0] for item in items), min(item[1] for item in items),
                 max(item[2] for item in items), max(item[3] for item in items))
 
-    def is_candidate(item):
-        return _matches(item.tags, tags) and not _matches(item.tags, excluded_tags)
-
     ways, relations, relation_bounds = {}, {}, {}
     processor = osmium.FileProcessor(source).with_locations()
     with osmium.BackReferenceWriter(destination, ref_src=source, remove_tags=False, relation_depth=5) as writer:
@@ -259,7 +249,7 @@ def _write_spatial_subset(source, destination, polygon, tags, excluded_tags):
             if item.is_node():
                 if not item.location.valid():
                     raise PbfAcquisitionError(f"Invalid PBF node {item.id}")
-                if is_candidate(item) and west <= item.lon <= east and south <= item.lat <= north:
+                if _matches(item.tags, tags) and west <= item.lon <= east and south <= item.lat <= north:
                     writer.add(item)
             elif item.is_way():
                 if not item.nodes or any(not node.location.valid() for node in item.nodes):
@@ -268,7 +258,7 @@ def _write_spatial_subset(source, destination, polygon, tags, excluded_tags):
                 bounds = (min(x for x, y in coordinates), min(y for x, y in coordinates),
                           max(x for x, y in coordinates), max(y for x, y in coordinates))
                 ways[item.id] = bounds
-                if is_candidate(item) and intersects(bounds):
+                if _matches(item.tags, tags) and intersects(bounds):
                     writer.add(item)
             elif item.is_relation():
                 members = []
@@ -303,28 +293,25 @@ def _write_spatial_subset(source, destination, polygon, tags, excluded_tags):
         for identifier in relations:
             relation_envelope(identifier)
         for item in osmium.FileProcessor(source, entities=osmium.osm.RELATION):
-            if is_candidate(item) and intersects(relation_bounds[item.id]):
+            if _matches(item.tags, tags) and intersects(relation_bounds[item.id]):
                 writer.add(item)
 
 
-def features_from_pbf(osmnx, path, polygon, tags, *, temporary_dir=None, excluded_tags=None):
+def features_from_pbf(osmnx, path, polygon, tags, *, temporary_dir=None):
     """Filter tags, retain full ways/relations, then let OSMnx filter the AOI.
 
     Filtering by node coordinates first would lose crossing ways and polygons
     enclosing the AOI. OSMnx applies the final geometry intersection instead.
-    Explicitly excluded objects are not roots, but still become dependencies
-    when an included object references them.
     """
     import osmium
 
-    excluded_tags = excluded_tags or {}
     with tempfile.TemporaryDirectory(prefix="features-", dir=temporary_dir) as temporary:
         selected = Path(temporary) / "selected.osm.pbf"
         xml = Path(temporary) / "features.osm"
         count = 0
         with osmium.BackReferenceWriter(selected, ref_src=path, remove_tags=False, relation_depth=5) as writer:
             for item in osmium.FileProcessor(path).with_filter(osmium.filter.KeyFilter(*tags)):
-                if not _matches(item.tags, tags) or _matches(item.tags, excluded_tags):
+                if not _matches(item.tags, tags):
                     continue
                 if item.is_relation() and item.tags.get("type") not in {"multipolygon", "boundary"}:
                     continue
@@ -337,7 +324,7 @@ def features_from_pbf(osmnx, path, polygon, tags, *, temporary_dir=None, exclude
         del writer
         if not count:
             raise PbfAcquisitionError("No matching features in PBF")
-        _write_spatial_subset(selected, xml, polygon, tags, excluded_tags)
+        _write_spatial_subset(selected, xml, polygon, tags)
         features = osmnx.features_from_xml(xml, polygon=polygon, tags=tags)
         if features.empty or features.geometry.isna().any() or features.geometry.is_empty.any():
             raise PbfAcquisitionError("PBF produced empty or incomplete feature geometry")
@@ -346,7 +333,7 @@ def features_from_pbf(osmnx, path, polygon, tags, *, temporary_dir=None, exclude
 
 def features_from_polygon_pbf(
     osmnx, polygon, tags, *, region="auto", cache_dir=".cache/oswm/pbf",
-    max_download_bytes=1024 * 1024 * 1024, max_age_hours=72, minimum_timestamp=None, excluded_tags=None,
+    max_download_bytes=1024 * 1024 * 1024, max_age_hours=72, minimum_timestamp=None,
 ):
     """Acquire current features with an auditable source timestamp and checksum."""
     cache_dir = Path(cache_dir)
@@ -360,13 +347,7 @@ def features_from_polygon_pbf(
         url, cache_dir, max_download_bytes=max_download_bytes,
         max_age_hours=max_age_hours, minimum_timestamp=minimum_timestamp,
     )
-    parse_start = time.monotonic()
-    LOGGER.warning("Parsing PBF: region=%s snapshot=%s cache_hit=%s", identifier, isoformat_utc(timestamp), cache_hit)
-    features = features_from_pbf(
-        osmnx, path, polygon, tags, temporary_dir=cache_dir, excluded_tags=excluded_tags,
-    )
-    parse_seconds = round(time.monotonic() - parse_start, 3)
-    LOGGER.warning("PBF parsing complete: %d features in %.3f s", len(features), parse_seconds)
+    features = features_from_pbf(osmnx, path, polygon, tags, temporary_dir=cache_dir)
     features.attrs[PROVENANCE_KEY] = {
         "provider": "geofabrik_pbf",
         "region": identifier,
@@ -375,6 +356,5 @@ def features_from_polygon_pbf(
         "acquired_at": isoformat_utc(),
         "sha256": checksum,
         "cache_hit": cache_hit,
-        "parse_seconds": parse_seconds,
     }
     return features
