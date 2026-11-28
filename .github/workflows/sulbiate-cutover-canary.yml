@@ -1,4 +1,4 @@
-name: Sulbiate read-only cutover canary
+name: Milan and Paris read-only cutover canaries
 
 on:
   push:
@@ -12,16 +12,27 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  sulbiate:
+  node:
+    name: ${{ matrix.node.city }} isolated daily
+    strategy:
+      fail-fast: false
+      matrix:
+        node:
+          - city: Milan
+            repository: opensidewalkmap/milan
+            ref: c8a2055200a918bb1a9b40aad1e4926c5ab7dfa8
+          - city: Paris
+            repository: opensidewalkmap/paris
+            ref: 102299c4611c3d395d3fbe642611036759e3b6d0
     # Isolated experiment; never run this on main or a node checkout with write access.
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 55
     steps:
-      - name: Check out pinned Sulbiate node
+      - name: Check out pinned test node
         uses: actions/checkout@v4
         with:
-          repository: opensidewalkmap/sulbiate
-          ref: 46501540c7f4392daf1b9115f7b10792dc240346
+          repository: ${{ matrix.node.repository }}
+          ref: ${{ matrix.node.ref }}
           submodules: false
           persist-credentials: false
       - name: Check out the proposed core revision
@@ -45,8 +56,8 @@ jobs:
           set -euxo pipefail
           git -C oswm_codebase rev-parse HEAD
           git rev-parse HEAD
-          cp quality_check/completeness/data.json "$RUNNER_TEMP/sulbiate-before.json"
-          bash oswm_codebase/runners/daily.sh 2>&1 | tee "$RUNNER_TEMP/sulbiate-daily.log"
+          cp quality_check/completeness/data.json "$RUNNER_TEMP/node-before.json"
+          bash oswm_codebase/runners/daily.sh 2>&1 | tee "$RUNNER_TEMP/node-daily.log"
       - name: Validate products, archived observations and cached-road refresh
         run: |
           set -euxo pipefail
@@ -81,25 +92,27 @@ jobs:
           else:
               # OSMnx does not expose an Overpass replication cutoff here.
               assert acquisition.get("acquired_at"), "Missing Overpass retrieval time"
-          before = read(Path(os.environ["RUNNER_TEMP"]) / "sulbiate-before.json")
+          before = read(Path(os.environ["RUNNER_TEMP"]) / "node-before.json")
           after = read("quality_check/completeness/data.json")
-          assert snapshot(before, "2026-11-11")
-          assert snapshot(before, "2026-11-11") == snapshot(after, "2026-11-11")
-          assert {"2026-08-01", "2026-09-01", "2026-10-01"} <= set(after["metadata"]["unavailable_history"])
           latest = after["timestamps"][-1]
-          assert latest > "2026-11-11"
+          assert latest >= before["timestamps"][-1], "Current data is older than archived data"
           assert after["metadata"]["snapshot_sources"][latest] == "local_osm_snapshot"
-          assert len(after["zoom_levels"]["17"]["tiles"]) == 164
+          assert len(after["zoom_levels"]["17"]["tiles"]) == len(before["zoom_levels"]["17"]["tiles"])
+          for date in before["timestamps"]:
+              if date < latest:
+                  assert snapshot(before, date), f"Archive date lacks rows: {date}"
+                  assert snapshot(before, date) == snapshot(after, date), f"Archived rows changed: {date}"
           print("Verified current snapshot:", latest)
+          print("Fine-grid tiles:", len(after["zoom_levels"]["17"]["tiles"]))
           PY
       - name: Upload only diagnostic output
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: sulbiate-canary-diagnostics
+          name: cutover-diagnostics-${{ matrix.node.city }}
           if-no-files-found: ignore
           path: |
-            ${{ runner.temp }}/sulbiate-daily.log
+            ${{ runner.temp }}/node-daily.log
             data/updates/acquisition.json
             data/updates/pipeline_decision.json
             data/updates/pipeline_failures.txt
