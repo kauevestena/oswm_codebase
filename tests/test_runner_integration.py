@@ -67,7 +67,7 @@ def _prepare_fixture(root: Path, *, complete: bool, recorded_revision: str | Non
         shutil.copy2(ROOT / relative, destination)
 
     stub = '''from pathlib import Path
-import os, sys
+import json, os, sys
 root = Path.cwd()
 relative = Path(__file__).resolve().relative_to(root / "oswm_codebase").as_posix()
 with (root / "events.log").open("a") as handle:
@@ -84,11 +84,16 @@ if relative == "build_provenance.py":
 if relative == "datahub/watcher/watcher_lib.py":
     with (root / "watcher_calls.log").open("a") as handle:
         handle.write(" ".join(sys.argv[1:]) + "\\n")
-    if "--render-only" in sys.argv or "--render-current" in sys.argv:
+    if "--render-snapshot" in sys.argv:
         raise SystemExit(0)
     raise SystemExit(int(os.environ.get("WATCHER_EXIT", "0")))
 if relative == "getting_data.py":
-    for item in %r:
+    names = %r
+    changed = bool(int(os.environ.get("WATCHER_EXIT", "0"))) or any(not (root / item).is_file() for item in names)
+    report = root / "data/updates/snapshot_changes.json"
+    report.parent.mkdir(parents=True, exist_ok=True)
+    report.write_text(json.dumps({Path(item).stem: changed for item in names if item.startswith("data/raw/")}))
+    for item in names:
         path = root / item
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text("raw\\n")
@@ -159,7 +164,7 @@ def test_cold_runner_fetches_then_generates_complete_contract(tmp_path):
     assert "getting_data.py" in events
     assert "getting_feature_versioning_data.py" in events
     assert "filtering_adapting_data.py" in events
-    assert events.count("datahub/watcher/watcher_lib.py") == 2
+    assert events.count("datahub/watcher/watcher_lib.py") == 1
 
 
 def test_weekly_runner_regenerates_versioning_consumers():
@@ -172,13 +177,14 @@ def test_weekly_runner_regenerates_versioning_consumers():
     assert versioning < filtering < quality < statistics < metadata
 
 
-def test_no_change_runner_skips_osm_dependent_generation(tmp_path):
+def test_unchanged_snapshot_skips_derived_generation(tmp_path):
     _prepare_fixture(tmp_path, complete=True, recorded_revision="same")
     result = _run(tmp_path, revision="same", watcher_exit=0)
     assert result.returncode == 0, result.stdout + result.stderr
     events = (tmp_path / "events.log").read_text()
-    assert "getting_data.py" not in events
+    assert "getting_data.py" in events
     assert "filtering_adapting_data.py" not in events
+    assert "data_quality/completeness/completeness_runner.py" in events
     assert "metadata/metadata_generation.py" in events
     assert events.index("metadata/metadata_generation.py") < events.index("metadata/stac_generation.py") < events.index("datahub/API/generate_api.py")
     assert events.count("datahub/watcher/watcher_lib.py") == 1
@@ -310,14 +316,14 @@ def test_missing_basemaps_force_rebuild_during_no_change_cycle(tmp_path):
     assert "webmap/create_webmap_new.py" in events
 
 
-def test_codebase_change_rebuilds_derived_products_without_redownload(tmp_path):
+def test_codebase_change_rebuilds_derived_products_after_snapshot_check(tmp_path):
     _prepare_fixture(tmp_path, complete=True, recorded_revision="old")
     result = _run(tmp_path, revision="new", watcher_exit=0)
     assert result.returncode == 0, result.stdout + result.stderr
     events = (tmp_path / "events.log").read_text()
-    assert "getting_data.py" not in events
+    assert "getting_data.py" in events
     assert "filtering_adapting_data.py" in events
-    assert events.count("datahub/watcher/watcher_lib.py") == 2
+    assert events.count("datahub/watcher/watcher_lib.py") == 1
     registry = json.loads((tmp_path / "data/updates/registry.json").read_text())
     assert registry[CODEBASE_REVISION_KEY] == "new"
 
@@ -350,7 +356,7 @@ def test_lima_forced_rebuild_preserves_acquisition_without_refetching_raw_data(t
                  "generation/routing_tiles_gen.py", "generation/hazard_tiles_gen.py",
                  "datahub/acquisition/generate_acquisition.py", "build_provenance.py"):
         assert step in events
-    assert (tmp_path / "watcher_calls.log").read_text().splitlines() == ["", "--render-only"]
+    assert (tmp_path / "watcher_calls.log").read_text().splitlines() == ["--render-snapshot --cached-inputs"]
     assert all((tmp_path / path).read_bytes() == content for path, content in preserved.items())
     registry = json.loads(registry_path.read_text())
     assert registry["Data Fetching"] == "2026-10-13T13:21:12Z"
@@ -370,26 +376,24 @@ def test_forced_rebuild_requires_acquisition_when_any_raw_input_is_missing(tmp_p
     assert "getting_data" in (tmp_path / "data/updates/pipeline_failures.txt").read_text()
     assert "getting_data.py" in (tmp_path / "events.log").read_text().splitlines()
     assert "Pipeline Success" not in json.loads((tmp_path / "data/updates/registry.json").read_text())
-    assert "--render-current" not in (tmp_path / "watcher_calls.log").read_text()
+    assert not (tmp_path / "watcher_calls.log").exists()
 
 
-@pytest.mark.parametrize("watcher_exit", [1, 2])
-def test_forced_run_still_acquires_changes_or_inconclusive_data(tmp_path, watcher_exit):
-    _prepare_fixture(tmp_path, complete=True, recorded_revision="same")
-
-    result = _run(tmp_path, revision="same", watcher_exit=watcher_exit, force=True)
-
+def test_changed_snapshot_regenerates_even_with_codebase_change(tmp_path):
+    _prepare_fixture(tmp_path, complete=True, recorded_revision="old")
+    result = _run(tmp_path, revision="new", watcher_exit=1)
     assert result.returncode == 0, result.stdout + result.stderr
-    assert "getting_data.py" in (tmp_path / "events.log").read_text().splitlines()
-    assert (tmp_path / "watcher_calls.log").read_text().splitlines() == ["", "--render-current"]
+    decision = json.loads((tmp_path / "data/updates/pipeline_decision.json").read_text())
+    assert (decision["mode"], decision["reason"]) == ("generate", "snapshot_content_changed")
+    assert (tmp_path / "watcher_calls.log").read_text().splitlines() == ["--render-snapshot"]
 
 
-def test_refresh_renders_current_watcher_only_after_step_failure_guard():
+def test_refresh_never_invokes_v1_watcher_modes():
     daily = (ROOT / "runners/daily.sh").read_text()
-    failure_guard = daily.index('if [ "${#FAILED_STEPS[@]}" -ne 0 ]')
-    render_current = daily.index("watcher_lib.py --render-current")
-    require = daily.index("node_outputs.py --root . require", render_current)
-    assert failure_guard < render_current < require
+    assert "--render-only" not in daily
+    assert "--render-current" not in daily
+    assert "--render-snapshot" in daily
+    assert 'node_outputs.py --root . require || exit 1' in daily
 
 
 def test_watcher_exposes_comparable_changeset_scopes():
