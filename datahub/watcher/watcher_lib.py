@@ -712,30 +712,26 @@ def generate_watcher_page(history: dict, results: dict, activity: dict):
     for layer in layers:
         chart_data_dict[layer] = []
         
+    by_layer = {layer: {item["date"]: item for item in history["layers"][layer]} for layer in layers}
     for d in dates:
-        # Total
-        add_tot = sum(next((i.get('additions', 0) for i in history["layers"][layer] if i["date"] == d), 0) for layer in layers)
-        mod_tot = sum(next((i.get('modifications', 0) for i in history["layers"][layer] if i["date"] == d), 0) for layer in layers)
-        del_tot = sum(next((i.get('deletions', 0) for i in history["layers"][layer] if i["date"] == d), 0) for layer in layers)
-        chart_data_dict["Total"].append(f"{{ date: '{d}', 'Additions': {add_tot}, 'Modifications': {mod_tot}, 'Deletions': {del_tot} }}")
-        
-        # Individual Layers
+        keys = {"Additions": "additions", "Modifications": "modifications", "Deletions": "deletions"}
+        chart_data_dict["Total"].append({
+            "date": d, **{label: sum(by_layer[layer][d][key] for layer in layers)
+                         if all(d in by_layer[layer] and key in by_layer[layer][d] for layer in layers) else None
+                         for label, key in keys.items()},
+        })
         for layer in layers:
-            item = next((i for i in history["layers"][layer] if i["date"] == d), {})
-            add_l = item.get('additions', 0)
-            mod_l = item.get('modifications', 0)
-            del_l = item.get('deletions', 0)
-            chart_data_dict[layer].append(f"{{ date: '{d}', 'Additions': {add_l}, 'Modifications': {mod_l}, 'Deletions': {del_l} }}")
-            
-    chart_data_js = "const chartData = {\n"
-    for key, data_list in chart_data_dict.items():
-        chart_data_js += f"  '{key}': [" + ",".join(data_list) + "],\n"
-    chart_data_js += "};"
+            item = by_layer[layer].get(d, {})
+            chart_data_dict[layer].append({"date": d, **{label: item.get(key) for label, key in keys.items()}})
+    import json
+    chart_data_js = "const chartData = " + json.dumps(chart_data_dict).replace("<", "\\u003c") + ";"
 
     # Yesterday's Changesets HTML
     yesterday_html = ""
     yesterday_list = activity.get("yesterday", [])
-    if not yesterday_list:
+    if activity.get("archived"):
+        yesterday_html = "<p>Fresh changeset activity is unavailable. The existing RSS feed is an archive.</p>"
+    elif not yesterday_list:
         yesterday_html = "<p style='color: var(--text-muted); padding: 0.5rem 0;'>No changesets affecting OSWM features yesterday.</p>"
     else:
         yesterday_html = """
@@ -782,7 +778,9 @@ def generate_watcher_page(history: dict, results: dict, activity: dict):
     # Top 5 Deletions HTML
     deletions_html = ""
     deletions_list = activity.get("top_deletions", [])
-    if not deletions_list:
+    if activity.get("archived"):
+        deletions_html = "<p>Recent deletion history is unavailable, not zero.</p>"
+    elif not deletions_list:
         deletions_html = "<p style='color: var(--text-muted); padding: 0.5rem 0;'>No deletion changesets in the last 120 days.</p>"
     else:
         deletions_html = """
@@ -1052,16 +1050,17 @@ def generate_watcher_page(history: dict, results: dict, activity: dict):
     <div class="container">
         <div class="glass-panel">
             <h2>Current Status</h2>
+            {"<p>Rebuilt from stored inputs. No fresh provider check was performed.</p>" if activity.get("cached_inputs") else "<p>Compared with the previous OSM snapshot. Charts and RSS are archival; net snapshot changes are not OSM edit counts.</p>" if activity.get("archived") else ""}
             <p style="color: var(--text-muted); margin-top: 0.5rem;">Last Checked: {history.get('last_updated', 'Unknown')}</p>
             <div class="status-grid">
     """
     
     for layer, status in results.items():
         if status is True:
-            label = "UPDATE NEEDED"
+            label = "Snapshot changed" if activity.get("archived") else "UPDATE NEEDED"
             css_class = "status-true"
         elif status is False:
-            label = "Up to date"
+            label = "Snapshot unchanged" if activity.get("archived") else "Up to date"
             css_class = "status-false"
         else:
             label = "UNKNOWN"
@@ -1077,7 +1076,7 @@ def generate_watcher_page(history: dict, results: dict, activity: dict):
         </div>
 
         <div class="glass-panel">
-            <h2>Daily Contributions (Last 120 Days)</h2>
+            <h2>{"Archived daily contributions" if activity.get("archived") else "Daily Contributions (Last 120 Days)"}</h2>
             <div class="tabs" id="chart-tabs">
                 <button class="tab-btn active" onclick="updateChart('Total', this)">Total</button>
 """
@@ -1212,6 +1211,28 @@ def render_watcher_outputs(results: dict) -> bool:
     return True
 
 
+def render_snapshot_outputs(decision_path: str, *, cached_inputs: bool = False) -> int:
+    changes_file = os.path.join(os.path.dirname(updating_infos_path), "snapshot_changes.json")
+    changes = dict.fromkeys(OHSOME_FILTER_MAP) if cached_inputs else read_json(changes_file)
+    if not cached_inputs and (not changes or any(type(value) is not bool for value in changes.values())):
+        print("[watcher] Invalid local snapshot comparison", file=sys.stderr)
+        return 2
+    history = read_json(watcher_history_path) if os.path.exists(watcher_history_path) else {"layers": {}}
+    checked_at = isoformat_utc()
+    activity = {"archived": True, "cached_inputs": cached_inputs}
+    os.makedirs(os.path.dirname(watcher_page_path), exist_ok=True)
+    if not os.path.exists(watcher_rss_path):
+        generate_rss_feed(history)
+    if not os.path.exists(watcher_changesets_rss_path):
+        generate_changeset_rss_feed(activity)
+    generate_watcher_page({**history, "last_updated": checked_at}, changes, activity)
+    dump_json({
+        "schema_version": 1, "checked_at": checked_at, "needs_update": None if cached_inputs else any(changes.values()),
+        "layers": changes, "source": "cached_rebuild" if cached_inputs else "local_snapshot_comparison", "activity": "archived",
+    }, decision_path)
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Check for OSM updates and render watcher outputs."
@@ -1226,74 +1247,18 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="render an all-current decision after a successful data refresh",
     )
+    parser.add_argument("--render-snapshot", action="store_true", help="render the local snapshot comparison without OHSOME")
+    parser.add_argument("--cached-inputs", action="store_true", help="no fresh provider check was performed")
     args = parser.parse_args(argv)
     decision_path = os.path.join(os.path.dirname(updating_infos_path), "watcher_decision.json")
 
-    if args.render_only and args.render_current:
-        parser.error("--render-only and --render-current are mutually exclusive")
+    if args.render_snapshot:
+        if args.render_only or args.render_current:
+            parser.error("--render-snapshot cannot be combined with legacy history options")
+        return render_snapshot_outputs(decision_path, cached_inputs=args.cached_inputs)
 
-    if args.render_current:
-        results = {layer: False for layer in OHSOME_FILTER_MAP}
-        if not render_watcher_outputs(results):
-            return 2
-        dump_json(
-            {
-                "schema_version": 1,
-                "checked_at": isoformat_utc(),
-                "needs_update": False,
-                "layers": results,
-                "source": "successful_pipeline_refresh",
-            },
-            decision_path,
-        )
-        return 0
-
-    if args.render_only:
-        decision = read_json(decision_path) if os.path.exists(decision_path) else {}
-        results = decision.get("layers") if isinstance(decision, dict) else None
-        if not isinstance(results, dict) or not results:
-            print(
-                f"[watcher] Cannot render: missing layer decision in {decision_path}.",
-                file=sys.stderr,
-            )
-            return 2
-        return 0 if render_watcher_outputs(results) else 2
-
-    results = needs_update()
-    print("\n--- Watcher results ---")
-    any_update = False
-    for layer, status in results.items():
-        if status is True:
-            label = "UPDATE NEEDED"
-            any_update = True
-        elif status is False:
-            label = "up to date"
-        else:
-            label = "UNKNOWN (check failed)"
-            any_update = True
-        print(f"  {layer:<20} {label}")
-
-    print()
-    if any_update:
-        print("Conclusion: at least one layer has changes — run the full pipeline.")
-    else:
-        print("Conclusion: no changes detected — skipping data download.")
-
-    # A cold start has no boundary yet. The daily runner renders again after
-    # generation; existing nodes still refresh the dashboard during checking.
-    if _boundary_bboxes():
-        render_watcher_outputs(results)
-
-    dump_json(
-        {
-            "schema_version": 1,
-            "checked_at": isoformat_utc(),
-            "needs_update": any_update,
-            "layers": results,
-        },
-        decision_path,
-    )
-    return 1 if any_update else 0
+    print("[watcher] OHSOME v1 checks are retired; use the daily runner to acquire and compare current OSM.", file=sys.stderr)
+    return 2
 
 
 if __name__ == "__main__":

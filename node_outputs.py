@@ -50,7 +50,12 @@ DERIVED_RESET_PATHS = (
     "oswm_runtime",
 )
 
-PRESERVED_DURING_DERIVED_RESET = ("quality_check/keys_without_wiki.json",)
+PRESERVED_DURING_DERIVED_RESET = (
+    "quality_check/keys_without_wiki.json",
+    "quality_check/completeness/data.json",
+    "hub/watcher/feed.xml",
+    "hub/watcher/changesets.xml",
+)
 
 VERSIONING_OUTPUTS = (
     "data/updates/versioning/sidewalks_versioning.json",

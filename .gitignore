@@ -197,6 +197,7 @@ tests/fixtures/*
 !tests/test_metadata_generation.py
 !tests/test_launch_readiness.py
 !tests/test_pbf_acquisition.py
+!tests/test_ohsome_v2.py
 !tests/test_runner_integration.py
 !tests/test_quality_osm_identity.py
 !tests/test_fleet_management.py
