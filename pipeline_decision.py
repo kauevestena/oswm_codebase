@@ -46,7 +46,7 @@ def current_codebase_revision(root: Path) -> str | None:
     return result.stdout.strip() or None if result.returncode == 0 else None
 
 
-def decide(root: Path, *, watcher_status: int, force: bool = False) -> dict[str, Any]:
+def decide(root: Path, *, watcher_status: int, force: bool = False, snapshot_checked: bool = False) -> dict[str, Any]:
     registry_path = root / "data/updates/registry.json"
     registry = _load_json(registry_path)
     current_revision = current_codebase_revision(root)
@@ -54,7 +54,23 @@ def decide(root: Path, *, watcher_status: int, force: bool = False) -> dict[str,
     raw_missing = [item for item in RAW_OUTPUTS if not (root / item).is_file()]
     required_missing = missing_required(root)
 
-    if force:
+    changes = _load_json(root / "data/updates/snapshot_changes.json") if snapshot_checked else {}
+    if snapshot_checked:
+        if raw_missing:
+            raise ValueError("Current snapshot did not produce all required raw files")
+        if not {Path(path).stem for path in RAW_OUTPUTS if path.startswith("data/raw/")} <= changes.keys() or any(type(value) is not bool for value in changes.values()):
+            raise ValueError("Missing or invalid current-snapshot comparison")
+        if any(changes.values()):
+            mode, reason = "generate", "snapshot_content_changed"
+        elif force:
+            mode, reason = "rebuild", "forced"
+        elif required_missing:
+            mode, reason = "rebuild", "derived_outputs_missing"
+        elif current_revision and current_revision != recorded_revision:
+            mode, reason = "rebuild", "codebase_revision_changed"
+        else:
+            mode, reason = "skip", "snapshot_content_unchanged"
+    elif force:
         # force_regeneration requests derived products, not an unnecessary
         # provider refresh. Still acquire on cold/changed/inconclusive runs.
         mode = "generate" if raw_missing or watcher_status != 0 else "rebuild"
@@ -75,7 +91,8 @@ def decide(root: Path, *, watcher_status: int, force: bool = False) -> dict[str,
         "checked_at": isoformat_utc(),
         "mode": mode,
         "reason": reason,
-        "watcher_status": watcher_status,
+        "watcher_status": None if snapshot_checked else watcher_status,
+        "snapshot_changes": changes if snapshot_checked else None,
         "force": force,
         "current_codebase_revision": current_revision,
         "recorded_codebase_revision": recorded_revision,
@@ -103,6 +120,7 @@ def main(argv: list[str] | None = None) -> int:
     subparsers = parser.add_subparsers(dest="command", required=True)
     decision = subparsers.add_parser("decide")
     decision.add_argument("--watcher-status", type=int, required=True)
+    decision.add_argument("--snapshot-checked", action="store_true")
     decision.add_argument("--force", action="store_true")
     decision.add_argument("--output", type=Path)
     subparsers.add_parser("record-success")
@@ -112,7 +130,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "record-success":
         record_success(root)
         return 0
-    payload = decide(root, watcher_status=args.watcher_status, force=args.force)
+    payload = decide(root, watcher_status=args.watcher_status, force=args.force, snapshot_checked=args.snapshot_checked)
     rendered = json.dumps(payload, indent=2) + "\n"
     if args.output:
         output = args.output if args.output.is_absolute() else root / args.output

@@ -1,23 +1,13 @@
-"""
-Completeness analysis library for OSWM.
-
-Hybrid approach:
-- Current month: local GeoParquet data + OSMnx roads (fully offline)
-- Historical months: OHSOME API at Z15, disaggregated to Z17 offline
-
-Query Z15 once, disaggregate to Z17, aggregate upward to Z12.
-"""
+"""Compute completeness on local OSM snapshots and optional OHSOME v2 extracts."""
 
 import os
 import sys
-import time
 import json
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 
 import mercantile
 import geopandas as gpd
 import pandas as pd
-import requests
 from shapely.geometry import box
 from tqdm import tqdm
 
@@ -25,6 +15,7 @@ from tqdm import tqdm
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 from functions import get_boundaries_infos, create_folder_if_not_exists, dump_json
 from branding import branding_asset_url
+from time_utils import parse_timestamp
 import constants as node_config
 from overpass_acquisition import DEFAULT_OVERPASS_ENDPOINTS, features_from_polygon_with_failover
 from pbf_acquisition import PROVENANCE_KEY, pbf_options_from_config
@@ -42,22 +33,6 @@ from constants import (
 MIN_ZOOM = 12
 MAX_ZOOM = 17
 QUERY_ZOOM = 15  # Primary computation zoom
-
-OHSOME_API_BASE = "https://api.ohsome.org/v1"
-OHSOME_FILTERS = {
-    "roads": (
-        "(highway in (motorway, trunk, primary, secondary, tertiary, "
-        "residential, unclassified, motorway_link, trunk_link, primary_link, "
-        "secondary_link, tertiary_link)) and type:way"
-    ),
-    "footways": "highway=footway and type:way",
-    "sidewalks": "footway=sidewalk and type:way",
-}
-
-OHSOME_BATCH_SIZE = 50
-MAX_RETRIES = 1
-RETRY_DELAY = 2
-OHSOME_TIMEOUT = 10
 
 ROADS_CACHE_PATH = os.path.join(processed_folderpath, "roads_for_completeness.parquet")
 
@@ -82,9 +57,9 @@ ATTRIBUTE_RULES = {
 # Data loading
 # ---------------------------------------------------------------------------
 
-def fetch_or_load_roads(bounds, cache_path=ROADS_CACHE_PATH, silent=False):
+def fetch_or_load_roads(bounds, cache_path=ROADS_CACHE_PATH, silent=False, refresh=False):
     """Load roads from cache or fetch via Overpass, with regional PBF failover."""
-    if os.path.exists(cache_path):
+    if not refresh and os.path.exists(cache_path):
         if not silent:
             print("[completeness] Loading cached road network...")
         return gpd.read_parquet(cache_path)
@@ -103,6 +78,7 @@ def fetch_or_load_roads(bounds, cache_path=ROADS_CACHE_PATH, silent=False):
         endpoints=getattr(node_config, "OVERPASS_ENDPOINTS", DEFAULT_OVERPASS_ENDPOINTS),
         attempts_per_endpoint=getattr(node_config, "OVERPASS_ATTEMPTS_PER_ENDPOINT", 2),
         backoff_seconds=getattr(node_config, "OVERPASS_BACKOFF_SECONDS", 5),
+        budget_seconds=getattr(node_config, "OVERPASS_BUDGET_SECONDS", 90),
         pbf_options=pbf_options_from_config(node_config),
     )
     acquisition = roads.attrs.get(PROVENANCE_KEY, {})
@@ -243,14 +219,14 @@ def _get_children_at_zoom(tile_id, target_zoom):
 # Local length computation
 # ---------------------------------------------------------------------------
 
-def compute_clipped_lengths_z15(gdf, tile_grid_z15, utm_crs, label="", silent=False):
+def compute_clipped_tile_lengths(gdf, grid, utm_crs, label="", silent=False):
     """
-    Compute total length of features within each Z15 tile.
+    Compute total length of features within each supplied tile.
     Uses spatial join + clip for accuracy.
     Returns dict {tile_id: length_meters}.
     """
     if gdf.empty:
-        return {row["tile_id"]: 0.0 for _, row in tile_grid_z15.iterrows()}
+        return {row["tile_id"]: 0.0 for _, row in grid.iterrows()}
 
     results = {}
     gdf_reset = gdf.reset_index(drop=True)
@@ -258,18 +234,18 @@ def compute_clipped_lengths_z15(gdf, tile_grid_z15, utm_crs, label="", silent=Fa
     # Spatial join: find candidate features per tile
     joined = gpd.sjoin(
         gdf_reset,
-        tile_grid_z15,
+        grid,
         how="inner",
         predicate="intersects",
     )
 
     # Build tile_id -> geometry lookup
-    tile_geom_lookup = dict(zip(tile_grid_z15["tile_id"], tile_grid_z15["geometry"]))
+    tile_geom_lookup = dict(zip(grid["tile_id"], grid["geometry"]))
 
     grouped = joined.groupby("tile_id")
 
     for tile_id in tqdm(
-        tile_grid_z15["tile_id"], desc=f"  Z15 tiles ({label})", leave=False, disable=silent
+        grid["tile_id"], desc=f"  tiles ({label})", leave=False, disable=silent
     ):
         if tile_id not in grouped.groups:
             results[tile_id] = 0.0
@@ -385,135 +361,14 @@ def aggregate_upward(z_lengths, bounds, source_zoom, target_zoom):
 # OHSOME querying at Z15
 # ---------------------------------------------------------------------------
 
-def _batch_bboxes(bboxes_dict, batch_size=OHSOME_BATCH_SIZE):
-    items = list(bboxes_dict.items())
-    for i in range(0, len(items), batch_size):
-        yield dict(items[i : i + batch_size])
-
-
-def query_ohsome_z15(bboxes_z15, filter_str, timestamp, silent=False):
-    """Query OHSOME at Z15 for a single timestamp. Returns {tile_id: length}."""
-    results = {}
-    url = f"{OHSOME_API_BASE}/elements/length/groupBy/boundary"
-
-    batches = list(_batch_bboxes(bboxes_z15))
-    for batch in tqdm(batches, desc="    OHSOME batches", leave=False, disable=silent):
-        bboxes_param = "|".join(f"{tid}:{bbox}" for tid, bbox in batch.items())
-        params = {
-            "bboxes": bboxes_param,
-            "filter": filter_str,
-            "format": "json",
-            "time": timestamp,
-        }
-
-        data = None
-        for attempt in range(MAX_RETRIES):
-            try:
-                resp = requests.post(url, data=params, timeout=OHSOME_TIMEOUT)
-                resp.raise_for_status()
-                data = resp.json()
-                break
-            except (requests.RequestException, ValueError) as e:
-                if hasattr(e, "response") and e.response is not None and e.response.status_code == 404:
-                    if not silent:
-                        tqdm.write(f"    [ohsome] 404: ts={timestamp} out of bounds")
-                    break
-                if attempt < MAX_RETRIES - 1:
-                    wait = RETRY_DELAY * (2 ** attempt)
-                    if not silent:
-                        tqdm.write(f"    [ohsome] Retry {attempt+1}/{MAX_RETRIES} after {wait}s: {e}")
-                    time.sleep(wait)
-                else:
-                    if not silent:
-                        tqdm.write(f"    [ohsome] Failed after {MAX_RETRIES} attempts: {e}")
-
-        if data is None:
-            for tid in batch:
-                results[tid] = 0.0
-            continue
-
-        for group in data.get("groupByResult", []):
-            tid = group.get("groupByObject", "")
-            entries = group.get("result", [])
-            results[tid] = entries[-1].get("value", 0.0) if entries else 0.0
-
-        time.sleep(0.3)
-
-    # Fill missing
-    for tid in bboxes_z15:
-        if tid not in results:
-            results[tid] = 0.0
-
-    return results
-
-
-def ohsome_disaggregate_z15_to_z17(z15_lengths, local_z17_lengths, bounds):
-    """
-    Distribute OHSOME Z15 lengths to Z17 using local geometry proportions.
-
-    For each Z15 tile, the total length is distributed among its Z17 children
-    proportionally to the local (current) Z17 lengths. If local lengths are
-    all zero, distribute uniformly.
-    """
-    z15_bboxes = generate_tile_bboxes(bounds, QUERY_ZOOM)
-    result = {}
-
-    for z15_tid in z15_bboxes:
-        z17_children = _get_children_at_zoom(z15_tid, MAX_ZOOM)
-        ohsome_total = z15_lengths.get(z15_tid, 0.0)
-
-        if ohsome_total == 0.0:
-            for cid in z17_children:
-                result[cid] = 0.0
-            continue
-
-        # Get local proportions
-        local_vals = [local_z17_lengths.get(cid, 0.0) for cid in z17_children]
-        local_total = sum(local_vals)
-
-        if local_total > 0:
-            for cid, lv in zip(z17_children, local_vals):
-                result[cid] = ohsome_total * (lv / local_total)
-        else:
-            # Uniform distribution
-            share = ohsome_total / len(z17_children)
-            for cid in z17_children:
-                result[cid] = share
-
-    return result
-
-
-# ---------------------------------------------------------------------------
-# Timestamp generation
-# ---------------------------------------------------------------------------
-
-def generate_kickstart_timestamps(n_months=3):
-    """Generate N prior month-start timestamps for OHSOME kickstart."""
-    now = datetime.now(tz=timezone.utc)
-    timestamps = []
-    for i in range(n_months, 0, -1):
-        dt = now.replace(day=1) - timedelta(days=i * 30)
-        first_of_month = dt.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        ts = first_of_month.strftime("%Y-%m-%d")
-        if ts not in timestamps:
-            timestamps.append(ts)
-    return timestamps
-
-
-def get_next_historical_timestamp(existing_timestamps):
-    """Get the month before the earliest existing timestamp."""
-    if not existing_timestamps:
-        return None
-    earliest = min(existing_timestamps)
-    dt = datetime.strptime(earliest, "%Y-%m-%d")
-    # Go to previous month's 1st
-    first_of_prev = (dt.replace(day=1) - timedelta(days=1)).replace(day=1)
-    return first_of_prev.strftime("%Y-%m-%d")
-
-
 def get_current_timestamp():
-    """Get today's date as timestamp string."""
-    return datetime.now(tz=timezone.utc).strftime("%Y-%m-%d")
+    """Date of acquired inputs, not the date a cached graph was regenerated."""
+    try:
+        with open(node_config.updating_infos_path, encoding="utf-8") as f:
+            snapshot = parse_timestamp(json.load(f).get("Data Fetching"), node_config.METADATA_TIMEZONE)
+    except (OSError, ValueError, AttributeError):
+        snapshot = None
+    return (snapshot or datetime.now(tz=timezone.utc)).date().isoformat()
 
 
 # ---------------------------------------------------------------------------
@@ -527,7 +382,7 @@ def _init_results_structure(bounds, timestamps):
             "city": CITY_NAME,
             "generated_at": datetime.now(tz=timezone.utc).isoformat(),
             "bounds": bounds,
-            "method": "hybrid_local_ohsome",
+            "method": "local_osm_snapshots_with_archived_history",
         },
         "timestamps": sorted(timestamps),
         "zoom_levels": {},
@@ -642,7 +497,7 @@ def _add_timestamp_data(results, timestamp, z17_roads, z17_footways, z17_sidewal
 # Main analysis entry points
 # ---------------------------------------------------------------------------
 
-def compute_local_snapshot(bounds, silent=False):
+def compute_local_snapshot(bounds, silent=False, refresh_roads=False):
     """
     Compute current lengths using local data.
     Returns (z17_roads, z17_footways, z17_sidewalks) dicts.
@@ -653,7 +508,7 @@ def compute_local_snapshot(bounds, silent=False):
         print(f"\n[completeness] Computing attribute counts...")
     attr_counts = compute_attribute_counts(ped, bounds, silent=silent)
     
-    roads = fetch_or_load_roads(bounds, silent=silent)
+    roads = fetch_or_load_roads(bounds, silent=silent, refresh=refresh_roads)
     utm_crs = roads.estimate_utm_crs()
 
     if not silent:
@@ -672,7 +527,7 @@ def compute_local_snapshot(bounds, silent=False):
     for name, gdf in layers.items():
         if not silent:
             print(f"[completeness]   Layer: {name} ({len(gdf)} features)")
-        z15[name] = compute_clipped_lengths_z15(gdf, tile_grid_z15, utm_crs, label=name, silent=silent)
+        z15[name] = compute_clipped_tile_lengths(gdf, tile_grid_z15, utm_crs, label=name, silent=silent)
 
     # Step 2: Disaggregate Z15 → Z17
     if not silent:
@@ -687,151 +542,86 @@ def compute_local_snapshot(bounds, silent=False):
     return z17["roads"], z17["footways"], z17["sidewalks"], attr_counts
 
 
-def compute_ohsome_historical(bounds, timestamps, local_z17, silent=False):
-    """
-    Compute historical lengths using OHSOME at Z15, disaggregated to Z17
-    using local geometry proportions.
+def _measure_v2_history(bounds, date, silent=False):
+    from ohsome_v2 import BASE_URL, FILTERS, historical_layers
 
-    local_z17: dict {layer_name: {tile_id: length}} from local snapshot.
-    Returns list of (timestamp, z17_roads, z17_footways, z17_sidewalks).
-    """
-    bboxes_z15 = generate_tile_bboxes(bounds, QUERY_ZOOM)
-    layer_names = ["roads", "footways", "sidewalks"]
-
-    results_list = []
-
-    ts_iter = tqdm(timestamps, desc="OHSOME timestamps", leave=False, disable=silent)
-    for ts in ts_iter:
-        ts_iter.set_postfix({"ts": ts})
-
-        z15_lengths = {}
-        layer_iter = tqdm(
-            zip(layer_names, [OHSOME_FILTERS[n] for n in layer_names]),
-            total=len(layer_names),
-            desc="  Layers",
-            leave=False,
-            disable=silent,
-        )
-        for lname, filt in layer_iter:
-            layer_iter.set_postfix({"layer": lname})
-            z15_lengths[lname] = query_ohsome_z15(bboxes_z15, filt, ts, silent=silent)
-
-        # Disaggregate each layer's Z15 → Z17 using local proportions
-        z17_ts = {}
-        for lname in layer_names:
-            z17_ts[lname] = ohsome_disaggregate_z15_to_z17(
-                z15_lengths[lname], local_z17[lname], bounds
-            )
-
-        results_list.append((ts, z17_ts["roads"], z17_ts["footways"], z17_ts["sidewalks"]))
-
-    return results_list
+    grid = _build_tile_grid(bounds, MAX_ZOOM)
+    # The city's bounding box can bisect a selected tile. Request the full
+    # envelope of the cells we actually measure, then clip per cell locally.
+    aoi = grid.total_bounds.tolist()
+    utm = grid.estimate_utm_crs()
+    layers = historical_layers(aoi, date)
+    values = [compute_clipped_tile_lengths(layer, grid, utm, label, silent=silent)
+              for label, layer in zip(("roads", "footways", "sidewalks"), layers, strict=True)]
+    details = {
+        "provider": "ohsome_v2",
+        "endpoint": f"{BASE_URL}/extraction/features.parquet",
+        "snapshot_timestamp": f"{date}T00:00:00Z",
+        "length_method": "measure_clipped_historical_geometry_at_finest_zoom_then_sum",
+        "length_crs": utm.to_string(),
+        "measurement_zoom": MAX_ZOOM,
+        "tile_selection": "full Web Mercator tiles intersecting the node boundary",
+        "aoi_bbox_wgs84": aoi,
+        "server_clip": True,
+        "filters": dict(zip(("roads", "footways", "sidewalks"), FILTERS, strict=True)),
+    }
+    return values, details
 
 
-def run_completeness_analysis(
-    bounds,
-    existing_data=None,
-    silent=False,
-    offline=False,
-):
-    """
-    Main entry point for the completeness analysis.
-
-    If existing_data is None (first run):
-      - OHSOME kickstart for 3 prior months (unless offline)
-      - Local snapshot for current month
-
-    If existing_data is provided (incremental):
-      - Local snapshot for current month
-      - OHSOME for one more historical month (unless offline)
-    """
+def run_completeness_analysis(bounds, existing_data=None, silent=False, historical_date=None, refresh_roads=False):
+    """Render local snapshot, retain observations, and optionally backfill one v2 date."""
     current_ts = get_current_timestamp()
-    is_offline = offline or bool(os.environ.get("OSWM_OFFLINE"))
+    existing = existing_data or {}
+    previous = existing.get("zoom_levels", {})
+    prior_metadata = existing.get("metadata", {})
+    dates = set(existing.get("timestamps", []))
+    unavailable = set(prior_metadata.get("unavailable_history", []))
+    sources = {k: v for k, v in prior_metadata.get("snapshot_sources", {}).items() if k in dates}
 
-    # Step 1: Local snapshot (always)
-    if not silent:
-        print("=" * 60)
-        print("[completeness] Computing local snapshot...")
-        print("=" * 60)
+    methods = {k: v for k, v in prior_metadata.get("snapshot_methods", {}).items() if k in dates}
 
-    z17_roads, z17_footways, z17_sidewalks, attr_counts = compute_local_snapshot(bounds, silent=silent)
-    local_z17 = {"roads": z17_roads, "footways": z17_footways, "sidewalks": z17_sidewalks}
+    # These exact three Sulbiate snapshots were published as entirely zero
+    # after the provider watermark. Do not infer that other zeros are invalid.
+    if (getattr(node_config, "USERNAME", None), getattr(node_config, "REPO_NAME", None)) == ("opensidewalkmap", "sulbiate"):
+        finest = previous.get(str(MAX_ZOOM), {}).get("tiles", {})
+        for ts in {"2026-08-01", "2026-09-01", "2026-10-01"} & (dates - set(sources)):
+            entries = [next((d for d in tile.get("data", []) if d["timestamp"] == ts), None)
+                       for tile in finest.values()]
+            if entries and all(e and all(e.get(k) == 0 for k in ("road_length", "footway_length", "sidewalk_length")) for e in entries):
+                dates.remove(ts)
+                unavailable.add(ts)
+                methods.pop(ts, None)
 
-    # Step 2: Determine OHSOME timestamps
-    existing_ts = existing_data.get("timestamps", []) if existing_data else []
-    
-    if is_offline:
-        ohsome_timestamps = []
-        all_timestamps = list(existing_ts)
-        if current_ts not in all_timestamps:
-            all_timestamps.append(current_ts)
-    elif existing_data is None:
-        # First run: kickstart with 3 prior months
-        ohsome_timestamps = generate_kickstart_timestamps(n_months=3)
-        all_timestamps = ohsome_timestamps + [current_ts]
-    else:
-        all_timestamps = list(existing_ts)
-        if current_ts not in all_timestamps:
-            all_timestamps.append(current_ts)
-        # Extend one month backwards
-        next_hist = get_next_historical_timestamp(existing_ts)
-        if next_hist and next_hist not in all_timestamps:
-            ohsome_timestamps = [next_hist]
-            all_timestamps.append(next_hist)
-        else:
-            ohsome_timestamps = []
-
-    all_timestamps = sorted(set(all_timestamps))
-
-    if not silent:
-        print(f"\n[completeness] All timestamps: {all_timestamps}")
-        print(f"[completeness] OHSOME timestamps: {ohsome_timestamps if existing_data is None or ohsome_timestamps else 'kickstart: ' + str(ohsome_timestamps)}")
-
-    # Step 3: Query OHSOME for historical timestamps
-    ohsome_results = []
-    if ohsome_timestamps:
-        if not silent:
-            print("\n" + "=" * 60)
-            print(f"[completeness] Querying OHSOME for {len(ohsome_timestamps)} historical timestamp(s)...")
-            print("=" * 60)
-        ohsome_results = compute_ohsome_historical(
-            bounds, ohsome_timestamps, local_z17, silent=silent
-        )
-
-    # Step 4: Build results structure
-    if not silent:
-        print("\n[completeness] Building results...")
-
-    results = _init_results_structure(bounds, all_timestamps)
-
-    # Add OHSOME historical data
-    for ts, z17_r, z17_f, z17_s in ohsome_results:
-        _add_timestamp_data(results, ts, z17_r, z17_f, z17_s, bounds, attr_counts=None)
-
-    # Add local current snapshot
-    _add_timestamp_data(results, current_ts, z17_roads, z17_footways, z17_sidewalks, bounds, attr_counts=attr_counts)
-
-    # If merging, carry forward existing data for timestamps we didn't recompute
-    if existing_data:
-        recomputed_ts = set([current_ts] + ohsome_timestamps)
-        for ts in existing_ts:
-            if ts not in recomputed_ts:
-                # Copy data from existing
-                for z_str in results["zoom_levels"]:
-                    for tid in results["zoom_levels"][z_str]["tiles"]:
-                        old_tile = existing_data["zoom_levels"].get(z_str, {}).get("tiles", {}).get(tid, {})
-                        old_entries = old_tile.get("data", [])
-                        entry = next((d for d in old_entries if d["timestamp"] == ts), None)
-                        if entry:
-                            results["zoom_levels"][z_str]["tiles"][tid]["data"].append(entry)
-
-    # Sort all data entries by timestamp
-    for z_str in results["zoom_levels"]:
-        for tid in results["zoom_levels"][z_str]["tiles"]:
-            results["zoom_levels"][z_str]["tiles"][tid]["data"].sort(
-                key=lambda d: d["timestamp"]
-            )
-
+    if historical_date and historical_date >= current_ts:
+        raise ValueError("Historical date must be earlier than the current OSM snapshot")
+    if historical_date and historical_date in dates:
+        raise ValueError("Historical date already has an observation; refusing to overwrite it")
+    roads, footways, sidewalks, attrs = compute_local_snapshot(bounds, silent=silent, refresh_roads=refresh_roads)
+    dates.add(current_ts)
+    sources[current_ts] = "local_osm_snapshot"
+    measurements = None
+    if historical_date:
+        measurements, methods[historical_date] = _measure_v2_history(bounds, historical_date, silent=silent)
+        dates.add(historical_date)
+        unavailable.discard(historical_date)
+        sources[historical_date] = "ohsome_v2_clipped_geometry"
+    unavailable -= dates
+    results = _init_results_structure(bounds, dates)
+    results["metadata"]["unavailable_history"] = sorted(unavailable)
+    results["metadata"]["snapshot_sources"] = sources
+    results["metadata"]["snapshot_methods"] = methods
+    recomputed = {current_ts, historical_date}
+    for zoom, output in results["zoom_levels"].items():
+        old_tiles = previous.get(zoom, {}).get("tiles", {})
+        for tile_id, tile in output["tiles"].items():
+            tile["data"].extend(e for e in old_tiles.get(tile_id, {}).get("data", [])
+                                if e["timestamp"] in dates and e["timestamp"] not in recomputed)
+    _add_timestamp_data(results, current_ts, roads, footways, sidewalks, bounds, attr_counts=attrs)
+    if measurements is not None:
+        _add_timestamp_data(results, historical_date, *measurements, bounds, attr_counts=None)
+    for output in results["zoom_levels"].values():
+        for tile in output["tiles"].values():
+            tile["data"].sort(key=lambda entry: entry["timestamp"])
     return results
 
 
@@ -850,6 +640,13 @@ def generate_completeness_map(data, output_dir, silent=False):
     # Build GeoJSON features for each zoom level
     # We use the last timestamp's data for the initial view
     timestamps = data.get("timestamps", [])
+    timestamp_indexes = {ts: i for i, ts in enumerate(timestamps)}
+    unavailable = data.get("metadata", {}).get("unavailable_history", [])
+    import html
+    history_note = html.escape(
+        "Unavailable dates are not shown as zero. Archived values may use a different method from v2." +
+        (" Unavailable dates: " + ", ".join(unavailable) if unavailable else "")
+    )
     all_features = []
 
     for zoom_str, zoom_data in data["zoom_levels"].items():
@@ -873,8 +670,10 @@ def generate_completeness_map(data, output_dir, silent=False):
                 "bbox": bbox,
             }
 
-            for i, entry in enumerate(tile_info.get("data", [])):
-                suffix = f"_t{i}"
+            for entry in tile_info.get("data", []):
+                if entry["timestamp"] not in timestamp_indexes:
+                    continue
+                suffix = f"_t{timestamp_indexes[entry['timestamp']]}"
                 props[f"road_length{suffix}"] = entry.get("road_length", 0)
                 props[f"footway_length{suffix}"] = entry.get("footway_length", 0)
                 props[f"sidewalk_length{suffix}"] = entry.get("sidewalk_length", 0)
@@ -902,7 +701,16 @@ def generate_completeness_map(data, output_dir, silent=False):
     city_name = data["metadata"].get("city", "City")
 
     import json
-    timestamp_labels_js = json.dumps(timestamps)
+    sources = data["metadata"].get("snapshot_sources", {})
+    methods = data["metadata"].get("snapshot_methods", {})
+    timestamp_labels_js = json.dumps([
+        f"{ts} · " + (
+            "OHSOME v2 · measured from dated geometry"
+            if methods.get(ts, {}).get("length_method") == "measure_clipped_historical_geometry_at_finest_zoom_then_sum"
+            else "local snapshot" if sources.get(ts) == "local_osm_snapshot"
+            else "archived · original method"
+        ) for ts in timestamps
+    ])
 
     with open(boundaries_geojson_path, "r", encoding="utf-8") as f:
         boundary_geojson_str = f.read()
@@ -913,8 +721,10 @@ def generate_completeness_map(data, output_dir, silent=False):
         center_lon=center_lon,
         center_lat=center_lat,
         city_name=city_name,
-        timestamps_js=timestamp_labels_js,
+        timestamps_js=json.dumps(timestamps),
+        timestamp_labels_js=timestamp_labels_js,
         n_timestamps=len(timestamps),
+        history_note=history_note,
         attribute_rules_js=json.dumps(ATTRIBUTE_RULES),
     )
 
@@ -926,7 +736,7 @@ def generate_completeness_map(data, output_dir, silent=False):
         print(f"[completeness] Map written to {outpath}")
 
 
-def _build_map_html(geojson_str, boundary_geojson_str, center_lon, center_lat, city_name, timestamps_js, n_timestamps, attribute_rules_js):
+def _build_map_html(geojson_str, boundary_geojson_str, center_lon, center_lat, city_name, timestamps_js, n_timestamps, attribute_rules_js, history_note="", timestamp_labels_js=None):
     """Build the standalone MapLibre GL HTML string."""
 
     last_idx = n_timestamps - 1
@@ -1054,6 +864,7 @@ def _build_map_html(geojson_str, boundary_geojson_str, center_lon, center_lat, c
 <body>
 
 <div id="map"></div>
+<aside style="position:absolute;bottom:1rem;left:1rem;z-index:2;background:#172033;color:white;padding:.4rem .65rem;max-width:68vw">{history_note}</aside>
 
 <div class="top-bar">
   <div class="header-left">
@@ -1148,6 +959,7 @@ let protocol = new pmtiles.Protocol();
 maplibregl.addProtocol("pmtiles", protocol.tile);
 
 const TIMESTAMPS = {timestamps_js};
+const TIMESTAMP_LABELS = {timestamp_labels_js or timestamps_js};
 const GEOJSON = {geojson_str};
 const BOUNDARY_GEOJSON = {boundary_geojson_str};
 const ATTRIBUTE_RULES = {attribute_rules_js};
@@ -1301,7 +1113,7 @@ function updateFeatureLayers() {{
 }}
 
 function updateTimestampLabel() {{
-  document.getElementById('ts-label').textContent = TIMESTAMPS[currentTsIdx] || '';
+  document.getElementById('ts-label').textContent = TIMESTAMP_LABELS[currentTsIdx] || '';
 }}
 
 let autoScale = true;
@@ -1493,9 +1305,10 @@ map.on('load', () => {{
             <div style="margin-top:8px;">${{osmLinks}}</div>
           </div>`;
       }} else {{
-        const roadLen = (p['road_length' + suffix] || 0).toFixed(0);
-        const footLen = (p['footway_length' + suffix] || 0).toFixed(0);
-        const swLen = (p['sidewalk_length' + suffix] || 0).toFixed(0);
+        const formatLength = value => value == null ? 'Unavailable' : Number(value).toLocaleString(undefined, {{maximumFractionDigits: 0}}) + ' m';
+        const roadLen = formatLength(p['road_length' + suffix]);
+        const footLen = formatLength(p['footway_length' + suffix]);
+        const swLen = formatLength(p['sidewalk_length' + suffix]);
         const fRatio = p['footway_ratio' + suffix];
         const sRatio = p['sidewalk_ratio' + suffix];
 
@@ -1506,9 +1319,9 @@ map.on('load', () => {{
               <button onclick="navigator.clipboard.writeText('${{bStr}}')" style="background:none;border:none;color:#94a3b8;cursor:pointer;font-size:11px;text-decoration:underline;">Copy BBox</button>
             </h4>
             <div style="font-size:12px;color:#cbd5e1;line-height:1.6">
-              <b>Roads:</b> ${{Number(roadLen).toLocaleString()}} m<br>
-              <b>Footways:</b> ${{Number(footLen).toLocaleString()}} m<br>
-              <b>Sidewalks:</b> ${{Number(swLen).toLocaleString()}} m<br>
+              <b>Roads:</b> ${{roadLen}}<br>
+              <b>Footways:</b> ${{footLen}}<br>
+              <b>Sidewalks:</b> ${{swLen}}<br>
               <b>Footway ratio:</b> ${{fRatio != null ? (fRatio * 100).toFixed(1) + '%' : 'N/A'}}<br>
               <b>Sidewalk ratio:</b> ${{sRatio != null ? (sRatio * 100).toFixed(1) + '%' : 'N/A'}}
             </div>

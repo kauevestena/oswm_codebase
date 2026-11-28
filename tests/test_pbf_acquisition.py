@@ -106,6 +106,40 @@ def test_incomplete_references_fail_instead_of_publishing_partial_data(tmp_path,
         pbf.features_from_pbf(osmnx, path, AOI, TAGS)
 
 
+def test_excluded_boundary_does_not_abort_local_pbf_fallback(tmp_path):
+    # A regional extract can clip a protected area's geometry at the border.
+    # foot=yes makes it match the broad feature request, but access=no is
+    # already a global exclusion in the actual node processing pipeline.
+    relation = ('<relation id="21"><member type="way" ref="99" role="outer"/>'
+                '<tag k="type" v="boundary"/><tag k="boundary" v="protected_area"/>'
+                '<tag k="foot" v="yes"/><tag k="access" v="no"/></relation>')
+    path = write_pbf(tmp_path, xml=XML.replace('</osm>', relation + '</osm>'))
+    tags = {**TAGS, "foot": ["yes"]}
+    excluded = {"access": ["no", "private"]}
+    actual = pbf.features_from_pbf(osmnx, path, AOI, tags, excluded_tags=excluded)
+    assert set(actual.index) == {("node", 3), ("way", 3), ("way", 6), ("way", 7), ("relation", 20)}
+    with pytest.raises(pbf.PbfAcquisitionError, match="Incomplete PBF relation 21"):
+        pbf.features_from_pbf(osmnx, path, AOI, tags)
+
+
+def test_excluded_way_is_retained_and_validated_as_selected_relation_dependency(tmp_path):
+    tagged_outer = XML.replace(
+        '<nd ref="7"/><nd ref="4"/></way>',
+        '<nd ref="7"/><nd ref="4"/><tag k="access" v="no"/></way>',
+    )
+    excluded = {"access": ["no"]}
+    result = pbf.features_from_pbf(
+        osmnx, write_pbf(tmp_path, xml=tagged_outer), AOI, TAGS, excluded_tags=excluded,
+    )
+    assert ("relation", 20) in result.index
+    assert result.loc[("relation", 20)].geometry.area == pytest.approx(15.84)
+    broken = tagged_outer.replace('<nd ref="7"/>', '<nd ref="99"/>')
+    with pytest.raises(pbf.PbfAcquisitionError, match="Incomplete PBF way 4"):
+        pbf.features_from_pbf(
+            osmnx, write_pbf(tmp_path, xml=broken, name="broken"), AOI, TAGS, excluded_tags=excluded,
+        )
+
+
 def test_empty_and_corrupt_pbf_fail(tmp_path):
     path = write_pbf(tmp_path)
     with pytest.raises(pbf.PbfAcquisitionError, match="No matching"):
@@ -312,9 +346,11 @@ def test_full_acquisition_uses_snapshot_cutoff_and_preserves_raw_on_failure(tmp_
     boundary_path.touch()
     registry = {}
     reports = {}
+    excluded = {"access": ["no", "private"]}
 
     def acquire(*args, **kwargs):
         assert kwargs["pbf_options"]["minimum_timestamp"] == previous
+        assert kwargs["pbf_options"]["excluded_tags"] == excluded
         if fail: raise OverpassAcquisitionError("all providers unavailable")
         return features
 
@@ -326,7 +362,7 @@ def test_full_acquisition_uses_snapshot_cutoff_and_preserves_raw_on_failure(tmp_
         paths_dict={"data_raw": raw}, boundaries_folderpath=str(tmp_path),
         boundaries_geojson_path=str(boundary_path), boundaries_path=str(boundary_path),
         boundaries_infos_path=str(tmp_path / "infos.json"), CITY_NAME="Test",
-        OTHER_FOOTWAY_EXCLUSION_RULES={}, updating_infos_path=str(tmp_path / "registry.json"),
+        OTHER_FOOTWAY_EXCLUSION_RULES=excluded, updating_infos_path=str(tmp_path / "registry.json"),
         create_folder_if_not_exists=lambda path: None,
         dump_json=lambda data, path: reports.update({str(path): data}),
         save_geoparquet=lambda frame, path: frame.to_parquet(path),
@@ -335,6 +371,8 @@ def test_full_acquisition_uses_snapshot_cutoff_and_preserves_raw_on_failure(tmp_
         pbf_options_from_config=pbf.pbf_options_from_config, PROVENANCE_KEY=pbf.PROVENANCE_KEY,
         record_datetime=lambda key, value=None: registry.update({key: value}),
         parse_timestamp=parse_timestamp, formatted_datetime_now=isoformat_utc,
+        METADATA_TIMEZONE="UTC", read_json=lambda path: {"Data Fetching": isoformat_utc(previous)},
+        same_snapshot=lambda *_: False,
         gen_updating_infotable_page=lambda: None, time=time.monotonic, sleep=lambda _: None,
     ))
     if fail:
@@ -380,3 +418,48 @@ def test_completeness_pbf_fallback_persists_only_roads_and_provenance(tmp_path, 
     assert json.loads(Path(f"{cache}.source.json").read_text()) == provenance
     assert len(load(AOI.bounds, silent=True)) == len(roads)
     assert calls == ["pbf"]
+
+
+def test_timeout_reaches_pbf_after_both_overpass_endpoints(monkeypatch):
+    import signal
+    import time
+    from types import SimpleNamespace
+
+    from overpass_acquisition import features_from_polygon_with_failover
+    if not hasattr(signal, "setitimer"):
+        pytest.skip("elapsed-time budget is implemented for the Linux CLI")
+    endpoints_seen = []
+    settings = SimpleNamespace(overpass_url="original")
+
+    def hang(*args):
+        endpoints_seen.append(settings.overpass_url)
+        time.sleep(5)
+
+    ox = SimpleNamespace(settings=settings, features_from_polygon=hang)
+    original_signal = signal.getsignal(signal.SIGALRM)
+    expected = object()
+    monkeypatch.setattr(pbf, "features_from_polygon_pbf", lambda *_args, **_kwargs: expected)
+    result = features_from_polygon_with_failover(
+        ox, AOI, TAGS, endpoints=("https://first.example", "https://second.example"),
+        budget_seconds=0.04, pbf_options={},
+    )
+    assert result is expected
+    assert endpoints_seen == ["https://first.example", "https://second.example"]
+    assert settings.overpass_url == "original"
+    assert signal.getsignal(signal.SIGALRM) == original_signal
+    assert signal.getitimer(signal.ITIMER_REAL) == (0.0, 0.0)
+
+
+def test_snapshot_comparison_ignores_column_and_row_order_but_not_geometry(tmp_path):
+    from shapely import Point
+
+    candidate = gpd.GeoDataFrame({"element": ["node", "node"], "id": [1, 2], "kerb": ["lowered", "flush"]},
+                                 geometry=[Point(9, 45), Point(9.1, 45)], crs="EPSG:4326")
+    path = tmp_path / "raw.parquet"
+    same = load_function("getting_data.py", "same_snapshot", {"os": os, "gpd": gpd})
+    assert not same(candidate, path)
+    candidate.iloc[::-1][["id", "element", "geometry", "kerb"]].to_parquet(path)
+    assert same(candidate, path)
+    moved = candidate.copy()
+    moved.at[0, "geometry"] = Point(9.0001, 45)
+    assert not same(moved, path)

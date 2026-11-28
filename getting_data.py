@@ -8,47 +8,30 @@ from time_utils import parse_timestamp
 
 
 
-def main():
-    """
-    NOTE: This script attempts to do an incremental data fetch using OHSOME API.
-    If the data doesn't exist yet, or the OHSOME API fails, it will fallback
-    to a full OSMnx data download, then a regional PBF if Overpass is unavailable.
-    """
-    # 1. Quick lookup to see if existing data is present
-    all_data_exists = True
-    for category in layer_tags_dict:
-        if not os.path.exists(paths_dict["data_raw"][category]):
-            all_data_exists = False
-            break
-
-    # 2. Check for the timestamp
-    import sys
-    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "datahub/watcher")))
+def same_snapshot(candidate, path):
+    """A conservative semantic comparison; uncertainty means rebuild."""
+    if not os.path.isfile(path):
+        return False
     try:
-        from watcher_lib import _load_last_processed_time
-        since_dt = _load_last_processed_time("Data Fetching")
-    except Exception:
-        since_dt = None
-        
-    # 3. Attempt incremental if we have data and a timestamp
-    force_full_fetch = os.environ.get("OSWM_FORCE_FULL_FETCH", "").lower() in {
-        "1", "true", "yes", "on"
-    }
-    if all_data_exists and since_dt and not force_full_fetch:
-        print("[getting_data] Existing data found. Attempting incremental update...")
-        try:
-            import oswm_codebase.incremental_fetch as incremental_fetch
-            success = incremental_fetch.fetch_incremental_data(since_dt)
-            if success:
-                print("[getting_data] Incremental update successful.")
-                gen_updating_infotable_page()
-                return
-            else:
-                print("[getting_data] Incremental update failed. Falling back to full download.")
-        except Exception as e:
-            print(f"[getting_data] Incremental update exception: {e}. Falling back to full download.")
-    else:
-        print("[getting_data] Missing data or timestamp. Proceeding with full data download...")
+        previous = gpd.read_parquet(path)
+        if candidate.crs != previous.crs or set(candidate.columns) != set(previous.columns):
+            return False
+
+        def ordered(frame):
+            return frame.sort_values(["element", "id"]).reset_index(drop=True).reindex(sorted(frame.columns), axis=1)
+
+        return ordered(candidate).equals(ordered(previous))
+    except (OSError, ValueError, TypeError, KeyError):
+        return False
+
+
+def main():
+    """Acquire a current OpenStreetMap snapshot without an OHSOME credential."""
+    try:
+        info = read_json(updating_infos_path)
+    except FileNotFoundError:
+        info = {}
+    since_dt = parse_timestamp(info.get("Data Fetching"), METADATA_TIMEZONE)
 
     # Getting the boundaries:
     # downloading the boundaries if doesn't exist:
@@ -121,7 +104,10 @@ def main():
         ),
         attempts_per_endpoint=globals().get("OVERPASS_ATTEMPTS_PER_ENDPOINT", 2),
         backoff_seconds=globals().get("OVERPASS_BACKOFF_SECONDS", 5),
-        pbf_options=pbf_options_from_config(globals(), minimum_timestamp=since_dt),
+        budget_seconds=globals().get("OVERPASS_BUDGET_SECONDS", 90),
+        pbf_options=pbf_options_from_config(
+            globals(), minimum_timestamp=since_dt, excluded_tags=OTHER_FOOTWAY_EXCLUSION_RULES,
+        ),
     )
     acquisition = as_gdf.attrs.get(PROVENANCE_KEY, {})
     print(f"    took {time()-t1:.2f} seconds, with {len(as_gdf)} features")
@@ -144,6 +130,7 @@ def main():
     as_gdf.rename(columns={"osmid": "id"}, inplace=True)
 
     print("splitting layers:")
+    unchanged = {}
     # small adaptations as OSMNX works differentlydownloaded in
     for category in layer_tags_dict:
         # outpath = f'data/{category}_raw.geojson'
@@ -153,8 +140,9 @@ def main():
 
         to_save = as_gdf[belonging].copy()
 
-        # as_gdf[belonging].to_file(outpath)
-        save_geoparquet(to_save, outpath)
+        unchanged[category] = same_snapshot(to_save, outpath)
+        if not unchanged[category]:
+            save_geoparquet(to_save, outpath)
 
         as_gdf = as_gdf[~belonging]
 
@@ -170,6 +158,10 @@ def main():
     dump_json(
         acquisition or {"provider": "overpass", "acquired_at": formatted_datetime_now()},
         os.path.join(os.path.dirname(updating_infos_path), "acquisition.json"),
+    )
+    dump_json(
+        {layer: not equal for layer, equal in unchanged.items()},
+        os.path.join(os.path.dirname(updating_infos_path), "snapshot_changes.json"),
     )
     sleep(0.1)
 
