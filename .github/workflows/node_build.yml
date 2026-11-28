@@ -88,7 +88,6 @@ jobs:
         run: |
           python oswm_codebase/other/auxiliary_scripts/validate_tiles.py
           python oswm_codebase/node_outputs.py --root . require
-          python oswm_codebase/node_outputs.py --root . validate-sizes --max-mib 95
 
       - name: Validate self-contained published runtime
         if: inputs.mode != 'special'
@@ -106,6 +105,9 @@ jobs:
             custom) profile=custom ;;
           esac
           python oswm_codebase/node_outputs.py --root . stage "$profile"
+
+      - name: Validate staged file sizes
+        run: python oswm_codebase/node_outputs.py --root . validate-sizes --max-mib 95
 
       - name: Commit generated products
         id: commit

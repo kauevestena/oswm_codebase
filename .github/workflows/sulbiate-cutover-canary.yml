@@ -19,14 +19,16 @@ jobs:
       matrix:
         node:
           - city: Milan
+            timeout_minutes: 55
             repository: opensidewalkmap/milan
             ref: c8a2055200a918bb1a9b40aad1e4926c5ab7dfa8
           - city: Paris
+            timeout_minutes: 95
             repository: opensidewalkmap/paris
             ref: 102299c4611c3d395d3fbe642611036759e3b6d0
     # Isolated experiment; never run this on main or a node checkout with write access.
     runs-on: ubuntu-latest
-    timeout-minutes: 55
+    timeout-minutes: ${{ matrix.node.timeout_minutes }}
     steps:
       - name: Check out pinned test node
         uses: actions/checkout@v4
@@ -52,6 +54,8 @@ jobs:
           sudo apt-get install -y fonts-noto-cjk gdal-bin libgdal-dev
           python -m pip install -r oswm_codebase/requirements.txt
       - name: Run the daily entry point with live upstreams
+        env:
+          PYTHONUNBUFFERED: "1"
         run: |
           set -euxo pipefail
           git -C oswm_codebase rev-parse HEAD
@@ -63,6 +67,7 @@ jobs:
           set -euxo pipefail
           python oswm_codebase/other/auxiliary_scripts/validate_tiles.py
           python oswm_codebase/node_outputs.py --root . require
+          python oswm_codebase/node_outputs.py --root . stage daily
           python oswm_codebase/node_outputs.py --root . validate-sizes --max-mib 95
           python oswm_codebase/runtime_validation.py --root .
           python oswm_codebase/data_quality/completeness/completeness_runner.py --offline
